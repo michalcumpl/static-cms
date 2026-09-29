@@ -1,5 +1,5 @@
 {
-  "name": "@static-cms/core",
+  "name": "@static-cms/site",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,21 +7,28 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./fixtures/*": "./fixtures/*"
   },
   "files": [
-    "dist"
+    "dist",
+    "fixtures"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p scripts",
     "test": "vitest run",
-    "clean": "rm -rf dist .turbo"
+    "clean": "rm -rf dist out .turbo",
+    "demo": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/build-demo.ts"
+  },
+  "dependencies": {
+    "fflate": "catalog:"
   },
   "devDependencies": {
     "@static-cms/tsconfig": "workspace:*",
     "@types/node": "catalog:",
+    "html-validate": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

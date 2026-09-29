@@ -4,23 +4,27 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist .turbo"
+    "start": "node dist",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
+    "test": "svelte-kit sync && vitest run",
+    "clean": "rm -rf dist .svelte-kit .turbo"
   },
   "dependencies": {
-    "@static-cms/core": "workspace:*",
-    "react": "catalog:",
-    "react-dom": "catalog:"
+    "@static-cms/site": "workspace:*"
   },
   "devDependencies": {
     "@static-cms/tsconfig": "workspace:*",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
-    "typescript": "catalog:",
-    "vite": "catalog:"
+    "@sveltejs/adapter-node": "catalog:",
+    "@sveltejs/kit": "catalog:",
+    "@sveltejs/vite-plugin-svelte": "catalog:",
+    "@types/node": "catalog:",
+    "svelte": "catalog:",
+    "svelte-check": "catalog:",
+    "typescript": "catalog:typescript6",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

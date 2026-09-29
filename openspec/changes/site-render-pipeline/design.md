@@ -31,7 +31,7 @@ Rename `packages/core` to `packages/site`. The package holds the site model (sch
 
 ### 2. One Svedit document per site, rooted at a `site` node
 
-The whole site (settings, theme, navigation, pages, blocks) is one document whose `document_id` is the `site` node. Pages are `page` nodes in the site's `pages` node_array. Navigation items reference page nodes, not URLs.
+The whole site (settings, theme, navigation, pages, blocks) is one document whose `document_id` is the `site` node. Pages are `page` nodes in the site's `pages` node_array. Links to pages (`page_link` in navigation and calls-to-action, the `internal_link` mark in text) store the page's node ID in a `page_id` string, not a URL. They are not Svedit `node` references, because Svedit forbids reference cycles and two pages linking to each other would form one. Our validator checks that every `page_id` names a page of the site.
 
 - **Why:** a site version is a single JSON blob, which matches the snapshot-per-version storage chosen for the backend. It also gives one undo history across pages, and navigation survives slug changes.
 - **Alternative:** a site envelope plus one Svedit document per page. It is closer to Svedit's "document = routable entry" idea, but adds a second, non-Svedit model and cross-document references.
@@ -58,7 +58,7 @@ Render and export call validation first and return its errors instead of throwin
 
 - **Why:** there are few block types, output is easy to snapshot, it runs anywhere, and escaping and URL building each have a single place to audit.
 - **Base path vs. relative links:** relative links (`../assets/style.css`) would work under any prefix without an option, but they complicate every emitted URL and don't make `file://` browsing work anyway (directory links open folder listings). An explicit base path is simpler and also covers hosting in a subdirectory.
-- **Marked text:** Svedit guarantees marks don't overlap, so rendering is linear. Split the string at mark boundaries and wrap each marked segment (`strong` → `<strong>`, `emphasis` → `<em>`, `link` → `<a href>`). Offsets are treated as JavaScript string indices (UTF-16 code units). See Risks.
+- **Marked text:** Svedit guarantees marks don't overlap, so rendering is linear. Split the string at mark boundaries and wrap each marked segment (`strong` → `<strong>`, `emphasis` → `<em>`, `link` → `<a href>`). Offsets count grapheme clusters (`Intl.Segmenter`, granularity `grapheme`), exactly as Svedit 0.14 does (verified in its `get_char_length`). They are not UTF-16 code units, so an emoji or a combining sequence counts as one position.
 - **Headings:** a render context tracks whether the page's `<h1>` came from a hero. That context implements the "exactly one h1" rule from the rendering spec.
 - **Deterministic output:** no timestamps, random IDs or object-key-order dependence. Nodes are always visited through ordered `nodes` arrays.
 
@@ -104,14 +104,14 @@ index.ts    public API (slugify, validateSite, renderSite, exportSite, zipFiles,
 ```
 
 - **[Download ZIP] runs entirely in the browser:** fetch the fixture and media from `/demo/…`, then call `exportSite` and `zipFiles` client-side and save the result as a Blob. This is the M1 proof that the package works in the browser, not only on the server.
-- The fixture is read on the server via the package's `fixtures/*` subpath export (resolved with `import.meta.resolve`), so the app doesn't depend on repo-relative paths.
+- The fixture is read on the server via the package's `fixtures/*` subpath export (resolved with `createRequire(import.meta.url).resolve`, which behaves the same under Vite's dev server and in the built app), so the app doesn't depend on repo-relative paths.
 - **Why these three routes:** they exercise server import, client import and base-path rendering, which are the three integration points M2 relies on. Nothing else.
 - **Alternative:** keep the React stub until M2. That was rejected: it leaves the wrong framework in the tree and defers catching SvelteKit/monorepo build problems.
 
 ## Risks / Trade-offs
 
 - **[Svedit is pre-1.0; the document format may change]** → The renderer depends only on the documented `{ document_id, nodes }` / text / node_array shapes, and these are isolated in `schema/`. The Milestone 2 spike re-checks them against the current Svedit version.
-- **[Mark offsets may not be UTF-16 code units in Svedit]** (for example grapheme-based) → M1 uses JS string indices, and tests include Czech diacritics (single code units after NFC). The M2 spike verifies offsets with an emoji. Only the mark-splitting function would change.
+- **[Svedit changes how it counts offsets]** → The segmentation is isolated in one helper, and tests pin it with an emoji and a decomposed diacritic.
 - **[Two renderers drift: Svedit edit components vs. `@static-cms/site` HTML]** → Both use the same block class names and the package's stylesheet. Edit components will import that CSS in M2, and snapshot tests pin the published markup.
 - **[Hand-written TS types can drift from the schema object]** → A test checks that every schema node type has a matching render function and fixture coverage.
 - **[SvelteKit may not yet support the catalog's Vite 8 / TypeScript 7]** → Check during setup. If needed, pin the versions SvelteKit supports in the catalog for the admin app only, and record the pin in the catalog with a comment.

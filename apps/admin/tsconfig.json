@@ -1,7 +1,6 @@
 {
-  "extends": "@static-cms/tsconfig/app.json",
+  "extends": ["@static-cms/tsconfig/app.json", "./.svelte-kit/tsconfig.json"],
   "compilerOptions": {
-    "types": ["vite/client"]
-  },
-  "include": ["src", "vite.config.ts"]
+    "types": ["node"]
+  }
 }
