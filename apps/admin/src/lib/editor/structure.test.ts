@@ -1,5 +1,6 @@
 import { validate_document } from "svedit";
 import { describe, expect, it } from "vitest";
+import { projectPaths } from "$lib/project-paths";
 import { demoSite } from "$lib/server/demo";
 import { editorSchema } from "./schema";
 import { EditorState } from "./state.svelte";
@@ -16,7 +17,10 @@ import {
 } from "./structure";
 
 function setup() {
-  const editor = new EditorState({ document: demoSite(), version: "v1", problems: [] });
+  const editor = new EditorState(
+    { document: demoSite(), version: "v1", problems: [] },
+    projectPaths("p_test"),
+  );
   const { session } = editor;
   const blocks = () => (session.get(["site_1", "pages", 0, "blocks"]) as { nodes: string[] }).nodes;
   const types = () => blocks().map((id) => (session.get(id) as { type: string }).type);

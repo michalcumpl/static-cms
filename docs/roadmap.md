@@ -70,9 +70,16 @@ Carried over from Milestone 2: page management, navigation targets, theme editin
 upload are all out of M2 on purpose. Suggested order: storage first, then pages and navigation,
 then the rest.
 
-- **Storage:** a database with auth. The model is *project → site documents → version
-  snapshots*, so languages can be added in Milestone 5 without a migration. A project has one
-  language until then.
+- **Storage and accounts: done.**
+  - Change: [`workspace-storage`](../openspec/changes/archive/2026-09-29-workspace-storage/).
+    Specs: [`accounts`](../openspec/specs/accounts/spec.md),
+    [`site-storage`](../openspec/specs/site-storage/spec.md).
+  - **Workspaces:** a workspace is a business, with owner and editor members; agency people
+    belong to several workspaces.
+  - **Storage:** SQLite on one VPS. The model is *project → site documents (one per language)
+    → versions*, so Milestone 5 can add languages without a migration.
+  - **Sign-in:** magic links over plain SMTP; invite-only, with an admin command for the first
+    user. Media per project on disk; backups with Litestream (documented).
 - **Pages** are managed in a sidebar panel; every action is a Svedit transaction, so undo covers it.
   - Add a page: the title becomes the slug via `slugify`, and the slug stays editable.
   - Rename a page, edit its slug and SEO text, duplicate it, delete it.
@@ -92,8 +99,8 @@ then the rest.
   - Problem messages readable for owners (no internal IDs).
   - Reconsider Cmd+A → Backspace emptying a whole section.
 
-Open decisions: database (Postgres or SQLite), auth, and whether one account owns one site or an
-agency manages many.
+Still open: open sign-up (a switch, when billing exists), Google sign-in, and a version history
+UI (versions are already stored).
 
 ### 4. Publishing
 

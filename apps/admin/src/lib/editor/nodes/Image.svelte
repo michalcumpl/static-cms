@@ -1,9 +1,11 @@
 <script lang="ts">
 import { CustomProperty, type DocumentPath, Node, type SveditContext } from "svedit";
 import { getContext } from "svelte";
+import { getEditor } from "../state.svelte";
 
 let { path }: { path: DocumentPath } = $props();
 const svedit = getContext<SveditContext>("svedit");
+const editor = getEditor();
 const image = $derived(svedit.session.get(path));
 </script>
 
@@ -13,7 +15,7 @@ const image = $derived(svedit.session.get(path));
     <div contenteditable="false">
       <img
         class="hero-image"
-        src={`/api/media/${encodeURIComponent(image.src)}`}
+        src={editor.paths.media(image.src)}
         alt={image.decorative ? "" : image.alt}
         width={image.width || undefined}
         height={image.height || undefined}

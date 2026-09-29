@@ -46,7 +46,7 @@ versions(id, document_id, version, document JSON, created_at, created_by)
 
 ### 2. SQLite access: better-sqlite3 + Drizzle
 
-- **`better-sqlite3`:** synchronous and fast. WAL mode and `foreign_keys = ON` are set at open.
+- **`better-sqlite3`:** synchronous and fast. WAL mode and `foreign_keys = ON` are set at open. Pinned to 12.x: 13.0.3's prebuilt binary crashes with a segmentation fault when opening a database on Node 22.13, while 12.11.1 works.
 - **Drizzle:** typed schema in TypeScript; `drizzle-kit generate` creates SQL migrations committed to `apps/admin/drizzle/`, and the server applies them with Drizzle's migrator at startup.
 - **Location:** `DATABASE_PATH` (default `data/app.db`); `:memory:` for unit tests.
 - **Alternatives:** `node:sqlite` is still experimental in Node 22; raw SQL without an ORM gives no typed schema and no migration tooling.

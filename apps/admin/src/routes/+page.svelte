@@ -1,95 +1,78 @@
 <script lang="ts">
-import { exportSite, zipFiles } from "@static-cms/site";
+import { projectPaths } from "$lib/project-paths";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
-const errors = $derived(data.problems.filter((p) => p.severity === "error"));
-const warnings = $derived(data.problems.filter((p) => p.severity === "warning"));
-
-let downloading = $state(false);
-let downloadError = $state("");
-
-/** Builds the ZIP entirely in the browser, from the raw fixture files. */
-async function downloadZip() {
-  downloading = true;
-  downloadError = "";
-  try {
-    const { document: doc } = (await (await fetch("/api/site")).json()) as { document: unknown };
-    const media = new Map<string, Uint8Array>();
-    for (const name of data.mediaNames) {
-      const response = await fetch(`/api/media/${encodeURIComponent(name)}`);
-      media.set(name, new Uint8Array(await response.arrayBuffer()));
-    }
-    const result = exportSite(doc, media);
-    if (!result.ok) {
-      downloadError = result.problems.map((p) => p.message).join(" ");
-      return;
-    }
-    const zip = zipFiles(result.files);
-    const url = URL.createObjectURL(new Blob([zip], { type: "application/zip" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "website.zip";
-    link.click();
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    downloadError = err instanceof Error ? err.message : String(err);
-  } finally {
-    downloading = false;
-  }
-}
+// A lone owner's workspace isn't mentioned until there is more than one.
+const showWorkspaces = $derived(data.workspaces.length > 1);
 </script>
 
 <svelte:head>
-  <title>Static CMS</title>
+  <title>Projects – Static CMS</title>
 </svelte:head>
 
+<header class="top">
+  <strong>Static CMS</strong>
+  <span class="account">
+    {data.user.email}
+    <form method="POST" action="/signout"><button type="submit">Sign out</button></form>
+  </span>
+</header>
+
 <main>
-  <h1>Static CMS</h1>
-  <p>The saved site. <a href="/edit/">Open the editor</a></p>
-
-  <section aria-labelledby="validation">
-    <h2 id="validation">Validation</h2>
-    {#if data.valid}
-      <p class="ok">Valid{#if warnings.length > 0}, with {warnings.length} warning(s){/if}.</p>
-    {:else}
-      <p class="bad">{errors.length} error(s) — the site can't be rendered.</p>
-    {/if}
-    {#if data.problems.length > 0}
-      <ul>
-        {#each data.problems as problem, i (i)}
-          <li>
-            <strong>{problem.severity}</strong>
-            <code>{problem.code}</code>
-            {problem.message}
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </section>
-
-  <section aria-labelledby="pages">
-    <h2 id="pages">Pages</h2>
-    <ul>
-      {#each data.pages as page (page.id)}
-        <li><a href={page.url} data-sveltekit-reload>{page.path}</a></li>
-      {/each}
-    </ul>
-  </section>
-
-  <section aria-labelledby="export">
-    <h2 id="export">Export</h2>
-    <p>The ZIP is built in your browser with the same code the server uses.</p>
-    <button type="button" onclick={downloadZip} disabled={downloading || !data.valid}>
-      {downloading ? "Building…" : "Download ZIP"}
-    </button>
-    {#if downloadError}
-      <p class="bad" role="alert">{downloadError}</p>
-    {/if}
-  </section>
+  <h1>Projects</h1>
+  {#if data.workspaces.length === 0}
+    <p>You aren't a member of any workspace yet. Ask an owner to invite you.</p>
+  {/if}
+  {#each data.workspaces as workspace (workspace.id)}
+    <section aria-labelledby={`ws-${workspace.id}`}>
+      {#if showWorkspaces}
+        <h2 id={`ws-${workspace.id}`}>{workspace.name}</h2>
+      {:else}
+        <h2 id={`ws-${workspace.id}`} class="visually-hidden">{workspace.name}</h2>
+      {/if}
+      {#if workspace.projects.length === 0}
+        <p>No projects yet.</p>
+      {:else}
+        <ul class="projects">
+          {#each workspace.projects as project (project.id)}
+            <li>
+              <a href={projectPaths(project.id).overview}>{project.name}</a>
+              · <a href={projectPaths(project.id).edit()}>Edit</a>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+      {#if workspace.role === "owner"}
+        <p class="actions">
+          <a href={`/w/${workspace.id}/new`}>New project</a>
+          · <a href={`/w/${workspace.id}/members`}>Members</a>
+        </p>
+      {/if}
+    </section>
+  {/each}
 </main>
 
 <style>
+  .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #ddd;
+    font-family: system-ui, sans-serif;
+  }
+
+  .account {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .account form {
+    margin: 0;
+  }
+
   main {
     max-width: 48rem;
     margin: 0 auto;
@@ -98,16 +81,19 @@ async function downloadZip() {
     line-height: 1.5;
   }
 
-  .ok {
-    color: #1a6b2f;
+  .projects {
+    padding-left: 1.25rem;
   }
 
-  .bad {
-    color: #a3161a;
+  .actions {
+    font-size: 0.95rem;
   }
 
-  button {
-    font: inherit;
-    padding: 0.5rem 1rem;
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 </style>

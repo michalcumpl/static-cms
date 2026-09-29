@@ -1,6 +1,7 @@
 import type { Problem } from "@static-cms/site";
 import { type Document, Session } from "svedit";
 import { getContext, setContext } from "svelte";
+import type { ProjectPaths } from "../project-paths";
 import { createConfig } from "./config";
 import { editorSchema } from "./schema";
 
@@ -9,7 +10,7 @@ export interface EditorPage {
   title: string;
   /** Empty for the home page. */
   slug: string;
-  /** The page's editor URL: `/edit/` or `/edit/<slug>/`. */
+  /** The page's editor URL: `/p/<project>/edit/` or `/p/<project>/edit/<slug>/`. */
   href: string;
 }
 
@@ -57,14 +58,17 @@ export class EditorState {
     this.#lastSavedJson = JSON.stringify(doc);
   }
 
-  constructor(data: SiteData) {
+  constructor(
+    data: SiteData,
+    readonly paths: ProjectPaths,
+  ) {
     const document = data.document as Document;
     this.session = new Session(editorSchema, document, createConfig());
     this.siteId = document.document_id;
     this.#markSaved(this.session.doc);
     this.version = data.version;
     this.savedProblems = data.problems;
-    this.pages = sitePages(document);
+    this.pages = sitePages(document, paths);
   }
 
   /** Switches the canvas to another page. The selection belongs to the old page, so it goes. */
@@ -79,7 +83,7 @@ export class EditorState {
     const document = this.session.doc;
     this.status = { kind: "saving" };
     try {
-      const response = await fetch("/api/site", {
+      const response = await fetch(this.paths.api, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ document, baseVersion: this.version }),
@@ -113,13 +117,13 @@ export class EditorState {
   }
 }
 
-export function sitePages(document: Document): EditorPage[] {
+export function sitePages(document: Document, paths: ProjectPaths): EditorPage[] {
   const nodes = document.nodes as SiteNodes;
   const site = nodes[document.document_id] as { pages: { nodes: string[] } } | undefined;
   return (site?.pages.nodes ?? []).map((id, index) => {
     const page = nodes[id] as { title: string; slug: string } | undefined;
     const slug = index === 0 ? "" : (page?.slug ?? "");
-    return { id, title: page?.title ?? id, slug, href: slug ? `/edit/${slug}/` : "/edit/" };
+    return { id, title: page?.title ?? id, slug, href: paths.edit(slug) };
   });
 }
 

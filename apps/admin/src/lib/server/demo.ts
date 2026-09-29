@@ -2,36 +2,27 @@ import { readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
-// Resolved through the package's `./fixtures/*` export, not a repo-relative path.
+// Fixtures of @static-cms/site, resolved through the package's `./fixtures/*` export.
 const require = createRequire(import.meta.url);
-const fixtureFile = require.resolve("@static-cms/site/fixtures/demo-site.json");
-const mediaDir = join(dirname(fixtureFile), "media");
+const demoFile = require.resolve("@static-cms/site/fixtures/demo-site.json");
+const starterFile = require.resolve("@static-cms/site/fixtures/starter-site.json");
+const demoMediaDir = join(dirname(demoFile), "media");
 
-/** File names in the demo media folder; also the only names `demoMediaFile` serves. */
-export function demoMediaNames(): string[] {
-  return readdirSync(mediaDir).sort();
-}
-
-/** The demo site document, freshly read so fixture edits show up without a restart. */
-export function demoSiteJson(): string {
-  return readFileSync(fixtureFile, "utf8");
-}
-
+/** The demo site document (tests, and the images of an imported Milestone 2 working copy). */
 export function demoSite(): unknown {
-  return JSON.parse(demoSiteJson());
+  return JSON.parse(readFileSync(demoFile, "utf8"));
 }
 
+/** The site a new project starts from, with its site name set to `name`. */
+export function starterSite(name: string): { document_id: string; nodes: Record<string, unknown> } {
+  const doc = JSON.parse(readFileSync(starterFile, "utf8"));
+  doc.nodes[doc.document_id].name = name;
+  return doc;
+}
+
+/** One of the demo site's images, or undefined for other names. */
 export function demoMediaFile(name: string): Uint8Array<ArrayBuffer> | undefined {
-  return demoMediaNames().includes(name)
-    ? new Uint8Array(readFileSync(join(mediaDir, name)))
+  return readdirSync(demoMediaDir).includes(name)
+    ? new Uint8Array(readFileSync(join(demoMediaDir, name)))
     : undefined;
-}
-
-export function demoMedia(): Map<string, Uint8Array> {
-  return new Map(
-    demoMediaNames().flatMap((name) => {
-      const bytes = demoMediaFile(name);
-      return bytes ? [[name, bytes] as const] : [];
-    }),
-  );
 }

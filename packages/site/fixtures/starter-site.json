@@ -1,0 +1,115 @@
+{
+  "document_id": "site_1",
+  "nodes": {
+    "theme_1": {
+      "id": "theme_1",
+      "type": "theme",
+      "color_primary": "#1f5a8a",
+      "color_secondary": "#e8eef4",
+      "color_background": "#ffffff",
+      "color_text": "#1a1a1a",
+      "font_heading": "Georgia, 'Times New Roman', serif",
+      "font_body": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+      "radius": "0.5rem",
+      "content_width": "64rem"
+    },
+    "nav_home": {
+      "id": "nav_home",
+      "type": "page_link",
+      "label": {
+        "content": "Úvod",
+        "marks": [],
+        "annotations": []
+      },
+      "page_id": "page_home"
+    },
+    "nav_1": {
+      "id": "nav_1",
+      "type": "nav",
+      "items": {
+        "nodes": ["nav_home"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "hero_1": {
+      "id": "hero_1",
+      "type": "hero",
+      "heading": {
+        "content": "Vítejte",
+        "marks": [],
+        "annotations": []
+      },
+      "text": {
+        "content": "Krátce představte, co nabízíte a pro koho.",
+        "marks": [],
+        "annotations": []
+      },
+      "image": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "action": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "sub_about": {
+      "id": "sub_about",
+      "type": "subheading",
+      "content": {
+        "content": "O nás",
+        "marks": [],
+        "annotations": []
+      },
+      "level": 2
+    },
+    "para_about": {
+      "id": "para_about",
+      "type": "paragraph",
+      "content": {
+        "content": "Napište pár vět o sobě: kdo jste, co děláte a kde vás najdou.",
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "rich_text_about": {
+      "id": "rich_text_about",
+      "type": "rich_text",
+      "body": {
+        "nodes": ["sub_about", "para_about"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "page_home": {
+      "id": "page_home",
+      "type": "page",
+      "title": "Úvod",
+      "slug": "",
+      "seo_description": "",
+      "blocks": {
+        "nodes": ["hero_1", "rich_text_about"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "site_1": {
+      "id": "site_1",
+      "type": "site",
+      "schema_version": 1,
+      "name": "Můj web",
+      "lang": "cs",
+      "base_url": "",
+      "theme": "theme_1",
+      "nav": "nav_1",
+      "pages": {
+        "nodes": ["page_home"],
+        "marks": [],
+        "annotations": []
+      }
+    }
+  }
+}

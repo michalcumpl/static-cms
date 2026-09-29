@@ -4,6 +4,7 @@ import {
   caretAtEnd,
   expect,
   openEditor,
+  paths,
   selectText,
   test,
   toolbarButton,
@@ -22,7 +23,7 @@ test("edit the hero heading, save, and see it in the preview", async ({ page }) 
     "Saved",
   );
 
-  await page.goto("/preview/");
+  await page.goto(paths().preview);
   await expect(page.locator("h1")).toHaveText("Čerstvý chléb každé ráno – i v neděli");
 });
 
@@ -46,10 +47,10 @@ test("make a word bold and link text to another page", async ({ page }) => {
   await expect(page.getByRole("toolbar", { name: "Editing" }).getByRole("status")).toHaveText(
     "Saved",
   );
-  await page.goto("/preview/");
+  await page.goto(paths().preview);
   await expect(
     page.locator("p", { hasText: "1998" }).getByRole("link", { name: "1998" }),
-  ).toHaveAttribute("href", "/preview/kontakt/");
+  ).toHaveAttribute("href", `${paths().preview}kontakt/`);
 });
 
 test("refuse an unsafe link address", async ({ page }) => {
@@ -134,7 +135,7 @@ test("an empty subheading is listed as a problem, and saving still works", async
     "Saved",
   );
 
-  const preview = await page.request.get("/preview/");
+  const preview = await page.request.get(paths().preview);
   expect(preview.status()).toBe(422);
   expect(await preview.text()).toContain("empty-heading");
 });
@@ -149,7 +150,7 @@ test("leaving with unsaved edits asks first", async ({ page }) => {
     asked = dialog.message();
     await dialog.dismiss();
   });
-  await page.getByRole("link", { name: "← Overview" }).click();
+  await page.locator(".sidebar .back").click();
   await expect.poll(() => asked).toContain("unsaved changes");
   await expect(page).toHaveURL(/\/edit\/$/);
 });

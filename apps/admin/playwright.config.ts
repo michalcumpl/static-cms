@@ -3,13 +3,26 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { defineConfig, devices } from "@playwright/test";
 
-// A fresh, empty working copy for every run: the server seeds it from the demo fixture.
-const dataDir = mkdtempSync(join(tmpdir(), "static-cms-e2e-"));
+// One data folder per run, shared by the dev server, the global setup and the test workers
+// (workers load this config again, so the path travels in an environment variable).
+process.env.E2E_DATA_DIR ??= mkdtempSync(join(tmpdir(), "static-cms-e2e-"));
+const dataDir = process.env.E2E_DATA_DIR;
 const port = 5198;
+
+export const e2eEnv = {
+  DATABASE_PATH: join(dataDir, "app.db"),
+  MEDIA_DIR: join(dataDir, "media"),
+  OUTBOX_DIR: join(dataDir, "outbox"),
+  // No Milestone 2 working copy to import.
+  SITE_DATA_DIR: join(dataDir, "legacy"),
+  ORIGIN: `http://localhost:${port}`,
+};
+Object.assign(process.env, e2eEnv);
 
 export default defineConfig({
   testDir: "e2e",
-  // All tests share one working copy, and each resets it first, so they run one at a time.
+  globalSetup: "./e2e/global-setup.ts",
+  // All tests share one database, and each resets its project first, so they run one at a time.
   workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
@@ -26,8 +39,8 @@ export default defineConfig({
   ],
   webServer: {
     command: `vite dev --port ${port} --strictPort`,
-    url: `http://localhost:${port}/api/site`,
-    env: { SITE_DATA_DIR: dataDir },
+    url: `http://localhost:${port}/signin`,
+    env: e2eEnv,
     reuseExistingServer: false,
     timeout: 60_000,
   },

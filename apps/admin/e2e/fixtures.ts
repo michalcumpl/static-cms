@@ -1,29 +1,62 @@
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { test as base, expect, type Locator, type Page } from "@playwright/test";
+import {
+  type BrowserContext,
+  test as base,
+  expect,
+  type Locator,
+  type Page,
+} from "@playwright/test";
+import { projectPaths } from "../src/lib/project-paths";
+import { createSession } from "../src/lib/server/auth";
+import { type Db, openDatabase } from "../src/lib/server/db/index";
+import { demoSite } from "../src/lib/server/demo";
+import { readSite, saveSite } from "../src/lib/server/site-documents";
+import { readState } from "./state";
 
-const require = createRequire(import.meta.url);
-const demoSite = readFileSync(require.resolve("@static-cms/site/fixtures/demo-site.json"), "utf8");
+let db: Db | undefined;
+/** The test database (the same file the dev server uses). */
+export function testDb(): Db {
+  db ??= openDatabase();
+  return db;
+}
 
-/** Puts the demo site back into the working copy, whatever the previous test saved. */
-async function resetSite(page: Page): Promise<void> {
-  const { version } = await (await page.request.get("/api/site")).json();
-  const response = await page.request.put("/api/site", {
-    data: { document: JSON.parse(demoSite), baseVersion: version },
-  });
-  expect(response.ok()).toBe(true);
+export const state = () => readState();
+export const paths = () => projectPaths(state().projectId);
+
+/** Puts the demo site back into the project, whatever the previous test saved. */
+function resetSite(): void {
+  const { projectId, owner } = state();
+  const current = readSite(testDb(), projectId);
+  const result = saveSite(testDb(), projectId, owner.id, demoSite(), current?.version ?? "");
+  if (!result.ok) throw new Error("could not reset the project");
+}
+
+/** Signs a browser context in as `user` by giving it a fresh session cookie. */
+export async function signIn(context: BrowserContext, user = state().owner): Promise<void> {
+  const token = createSession(testDb(), user.id);
+  await context.addCookies([
+    {
+      name: "session",
+      value: token,
+      url: process.env.ORIGIN ?? "",
+      httpOnly: true,
+      sameSite: "Lax",
+    },
+  ]);
 }
 
 /**
- * Every test starts from the demo site and fails on any uncaught error in the page.
+ * Every test starts from the demo site, signed in as the project's owner, and fails on
+ * any uncaught error in the page. Tests about signing in use the `anonymous` option.
  * Leaving an editor with unsaved edits would open a dialog; tests that care handle it.
  */
-export const test = base.extend<{ pageErrors: Error[] }>({
+export const test = base.extend<{ anonymous: boolean; pageErrors: Error[] }>({
+  anonymous: [false, { option: true }],
   pageErrors: [
-    async ({ page }, use) => {
+    async ({ page, context, anonymous }, use) => {
       const errors: Error[] = [];
       page.on("pageerror", (error) => errors.push(error));
-      await resetSite(page);
+      resetSite();
+      if (!anonymous) await signIn(context);
       await use(errors);
       expect(errors.map((e) => e.message)).toEqual([]);
     },
@@ -36,7 +69,7 @@ export { expect };
 export const canvas = (page: Page) => page.locator(".site-canvas");
 
 /** Opens the editor for a page and waits for the canvas. */
-export async function openEditor(page: Page, path = "/edit/"): Promise<void> {
+export async function openEditor(page: Page, path = paths().edit()): Promise<void> {
   await page.goto(path);
   await expect(canvas(page).locator("[contenteditable=true]")).toBeVisible();
 }
@@ -79,3 +112,17 @@ export const blockOrder = (page: Page) =>
   canvas(page)
     .locator(".page-blocks > [data-type=node]")
     .evaluateAll((nodes) => nodes.map((n) => /node-(\w+)/.exec(n.className)?.[1]));
+
+/** The newest email in the outbox addressed to `to`, and the first link in it. */
+export async function latestLink(to: string, since = 0): Promise<string> {
+  const { readOutbox } = await import("../src/lib/server/mail");
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const message = readOutbox(process.env.OUTBOX_DIR ?? "")
+      .filter((m) => m.to === to && Date.parse(m.sentAt) >= since)
+      .at(-1);
+    const link = /https?:\/\/\S+/.exec(message?.text ?? "")?.[0];
+    if (link) return link;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`no email to ${to}`);
+}

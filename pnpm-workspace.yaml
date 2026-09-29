@@ -3,19 +3,33 @@ packages:
   - packages/*
   - tooling/*
 
+# Install scripts pnpm may run: better-sqlite3 builds or fetches its native SQLite binding,
+# esbuild (used by tsx and drizzle-kit) checks its platform binary.
+allowBuilds:
+  better-sqlite3: true
+  esbuild: true
+
 catalog:
   "@biomejs/biome": 2.5.14
   "@playwright/test": ^1.63.0
   "@sveltejs/adapter-node": ^5.5.7
   "@sveltejs/kit": ^2.70.3
   "@sveltejs/vite-plugin-svelte": ^7.3.1
+  "@types/better-sqlite3": ^9.6.0
   "@types/node": ^22.0.0
+  "@types/nodemailer": ^8.0.2
+  # 13.x's prebuilt binary crashes (segfault) when opening a database on Node 22.13; 12.x works.
+  better-sqlite3: ^12.11.1
+  drizzle-kit: ^0.31.11
+  drizzle-orm: ^0.45.3
   fflate: ^0.8.3
   html-validate: ^9.7.1
+  nodemailer: ^10.0.12
   svelte: ^5.57.1
   svelte-check: ^4.7.6
   # Pre-1.0 and changing quickly: pinned exactly, upgrade deliberately.
   svedit: 0.14.0
+  tsx: ^4.23.15
   turbo: ^2.11.5
   typescript: ^7.0.2
   vite: ^8.3.1

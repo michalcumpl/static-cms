@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { projectPaths } from "$lib/project-paths";
 import { demoSite } from "$lib/server/demo";
 import { EditorState } from "./state.svelte";
 
 function editor() {
-  return new EditorState({ document: demoSite(), version: "v1", problems: [] });
+  return new EditorState(
+    { document: demoSite(), version: "v1", problems: [] },
+    projectPaths("p_test"),
+  );
 }
 
 describe("EditorState.dirty", () => {

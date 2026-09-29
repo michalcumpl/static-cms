@@ -8,14 +8,20 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "node dist",
-    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings && tsc -p e2e",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings && tsc -p e2e && tsc -p scripts",
     "test": "svelte-kit sync && vitest run",
     "clean": "rm -rf dist .svelte-kit .turbo",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:generate": "drizzle-kit generate",
+    "admin": "tsx scripts/admin.ts"
   },
   "dependencies": {
     "@static-cms/site": "workspace:*",
-    "svedit": "catalog:"
+    "better-sqlite3": "catalog:",
+    "drizzle-orm": "catalog:",
+    "nodemailer": "catalog:",
+    "svedit": "catalog:",
+    "tsx": "catalog:"
   },
   "devDependencies": {
     "@playwright/test": "catalog:",
@@ -23,7 +29,10 @@
     "@sveltejs/adapter-node": "catalog:",
     "@sveltejs/kit": "catalog:",
     "@sveltejs/vite-plugin-svelte": "catalog:",
+    "@types/better-sqlite3": "catalog:",
     "@types/node": "catalog:",
+    "@types/nodemailer": "catalog:",
+    "drizzle-kit": "catalog:",
     "svelte": "catalog:",
     "svelte-check": "catalog:",
     "typescript": "catalog:typescript6",

@@ -1,6 +1,11 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
-declare global {
-  namespace App {}
-}
+import type { SessionUser } from "$lib/server/auth";
 
-export {};
+declare global {
+  namespace App {
+    interface Locals {
+      /** The signed-in user, set by hooks.server.ts from the session cookie. */
+      user?: SessionUser;
+    }
+  }
+}

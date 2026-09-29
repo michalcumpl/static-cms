@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { loadDemoMedia, loadDemoSite } from "../test/fixtures.js";
+import { validateSite } from "../validate/index.js";
 import { type PropertyDef, siteSchema } from "./schema.js";
 
 function matchesProperty(def: PropertyDef, value: unknown): boolean {
@@ -48,5 +50,19 @@ describe("demo site fixture", () => {
     for (const node of Object.values(doc.nodes)) {
       if (node.type === "image") expect(media.has(node.src), node.src).toBe(true);
     }
+  });
+});
+
+describe("starter site fixture", () => {
+  const starter = JSON.parse(
+    readFileSync(new URL("../../fixtures/starter-site.json", import.meta.url), "utf8"),
+  );
+
+  it("is a valid one-page site with no problems and no images", () => {
+    expect(validateSite(starter)).toEqual({ valid: true, problems: [] });
+    expect(starter.nodes[starter.document_id].pages.nodes).toEqual(["page_home"]);
+    expect(Object.values(starter.nodes).some((n) => (n as { type: string }).type === "image")).toBe(
+      false,
+    );
   });
 });
