@@ -44,8 +44,58 @@ export type ProblemCode =
   | "missing-media"
   | "no-base-url";
 
+/** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
+export type ProblemCategory = "structure" | "site";
+
+const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
+  "invalid-document": "structure",
+  "invalid-id": "structure",
+  "id-mismatch": "structure",
+  "unknown-type": "structure",
+  "invalid-value": "structure",
+  "missing-reference": "structure",
+  "disallowed-type": "structure",
+  "invalid-range": "structure",
+  "overlapping-marks": "structure",
+  cycle: "structure",
+  "unreachable-node": "structure",
+  "root-not-site": "site",
+  "unsupported-version": "site",
+  "missing-site-name": "site",
+  "missing-language": "site",
+  "invalid-language": "site",
+  "invalid-base-url": "site",
+  "no-pages": "site",
+  "duplicate-reference": "site",
+  "missing-title": "site",
+  "home-slug": "site",
+  "invalid-slug": "site",
+  "duplicate-slug": "site",
+  "missing-page": "site",
+  "hero-not-first": "site",
+  "too-many-items": "site",
+  "empty-heading": "site",
+  "heading-skip": "site",
+  "missing-alt": "site",
+  "decorative-with-alt": "site",
+  "invalid-media-key": "site",
+  "empty-link-label": "site",
+  "unsafe-link": "site",
+  "invalid-color": "site",
+  "invalid-theme-value": "site",
+  "low-contrast": "site",
+  "invalid-base-path": "site",
+  "missing-media": "site",
+  "no-base-url": "site",
+};
+
+export function problemCategory(code: ProblemCode): ProblemCategory {
+  return CATEGORIES[code];
+}
+
 export interface Problem {
   severity: Severity;
+  category: ProblemCategory;
   code: ProblemCode;
   message: string;
   /** The node the problem concerns (the document ID for document-level problems). */
@@ -75,14 +125,14 @@ export class Problems {
   }
 }
 
-function problem(
+/** Builds a problem; the category always follows from the code. */
+export function problem(
   severity: Severity,
   code: ProblemCode,
   nodeId: string,
   message: string,
-  property: string | undefined,
+  property?: string,
 ): Problem {
-  return property === undefined
-    ? { severity, code, message, nodeId }
-    : { severity, code, message, nodeId, property };
+  const base = { severity, category: problemCategory(code), code, message, nodeId };
+  return property === undefined ? base : { ...base, property };
 }

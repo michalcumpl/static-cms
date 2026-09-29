@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { siteSchema, slugify, validateSite } from "./index.js";
+import { isSafeHref, siteSchema, slugify, validateSite } from "./index.js";
 import { loadDemoSite } from "./test/fixtures.js";
 
 describe("slugify", () => {
@@ -12,5 +12,10 @@ describe("package entry", () => {
   it("exposes the schema and validateSite", () => {
     expect(siteSchema.site.kind).toBe("document");
     expect(validateSite(loadDemoSite()).valid).toBe(true);
+  });
+
+  it("exposes isSafeHref for link editors", () => {
+    expect(isSafeHref("https://example.com")).toBe(true);
+    expect(isSafeHref("javascript:alert(1)")).toBe(false);
   });
 });

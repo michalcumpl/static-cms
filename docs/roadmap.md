@@ -32,22 +32,39 @@ a SvelteKit admin shell with a preview route and in-browser ZIP download.
   optional base path for rendering.
 - Blocks so far: `hero`, `rich_text`, `services`.
 
-### 2. In-place editing with Svedit: next
+### 2. In-place editing with Svedit: done
 
-- Edit text directly on the page, including bold, italic and links.
-- Select, insert, delete and reorder blocks and their items.
-- Undo and redo.
-- Desktop/mobile preview toggle.
+Built `/edit/` in the admin app, where the owner edits the site on the page itself. It supports:
+- text, bold, italic, and links (to a page or an address);
+- adding, moving and deleting blocks, list items and service items;
+- image descriptions (alt text, decorative);
+- undo/redo;
+- a desktop/mobile toggle;
+- a problems panel that jumps to the problem;
+- saving with conflict protection.
 
-Open decisions:
-- **Where edits are saved:** a JSON file on the server (a database replaces it in M3), the
-  browser only, or a database now.
-- **How much is editable:** text only, text plus blocks, or also pages, navigation, theme and
-  images.
-- **Spike first:** can a Svedit session edit one page inside the site document? If not, split per
-  page at load time. See the M1 design.
+- Change: [`openspec/changes/archive/2026-09-29-inline-editing`](../openspec/changes/archive/2026-09-29-inline-editing/)
+- Specs: [`site-editing`](../openspec/specs/site-editing/spec.md),
+  [`site-storage`](../openspec/specs/site-storage/spec.md), and a problem category added to
+  [`site-document`](../openspec/specs/site-document/spec.md)
+- Decisions:
+  - **One Svedit editor rooted at the site node.** Two editors on one session crash when focus
+    moves between them.
+  - **Saves go to a JSON working copy on the server.** Only structurally broken documents are
+    refused; unfinished content is saved, and preview/ZIP wait until it is valid.
+  - **Links are `span.link` while editing.** The editor derives their CSS from the site's link
+    rules.
+  - **Container queries (`@container`, `cqi`) in the site CSS,** so the mobile toggle reflows the
+    page without an iframe.
+  - **Playwright end-to-end tests** in CI (Chromium).
+- Known limits:
+  - Bold, italic and links can't overlap on the same text; Svedit marks are exclusive.
+  - There is no authentication yet: run the admin locally or on a trusted network.
 
 ### 3. A real website
+
+Carried over from Milestone 2: page management, navigation targets, theme editing and image
+upload are all out of M2 on purpose.
 
 - Database storage with version snapshots, and auth.
 - Pages: add, rename, reorder, delete. Navigation editing.

@@ -2,7 +2,7 @@ import { zipSync } from "fflate";
 import { escapeHtml } from "../render/html.js";
 import { renderSite } from "../render/index.js";
 import { type PropertyDef, type SiteDocument, siteSchema } from "../schema/index.js";
-import type { Problem } from "../validate/index.js";
+import { type Problem, problem } from "../validate/index.js";
 
 export interface ExportOptions {
   /** Where the site will be served from: `/` (default) or a subdirectory like `/web/`. */
@@ -42,13 +42,15 @@ export function exportSite(
     if (bytes) {
       files.push([`assets/images/${image.src}`, bytes]);
     } else {
-      missing.push({
-        severity: "error",
-        code: "missing-media",
-        nodeId: image.id,
-        property: "src",
-        message: `No file was supplied for image ${image.id}: ${image.src}.`,
-      });
+      missing.push(
+        problem(
+          "error",
+          "missing-media",
+          image.id,
+          `No file was supplied for image ${image.id}: ${image.src}.`,
+          "src",
+        ),
+      );
     }
   }
   if (missing.length > 0) return { ok: false, problems: missing };
@@ -58,13 +60,15 @@ export function exportSite(
     const routes = rendered.site.pages.map((p) => p.path.replace(/index\.html$/, ""));
     files.push(["sitemap.xml", encoder.encode(sitemap(site.base_url, routes))]);
   } else {
-    warnings.push({
-      severity: "warning",
-      code: "no-base-url",
-      nodeId: doc.document_id,
-      property: "base_url",
-      message: "The site has no base URL, so sitemap.xml was left out.",
-    });
+    warnings.push(
+      problem(
+        "warning",
+        "no-base-url",
+        doc.document_id,
+        "The site has no base URL, so sitemap.xml was left out.",
+        "base_url",
+      ),
+    );
   }
 
   files.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));

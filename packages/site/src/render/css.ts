@@ -31,6 +31,7 @@ html {
 }
 
 body {
+  container-type: inline-size;
   margin: 0;
   background: var(--color-background);
   color: var(--color-text);
@@ -48,7 +49,7 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(2rem, 5cqi, 3rem);
 }
 
 h2 {
@@ -214,7 +215,7 @@ img {
   padding-block: 1.5rem;
 }
 
-@media (min-width: 48rem) {
+@container (min-width: 48rem) {
   .hero-inner {
     grid-template-columns: 3fr 2fr;
   }
@@ -225,6 +226,35 @@ img {
 }
 `;
 
-export function siteCss(theme: NodeOfType<"theme">): string {
-  return `${themeCss(theme)}\n${BASE_CSS}`;
+export interface SiteCssOptions {
+  /**
+   * A selector to confine the styles to, e.g. `.site-canvas` for an editor canvas.
+   * `:root`, `html` and `body` rules then apply to that element, and every other
+   * rule only inside it. Without a scope the stylesheet is for a published page.
+   */
+  scope?: string;
+}
+
+export function siteCss(theme: NodeOfType<"theme">, options: SiteCssOptions = {}): string {
+  const css = `${themeCss(theme)}\n${BASE_CSS}`;
+  return options.scope ? scopeCss(css, options.scope) : css;
+}
+
+const DOCUMENT_SELECTORS = new Set([":root", "html", "body"]);
+
+/**
+ * Prefixes every rule's selectors with `scope`. Works on this module's own CSS only:
+ * flat rules plus at-rule blocks, with no braces inside strings or comments.
+ */
+function scopeCss(css: string, scope: string): string {
+  return css.replace(/([^{}]+)\{/g, (_match, prelude: string) => {
+    const lead = prelude.match(/^\s*/)?.[0] ?? "";
+    const selectors = prelude.trim();
+    if (selectors.startsWith("@")) return `${prelude}{`;
+    const scoped = selectors
+      .split(",")
+      .map((s) => s.trim())
+      .map((s) => (DOCUMENT_SELECTORS.has(s) ? scope : `${scope} ${s}`));
+    return `${lead}${[...new Set(scoped)].join(",\n")} {`;
+  });
 }

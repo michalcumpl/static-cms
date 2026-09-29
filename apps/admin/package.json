@@ -8,14 +8,17 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "node dist",
-    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings && tsc -p e2e",
     "test": "svelte-kit sync && vitest run",
-    "clean": "rm -rf dist .svelte-kit .turbo"
+    "clean": "rm -rf dist .svelte-kit .turbo",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@static-cms/site": "workspace:*"
+    "@static-cms/site": "workspace:*",
+    "svedit": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:",
     "@static-cms/tsconfig": "workspace:*",
     "@sveltejs/adapter-node": "catalog:",
     "@sveltejs/kit": "catalog:",

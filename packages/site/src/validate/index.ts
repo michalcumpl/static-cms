@@ -2,7 +2,14 @@ import { checkSiteRules } from "./domain.js";
 import { checkStructure } from "./generic.js";
 import { Problems, type ValidationResult } from "./problems.js";
 
-export type { Problem, ProblemCode, Severity, ValidationResult } from "./problems.js";
+export type {
+  Problem,
+  ProblemCategory,
+  ProblemCode,
+  Severity,
+  ValidationResult,
+} from "./problems.js";
+export { problem, problemCategory } from "./problems.js";
 
 /**
  * Checks a site document (any JSON value) against the schema and the site rules.

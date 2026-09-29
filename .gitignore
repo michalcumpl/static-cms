@@ -10,3 +10,8 @@ coverage/
 *.log
 out/
 .svelte-kit/
+# The admin app's site working copy (SITE_DATA_DIR default).
+apps/admin/data/
+# Playwright output
+test-results/
+playwright-report/

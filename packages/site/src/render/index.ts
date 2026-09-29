@@ -1,11 +1,12 @@
 import type { SiteDocument } from "../schema/index.js";
 import type { Problem } from "../validate/index.js";
-import { validateSite } from "../validate/index.js";
+import { problem, validateSite } from "../validate/index.js";
 import { isValidBasePath, RenderContext } from "./context.js";
 import { siteCss } from "./css.js";
 import { renderPage } from "./page.js";
 
 export { isValidBasePath } from "./context.js";
+export { type SiteCssOptions, siteCss } from "./css.js";
 
 export interface RenderOptions {
   /** Where the site is served from: `/` (default) or a subdirectory like `/preview/`. */
@@ -39,12 +40,12 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
     return {
       ok: false,
       problems: [
-        {
-          severity: "error",
-          code: "invalid-base-path",
-          nodeId: "",
-          message: `Base path "${basePath}" must start and end with "/", like "/" or "/preview/".`,
-        },
+        problem(
+          "error",
+          "invalid-base-path",
+          "",
+          `Base path "${basePath}" must start and end with "/", like "/" or "/preview/".`,
+        ),
       ],
     };
   }

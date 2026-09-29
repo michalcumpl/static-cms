@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { readSite, saveSite } from "$lib/server/site-store";
+import { useTempDataDir } from "$lib/server/test-data-dir";
 import { GET } from "./[...path]/+server";
 
 type PreviewEvent = Parameters<typeof GET>[0];
+// biome-ignore lint/suspicious/noExplicitAny: tests edit nodes freely to build documents.
+type Doc = { nodes: Record<string, any> };
+
+useTempDataDir();
 
 const get = (path: string) => GET({ params: { path } } as PreviewEvent);
 
@@ -33,8 +39,27 @@ describe("/preview/[...path]", () => {
 
   it.each(["missing/", "assets/images/nope.png", "../package.json", "assets"])(
     "404s for %j",
-    (path) => {
-      expect(() => get(path)).toThrow(expect.objectContaining({ status: 404 }));
+    async (path) => {
+      await expect(get(path)).rejects.toMatchObject({ status: 404 });
     },
   );
+
+  it("shows saved edits", async () => {
+    const { document, version } = await readSite();
+    (document as Doc).nodes.hero_1.heading.content = "Nový nadpis";
+    await saveSite(document, version);
+    expect(await (await get("")).text()).toContain("<h1>Nový nadpis</h1>");
+  });
+
+  it("shows the problems instead of the page while the saved site is invalid", async () => {
+    const { document, version } = await readSite();
+    (document as Doc).nodes.sub_about.content.content = "";
+    (document as Doc).nodes.site_1.name = "<script>x</script>";
+    await saveSite(document, version);
+    const response = await get("");
+    expect(response.status).toBe(422);
+    const html = await response.text();
+    expect(html).toContain("<code>empty-heading</code>");
+    expect(html).not.toContain("<script>");
+  });
 });

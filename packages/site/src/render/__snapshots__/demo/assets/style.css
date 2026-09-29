@@ -21,6 +21,7 @@ html {
 }
 
 body {
+  container-type: inline-size;
   margin: 0;
   background: var(--color-background);
   color: var(--color-text);
@@ -38,7 +39,7 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(2rem, 5cqi, 3rem);
 }
 
 h2 {
@@ -204,7 +205,7 @@ img {
   padding-block: 1.5rem;
 }
 
-@media (min-width: 48rem) {
+@container (min-width: 48rem) {
   .hero-inner {
     grid-template-columns: 3fr 2fr;
   }

@@ -14,10 +14,10 @@ async function downloadZip() {
   downloading = true;
   downloadError = "";
   try {
-    const doc: unknown = await (await fetch("/demo/demo-site.json")).json();
+    const { document: doc } = (await (await fetch("/api/site")).json()) as { document: unknown };
     const media = new Map<string, Uint8Array>();
     for (const name of data.mediaNames) {
-      const response = await fetch(`/demo/media/${encodeURIComponent(name)}`);
+      const response = await fetch(`/api/media/${encodeURIComponent(name)}`);
       media.set(name, new Uint8Array(await response.arrayBuffer()));
     }
     const result = exportSite(doc, media);
@@ -46,7 +46,7 @@ async function downloadZip() {
 
 <main>
   <h1>Static CMS</h1>
-  <p>Demo site: <code>@static-cms/site/fixtures/demo-site.json</code></p>
+  <p>The saved site. <a href="/edit/">Open the editor</a></p>
 
   <section aria-labelledby="validation">
     <h2 id="validation">Validation</h2>
