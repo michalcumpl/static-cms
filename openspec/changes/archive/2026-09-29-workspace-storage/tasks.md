@@ -42,4 +42,4 @@
 ## 8. Documentation and wrap-up
 
 - [x] 8.1 Update `apps/admin/README.md` (environment variables, first run with `admin create-user`, SMTP and SPF/DKIM notes, Litestream backups of `app.db` plus `data/media`, VPS notes for better-sqlite3) and `docs/roadmap.md` (storage done, decisions); verify commands in the README run as written against a temp data folder
-- [ ] 8.2 Run `pnpm lint`, `pnpm turbo run typecheck test build` and `test:e2e`, then walk through an upgrade: start with an old `data/site.json`, create the admin, sign in, find the imported site, edit and save, invite a second user, check the preview and ZIP; verify everything works and CI passes on push
+- [x] 8.2 Run `pnpm lint`, `pnpm turbo run typecheck test build` and `test:e2e`, then walk through an upgrade: start with an old `data/site.json`, create the admin, sign in, find the imported site, edit and save, invite a second user, check the preview and ZIP; verify everything works and CI passes on push
