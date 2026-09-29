@@ -49,7 +49,7 @@
 
 - [x] 8.1 Add `@playwright/test` to `apps/admin` with a Chromium-only config whose web server runs the dev server with a fresh temp `SITE_DATA_DIR`, and a `test:e2e` script; verify an empty smoke test that opens `/edit/` passes locally
 - [x] 8.2 Write e2e tests for: edit hero heading + save + `/preview/` shows it; bold and page link; insert services block and reorder; undo/redo; page switching keeps an edit; unsafe link refused; empty subheading listed while save succeeds; verify `pnpm --filter @static-cms/admin test:e2e` passes
-- [ ] 8.3 Add the Playwright browser install and `test:e2e` steps to `.github/workflows/ci.yml` after the turbo step; verify the workflow file runs the same commands as the local run, and CI passes on push
+- [x] 8.3 Add the Playwright browser install and `test:e2e` steps to `.github/workflows/ci.yml` after the turbo step; verify the workflow file runs the same commands as the local run, and CI passes on push
 
 ## 9. Wrap-up
 
