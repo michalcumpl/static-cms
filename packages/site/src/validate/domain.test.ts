@@ -7,11 +7,11 @@ function errors(input: unknown) {
   return validateSite(input).problems.filter((p) => p.severity === "error");
 }
 
-function addPage(nodes: LooseNodes, id: string, slug: string) {
+function addPage(nodes: LooseNodes, id: string, slug: string, title = id) {
   nodes[id] = {
     id,
     type: "page",
-    title: id,
+    title,
     slug,
     seo_description: "",
     blocks: { nodes: [], marks: [], annotations: [] },
@@ -38,7 +38,7 @@ describe("validateSite: site rules", () => {
     const { doc, nodes } = editableDemoSite();
     nodes.site_1.lang = "czech language";
     nodes.site_1.base_url = "ftp://pekarna.example";
-    nodes.site_1.schema_version = 2;
+    nodes.site_1.schema_version = 1;
     expect(errors(doc).map((p) => p.code)).toEqual([
       "unsupported-version",
       "invalid-language",
@@ -46,22 +46,64 @@ describe("validateSite: site rules", () => {
     ]);
   });
 
-  it("requires the home page slug to be empty", () => {
+  it("treats the page named by home_page_id as home, wherever it is listed", () => {
     const { doc, nodes } = editableDemoSite();
-    nodes.page_home.slug = "uvod";
+    nodes.site_1.pages.nodes = ["page_contact", "page_home"];
+    expect(validateSite(doc).problems).toEqual([]);
+  });
+
+  it("reports a home page ID that is not a page of the site", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.site_1.home_page_id = "page_gone";
     expect(errors(doc)).toEqual([
-      expect.objectContaining({ code: "home-slug", nodeId: "page_home" }),
+      expect.objectContaining({
+        code: "missing-home",
+        category: "site",
+        nodeId: "site_1",
+        property: "home_page_id",
+      }),
     ]);
   });
 
-  it("reports duplicate slugs naming both pages", () => {
+  it("requires the home page to have a slug too", () => {
     const { doc, nodes } = editableDemoSite();
-    addPage(nodes, "page_contact_2", "kontakt");
+    nodes.page_home.slug = "";
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({ code: "invalid-slug", nodeId: "page_home" }),
+    ]);
+  });
+
+  it("reports a home slug that another page also uses", () => {
+    const { doc, nodes } = editableDemoSite();
+    addPage(nodes, "page_intro", "uvod");
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({ code: "duplicate-slug", nodeId: "page_intro" }),
+    ]);
+  });
+
+  it("reports duplicate slugs naming both pages by title", () => {
+    const { doc, nodes } = editableDemoSite();
+    addPage(nodes, "page_contact_2", "kontakt", "Contact us");
     const [problem, ...rest] = errors(doc);
     expect(rest).toEqual([]);
     expect(problem).toMatchObject({ code: "duplicate-slug", nodeId: "page_contact_2" });
-    expect(problem?.message).toContain("page_contact");
-    expect(problem?.message).toContain("page_contact_2");
+    expect(problem?.message).toBe('"Kontakt" and "Contact us" both use the slug "kontakt".');
+  });
+
+  it("warns about a page that is in the menu twice", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.nav_contact_2 = { ...nodes.nav_contact, id: "nav_contact_2" };
+    nodes.nav_1.items.nodes.push("nav_contact_2");
+    const result = validateSite(doc);
+    expect(result.valid).toBe(true);
+    expect(result.problems).toEqual([
+      expect.objectContaining({
+        severity: "warning",
+        code: "duplicate-menu-item",
+        nodeId: "nav_contact_2",
+      }),
+    ]);
+    expect(result.problems[0]?.message).toBe('"Kontakt" is in the menu more than once.');
   });
 
   it("reports non-normalized slugs with a suggestion", () => {
@@ -72,7 +114,7 @@ describe("validateSite: site rules", () => {
     expect(problem?.message).toContain('"kontakt-us"');
   });
 
-  it("requires a slug for pages other than home", () => {
+  it("requires a slug for every page", () => {
     const { doc, nodes } = editableDemoSite();
     addPage(nodes, "page_empty", "");
     expect(errors(doc)).toEqual([expect.objectContaining({ code: "invalid-slug" })]);
@@ -82,10 +124,22 @@ describe("validateSite: site rules", () => {
     const { doc, nodes } = editableDemoSite();
     nodes.nav_contact.page_id = "page_gone";
     nodes.internal_contact.page_id = "hero_1";
-    expect(errors(doc).map((p) => [p.code, p.nodeId])).toEqual([
-      ["missing-page", "nav_contact"],
-      ["missing-page", "internal_contact"],
+    const problems = errors(doc);
+    expect(problems.map((p) => [p.code, p.category, p.nodeId])).toEqual([
+      ["missing-page", "site", "nav_contact"],
+      ["missing-page", "site", "internal_contact"],
     ]);
+    expect(problems[0]?.message).toBe("This link points to a page that no longer exists.");
+  });
+
+  it("names pages by title, never by node ID, in page messages", () => {
+    const { doc, nodes } = editableDemoSite();
+    addPage(nodes, "page_empty", "", "Ceník");
+    nodes.page_home.blocks.nodes = ["rich_text_about", "hero_1", "services_1"];
+    const messages = errors(doc).map((p) => p.message);
+    expect(messages).toContain('"Ceník" needs a slug (its address).');
+    expect(messages).toContain('The hero must be the first block of "Úvod".');
+    expect(messages.join(" ")).not.toMatch(/page_/);
   });
 
   it("requires link labels", () => {

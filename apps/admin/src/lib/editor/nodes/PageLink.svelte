@@ -8,7 +8,7 @@ const svedit = getContext<SveditContext>("svedit");
 const editor = getEditor();
 const link = $derived(svedit.session.get(path));
 const isAction = $derived(path.at(-2) === "action");
-const isCurrent = $derived(!isAction && link.page_id === editor.pages[editor.pageIndex]?.id);
+const isCurrent = $derived(!isAction && link.page_id === editor.currentPageId);
 </script>
 
 <!-- A span, not <a>: links must not navigate while editing. -->

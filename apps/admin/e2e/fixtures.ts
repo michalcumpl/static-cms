@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import {
   type BrowserContext,
   test as base,
@@ -5,9 +7,11 @@ import {
   type Locator,
   type Page,
 } from "@playwright/test";
+import { eq } from "drizzle-orm";
 import { projectPaths } from "../src/lib/project-paths";
 import { createSession } from "../src/lib/server/auth";
 import { type Db, openDatabase } from "../src/lib/server/db/index";
+import { siteDocuments, versions } from "../src/lib/server/db/schema";
 import { demoSite } from "../src/lib/server/demo";
 import { readSite, saveSite } from "../src/lib/server/site-documents";
 import { readState } from "./state";
@@ -28,6 +32,26 @@ function resetSite(): void {
   const current = readSite(testDb(), projectId);
   const result = saveSite(testDb(), projectId, owner.id, demoSite(), current?.version ?? "");
   if (!result.ok) throw new Error("could not reset the project");
+}
+
+/**
+ * Stores the demo site in the version-1 format as the project's current document, as an
+ * installation from before page management would have it (bypassing the save rules).
+ */
+export function storeVersion1Site(): void {
+  const require = createRequire(import.meta.url);
+  const file = require.resolve("@static-cms/site/fixtures/demo-site-v1.json");
+  const document = JSON.parse(readFileSync(file, "utf8"));
+  const current = testDb()
+    .select({ versionId: siteDocuments.currentVersionId })
+    .from(siteDocuments)
+    .where(eq(siteDocuments.projectId, state().projectId))
+    .get();
+  testDb()
+    .update(versions)
+    .set({ document })
+    .where(eq(versions.id, current?.versionId ?? ""))
+    .run();
 }
 
 /** Signs a browser context in as `user` by giving it a fresh session cookie. */

@@ -67,8 +67,7 @@ Built `/edit/` in the admin app, where the owner edits the site on the page itse
 ### 3. A real website
 
 Carried over from Milestone 2: page management, navigation targets, theme editing and image
-upload are all out of M2 on purpose. Suggested order: storage first, then pages and navigation,
-then the rest.
+upload are all out of M2 on purpose. Storage and pages are done; the rest follows.
 
 - **Storage and accounts: done.**
   - Change: [`workspace-storage`](../openspec/changes/archive/2026-09-29-workspace-storage/).
@@ -80,23 +79,31 @@ then the rest.
     → versions*, so Milestone 5 can add languages without a migration.
   - **Sign-in:** magic links over plain SMTP; invite-only, with an admin command for the first
     user. Media per project on disk; backups with Litestream (documented).
-- **Pages** are managed in a sidebar panel; every action is a Svedit transaction, so undo covers it.
-  - Add a page: the title becomes the slug via `slugify`, and the slug stays editable.
-  - Rename a page, edit its slug and SEO text, duplicate it, delete it.
-  - Reorder pages, with an explicit **"Set as home"** action (instead of "the first page is home").
-  - Deleting a page removes its menu item; text links and calls to action pointing to it are
-    reported as `missing-page` problems.
-  - The site stays flat: no subpages.
-- **Navigation** stays a curated `nav` node.
-  - New pages join the menu automatically, with a "show in menu" toggle.
-  - The menu can be reordered and can hold external links.
-  - No dropdown menus yet.
+- **Pages and navigation: done.**
+  - Change: [`page-management`](../openspec/changes/archive/2026-09-29-page-management/).
+    Specs: [`site-document`](../openspec/specs/site-document/spec.md),
+    [`site-rendering`](../openspec/specs/site-rendering/spec.md),
+    [`site-export`](../openspec/specs/site-export/spec.md),
+    [`site-storage`](../openspec/specs/site-storage/spec.md),
+    [`site-editing`](../openspec/specs/site-editing/spec.md).
+  - **Explicit home page:** the site names its home page (`home_page_id`); every page, home
+    included, keeps a unique slug, so "Set as home" changes nothing else. Document format 2;
+    stored format-1 documents are upgraded when read and saved as format 2 on the next save.
+  - **Editor routes by page ID** (`/p/<project>/edit/<page-id>/`), so renaming, slug edits,
+    reordering and undo keep the editor on the right page.
+  - **The sidebar is the menu:** "Menu" (menu order, pages and external links) and "Not in
+    menu". Add, duplicate, delete, set as home, show in menu, reorder, external links; every
+    action is one undoable step. A page settings panel edits title, slug and SEO text.
+  - **Slug and menu label follow the title** while they still match it.
+  - **Problem messages name pages by title.**
+  - Known limits: no redirects from old slugs until Milestone 4; no dropdown menus or subpages;
+    links to a deleted page stay in place and are listed as problems.
 - Media library and image upload.
 - SEO settings, favicon, site metadata.
 - More blocks: opening hours, contact, gallery, call to action, testimonials, maybe a map (mind
   GDPR with third-party embeds).
 - From the M2 walk-through:
-  - Problem messages readable for owners (no internal IDs).
+  - Problem messages readable for owners (no internal IDs); page problems are done.
   - Reconsider Cmd+A → Backspace emptying a whole section.
 
 Still open: open sign-up (a switch, when billing exists), Google sign-in, and a version history

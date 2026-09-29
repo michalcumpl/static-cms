@@ -23,7 +23,7 @@ export interface RenderedPage {
 }
 
 export interface RenderedSite {
-  /** In site order; the first page is the home page. */
+  /** In site order. The home page is the one at `index.html`, wherever it is listed. */
   pages: RenderedPage[];
   /** Contents of `assets/style.css`. */
   css: string;

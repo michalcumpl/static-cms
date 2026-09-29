@@ -13,7 +13,7 @@ export function text(content = ""): TextValue {
   return { content, marks: [], annotations: [] };
 }
 
-function list(nodes: string[] = []) {
+export function list(nodes: string[] = []) {
   return { nodes, marks: [], annotations: [] };
 }
 
@@ -67,14 +67,19 @@ export function insertServiceItem(tr: Tr): boolean {
   return true;
 }
 
-export function insertRichText(tr: Tr): boolean {
+/** Creates a text block with a placeholder subheading and an empty paragraph; returns its ID. */
+export function createRichText(tr: Tr): string {
   const heading = tr.generate_id();
   const paragraph = tr.generate_id();
   const block = tr.generate_id();
   tr.create({ id: heading, type: "subheading", content: text("Nadpis"), level: 2 });
   tr.create({ id: paragraph, type: "paragraph", content: text() });
   tr.create({ id: block, type: "rich_text", body: list([heading, paragraph]) });
-  insertAndFocus(tr, block, "body", 0, "content");
+  return block;
+}
+
+export function insertRichText(tr: Tr): boolean {
+  insertAndFocus(tr, createRichText(tr), "body", 0, "content");
   return true;
 }
 

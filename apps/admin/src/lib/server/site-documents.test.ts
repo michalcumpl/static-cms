@@ -1,11 +1,14 @@
+import { readFileSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { eq } from "drizzle-orm";
 import { validate_document } from "svedit";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { editorSchema } from "../editor/schema";
 import { type Db, openDatabase } from "./db/index";
-import { users, workspaces } from "./db/schema";
+import { siteDocuments, users, versions, workspaces } from "./db/schema";
 import { demoSite, starterSite } from "./demo";
 import { newId } from "./ids";
 import { createProject, readSite, saveSite, versionCount } from "./site-documents";
@@ -20,6 +23,25 @@ function setup(db: Db) {
   db.insert(users).values({ id: userId, email: "jana@example.cz", createdAt: new Date() }).run();
   const projectId = createProject(db, workspaceId, "Pekárna U Lípy", demoSite());
   return { workspaceId, userId, projectId };
+}
+
+const require = createRequire(import.meta.url);
+
+/** The demo site in the version-1 format (home first, with an empty slug). */
+function demoSiteV1(): Doc {
+  const file = require.resolve("@static-cms/site/fixtures/demo-site-v1.json");
+  return JSON.parse(readFileSync(file, "utf8"));
+}
+
+/** The document as stored, without the upgrade on read. */
+function storedDoc(db: Db, projectId: string): Doc {
+  const row = db
+    .select({ document: versions.document })
+    .from(siteDocuments)
+    .innerJoin(versions, eq(versions.id, siteDocuments.currentVersionId))
+    .where(eq(siteDocuments.projectId, projectId))
+    .get();
+  return row?.document as Doc;
 }
 
 function currentDoc(db: Db, projectId: string): Doc {
@@ -180,5 +202,40 @@ describe("project documents", () => {
     expect(site.problems).toEqual([]);
     expect((site.document as Doc).nodes.site_1.name).toBe("Kadeřnictví Eva");
     expect(() => validate_document(starterSite("X") as never, editorSchema)).not.toThrow();
+  });
+});
+
+describe("upgrading stored documents", () => {
+  function setupV1(db: Db) {
+    const { workspaceId, userId } = setup(db);
+    const projectId = createProject(db, workspaceId, "Stará pekárna", demoSiteV1());
+    return { userId, projectId };
+  }
+
+  it("returns a version-1 document upgraded, with the stored version, and leaves the row alone", () => {
+    const db = openDatabase(":memory:");
+    const { projectId } = setupV1(db);
+    const site = readSite(db, projectId);
+    if (!site) throw new Error("project has no document");
+    const doc = site.document as Doc;
+    expect(doc.nodes.site_1).toMatchObject({ schema_version: 2, home_page_id: "page_home" });
+    expect(doc.nodes.page_home.slug).toBe("uvod");
+    expect(site.problems).toEqual([]);
+    expect(storedDoc(db, projectId)).toEqual(demoSiteV1());
+    expect(readSite(db, projectId)?.version).toBe(site.version);
+  });
+
+  it("stores the upgrade with the next save based on the returned version", () => {
+    const db = openDatabase(":memory:");
+    const { userId, projectId } = setupV1(db);
+    const site = readSite(db, projectId);
+    if (!site) throw new Error("project has no document");
+    const doc = structuredClone(site.document) as Doc;
+    doc.nodes.hero_1.heading.content = "Nový chléb";
+    const result = saveSite(db, projectId, userId, doc, site.version);
+    expect(result.ok).toBe(true);
+    const stored = storedDoc(db, projectId);
+    expect(stored.nodes.site_1.schema_version).toBe(2);
+    expect(stored.nodes.hero_1.heading.content).toBe("Nový chléb");
   });
 });

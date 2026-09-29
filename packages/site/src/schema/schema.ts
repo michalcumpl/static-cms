@@ -36,13 +36,14 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 1 },
+      schema_version: { type: "integer", min: 1, default: 2 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
       theme: { type: "node", node_types: ["theme"] },
       nav: { type: "node", node_types: ["nav"] },
       pages: { type: "node_array", node_types: ["page"], default_node_type: "page" },
+      home_page_id: { type: "string" },
     },
   },
   theme: {

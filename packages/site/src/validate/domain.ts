@@ -10,6 +10,13 @@ const FONT_STACK = /^[A-Za-z0-9 ,'"-]+$/;
 const CSS_LENGTH = /^(0|\d+(\.\d+)?(px|rem|em|%|ch|vw))$/;
 const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const MIN_TEXT_CONTRAST = 4.5;
+export const SCHEMA_VERSION = 2;
+
+/** How messages name a page: by its title, since owners don't know node IDs. */
+export function pageLabel(page: { title: string }): string {
+  const title = page.title.trim();
+  return title === "" ? "An untitled page" : `"${title}"`;
+}
 
 /** Site rules on top of the structural checks. Only reads nodes that are well-formed. */
 export function checkSiteRules(docId: string, check: GenericCheck, problems: Problems): void {
@@ -35,23 +42,33 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
   const pageIds = new Set<string>();
   if (site) {
     checkSiteNode(site, problems);
-    const seen = new Map<string, string>();
-    site.pages.nodes.forEach((pageId, index) => {
+    const seen = new Map<string, NodeOfType<"page">>();
+    for (const pageId of site.pages.nodes) {
+      const page = get(pageId, "page");
       if (pageIds.has(pageId)) {
         problems.error(
           "duplicate-reference",
           docId,
-          `Page ${pageId} is listed more than once.`,
+          `${page ? pageLabel(page) : "A page"} is listed more than once.`,
           "pages",
         );
-        return;
+        continue;
       }
       pageIds.add(pageId);
-      const page = get(pageId, "page");
-      if (!page) return;
-      checkPageSlug(page, index === 0, seen, problems);
+      if (!page) continue;
+      checkPageSlug(page, seen, problems);
       checkPageBlocks(page, get, problems);
-    });
+    }
+    if (site.pages.nodes.length > 0 && !pageIds.has(site.home_page_id)) {
+      problems.error(
+        "missing-home",
+        site.id,
+        "The site has no home page; set one of its pages as home.",
+        "home_page_id",
+      );
+    }
+    const nav = get(site.nav, "nav");
+    if (nav) checkMenu(nav, get, problems);
     const theme = get(site.theme, "theme");
     if (theme) checkTheme(theme, problems);
   }
@@ -63,7 +80,7 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
       problems.error(
         "missing-page",
         link.id,
-        `${link.id} links to "${link.page_id}", which is not a page of this site.`,
+        "This link points to a page that no longer exists.",
         "page_id",
       );
     }
@@ -78,11 +95,11 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
 }
 
 function checkSiteNode(site: NodeOfType<"site">, problems: Problems): void {
-  if (site.schema_version !== 1) {
+  if (site.schema_version !== SCHEMA_VERSION) {
     problems.error(
       "unsupported-version",
       site.id,
-      `Schema version ${site.schema_version} is not supported; expected 1.`,
+      `Schema version ${site.schema_version} is not supported; expected ${SCHEMA_VERSION}.`,
       "schema_version",
     );
   }
@@ -129,25 +146,14 @@ function isValidBaseUrl(value: string): boolean {
   );
 }
 
+/** Every page, the home page included, needs a normalized slug that no other page uses. */
 function checkPageSlug(
   page: NodeOfType<"page">,
-  isHome: boolean,
-  seen: Map<string, string>,
+  seen: Map<string, NodeOfType<"page">>,
   problems: Problems,
 ): void {
   if (page.title.trim() === "") {
-    problems.error("missing-title", page.id, `Page ${page.id} needs a title.`, "title");
-  }
-  if (isHome) {
-    if (page.slug !== "") {
-      problems.error(
-        "home-slug",
-        page.id,
-        `The home page is served at the site root, so its slug must be empty (is "${page.slug}").`,
-        "slug",
-      );
-    }
-    return;
+    problems.error("missing-title", page.id, "This page needs a title.", "title");
   }
   const normalized = slugify(page.slug);
   if (normalized === "" || normalized !== page.slug) {
@@ -155,7 +161,7 @@ function checkPageSlug(
       "invalid-slug",
       page.id,
       normalized === ""
-        ? `Page ${page.id} needs a slug.`
+        ? `${pageLabel(page)} needs a slug (its address).`
         : `Slug "${page.slug}" must be lowercase letters, digits and dashes; try "${normalized}".`,
       "slug",
     );
@@ -166,11 +172,33 @@ function checkPageSlug(
     problems.error(
       "duplicate-slug",
       page.id,
-      `Pages ${other} and ${page.id} both use the slug "${page.slug}".`,
+      `${pageLabel(other)} and ${pageLabel(page)} both use the slug "${page.slug}".`,
       "slug",
     );
   } else {
-    seen.set(page.slug, page.id);
+    seen.set(page.slug, page);
+  }
+}
+
+/** A page should be in the menu at most once. */
+function checkMenu(
+  nav: NodeOfType<"nav">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const listed = new Set<string>();
+  for (const itemId of nav.items.nodes) {
+    const link = get(itemId, "page_link");
+    if (!link) continue;
+    if (listed.has(link.page_id)) {
+      const page = get(link.page_id, "page");
+      problems.warning(
+        "duplicate-menu-item",
+        link.id,
+        `${page ? pageLabel(page) : "This page"} is in the menu more than once.`,
+      );
+    }
+    listed.add(link.page_id);
   }
 }
 
@@ -187,7 +215,7 @@ function checkPageBlocks(
         problems.error(
           "hero-not-first",
           hero.id,
-          `The hero ${hero.id} must be the first block of page ${page.id}.`,
+          `The hero must be the first block of ${pageLabel(page)}.`,
         );
       }
       if (isBlank(hero.heading)) {
@@ -214,7 +242,7 @@ function checkPageBlocks(
         problems.error(
           "heading-skip",
           sub.id,
-          `Level 3 subheading ${sub.id} comes before any level 2 heading on page ${page.id}.`,
+          `A level 3 subheading comes before any level 2 heading on ${pageLabel(page)}.`,
           "level",
         );
       }

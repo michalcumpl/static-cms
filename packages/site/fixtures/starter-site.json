@@ -88,7 +88,7 @@
       "id": "page_home",
       "type": "page",
       "title": "Úvod",
-      "slug": "",
+      "slug": "uvod",
       "seo_description": "",
       "blocks": {
         "nodes": ["hero_1", "rich_text_about"],
@@ -99,7 +99,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 1,
+      "schema_version": 2,
       "name": "Můj web",
       "lang": "cs",
       "base_url": "",
@@ -109,7 +109,8 @@
         "nodes": ["page_home"],
         "marks": [],
         "annotations": []
-      }
+      },
+      "home_page_id": "page_home"
     }
   }
 }

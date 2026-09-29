@@ -23,3 +23,10 @@ export function editableDemoSite(): { doc: SiteDocument; nodes: LooseNodes } {
   const doc = loadDemoSite();
   return { doc, nodes: doc.nodes as LooseNodes };
 }
+
+/** The demo site with its home page listed second, to check nothing relies on list position. */
+export function homeListedSecondSite(): SiteDocument {
+  const { doc, nodes } = editableDemoSite();
+  nodes.site_1.pages.nodes = ["page_contact", "page_home"];
+  return doc;
+}

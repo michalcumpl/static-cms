@@ -10,8 +10,8 @@ type Doc = {
 export interface NodeLocation {
   /** Path from the site root to the node, e.g. `[site_1, "pages", 0, "blocks", 2]`. */
   path: DocumentPath;
-  /** The page the node is on, when it is inside one. */
-  pageIndex?: number;
+  /** ID of the page the node is on, when it is inside one (or is one). */
+  pageId?: string;
   /** Type of the node whose property holds this node (undefined for the root). */
   parentType?: string;
 }
@@ -51,10 +51,11 @@ export function locateNode(doc: Doc, nodeId: string): NodeLocation | undefined {
   };
   const path = visit([doc.document_id], doc.document_id, new Set());
   if (!path) return undefined;
-  const pageIndex = path[1] === "pages" && typeof path[2] === "number" ? path[2] : undefined;
+  const pages = (doc.nodes[doc.document_id]?.pages as { nodes?: string[] } | undefined)?.nodes;
+  const pageId = path[1] === "pages" && typeof path[2] === "number" ? pages?.[path[2]] : undefined;
   return {
     path,
-    ...(pageIndex === undefined ? {} : { pageIndex }),
+    ...(pageId === undefined ? {} : { pageId }),
     ...(parentType === undefined ? {} : { parentType }),
   };
 }
@@ -82,4 +83,33 @@ export function selectionFor(
     return { type: "node", path: list, anchor_offset: index, focus_offset: index + 1 };
   }
   return undefined;
+}
+
+/** A field of the page settings panel. */
+export type PageField = "title" | "slug" | "seo_description" | "home";
+
+const PAGE_FIELDS: readonly string[] = ["title", "slug", "seo_description"];
+
+/**
+ * The page settings field a problem is about: a page's title, slug or SEO description, or the
+ * site's home page (shown on the current page, so `pageId` is undefined).
+ */
+export function pageSettingsTarget(
+  doc: Doc,
+  nodeId: string,
+  property: string | undefined,
+): { pageId: string | undefined; field: PageField } | undefined {
+  const node = doc.nodes[nodeId];
+  if (node?.type === "page" && property !== undefined && PAGE_FIELDS.includes(property)) {
+    return { pageId: nodeId, field: property as PageField };
+  }
+  if (node?.type === "site" && property === "home_page_id") {
+    return { pageId: undefined, field: "home" };
+  }
+  return undefined;
+}
+
+/** The element ID of a page settings field, for focusing it from elsewhere. */
+export function pageFieldElementId(field: PageField): string {
+  return `page-settings-${field}`;
 }

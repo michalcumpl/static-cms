@@ -30,8 +30,9 @@ export interface SiteNode {
   base_url: string;
   theme: string;
   nav: string;
-  /** The first page is the home page. */
   pages: NodeArrayValue;
+  /** ID of the home page, served at the site root. Its position in `pages` doesn't matter. */
+  home_page_id: string;
 }
 
 export interface ThemeNode {
@@ -72,7 +73,7 @@ export interface PageNode {
   id: string;
   type: "page";
   title: string;
-  /** Empty for the home page. */
+  /** Every page has one; the home page's is used only if it stops being home. */
   slug: string;
   seo_description: string;
   blocks: NodeArrayValue;

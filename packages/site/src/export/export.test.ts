@@ -1,6 +1,11 @@
 import { unzipSync } from "fflate";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { editableDemoSite, loadDemoMedia, loadDemoSite } from "../test/fixtures.js";
+import {
+  editableDemoSite,
+  homeListedSecondSite,
+  loadDemoMedia,
+  loadDemoSite,
+} from "../test/fixtures.js";
 import { exportSite, type SiteFiles, zipFiles } from "./index.js";
 
 const decode = (bytes: Uint8Array | undefined) => new TextDecoder().decode(bytes);
@@ -34,6 +39,19 @@ describe("exportSite", () => {
     expect(decode(files.get("index.html"))).toContain(
       '<link rel="stylesheet" href="/web/assets/style.css">',
     );
+  });
+
+  it("writes the home page to index.html when it is listed second", () => {
+    const { files } = exported(homeListedSecondSite());
+    expect([...files.keys()]).toEqual([
+      "assets/images/hero.png",
+      "assets/style.css",
+      "index.html",
+      "kontakt/index.html",
+      "sitemap.xml",
+    ]);
+    expect(decode(files.get("index.html"))).toContain("<title>Pekárna U Lípy</title>");
+    expect(files.has("uvod/index.html")).toBe(false);
   });
 
   it("fails naming a referenced image whose bytes are missing", () => {
@@ -72,6 +90,13 @@ describe("exportSite", () => {
 </urlset>
 `,
     );
+  });
+
+  it("lists the home page at the base URL only, never at its slug", () => {
+    const sitemap = decode(exported(homeListedSecondSite()).files.get("sitemap.xml"));
+    expect(sitemap).toContain("<loc>https://pekarna-ulipy.example/</loc>");
+    expect(sitemap).toContain("<loc>https://pekarna-ulipy.example/kontakt/</loc>");
+    expect(sitemap).not.toContain("/uvod/");
   });
 
   it("omits the sitemap and warns when there is no base URL", () => {

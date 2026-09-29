@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { type Problem, validateSite } from "@static-cms/site";
+import { migrateSite, type Problem, validateSite } from "@static-cms/site";
 import { and, eq } from "drizzle-orm";
 import type { Db } from "./db/index";
 import { projects, siteDocuments, versions } from "./db/schema";
@@ -21,7 +21,11 @@ export type SaveResult =
   | { ok: false; reason: "conflict" }
   | { ok: false; reason: "invalid"; problems: Problem[] };
 
-/** A project's current document, its version and its problems, or undefined if there is none. */
+/**
+ * A project's current document, its version and its problems, or undefined if there is none.
+ * Documents stored in an older format are upgraded here, on every read; the upgrade is stored
+ * by the next save, which the returned (stored) version allows.
+ */
 export function readSite(db: Db, projectId: string): SiteSnapshot | undefined {
   const row = db
     .select({ version: siteDocuments.version, document: versions.document })
@@ -30,11 +34,8 @@ export function readSite(db: Db, projectId: string): SiteSnapshot | undefined {
     .where(and(eq(siteDocuments.projectId, projectId), eq(siteDocuments.lang, DEFAULT_LANG)))
     .get();
   if (!row) return undefined;
-  return {
-    document: row.document,
-    version: row.version,
-    problems: validateSite(row.document).problems,
-  };
+  const document = migrateSite(row.document);
+  return { document, version: row.version, problems: validateSite(document).problems };
 }
 
 /**

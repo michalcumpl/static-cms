@@ -2,7 +2,7 @@
 import { type Problem, validateSite } from "@static-cms/site";
 import { tick, untrack } from "svelte";
 import { goto } from "$app/navigation";
-import { locateNode, selectionFor } from "./locate";
+import { locateNode, pageFieldElementId, pageSettingsTarget, selectionFor } from "./locate";
 import type { EditorState } from "./state.svelte";
 
 let { editor, focusCanvas }: { editor: EditorState; focusCanvas: () => void } = $props();
@@ -22,25 +22,37 @@ $effect(() => {
 
 const errors = $derived(problems.filter((p) => p.severity === "error").length);
 
-/** Clickable when it leads somewhere: a node the editor can select, or at least its page. */
+/**
+ * Clickable when it leads somewhere: a page settings field, a node the editor can select,
+ * or at least its page.
+ */
 function canShow(problem: Problem): boolean {
   const doc = editor.session.doc as unknown as Doc;
+  if (pageSettingsTarget(doc, problem.nodeId, problem.property)) return true;
   const location = locateNode(doc, problem.nodeId);
   if (!location) return false;
-  return (
-    location.pageIndex !== undefined || selectionFor(doc, problem.nodeId, location) !== undefined
-  );
+  return location.pageId !== undefined || selectionFor(doc, problem.nodeId, location) !== undefined;
+}
+
+async function showPage(pageId: string | undefined) {
+  const page = editor.pages.find((p) => p.id === pageId);
+  if (page && page.id !== editor.currentPageId) {
+    await goto(page.href);
+    await tick();
+  }
 }
 
 async function show(problem: Problem) {
   const doc = editor.session.doc as unknown as Doc;
+  const target = pageSettingsTarget(doc, problem.nodeId, problem.property);
+  if (target) {
+    await showPage(target.pageId);
+    document.getElementById(pageFieldElementId(target.field))?.focus();
+    return;
+  }
   const location = locateNode(doc, problem.nodeId);
   if (!location) return;
-  const page = location.pageIndex === undefined ? undefined : editor.pages[location.pageIndex];
-  if (page && location.pageIndex !== editor.pageIndex) {
-    await goto(page.href);
-    await tick();
-  }
+  await showPage(location.pageId);
   const selection = selectionFor(doc, problem.nodeId, location);
   if (!selection) return;
   editor.session.selection = selection;

@@ -21,12 +21,13 @@ export type ProblemCode =
   | "invalid-language"
   | "invalid-base-url"
   | "no-pages"
+  | "missing-home"
   | "duplicate-reference"
   | "missing-title"
-  | "home-slug"
   | "invalid-slug"
   | "duplicate-slug"
   | "missing-page"
+  | "duplicate-menu-item"
   | "hero-not-first"
   | "too-many-items"
   | "empty-heading"
@@ -66,12 +67,13 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "invalid-language": "site",
   "invalid-base-url": "site",
   "no-pages": "site",
+  "missing-home": "site",
   "duplicate-reference": "site",
   "missing-title": "site",
-  "home-slug": "site",
   "invalid-slug": "site",
   "duplicate-slug": "site",
   "missing-page": "site",
+  "duplicate-menu-item": "site",
   "hero-not-first": "site",
   "too-many-items": "site",
   "empty-heading": "site",

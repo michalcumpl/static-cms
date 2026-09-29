@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { demoSite } from "$lib/server/demo";
-import { locateNode, selectionFor } from "./locate";
+import { locateNode, pageSettingsTarget, selectionFor } from "./locate";
 
 type Doc = Parameters<typeof locateNode>[0];
 const doc = () => demoSite() as Doc;
@@ -9,12 +9,12 @@ describe("locateNode", () => {
   it("finds blocks and nested nodes with their page", () => {
     expect(locateNode(doc(), "services_1")).toEqual({
       path: ["site_1", "pages", 0, "blocks", 1],
-      pageIndex: 0,
+      pageId: "page_home",
       parentType: "page",
     });
     expect(locateNode(doc(), "sub_hours")).toEqual({
       path: ["site_1", "pages", 1, "blocks", 0, "body", 4],
-      pageIndex: 1,
+      pageId: "page_contact",
       parentType: "rich_text",
     });
   });
@@ -67,5 +67,34 @@ describe("selectionFor", () => {
 
   it("doesn't node-select pages", () => {
     expect(select("page_contact")).toBeUndefined();
+  });
+});
+
+describe("pageSettingsTarget", () => {
+  it("leads a page's title, slug and SEO problems to that page's field", () => {
+    expect(pageSettingsTarget(doc(), "page_contact", "slug")).toEqual({
+      pageId: "page_contact",
+      field: "slug",
+    });
+    expect(pageSettingsTarget(doc(), "page_home", "title")).toEqual({
+      pageId: "page_home",
+      field: "title",
+    });
+    expect(pageSettingsTarget(doc(), "page_home", "seo_description")?.field).toBe(
+      "seo_description",
+    );
+  });
+
+  it("leads a home page problem to the home setting of the current page", () => {
+    expect(pageSettingsTarget(doc(), "site_1", "home_page_id")).toEqual({
+      pageId: undefined,
+      field: "home",
+    });
+  });
+
+  it("is undefined for problems about other nodes or properties", () => {
+    expect(pageSettingsTarget(doc(), "hero_1", "heading")).toBeUndefined();
+    expect(pageSettingsTarget(doc(), "page_home", "blocks")).toBeUndefined();
+    expect(pageSettingsTarget(doc(), "site_1", "name")).toBeUndefined();
   });
 });

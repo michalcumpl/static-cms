@@ -16,7 +16,7 @@ let selection: Selection | null = null;
 export function open(): void {
   selection = editor.session.selection;
   kind = "page";
-  pageId = editor.pages[0]?.id ?? "";
+  pageId = editor.homeId;
   address = "";
   error = "";
   dialog?.showModal();

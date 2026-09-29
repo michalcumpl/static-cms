@@ -27,15 +27,20 @@ export class RenderContext {
   ) {
     this.nodes = doc.nodes;
     this.site = this.node(doc.document_id, "site");
-    this.site.pages.nodes.forEach((pageId, index) => {
+    for (const pageId of this.site.pages.nodes) {
       const { slug } = this.node(pageId, "page");
       this.routes.set(
         pageId,
-        index === 0
+        pageId === this.homeId
           ? { path: "index.html", route: "" }
           : { path: `${slug}/index.html`, route: `${slug}/` },
       );
-    });
+    }
+  }
+
+  /** The home page, served at the base path; its own slug is never used while it is home. */
+  get homeId(): string {
+    return this.site.home_page_id;
   }
 
   node<T extends NodeType>(id: string, type: T): NodeOfType<T> {

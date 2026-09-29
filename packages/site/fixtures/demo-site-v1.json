@@ -264,7 +264,7 @@
       "id": "page_home",
       "type": "page",
       "title": "Úvod",
-      "slug": "uvod",
+      "slug": "",
       "seo_description": "Rodinná pekárna U Lípy – kváskový chléb, rohlíky a dorty na objednávku.",
       "blocks": {
         "nodes": ["hero_1", "services_1", "rich_text_about"],
@@ -409,7 +409,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 2,
+      "schema_version": 1,
       "name": "Pekárna U Lípy",
       "lang": "cs",
       "base_url": "https://pekarna-ulipy.example",
@@ -419,8 +419,7 @@
         "nodes": ["page_home", "page_contact"],
         "marks": [],
         "annotations": []
-      },
-      "home_page_id": "page_home"
+      }
     }
   }
 }

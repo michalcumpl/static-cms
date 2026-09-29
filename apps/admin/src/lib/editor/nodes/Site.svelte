@@ -17,7 +17,9 @@ const site = $derived(svedit.session.get(path));
       <Child path={[...path, "nav"]} />
     </div>
   </header>
-  <Child path={[...path, "pages", editor.pageIndex]} />
+  {#if editor.pageIndex >= 0}
+    <Child path={[...path, "pages", editor.pageIndex]} />
+  {/if}
   <footer class="site-footer">
     <div class="container" contenteditable="false">
       <p>© {site.name}</p>

@@ -1,10 +1,12 @@
 <script lang="ts">
 import { Command, define_keymap, KeyMapper, Svedit } from "svedit";
 import { setContext, untrack } from "svelte";
-import { beforeNavigate } from "$app/navigation";
+import { beforeNavigate, goto } from "$app/navigation";
 import { canvasCss } from "$lib/editor/canvas-css";
 import ImagePanel from "$lib/editor/ImagePanel.svelte";
 import LinkDialog from "$lib/editor/LinkDialog.svelte";
+import PageSettings from "$lib/editor/PageSettings.svelte";
+import PagesSidebar from "$lib/editor/PagesSidebar.svelte";
 import ProblemsPanel from "$lib/editor/ProblemsPanel.svelte";
 import { EditorState, setEditor } from "$lib/editor/state.svelte";
 import {
@@ -25,6 +27,7 @@ const editor = setEditor(
     untrack(() => data.site),
     projectPaths(untrack(() => data.project.id)),
   ),
+  untrack(() => data.project.id),
 );
 const session = editor.session;
 
@@ -36,7 +39,37 @@ class SaveCommand extends Command {
     return editor.save();
   }
 }
-keyMapper.push_scope(define_keymap({ "meta+s,ctrl+s": [new SaveCommand({} as never)] }));
+/**
+ * Undo and redo from the sidebar and the page settings panel. Svedit handles them while the
+ * canvas has focus; elsewhere (dialogs included) inputs keep the browser's own undo.
+ */
+function inHistoryKeysArea(): boolean {
+  const focused = document.activeElement;
+  return Boolean(focused?.closest("[data-history-keys]") && !focused.closest("dialog"));
+}
+class PanelUndoCommand extends Command {
+  override is_enabled() {
+    return inHistoryKeysArea();
+  }
+  override execute() {
+    editor.undo();
+  }
+}
+class PanelRedoCommand extends Command {
+  override is_enabled() {
+    return inHistoryKeysArea();
+  }
+  override execute() {
+    editor.redo();
+  }
+}
+keyMapper.push_scope(
+  define_keymap({
+    "meta+s,ctrl+s": [new SaveCommand({} as never)],
+    "meta+z,ctrl+z": [new PanelUndoCommand({} as never)],
+    "meta+shift+z,ctrl+shift+z,ctrl+y": [new PanelRedoCommand({} as never)],
+  }),
+);
 
 // The theme can't change in M2, so the canvas stylesheet is built once.
 $effect(() => {
@@ -47,6 +80,13 @@ $effect(() => {
   );
   document.head.append(style);
   return () => style.remove();
+});
+
+// The current page can disappear: deleted, or its addition undone. Show home instead.
+$effect(() => {
+  if (editor.currentPage) return;
+  editor.showPage(editor.homeId);
+  goto(editor.paths.edit(), { replaceState: true });
 });
 
 beforeNavigate(({ to, cancel }) => {
@@ -68,7 +108,9 @@ const BLOCK_LABELS: Record<BlockType, string> = {
   rich_text: "Text",
   services: "Services",
 };
-const insertable = $derived(availableBlocks(session, editor.siteId, editor.pageIndex));
+const insertable = $derived(
+  editor.pageIndex < 0 ? [] : availableBlocks(session, editor.siteId, editor.pageIndex),
+);
 const canAddItem = $derived(itemInsertionPoint(session) !== undefined);
 
 function addBlock(type: BlockType) {
@@ -104,26 +146,16 @@ const statusText = $derived.by(() => {
 <svelte:window onkeydown={(event) => keyMapper.handle_keydown(event)} {onbeforeunload} />
 
 <svelte:head>
-  <title>Editing {editor.pages[editor.pageIndex]?.title ?? ""} – Static CMS</title>
+  <title>Editing {editor.currentPage?.title ?? ""} – Static CMS</title>
 </svelte:head>
 
 <div class="editor">
-  <aside class="sidebar" aria-label="Pages">
-    <a class="back" href={editor.paths.overview}>← {data.project.name}</a>
-    <h2>Pages</h2>
-    <ul>
-      {#each editor.pages as p, index (p.id)}
-        <li>
-          <a href={p.href} aria-current={index === editor.pageIndex ? "page" : undefined}>{p.title}</a>
-        </li>
-      {/each}
-    </ul>
-  </aside>
+  <PagesSidebar {editor} projectName={data.project.name} />
 
   <div class="workspace">
     <div class="toolbar" role="toolbar" aria-label="Editing">
-      <button type="button" title="Undo (Ctrl/Cmd+Z)" onclick={() => commands?.undo?.execute()} disabled={commands?.undo?.disabled ?? true}>Undo</button>
-      <button type="button" title="Redo (Ctrl/Cmd+Shift+Z)" onclick={() => commands?.redo?.execute()} disabled={commands?.redo?.disabled ?? true}>Redo</button>
+      <button type="button" title="Undo (Ctrl/Cmd+Z)" onclick={() => editor.undo()} disabled={commands?.undo?.disabled ?? true}>Undo</button>
+      <button type="button" title="Redo (Ctrl/Cmd+Shift+Z)" onclick={() => editor.redo()} disabled={commands?.redo?.disabled ?? true}>Redo</button>
       <span class="separator"></span>
       <button type="button" class="mark" aria-label="Bold" title="Bold (Ctrl/Cmd+B)" aria-pressed={commands?.bold?.active ?? false} onmousedown={(e) => e.preventDefault()} onclick={() => commands?.bold?.execute()} disabled={commands?.bold?.disabled ?? true}><strong>B</strong></button>
       <button type="button" class="mark" aria-label="Italic" title="Italic (Ctrl/Cmd+I)" aria-pressed={commands?.italic?.active ?? false} onmousedown={(e) => e.preventDefault()} onclick={() => commands?.italic?.execute()} disabled={commands?.italic?.disabled ?? true}><em>I</em></button>
@@ -159,6 +191,7 @@ const statusText = $derived.by(() => {
   </div>
 
   <aside class="panels" aria-label="Details">
+    <PageSettings {editor} />
     <ImagePanel {editor} />
     <ProblemsPanel {editor} focusCanvas={() => canvas?.focus_canvas()} />
   </aside>
@@ -175,28 +208,6 @@ const statusText = $derived.by(() => {
     grid-template-columns: 13rem 1fr 18rem;
     min-height: 100vh;
     font-family: system-ui, sans-serif;
-  }
-
-  .sidebar {
-    border-right: 1px solid #ddd;
-    padding: 1rem;
-    background: #f7f7f7;
-  }
-
-  .sidebar h2 {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #555;
-  }
-
-  .sidebar ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .sidebar a[aria-current="page"] {
-    font-weight: 700;
   }
 
   .panels {

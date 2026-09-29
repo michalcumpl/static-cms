@@ -75,6 +75,34 @@ describe("renderSite: pages", () => {
     expect(count(home, /aria-current/g)).toBe(1);
   });
 
+  it("serves the page named by home_page_id at the root, wherever it is listed", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.site_1.home_page_id = "page_contact";
+    const moved = rendered(doc);
+    expect(moved.pages.map((p) => [p.pageId, p.path, p.url])).toEqual([
+      ["page_home", "uvod/index.html", "/uvod/"],
+      ["page_contact", "index.html", "/"],
+    ]);
+    const contactHome = page(moved, "index.html");
+    const intro = page(moved, "uvod/index.html");
+    expect(contactHome).toContain("<title>Pekárna U Lípy</title>");
+    expect(intro).toContain("<title>Úvod – Pekárna U Lípy</title>");
+    for (const html of [contactHome, intro]) {
+      expect(html).toContain('<a class="site-name" href="/">Pekárna U Lípy</a>');
+    }
+  });
+
+  it("links to the home page at the base path, never at its slug", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.site_1.home_page_id = "page_contact";
+    const moved = rendered(doc);
+    const intro = page(moved, "uvod/index.html");
+    // Navigation item and the text link on the intro page both point at the home page.
+    expect(intro).toContain('<li><a href="/">Kontakt</a></li>');
+    expect(intro).toMatch(/<a href="\/">stránce Kontakt<\/a>/);
+    for (const { html } of moved.pages) expect(html).not.toContain('href="/kontakt/"');
+  });
+
   it("renders external navigation links", () => {
     const { doc, nodes } = editableDemoSite();
     nodes.ext_1 = {

@@ -1,4 +1,8 @@
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
+import { siteDocuments, versions } from "$lib/server/db/schema";
 import { readSite, saveSite } from "$lib/server/site-documents";
 import { thrownBy, useTestProject } from "$lib/server/test-project";
 import { GET } from "./[...path]/+server";
@@ -86,5 +90,27 @@ describe("/p/[project]/preview/[...path]", () => {
     expect(html).toContain("<code>empty-heading</code>");
     expect(html).toContain(`href="/p/${project().projectId}/edit/"`);
     expect(html).not.toContain("<script>");
+  });
+
+  it("renders a project stored in the version-1 format from the upgraded document", async () => {
+    const { db, projectId } = project();
+    const require = createRequire(import.meta.url);
+    const v1 = JSON.parse(
+      readFileSync(require.resolve("@static-cms/site/fixtures/demo-site-v1.json"), "utf8"),
+    );
+    const current = db
+      .select({ versionId: siteDocuments.currentVersionId })
+      .from(siteDocuments)
+      .where(eq(siteDocuments.projectId, projectId))
+      .get();
+    db.update(versions)
+      .set({ document: v1 })
+      .where(eq(versions.id, current?.versionId ?? ""))
+      .run();
+    const response = await get("");
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("<title>Pekárna U Lípy</title>");
+    expect(html).not.toContain("unsupported-version");
   });
 });

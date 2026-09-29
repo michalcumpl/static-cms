@@ -6,6 +6,7 @@ export {
   zipFiles,
 } from "./export/index.js";
 export { isSafeHref } from "./links.js";
+export { migrateSite } from "./migrate.js";
 export {
   isValidBasePath,
   type RenderedPage,
@@ -17,7 +18,7 @@ export {
   siteCss,
 } from "./render/index.js";
 export * from "./schema/index.js";
-export { slugify } from "./slug.js";
+export { slugify, uniqueSlug } from "./slug.js";
 export {
   type Problem,
   type ProblemCategory,

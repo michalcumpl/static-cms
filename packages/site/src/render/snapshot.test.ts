@@ -1,10 +1,10 @@
 import { HtmlValidate } from "html-validate";
 import { describe, expect, it } from "vitest";
-import { loadDemoSite } from "../test/fixtures.js";
+import { homeListedSecondSite, loadDemoSite } from "../test/fixtures.js";
 import { renderSite } from "./index.js";
 
-function renderDemo() {
-  const result = renderSite(loadDemoSite());
+function renderDemo(doc: unknown = loadDemoSite()) {
+  const result = renderSite(doc);
   if (!result.ok) throw new Error(JSON.stringify(result.problems));
   return result.site;
 }
@@ -23,7 +23,8 @@ describe("demo site output", () => {
     await expect(site.css).toMatchFileSnapshot("__snapshots__/demo/assets/style.css");
   });
 
-  it.each(site.pages.map((p) => [p.path, p.html]))(
+  const homeSecond = renderDemo(homeListedSecondSite());
+  it.each([...site.pages, ...homeSecond.pages].map((p) => [p.path, p.html]))(
     "%s passes html-validate",
     async (_path, html) => {
       const validator = new HtmlValidate({

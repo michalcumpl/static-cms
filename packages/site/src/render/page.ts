@@ -5,7 +5,7 @@ import { type Html, html, raw } from "./html.js";
 
 export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
   const { site } = ctx;
-  const isHome = site.pages.nodes[0] === page.id;
+  const isHome = ctx.homeId === page.id;
   const title = isHome ? site.name : `${page.title} – ${site.name}`;
   const blocks = ctx.children(page.blocks);
   const heroIsH1 = blocks[0]?.type === "hero";
@@ -26,7 +26,7 @@ export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
   <body>
     <header class="site-header">
       <div class="container">
-        <a class="site-name" href="${ctx.pageUrl(site.pages.nodes[0] ?? page.id)}">${site.name}</a>
+        <a class="site-name" href="${ctx.pageUrl(ctx.homeId)}">${site.name}</a>
         <nav class="site-nav">
           <ul>${ctx.children(nav.items).map(
             (item) => html`

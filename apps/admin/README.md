@@ -30,7 +30,7 @@ workspace named "Default". The first user created with `create-user` becomes its
 | `/w/<workspace>/members`               | Members, roles and invitations (owners change them).               |
 | `/w/<workspace>/new`                   | Owners: create a project from the starter site.                    |
 | `/p/<project>/`                        | Validation, pages, **Download ZIP**.                               |
-| `/p/<project>/edit/`, `…/edit/<slug>/` | The editor (Svedit). Cmd/Ctrl+S saves the whole site.              |
+| `/p/<project>/edit/`, `…/edit/<page-id>/` | The editor (Svedit); `/edit/` opens the home page. Cmd/Ctrl+S saves the whole site. |
 | `/p/<project>/preview/…`               | The saved site as it would be published, or its problems.          |
 | `GET/PUT /api/projects/<project>/site` | The document: 200, 409 (outdated version), 422 (broken document).  |
 | `/api/projects/<project>/media/<name>` | The project's images.                                              |
@@ -94,6 +94,20 @@ Back up `app.db` and the `media/` folder together.
   next to the app. Copy `data/media/` to the same storage on a schedule (e.g. `rclone sync`).
 - **Nightly:** `sqlite3 data/app.db ".backup data/backup.db"` (safe while the app runs), then copy
   the backup and `data/media/` off the server.
+
+### Upgrading: site document format 2
+
+Page management (explicit home page, a slug on every page) stores site documents in format 2.
+Documents stored in format 1 are upgraded whenever the server reads them, and the upgrade is
+saved with the project's next save. There is no database migration and nothing to run.
+
+- **Before deploying**, take a backup (a Litestream snapshot or `sqlite3 … ".backup …"`).
+- **Rolling back** to a build from before format 2: projects saved since the upgrade are in
+  format 2, which the older build refuses, so their editor and preview show an unsupported-version
+  problem. Restore the database from the pre-upgrade backup (losing saves made since), or
+  redeploy the newer build.
+- Editor addresses changed from `/p/<project>/edit/<slug>/` to `/p/<project>/edit/<page-id>/`;
+  old bookmarks show "not found". `/p/<project>/edit/` still opens the home page.
 
 ## Scripts
 
