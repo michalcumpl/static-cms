@@ -1,0 +1,17 @@
+packages:
+  - apps/*
+  - packages/*
+  - tooling/*
+
+catalog:
+  "@biomejs/biome": 2.5.14
+  "@types/node": ^22.0.0
+  "@types/react": ^19.3.0
+  "@types/react-dom": ^19.3.0
+  "@vitejs/plugin-react": ^6.1.1
+  react: ^19.3.0
+  react-dom: ^19.3.0
+  turbo: ^2.11.5
+  typescript: ^7.0.2
+  vite: ^8.3.1
+  vitest: ^5.0.2
