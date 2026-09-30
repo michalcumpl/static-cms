@@ -15,5 +15,5 @@
 
 ## 4. Integration
 
-- [ ] 4.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally and in CI (a CI run after pushing); verify all pass
+- [x] 4.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally and in CI (a CI run after pushing); verify all pass
 - [x] 4.2 Remove the two items from the Milestone 2 walk-through list in `docs/roadmap.md` and note the change; verify the links resolve once the change is archived
