@@ -116,6 +116,11 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
   - Deployment needs `BODY_SIZE_LIMIT=25M` (adapter-node's default refuses photos).
   - Known limits: only the hero image so far; no HEIC decoding on the server; no AVIF;
     no cropping.
+- Image display options, chosen in the Image panel rather than by dragging (a free pixel size
+  doesn't survive responsive layouts):
+  - size presets per image (small / medium / full width; for the hero: beside the text, wider,
+    or as the background);
+  - cropping to a shape (4:3, 16:9, square) and a focal point that stays visible when cut.
 - SEO settings, favicon, site metadata.
 - More blocks: opening hours, contact, gallery, call to action, testimonials, maybe a map (mind
   GDPR with third-party embeds).
