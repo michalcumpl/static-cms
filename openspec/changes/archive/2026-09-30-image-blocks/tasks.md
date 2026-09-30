@@ -25,5 +25,5 @@
 
 ## 5. Integration
 
-- [ ] 5.1 End-to-end in Playwright: on a page, insert all four blocks, fill them from the library, describe the gallery photos, save, and check the preview (HTML of each block, the gallery link) and the ZIP (every used variant); verify `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite pass locally and in CI
+- [x] 5.1 End-to-end in Playwright: on a page, insert all four blocks, fill them from the library, describe the gallery photos, save, and check the preview (HTML of each block, the gallery link) and the ZIP (every used variant); verify `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite pass locally and in CI
 - [x] 5.2 Update `docs/roadmap.md` (image blocks done under "More blocks", the image options item narrowed to cropping and focal points) and the README's Images section; verify the roadmap links resolve once the change is archived
