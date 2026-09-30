@@ -90,7 +90,7 @@ test("remove the hero image, add it back, describe it, save and preview", async 
   await alt.fill("Chléb na pultu");
   await page
     .getByRole("toolbar", { name: "Editing" })
-    .getByRole("button", { name: "Save" })
+    .getByRole("button", { name: "Save", exact: true })
     .click();
   await expect(status(page)).toHaveText("Saved");
 

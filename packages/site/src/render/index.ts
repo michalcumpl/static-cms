@@ -1,4 +1,5 @@
 import type { SiteDocument } from "../schema/index.js";
+import { isValidBaseUrl } from "../validate/domain.js";
 import type { Problem } from "../validate/index.js";
 import { problem, validateSite } from "../validate/index.js";
 import { isValidBasePath, RenderContext } from "./context.js";
@@ -11,6 +12,11 @@ export { type SiteCssOptions, siteCss } from "./css.js";
 export interface RenderOptions {
   /** Where the site is served from: `/` (default) or a subdirectory like `/preview/`. */
   basePath?: string;
+  /**
+   * The site's address, like `https://anideti.cz`, when it is known (published sites). Pages
+   * then get canonical links.
+   */
+  siteUrl?: string;
 }
 
 export interface RenderedPage {
@@ -49,11 +55,24 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
       ],
     };
   }
+  if (options.siteUrl !== undefined && !isValidBaseUrl(options.siteUrl)) {
+    return {
+      ok: false,
+      problems: [
+        problem(
+          "error",
+          "invalid-site-url",
+          "",
+          `Site address "${options.siteUrl}" must be an absolute http(s) URL, like "https://anideti.cz".`,
+        ),
+      ],
+    };
+  }
   const validation = validateSite(input);
   if (!validation.valid) return { ok: false, problems: validation.problems };
 
   const doc = input as SiteDocument;
-  const ctx = new RenderContext(doc, basePath);
+  const ctx = new RenderContext(doc, basePath, options.siteUrl?.replace(/\/+$/, ""));
   const pages = ctx.site.pages.nodes.map((pageId): RenderedPage => {
     const route = ctx.routes.get(pageId);
     if (!route) throw new Error(`Page ${pageId} has no route.`);

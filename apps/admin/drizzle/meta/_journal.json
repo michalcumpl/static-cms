@@ -15,6 +15,13 @@
       "when": 1790710137287,
       "tag": "0001_lowly_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790772506443,
+      "tag": "0002_blushing_karnak",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
 import { exportSite, zipFiles } from "@static-cms/site";
+import PublishButton from "$lib/PublishButton.svelte";
 import { projectPaths } from "$lib/project-paths";
 import type { PageProps } from "./$types";
 
@@ -50,6 +51,12 @@ async function downloadZip() {
   <p class="crumbs"><a href="/">← All projects</a></p>
   <h1>{data.project.name}</h1>
   <p><a href={paths.edit()}>Open the editor</a> · <a href={paths.preview}>Preview</a></p>
+
+  <section aria-labelledby="publishing">
+    <h2 id="publishing">Publishing</h2>
+    <PublishButton {paths} />
+    <p><a href={paths.publishing}>Address, domain and history</a></p>
+  </section>
 
   <section aria-labelledby="validation">
     <h2 id="validation">Validation</h2>

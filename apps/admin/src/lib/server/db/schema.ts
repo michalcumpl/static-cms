@@ -154,3 +154,66 @@ export const media = sqliteTable(
     uniqueIndex("media_project_sha256_idx").on(t.projectId, t.sha256),
   ],
 );
+
+/**
+ * A workspace's connection to its Netlify team (netlify-publishing design.md decisions 2–3).
+ * The token is encrypted with a key from SECRET_KEY and never leaves the server.
+ */
+export const hostingConnections = sqliteTable("hosting_connections", {
+  workspaceId: text("workspace_id")
+    .primaryKey()
+    .references(() => workspaces.id, { onDelete: "cascade" }),
+  provider: text("provider", { enum: ["netlify"] }).notNull(),
+  accountSlug: text("account_slug").notNull(),
+  accountName: text("account_name").notNull(),
+  tokenEncrypted: text("token_encrypted").notNull(),
+  connectedBy: text("connected_by").references(() => users.id, { onDelete: "set null" }),
+  connectedAt: createdAt(),
+});
+
+/** A project's site at the provider, its custom domain, and which publish is live. */
+export const projectHosting = sqliteTable(
+  "project_hosting",
+  {
+    projectId: text("project_id")
+      .primaryKey()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    provider: text("provider", { enum: ["netlify"] }).notNull(),
+    accountSlug: text("account_slug").notNull(),
+    siteId: text("site_id").notNull(),
+    siteName: text("site_name").notNull(),
+    defaultUrl: text("default_url").notNull(),
+    domain: text("domain"),
+    domainState: text("domain_state", {
+      enum: ["waiting-for-dns", "issuing-certificate", "ready"],
+    }),
+    domainCheckedAt: integer("domain_checked_at", { mode: "timestamp_ms" }),
+    livePublishId: text("live_publish_id"),
+  },
+  (t) => [uniqueIndex("project_hosting_domain_idx").on(t.domain)],
+);
+
+export const publishStates = ["running", "ready", "failed"] as const;
+
+/** Every publish of a project: which saved version, by whom, and how it went. */
+export const publishes = sqliteTable(
+  "publishes",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    versionId: text("version_id")
+      .notNull()
+      .references(() => versions.id, { onDelete: "cascade" }),
+    state: text("state", { enum: publishStates }).notNull(),
+    deployId: text("deploy_id"),
+    url: text("url"),
+    error: text("error"),
+    redirectsCount: integer("redirects_count").notNull().default(0),
+    publishedBy: text("published_by").references(() => users.id, { onDelete: "set null" }),
+    startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
+    finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+  },
+  (t) => [index("publishes_project_idx").on(t.projectId, t.startedAt)],
+);

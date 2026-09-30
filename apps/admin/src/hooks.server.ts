@@ -3,6 +3,7 @@ import { getDb } from "$lib/server/app";
 import { getSessionUser } from "$lib/server/auth";
 import { importWorkingCopy } from "$lib/server/import-working-copy";
 import { bodySizeWarning, registerAllLegacyMedia } from "$lib/server/media";
+import { markInterruptedPublishes } from "$lib/server/publishing/history";
 import { SESSION_COOKIE } from "$lib/server/session-cookie";
 
 /**
@@ -13,6 +14,9 @@ export const init: ServerInit = async () => {
   const projectId = importWorkingCopy(getDb());
   if (projectId)
     console.log(`[import] Imported data/site.json into the "Default" workspace (${projectId}).`);
+  const interrupted = markInterruptedPublishes(getDb());
+  if (interrupted > 0)
+    console.warn(`[publish] Marked ${interrupted} interrupted publish(es) as failed.`);
   const warning = bodySizeWarning(process.env);
   if (warning) console.warn(`[media] ${warning}`);
   for (const [project, keys] of await registerAllLegacyMedia(getDb())) {

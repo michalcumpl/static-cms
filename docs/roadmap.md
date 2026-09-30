@@ -98,7 +98,7 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
   - **Problem messages name pages by title.**
   - Known limits: no redirects from old slugs until Milestone 4; no dropdown menus or subpages;
     links to a deleted page stay in place and are listed as problems.
-- **Media library and image upload: done (hero image).**
+- **Media library and image upload: done.**
   - Change: [`media-library`](../openspec/changes/archive/2026-09-30-media-library/).
     Specs: [`media`](../openspec/specs/media/spec.md), and images in
     [`site-rendering`](../openspec/specs/site-rendering/spec.md),
@@ -139,12 +139,20 @@ UI (versions are already stored).
 
 ### 4. Publishing
 
-- FTP/SFTP publishing from the server.
-- Deployment status.
-- Published version and rollback (re-publish an older snapshot).
-- Redirect pages at old URLs when a published page's slug changes (FTP hosting has no server
-  redirects), using a meta refresh and a canonical link.
-- Managed hosting later.
+- **Publishing to Netlify: done.**
+  - Change: [`netlify-publishing`](../openspec/changes/archive/2026-09-30-netlify-publishing/).
+    Spec: [`publishing`](../openspec/specs/publishing/spec.md).
+  - **Each workspace connects its own Netlify team** with a token (stored encrypted). Netlify's
+    standard terms don't allow one agency account to host clients' sites, and each client's
+    plan and credits are theirs.
+  - **Publish** from the editor or the project page: the saved site is exported on the server
+    and deployed atomically, uploading only changed files; status, history and *Make live
+    again* (instant restore).
+  - **Custom domains** with DNS instructions and states; the site's address feeds the sitemap
+    and new canonical links.
+  - **Redirects** (301) from earlier addresses of renamed pages, via `_redirects`.
+- Later: other targets behind the same interface (FTP/SFTP to the client's hosting, Bunny.net,
+  our own VPS), taking a site offline, publishing on a schedule.
 
 ### 5. Multi-language
 

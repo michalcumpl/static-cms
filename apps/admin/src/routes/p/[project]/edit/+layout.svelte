@@ -18,6 +18,7 @@ import {
   itemInsertionPoint,
 } from "$lib/editor/structure";
 import type { BlockType } from "$lib/editor/transforms";
+import PublishButton from "$lib/PublishButton.svelte";
 import { projectPaths } from "$lib/project-paths";
 import type { LayoutProps } from "./$types";
 
@@ -134,6 +135,13 @@ function guardFixedLists(event: InputEvent) {
   }
 }
 
+/** Publishing sends what is saved: save unsaved changes first, and stop if that fails. */
+async function saveBeforePublish(): Promise<boolean> {
+  if (!editor.dirty) return true;
+  await editor.save();
+  return editor.status.kind === "saved";
+}
+
 let linkDialog: LinkDialog | undefined = $state();
 let mediaLibrary: MediaLibrary | undefined = $state();
 editor.openLibrary = async (current) => {
@@ -199,6 +207,7 @@ const statusText = $derived.by(() => {
       <span class="spacer"></span>
       <span class="status" role="status" class:problem={editor.status.kind === "conflict" || editor.status.kind === "error"}>{statusText}</span>
       <button type="button" class="save" onclick={() => editor.save()} disabled={editor.status.kind === "saving" || !editor.dirty}>Save</button>
+      <PublishButton paths={editor.paths} unsaved={editor.dirty} beforePublish={saveBeforePublish} />
     </div>
 
     <div class="canvas-frame" onbeforeinputcapture={guardFixedLists}>

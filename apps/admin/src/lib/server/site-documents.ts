@@ -13,6 +13,8 @@ export interface SiteSnapshot {
   document: unknown;
   /** Opaque; changes on every accepted save. */
   version: string;
+  /** The stored version row this document comes from (for publishing). */
+  versionId: string;
   problems: Problem[];
 }
 
@@ -28,14 +30,23 @@ export type SaveResult =
  */
 export function readSite(db: Db, projectId: string): SiteSnapshot | undefined {
   const row = db
-    .select({ version: siteDocuments.version, document: versions.document })
+    .select({
+      version: siteDocuments.version,
+      versionId: siteDocuments.currentVersionId,
+      document: versions.document,
+    })
     .from(siteDocuments)
     .innerJoin(versions, eq(versions.id, siteDocuments.currentVersionId))
     .where(and(eq(siteDocuments.projectId, projectId), eq(siteDocuments.lang, DEFAULT_LANG)))
     .get();
   if (!row) return undefined;
   const document = migrateSite(row.document);
-  return { document, version: row.version, problems: validateSite(document).problems };
+  return {
+    document,
+    version: row.version,
+    versionId: row.versionId,
+    problems: validateSite(document).problems,
+  };
 }
 
 /**

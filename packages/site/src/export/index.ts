@@ -13,7 +13,19 @@ import { type Problem, problem } from "../validate/index.js";
 export interface ExportOptions {
   /** Where the site will be served from: `/` (default) or a subdirectory like `/web/`. */
   basePath?: string;
+  /** The site's address (canonical links and the sitemap); defaults to the document's base URL. */
+  siteUrl?: string;
+  /** Redirects written to `_redirects` (Netlify's format), in this order. */
+  redirects?: readonly Redirect[];
 }
+
+/** A permanent redirect from one address path to another, both starting with `/`. */
+export interface Redirect {
+  from: string;
+  to: string;
+}
+
+const REDIRECT_PATH = /^\/\S*$/;
 
 /** Site files keyed by path relative to the site root, e.g. `kontakt/index.html`. */
 export type SiteFiles = Map<string, Uint8Array>;
@@ -32,6 +44,22 @@ export function exportSite(
   media: ReadonlyMap<string, Uint8Array>,
   options: ExportOptions = {},
 ): ExportResult {
+  const badRedirect = (options.redirects ?? []).find(
+    (r) => !REDIRECT_PATH.test(r.from) || !REDIRECT_PATH.test(r.to),
+  );
+  if (badRedirect) {
+    return {
+      ok: false,
+      problems: [
+        problem(
+          "error",
+          "invalid-redirect",
+          "",
+          `Redirect "${badRedirect.from}" -> "${badRedirect.to}" needs paths that start with "/" and contain no spaces.`,
+        ),
+      ],
+    };
+  }
   const rendered = renderSite(input, options);
   if (!rendered.ok) return rendered;
 
@@ -64,9 +92,10 @@ export function exportSite(
   if (missing.length > 0) return { ok: false, problems: missing };
 
   const site = doc.nodes[doc.document_id];
-  if (site?.type === "site" && site.base_url !== "") {
+  const baseUrl = options.siteUrl ?? (site?.type === "site" ? site.base_url : "");
+  if (baseUrl !== "") {
     const routes = rendered.site.pages.map((p) => p.path.replace(/index\.html$/, ""));
-    files.push(["sitemap.xml", encoder.encode(sitemap(site.base_url, routes))]);
+    files.push(["sitemap.xml", encoder.encode(sitemap(baseUrl, routes))]);
   } else {
     warnings.push(
       problem(
@@ -77,6 +106,11 @@ export function exportSite(
         "base_url",
       ),
     );
+  }
+
+  if (options.redirects && options.redirects.length > 0) {
+    const lines = options.redirects.map((r) => `${r.from} ${r.to} 301\n`).join("");
+    files.push(["_redirects", encoder.encode(lines)]);
   }
 
   files.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));

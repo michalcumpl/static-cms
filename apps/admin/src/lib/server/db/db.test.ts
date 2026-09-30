@@ -12,11 +12,14 @@ describe("openDatabase", () => {
       .map((t) => t.name)
       .sort();
     expect(tables).toEqual([
+      "hosting_connections",
       "invitations",
       "login_tokens",
       "media",
       "memberships",
+      "project_hosting",
       "projects",
+      "publishes",
       "sessions",
       "site_documents",
       "users",

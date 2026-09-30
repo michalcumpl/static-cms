@@ -41,3 +41,15 @@ export function requireOwner(
   if (role !== "owner") error(403, "Only owners can do this.");
   return user;
 }
+
+/** A member of the workspace (any role); others get 404, like projects. */
+export function requireWorkspaceMember(
+  event: AccessEvent,
+  workspaceId: string,
+  options: { api?: boolean } = {},
+): { user: SessionUser; role: "owner" | "editor" } {
+  const user = requireUser(event, options);
+  const role = roleIn(getDb(), user.id, workspaceId);
+  if (!role) error(404, "Not found");
+  return { user, role };
+}

@@ -14,6 +14,16 @@ export interface ProjectPaths {
   media(name: string): string;
   /** An image's variant for showing it: `display` (up to 1600 px) or `thumbnail` (smallest). */
   image(key: string, width: number, use?: "display" | "thumbnail"): string;
+  /** The project's Publishing page. */
+  publishing: string;
+  /** POST starts a publish. */
+  publish: string;
+  /** GET the address, domain and publishes. */
+  publishes: string;
+  restore(publishId: string): string;
+  /** PUT/DELETE the custom domain; `domainCheck` checks it now. */
+  domain: string;
+  domainCheck: string;
 }
 
 export function projectPaths(projectId: string): ProjectPaths {
@@ -25,6 +35,12 @@ export function projectPaths(projectId: string): ProjectPaths {
     preview: `${base}preview/`,
     api: `/api/projects/${projectId}/site`,
     library: `/api/projects/${projectId}/media`,
+    publishing: `${base}publishing/`,
+    publish: `/api/projects/${projectId}/publish`,
+    publishes: `/api/projects/${projectId}/publishes`,
+    restore: (publishId) => `/api/projects/${projectId}/publishes/${publishId}/restore`,
+    domain: `/api/projects/${projectId}/domain`,
+    domainCheck: `/api/projects/${projectId}/domain/check`,
     media,
     image: (key, width, use = "display") =>
       media(

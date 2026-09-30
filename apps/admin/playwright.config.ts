@@ -8,6 +8,8 @@ import { defineConfig, devices } from "@playwright/test";
 process.env.E2E_DATA_DIR ??= mkdtempSync(join(tmpdir(), "static-cms-e2e-"));
 const dataDir = process.env.E2E_DATA_DIR;
 const port = 5198;
+/** The fake Netlify API the dev server publishes to (src/lib/server/publishing/fake-netlify.ts). */
+const netlifyPort = 5197;
 
 export const e2eEnv = {
   DATABASE_PATH: join(dataDir, "app.db"),
@@ -16,6 +18,8 @@ export const e2eEnv = {
   // No Milestone 2 working copy to import.
   SITE_DATA_DIR: join(dataDir, "legacy"),
   ORIGIN: `http://localhost:${port}`,
+  NETLIFY_API_URL: `http://127.0.0.1:${netlifyPort}`,
+  SECRET_KEY: "e2e-secret-key-that-is-long-enough-1234",
 };
 Object.assign(process.env, e2eEnv);
 
@@ -37,11 +41,19 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
   ],
-  webServer: {
-    command: `vite dev --port ${port} --strictPort`,
-    url: `http://localhost:${port}/signin`,
-    env: e2eEnv,
-    reuseExistingServer: false,
-    timeout: 60_000,
-  },
+  webServer: [
+    {
+      command: `tsx e2e/fake-netlify-server.ts ${netlifyPort}`,
+      url: `http://127.0.0.1:${netlifyPort}/__fake/uploads`,
+      reuseExistingServer: false,
+      timeout: 30_000,
+    },
+    {
+      command: `vite dev --port ${port} --strictPort`,
+      url: `http://localhost:${port}/signin`,
+      env: e2eEnv,
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+  ],
 });

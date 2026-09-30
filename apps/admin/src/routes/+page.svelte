@@ -47,6 +47,7 @@ const showWorkspaces = $derived(data.workspaces.length > 1);
         <p class="actions">
           <a href={`/w/${workspace.id}/new`}>New project</a>
           · <a href={`/w/${workspace.id}/members`}>Members</a>
+          · <a href={`/w/${workspace.id}/hosting`}>Netlify</a>
         </p>
       {/if}
     </section>

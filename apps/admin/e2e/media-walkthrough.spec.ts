@@ -55,7 +55,7 @@ test("a phone photo with GPS goes into the hero and is published without metadat
   await library.getByRole("button", { name: "Use this image" }).click();
   await panel.getByLabel(/Description/).fill("Bochníky na pultu");
   const toolbar = page.getByRole("toolbar", { name: "Editing" });
-  await toolbar.getByRole("button", { name: "Save" }).click();
+  await toolbar.getByRole("button", { name: "Save", exact: true }).click();
   await expect(toolbar.getByRole("status")).toHaveText("Saved");
 
   const home = await (await page.request.get(paths().preview)).text();

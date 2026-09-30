@@ -70,7 +70,7 @@ test("all four image blocks on a page: fill, describe, save, preview and ZIP", a
 
   const problems = page.getByRole("region", { name: "Problems" });
   await expect(problems).toContainText("No problems");
-  await toolbar(page).getByRole("button", { name: "Save" }).click();
+  await toolbar(page).getByRole("button", { name: "Save", exact: true }).click();
   await expect(toolbar(page).getByRole("status")).toHaveText("Saved");
 
   const html = await (await page.request.get(`${paths().preview}kontakt/`)).text();

@@ -88,13 +88,13 @@ test.describe("images in blocks", () => {
     await address.fill("https://nadace-harmonie.example");
     await address.press("Enter");
     await expect(imagePanel(page).getByRole("alert")).toHaveCount(0);
-    await toolbar(page).getByRole("button", { name: "Save" }).click();
+    await toolbar(page).getByRole("button", { name: "Save", exact: true }).click();
     await expect(toolbar(page).getByRole("status")).toHaveText("Saved");
     const html = await (await page.request.get(`${paths().preview}galerie/`)).text();
     expect(html).toContain('<a href="https://nadace-harmonie.example"><img');
 
     await toolbar(page).getByRole("button", { name: "Undo" }).click();
-    await toolbar(page).getByRole("button", { name: "Save" }).click();
+    await toolbar(page).getByRole("button", { name: "Save", exact: true }).click();
     await expect(toolbar(page).getByRole("status")).toHaveText("Saved");
     const reverted = await (await page.request.get(`${paths().preview}galerie/`)).text();
     expect(reverted).toContain('<a href="https://harmonie.example"><img');

@@ -1,0 +1,97 @@
+import type { Problem } from "@static-cms/site";
+import type { ProjectPaths } from "./project-paths";
+
+// The browser side of publishing: start a publish, follow it until it finishes, and keep the
+// project's publishing state (address, domain, history) up to date.
+
+export interface PublishSummary {
+  id: string;
+  state: "running" | "ready" | "failed";
+  url: string | null;
+  error: string | null;
+  publishedBy: string | null;
+  startedAt: string;
+  finishedAt: string | null;
+  live: boolean;
+}
+
+export interface DnsRecord {
+  type: "A" | "CNAME";
+  name: string;
+  value: string;
+}
+
+export interface PublishingInfo {
+  connected: boolean;
+  team: string | null;
+  address: string | null;
+  defaultUrl: string | null;
+  domain: string | null;
+  domainState: "waiting-for-dns" | "issuing-certificate" | "ready" | null;
+  dnsRecords: DnsRecord[];
+  publishes: PublishSummary[];
+}
+
+export type PublishStatus =
+  | { kind: "idle" }
+  | { kind: "publishing" }
+  | { kind: "published"; url: string }
+  | { kind: "failed"; message: string; problems?: Problem[] };
+
+const POLL_MS = 2000;
+
+export class Publishing {
+  info = $state<PublishingInfo | undefined>();
+  status = $state<PublishStatus>({ kind: "idle" });
+  #timer: ReturnType<typeof setTimeout> | undefined;
+
+  constructor(readonly paths: ProjectPaths) {}
+
+  get latest(): PublishSummary | undefined {
+    return this.info?.publishes[0];
+  }
+
+  /** Loads the state; follows a running publish until it finishes. */
+  async refresh(): Promise<void> {
+    const response = await fetch(this.paths.publishes);
+    if (!response.ok) return;
+    this.info = await response.json();
+    const latest = this.latest;
+    if (latest?.state === "running") {
+      this.status = { kind: "publishing" };
+      clearTimeout(this.#timer);
+      this.#timer = setTimeout(() => void this.refresh(), POLL_MS);
+    } else if (this.status.kind === "publishing" && latest) {
+      this.status =
+        latest.state === "ready"
+          ? { kind: "published", url: latest.url ?? "" }
+          : { kind: "failed", message: latest.error ?? "Publishing failed." };
+    }
+  }
+
+  async publish(): Promise<void> {
+    this.status = { kind: "publishing" };
+    const response = await fetch(this.paths.publish, { method: "POST" });
+    const body = await response.json().catch(() => ({}));
+    if (response.status === 202) {
+      await this.refresh();
+      return;
+    }
+    if (response.status === 422) {
+      this.status = {
+        kind: "failed",
+        message: "Fix the problems first; the site can't be published with errors.",
+        problems: body.problems,
+      };
+      return;
+    }
+    this.status = {
+      kind: "failed",
+      message: body.message ?? `Publishing failed (${response.status}).`,
+    };
+  }
+
+  stop(): void {
+    clearTimeout(this.#timer);
+  }
+}

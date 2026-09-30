@@ -218,7 +218,8 @@ function checkSiteNode(site: NodeOfType<"site">, problems: Problems): void {
   }
 }
 
-function isValidBaseUrl(value: string): boolean {
+/** An absolute http(s) URL without query, fragment or credentials, like `https://anideti.cz`. */
+export function isValidBaseUrl(value: string): boolean {
   if (!URL.canParse(value)) return false;
   const url = new URL(value);
   return (

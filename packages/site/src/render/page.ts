@@ -7,6 +7,7 @@ export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
   const { site } = ctx;
   const isHome = ctx.homeId === page.id;
   const title = isHome ? site.name : `${page.title} – ${site.name}`;
+  const canonical = ctx.canonicalUrl(page.id);
   const blocks = ctx.children(page.blocks);
   const heroIsH1 = blocks[0]?.type === "hero";
   const nav = ctx.node(site.nav, "nav");
@@ -21,7 +22,11 @@ export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
       html`
     <meta name="description" content="${page.seo_description}">`
     }
-    <link rel="stylesheet" href="${ctx.url("assets/style.css")}">
+    <link rel="stylesheet" href="${ctx.url("assets/style.css")}">${
+      canonical &&
+      html`
+    <link rel="canonical" href="${canonical}">`
+    }
   </head>
   <body>
     <header class="site-header">

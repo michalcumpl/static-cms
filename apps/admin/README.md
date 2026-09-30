@@ -57,6 +57,9 @@ Everything except sign-in and invitations needs a session. Project pages and API
 | `ORIGIN`         | –                | Public URL, e.g. `https://admin.example.cz`. **Required in production**: adapter-node uses it for request URLs, cross-site checks and the links in emails. The admin command uses it for printed links (default `http://localhost:5173`). |
 | `DATABASE_PATH`  | `data/app.db`    | SQLite database.                                               |
 | `MEDIA_DIR`      | `data/media`     | Project images, one folder per project: WebP variants, and metadata-free originals in `originals/` (never served). |
+| `SECRET_KEY`     | –                | At least 32 characters. Encrypts the workspaces' Netlify tokens. **Required for publishing in production; back it up with the database** (without it, owners must reconnect Netlify). The development server (`pnpm dev`) generates one in `SECRET_KEY_FILE` when it's unset. |
+| `SECRET_KEY_FILE`| `data/secret.key`| Development only: where the generated key is kept (readable by its owner only, git-ignored). |
+| `NETLIFY_API_URL`| `https://api.netlify.com` | Only for tests: points publishing at the fake Netlify (`e2e/fake-netlify-server.ts`). |
 | `BODY_SIZE_LIMIT`| `512K`           | adapter-node's request size limit. **Set it to `25M` in production**, or image uploads over 512 KB are refused before they reach the app (the server warns at startup). |
 | `SMTP_URL`       | –                | e.g. `smtps://user:password@smtp.example.cz:465`. Without it, email goes to the outbox. |
 | `MAIL_FROM`      | –                | Sender, e.g. `Static CMS <web@example.cz>`. Required with `SMTP_URL`. |
@@ -109,6 +112,30 @@ ORIGIN=https://admin.example.cz BODY_SIZE_LIMIT=25M SMTP_URL=… MAIL_FROM=… n
   `pnpm admin media-cleanup` deletes the files of removed images that no stored version uses.
 - Image files from before the library (such as an imported `hero.png`) are registered at
   startup under their file name and get their variants; the file itself stays in place.
+
+### Publishing
+
+- Each workspace publishes to **its own Netlify team**: an owner creates a personal access
+  token in Netlify (User settings → Applications → Personal access tokens) and connects it
+  under *Netlify* on the workspace. The token is stored encrypted with `SECRET_KEY` and never
+  shown again. A Netlify token grants access to that Netlify account, so a Netlify user
+  dedicated to publishing is a good idea where the plan allows it.
+- Hosting one agency account's sites for many clients isn't allowed under Netlify's standard
+  terms without a reseller agreement, which is why each client connects their own team.
+- Netlify's pricing is credit-based: every publish (production deploy) uses 15 of the team's
+  credits; the free plan has 300 a month (sites pause when they run out). Netlify allows at
+  most 3 deploys a minute and 100 a day per account.
+- The first publish creates a site named `sc-<project>` (`https://sc-<project>.netlify.app`).
+  Publishes deploy only the files Netlify doesn't have yet, atomically; earlier addresses of
+  renamed pages redirect (301) through `_redirects`; *Make live again* restores an earlier
+  deploy instantly.
+- Custom domains: the Publishing page shows the DNS records (bare domain: `A` to `75.2.60.5`
+  and `CNAME www` to the site; subdomain: `CNAME` to the site). Netlify issues the certificate
+  once DNS points at it.
+- GDPR: published sites are served by Netlify (a US company, with a DPA and SCCs); tell your
+  clients.
+- A publish runs inside the server process; a restart interrupts it and marks it failed. The
+  site keeps showing its previous publish.
 
 ### Backups
 

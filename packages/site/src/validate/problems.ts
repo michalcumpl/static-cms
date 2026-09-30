@@ -46,6 +46,8 @@ export type ProblemCode =
   | "low-contrast"
   // Render and export options
   | "invalid-base-path"
+  | "invalid-site-url"
+  | "invalid-redirect"
   | "missing-media"
   | "no-base-url";
 
@@ -95,6 +97,8 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "invalid-theme-value": "site",
   "low-contrast": "site",
   "invalid-base-path": "site",
+  "invalid-site-url": "site",
+  "invalid-redirect": "site",
   "missing-media": "site",
   "no-base-url": "site",
 };

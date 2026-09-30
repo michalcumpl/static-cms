@@ -2,6 +2,7 @@ export {
   type ExportOptions,
   type ExportResult,
   exportSite,
+  type Redirect,
   type SiteFiles,
   zipFiles,
 } from "./export/index.js";

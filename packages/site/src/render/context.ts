@@ -24,6 +24,8 @@ export class RenderContext {
   constructor(
     doc: SiteDocument,
     readonly basePath: string,
+    /** The site's address without a trailing slash, like `https://anideti.cz`, when known. */
+    readonly siteUrl?: string,
   ) {
     this.nodes = doc.nodes;
     this.site = this.node(doc.document_id, "site");
@@ -72,6 +74,11 @@ export class RenderContext {
   /** A URL for a path inside the site, e.g. `assets/style.css`. */
   url(path: string): string {
     return this.basePath + path;
+  }
+
+  /** A page's absolute URL for canonical links, or undefined without a site address. */
+  canonicalUrl(pageId: string): string | undefined {
+    return this.siteUrl === undefined ? undefined : this.siteUrl + this.pageUrl(pageId);
   }
 
   pageUrl(pageId: string): string {

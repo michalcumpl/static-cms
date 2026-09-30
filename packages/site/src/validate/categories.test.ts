@@ -72,6 +72,8 @@ describe("problem categories", () => {
       "invalid-theme-value": true,
       "low-contrast": true,
       "invalid-base-path": true,
+      "invalid-site-url": true,
+      "invalid-redirect": true,
       "missing-media": true,
       "no-base-url": true,
     };

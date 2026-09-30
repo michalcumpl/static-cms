@@ -158,3 +158,35 @@ export async function latestLink(to: string, since = 0): Promise<string> {
   }
   throw new Error(`no email to ${to}`);
 }
+
+/** The fake Netlify the dev server publishes to. */
+export const fakeNetlify = () => process.env.NETLIFY_API_URL ?? "";
+
+/** Registers a token with the fake Netlify, with the teams it can access. */
+export async function fakeNetlifyToken(token: string, teams: { slug: string; name: string }[]) {
+  await fetch(`${fakeNetlify()}/__fake/token`, {
+    method: "POST",
+    body: JSON.stringify({ token, teams }),
+  });
+}
+
+/** Connects the test workspace to the fake Netlify directly (the UI is tested separately). */
+export async function connectTestWorkspace(token = "nfp_e2e_token"): Promise<void> {
+  await fakeNetlifyToken(token, [{ slug: "e2e", name: "E2E team" }]);
+  const { connectWorkspace } = await import("../src/lib/server/publishing/connection");
+  const { workspaceId, owner } = state();
+  const result = await connectWorkspace(testDb(), workspaceId, owner.id, { token, account: "e2e" });
+  if (!result.ok) throw new Error(result.message);
+}
+
+/** Removes the test workspace's Netlify connection and its projects' hosting. */
+export async function resetPublishing(): Promise<void> {
+  const { hostingConnections, projectHosting, publishes } = await import(
+    "../src/lib/server/db/schema"
+  );
+  const { eq } = await import("drizzle-orm");
+  const { workspaceId, projectId } = state();
+  testDb().delete(publishes).where(eq(publishes.projectId, projectId)).run();
+  testDb().delete(projectHosting).where(eq(projectHosting.projectId, projectId)).run();
+  testDb().delete(hostingConnections).where(eq(hostingConnections.workspaceId, workspaceId)).run();
+}

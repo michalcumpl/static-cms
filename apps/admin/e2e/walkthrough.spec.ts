@@ -44,7 +44,7 @@ test("a version-1 project: add, duplicate, set as home, delete, save, preview an
 
   await sidebar.getByRole("link", { name: "Ceník" }).click();
   await settings.getByRole("button", { name: "Set as home" }).click();
-  await toolbar.getByRole("button", { name: "Save" }).click();
+  await toolbar.getByRole("button", { name: "Save", exact: true }).click();
   await expect(toolbar.getByRole("status")).toHaveText("Saved");
 
   const home = await page.request.get(paths().preview);
