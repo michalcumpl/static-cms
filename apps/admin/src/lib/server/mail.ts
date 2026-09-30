@@ -26,6 +26,8 @@ export interface OutboxMessage extends MailMessage {
   sentAt: string;
 }
 
+let nextSequence = 0;
+
 /**
  * Writes each message as a JSON file into `dir` instead of sending it, and logs it.
  * Used when no SMTP server is configured: development, tests, and the e2e suite.
@@ -35,7 +37,9 @@ export function outboxMailer(dir: string, log: (line: string) => void = console.
     async send(message) {
       mkdirSync(dir, { recursive: true });
       const sentAt = new Date().toISOString();
-      const file = `${sentAt.replace(/[:.]/g, "-")}-${randomBytes(4).toString("hex")}.json`;
+      // The sequence number keeps messages sent in the same millisecond in the order sent.
+      const sequence = String(nextSequence++).padStart(6, "0");
+      const file = `${sentAt.replace(/[:.]/g, "-")}-${sequence}-${randomBytes(4).toString("hex")}.json`;
       writeFileSync(join(dir, file), `${JSON.stringify({ ...message, sentAt }, null, 2)}\n`);
       log(`[mail] to ${message.to}: ${message.subject}\n${message.text}`);
     },
