@@ -314,9 +314,19 @@ export async function registerLegacyMedia(
   } catch {
     return [];
   }
+  // Which files are generated variants follows from the library's records, not from file
+  // names: an older file can itself be called `jak-pracujeme-0.webp` or `katerina-350.webp`.
+  const generated = new Set(
+    db
+      .select({ key: media.key, width: media.width })
+      .from(media)
+      .where(eq(media.projectId, projectId))
+      .all()
+      .flatMap(({ key, width }) => imageVariants(width).map((w) => imageFile(key, w))),
+  );
   const registered: string[] = [];
   for (const name of names) {
-    if (!MEDIA_KEY.test(name) || VARIANT_FILE.test(name) || name.includes(".tmp-")) continue;
+    if (!MEDIA_KEY.test(name) || generated.has(name) || name.includes(".tmp-")) continue;
     const known = db
       .select({ key: media.key })
       .from(media)
@@ -334,6 +344,7 @@ export async function registerLegacyMedia(
     const inspected = await inspect(bytes);
     if (!inspected.ok) continue;
     await serially(() => storeImage(bytes, name, inspected.image, projectId, root));
+    for (const w of imageVariants(inspected.image.width)) generated.add(imageFile(name, w));
     db.insert(media)
       .values({
         projectId,

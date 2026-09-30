@@ -259,6 +259,31 @@ describe("media from before the library", () => {
     expect(readdirSync(join(root, projectId))).toContain("hero.png");
   });
 
+  it("registers older files whose names look like variants", async () => {
+    mkdirSync(join(root, projectId), { recursive: true });
+    const { writeFileSync } = await import("node:fs");
+    const webp = async (width: number) =>
+      sharp({ create: { width, height: 100, channels: 3, background: `#${width}` } })
+        .webp()
+        .toBuffer();
+    writeFileSync(join(root, projectId, "jak-pracujeme-0.webp"), await webp(800));
+    writeFileSync(join(root, projectId, "katerina-350.webp"), await webp(350));
+    const registered = await registerAllLegacyMedia(db, root);
+    expect(registered.get(projectId)?.sort()).toEqual([
+      "jak-pracujeme-0.webp",
+      "katerina-350.webp",
+    ]);
+    for (const file of [
+      "jak-pracujeme-0.webp-480.webp",
+      "jak-pracujeme-0.webp-800.webp",
+      "katerina-350.webp-350.webp",
+    ]) {
+      expect(mediaFile(projectId, file, root), file).toBeDefined();
+    }
+    // Their generated variants are recognised as such on the next start.
+    expect(await registerAllLegacyMedia(db, root)).toEqual(new Map());
+  });
+
   it("registers nothing new on a second start", async () => {
     placeDemoHero();
     await registerAllLegacyMedia(db, root);
