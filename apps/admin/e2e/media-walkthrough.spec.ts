@@ -26,6 +26,8 @@ function unzip(archive: Buffer): Map<string, Buffer> {
 test("a phone photo with GPS goes into the hero and is published without metadata", async ({
   page,
 }) => {
+  // Processing a 12-megapixel photo takes a few seconds on a CI runner.
+  test.slow();
   const photo = await sharp({
     create: { width: 4032, height: 3024, channels: 3, background: "#a0662d" },
   })
@@ -61,6 +63,8 @@ test("a phone photo with GPS goes into the hero and is published without metadat
   expect(home).toContain('width="4032" height="3024"');
 
   await page.goto(paths().overview);
+  // The ZIP is built in the browser: click only once the page's script has taken over.
+  await page.waitForLoadState("networkidle");
   const downloading = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download ZIP" }).click();
   const files = unzip(readFileSync((await (await downloading).path()) as string));

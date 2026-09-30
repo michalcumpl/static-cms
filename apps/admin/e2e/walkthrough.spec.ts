@@ -55,6 +55,8 @@ test("a version-1 project: add, duplicate, set as home, delete, save, preview an
   expect(await intro.text()).toContain("<title>Úvod – Pekárna U Lípy</title>");
 
   await page.goto(paths().overview);
+  // The ZIP is built in the browser: click only once the page's script has taken over.
+  await page.waitForLoadState("networkidle");
   const downloading = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download ZIP" }).click();
   const download = await downloading;
