@@ -2,7 +2,7 @@
 
 ## 1. Spike: what browsers send when the picker lists HEIC
 
-- [ ] 1.1 Re-run the upload check page with a third picker whose `accept` adds `image/heic,image/heif,.heic,.heif`, on iOS Safari, macOS Safari and macOS Chrome; record in design.md (Risks) whether each sends HEIC or JPEG and under which name, and verify the dialog's behaviour for each browser follows from design.md decision 2
+- [x] 1.1 Re-run the upload check page with a third picker whose `accept` adds `image/heic,image/heif,.heic,.heif`, on iOS Safari, macOS Safari and macOS Chrome; record in design.md (Risks) whether each sends HEIC or JPEG and under which name, and verify the dialog's behaviour for each browser follows from design.md decision 2
 
 ## 2. Converter
 
@@ -18,5 +18,5 @@
 
 ## 4. Integration
 
-- [ ] 4.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally and in CI (a CI run after pushing); verify all pass
-- [ ] 4.2 Check the native path by hand: upload an iPhone HEIC in iOS Safari and in macOS Safari, then in macOS Chrome, and confirm each appears in the library under its real name (not `tempImage…`) with the right orientation; record the result in design.md
+- [x] 4.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally and in CI (a CI run after pushing); verify all pass
+- [x] 4.2 Check the native path by hand: upload an iPhone HEIC in iOS Safari and in macOS Safari, then in macOS Chrome, and confirm each appears in the library under its real name (not `tempImage…`) with the right orientation; record the result in design.md

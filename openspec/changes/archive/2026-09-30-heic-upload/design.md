@@ -89,11 +89,23 @@ decodeHeic(file):
 
 ## Risks / Trade-offs
 
-- **[Risk] With HEIC in `accept`, iOS might stop converting and send the raw HEIC.** → That's fine: the native path converts it. Task 1 checks what iOS sends, so the dialog's behaviour on the iPhone is known rather than assumed.
+- **[Risk] With HEIC in `accept`, iOS might stop converting and send the raw HEIC.** → Checked on 2026-09-30 (task 1.1), with the same iPhone photo (stored as HEIC) in three pickers:
+
+  | Browser | JPEG/PNG/WebP picker | Picker listing HEIC (C) | Picker without `accept` |
+  |---|---|---|---|
+  | iOS 18 Safari | JPEG, `IMG_5420.jpeg` | JPEG, `IMG_5420.jpeg` | JPEG, `IMG_5420.jpeg` |
+  | macOS Safari 26 | JPEG, `tempImage….jpg` | raw HEIC, `IMG_5420.HEIC` | raw HEIC, `IMG_5420.HEIC` |
+  | macOS Chrome 153 | HEIC not selectable | raw HEIC, `IMG_5420.HEIC` | raw HEIC, `IMG_5420.HEIC` |
+
+  iOS always hands over a JPEG with the photo's real name, so on the iPhone the converter never runs and nothing extra is downloaded. On the Mac, both browsers send the raw HEIC (`image/heic`) with its real name once HEIC is listed, and the editor converts it: natively in Safari, with libheif in Chrome. This also ends Safari's `tempImage…` names, so the key becomes `img-5420-<hash>`.
 - **[Trade-off] About 2 MB downloaded on the first HEIC file in Chrome or Firefox.** It happens once per browser cache, only for people who pick a HEIC file, and "Converting…" covers the wait.
 - **[Risk] A 12-megapixel decode on the page takes a second or two and briefly holds about 50 MB.** → Files convert one at a time, like uploads. A Web Worker is a follow-up if the page stutters.
 - **[Risk] Some HEIF variants don't decode** (unusual codecs, or `heic-sequence` Live Photo stills). → The clear failure message tells the owner to export as JPEG, and nothing half-converted is uploaded.
 - **[Trade-off] Colour.** The canvas works in sRGB, so Display P3 iPhone photos lose a little saturation. The server converts to sRGB anyway.
+
+## Verification
+
+- **2026-09-30 (task 4.2):** the owner uploaded an iPhone HEIC photo through the editor's media library in iOS Safari, macOS Safari and macOS Chrome. In each browser the photo appeared in the library upright and under its real name.
 
 ## Open Questions
 
