@@ -130,9 +130,9 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
 - SEO settings, favicon, site metadata.
 - More blocks: opening hours, contact, call to action, testimonials, maybe a map (mind GDPR with
   third-party embeds).
-- From the M2 walk-through:
-  - Problem messages readable for owners (no internal IDs); page problems are done.
-  - Reconsider Cmd+A → Backspace emptying a whole section.
+- **Editor polish: done.** Cmd/Ctrl+A selects only the current field's text; problem messages
+  name pages and never show internal IDs; problems about links inside text select the linked
+  words ([`editor-polish`](../openspec/changes/archive/2026-09-30-editor-polish/)).
 
 Still open: open sign-up (a switch, when billing exists), Google sign-in, and a version history
 UI (versions are already stored).

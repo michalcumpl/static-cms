@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { demoSite } from "$lib/server/demo";
-import { locateNode, pageSettingsTarget, selectionFor } from "./locate";
+import { locateMark, locateNode, pageSettingsTarget, selectionFor } from "./locate";
 
 type Doc = Parameters<typeof locateNode>[0];
 const doc = () => demoSite() as Doc;
@@ -96,5 +96,25 @@ describe("pageSettingsTarget", () => {
     expect(pageSettingsTarget(doc(), "hero_1", "heading")).toBeUndefined();
     expect(pageSettingsTarget(doc(), "page_home", "blocks")).toBeUndefined();
     expect(pageSettingsTarget(doc(), "site_1", "name")).toBeUndefined();
+  });
+});
+
+describe("locateMark", () => {
+  it("finds the text a link mark belongs to, its range and its page", () => {
+    expect(locateMark(doc(), "internal_contact")).toEqual({
+      path: ["site_1", "pages", 0, "blocks", 2, "body", 1, "content"],
+      start: 112,
+      end: 127,
+      pageId: "page_home",
+    });
+    expect(locateMark(doc(), "link_tel")).toMatchObject({
+      path: ["site_1", "pages", 1, "blocks", 0, "body", 3, "content"],
+      pageId: "page_contact",
+    });
+  });
+
+  it("finds nothing for nodes that aren't marks", () => {
+    expect(locateMark(doc(), "hero_1")).toBeUndefined();
+    expect(locateMark(doc(), "nope")).toBeUndefined();
   });
 });

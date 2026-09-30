@@ -1,3 +1,4 @@
+import { graphemeLength } from "@static-cms/site";
 import {
   AddNewLineCommand,
   BreakTextNodeCommand,
@@ -5,7 +6,6 @@ import {
   define_keymap,
   InsertDefaultNodeCommand,
   RedoCommand,
-  SelectAllCommand,
   SelectParentCommand,
   ToggleMarkCommand,
   UndoCommand,
@@ -44,6 +44,32 @@ class DeleteNodeCommand extends Command {
 
   override execute(): void {
     deleteSelectedNode(this.context.session);
+  }
+}
+
+/**
+ * Cmd/Ctrl+A selects the text of the current field and nothing more (editor-polish design.md
+ * decision 1). Svedit's own select-all grows to the paragraph and then the whole block, which
+ * a Backspace would then delete. Escape still selects paragraphs and blocks. On an image or a
+ * block selection it does nothing, but still takes the key, so the browser doesn't select the
+ * whole page.
+ */
+export class SelectFieldTextCommand extends Command {
+  override is_enabled(): boolean {
+    return Boolean(this.context.editable && this.context.session.selection);
+  }
+
+  override execute(): void {
+    const { session } = this.context;
+    const selection = session.selection as { type: string; path: (string | number)[] } | null;
+    if (selection?.type !== "text") return;
+    const text = session.get(selection.path) as { content: string };
+    session.selection = {
+      type: "text",
+      path: selection.path,
+      anchor_offset: 0,
+      focus_offset: graphemeLength(text.content),
+    };
   }
 }
 
@@ -99,7 +125,7 @@ export function createCommandsAndKeymap(context: any) {
     break_text: new BreakTextNodeCommand(context),
     insert_default: new InsertDefaultNodeCommand(context),
     new_line: new AddNewLineCommand(context),
-    select_all: new SelectAllCommand(context),
+    select_all: new SelectFieldTextCommand(context),
     select_parent: new SafeSelectParentCommand(context),
     move_up: new MoveNodeCommand(-1, context),
     move_down: new MoveNodeCommand(1, context),

@@ -87,7 +87,7 @@ describe("validateSite: site rules", () => {
     const [problem, ...rest] = errors(doc);
     expect(rest).toEqual([]);
     expect(problem).toMatchObject({ code: "duplicate-slug", nodeId: "page_contact_2" });
-    expect(problem?.message).toBe('"Kontakt" and "Contact us" both use the slug "kontakt".');
+    expect(problem?.message).toBe('"Kontakt" and "Contact us" have the same address "kontakt".');
   });
 
   it("warns about a page that is in the menu twice", () => {
@@ -129,7 +129,11 @@ describe("validateSite: site rules", () => {
       ["missing-page", "site", "nav_contact"],
       ["missing-page", "site", "internal_contact"],
     ]);
-    expect(problems[0]?.message).toBe("This link points to a page that no longer exists.");
+    // nav_contact is in the menu; internal_contact is a text link on the home page.
+    expect(problems.map((p) => p.message)).toEqual([
+      "A menu item points to a page that no longer exists.",
+      'A link on "Úvod" points to a page that no longer exists.',
+    ]);
   });
 
   it("names pages by title, never by node ID, in page messages", () => {
@@ -137,7 +141,7 @@ describe("validateSite: site rules", () => {
     addPage(nodes, "page_empty", "", "Ceník");
     nodes.page_home.blocks.nodes = ["rich_text_about", "hero_1", "services_1"];
     const messages = errors(doc).map((p) => p.message);
-    expect(messages).toContain('"Ceník" needs a slug (its address).');
+    expect(messages).toContain('"Ceník" needs an address.');
     expect(messages).toContain('The hero must be the first block of "Úvod".');
     expect(messages.join(" ")).not.toMatch(/page_/);
   });

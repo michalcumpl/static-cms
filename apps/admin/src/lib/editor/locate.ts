@@ -60,6 +60,58 @@ export function locateNode(doc: Doc, nodeId: string): NodeLocation | undefined {
   };
 }
 
+/** Where a mark (a link, bold, italic) sits: the text holding it and the marked range. */
+export interface MarkLocation {
+  /** Path from the site root to the text property, e.g. `[site_1, "pages", 0, …, "content"]`. */
+  path: DocumentPath;
+  start: number;
+  end: number;
+  pageId?: string;
+}
+
+/**
+ * Finds the text a mark belongs to. Marks aren't reached through node properties but through
+ * the ranges of a text, so `locateNode` never finds them.
+ */
+export function locateMark(doc: Doc, markId: string): MarkLocation | undefined {
+  const visit = (path: DocumentPath, id: string, seen: Set<string>): MarkLocation | undefined => {
+    if (seen.has(id)) return undefined;
+    seen.add(id);
+    const node = doc.nodes[id];
+    const properties = node ? editorSchema[node.type]?.properties : undefined;
+    for (const [name, def] of Object.entries(properties ?? {})) {
+      const value = node?.[name];
+      if (def.type === "text") {
+        const marks = (
+          value as { marks?: { node_id: string; start_offset: number; end_offset: number }[] }
+        )?.marks;
+        const range = marks?.find((m) => m.node_id === markId);
+        if (range) {
+          return { path: [...path, name], start: range.start_offset, end: range.end_offset };
+        }
+      } else if (def.type === "node" && typeof value === "string") {
+        const found = visit([...path, name], value, seen);
+        if (found) return found;
+      } else if (def.type === "node_array") {
+        const ids = (value as { nodes?: string[] } | undefined)?.nodes ?? [];
+        for (const [index, child] of ids.entries()) {
+          const found = visit([...path, name, index], child, seen);
+          if (found) return found;
+        }
+      }
+    }
+    return undefined;
+  };
+  const found = visit([doc.document_id], doc.document_id, new Set());
+  if (!found) return undefined;
+  const pages = (doc.nodes[doc.document_id]?.pages as { nodes?: string[] } | undefined)?.nodes;
+  const pageId =
+    found.path[1] === "pages" && typeof found.path[2] === "number"
+      ? pages?.[found.path[2]]
+      : undefined;
+  return pageId === undefined ? found : { ...found, pageId };
+}
+
 /**
  * The selection that shows a node: the caret at the start of its first text, a node
  * selection when it is a block or item in an editable list, or its image.

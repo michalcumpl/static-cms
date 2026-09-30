@@ -1,5 +1,12 @@
 import { isSafeHref } from "../links.js";
-import type { NodeOfType, NodeType, TextValue } from "../schema/index.js";
+import {
+  isNodeType,
+  type NodeOfType,
+  type NodeType,
+  type PropertyDef,
+  siteSchema,
+  type TextValue,
+} from "../schema/index.js";
 import { slugify } from "../slug.js";
 import type { GenericCheck } from "./generic.js";
 import type { Problems } from "./problems.js";
@@ -38,6 +45,7 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
     );
   }
   const site = get(docId, "site");
+  const where = placesOf(site, check);
 
   const pageIds = new Set<string>();
   if (site) {
@@ -75,7 +83,9 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
 
   // A logo's image is described by the logo's name, so it needs no alt text of its own.
   const logoImages = new Set(all("logo_item").flatMap((logo) => logo.image.nodes));
-  for (const image of all("image")) checkImage(image, problems, logoImages.has(image.id));
+  for (const image of all("image")) {
+    checkImage(image, problems, where(image.id), logoImages.has(image.id));
+  }
   for (const logo of all("logo_item")) {
     if (logo.page_id !== "" && logo.url !== "") {
       problems.error(
@@ -89,7 +99,7 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
       problems.error(
         "missing-page",
         logo.id,
-        "This logo links to a page that no longer exists.",
+        `A logo ${where(logo.id)} links to a page that no longer exists.`,
         "page_id",
       );
     }
@@ -101,7 +111,7 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
       problems.error(
         "missing-page",
         link.id,
-        "This link points to a page that no longer exists.",
+        `${linkLabel(link.id)} points to a page that no longer exists.`,
         "page_id",
       );
     }
@@ -110,9 +120,62 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
   for (const link of all("link")) checkHref(link.id, "href", link.href, problems);
   for (const link of [...all("page_link"), ...all("external_link")]) {
     if (isBlank(link.label)) {
-      problems.error("empty-link-label", link.id, `Link ${link.id} needs a label.`, "label");
+      problems.error("empty-link-label", link.id, `${linkLabel(link.id)} needs a label.`, "label");
     }
   }
+
+  /** How a link is named in messages: a menu item, a button (call to action) or a link. */
+  function linkLabel(id: string): string {
+    const place = where(id);
+    if (place === "in the menu") return "A menu item";
+    const node = check.nodes[id];
+    const kind =
+      node?.type === "page_link" || node?.type === "external_link" ? "A button" : "A link";
+    return place ? `${kind} ${place}` : kind;
+  }
+}
+
+type RawNode = Record<string, unknown> & { type: string };
+
+/**
+ * Where each node is, for messages: `on "Kontakt"` for nodes of a page (marks in its texts
+ * included), `in the menu` for the navigation, "" elsewhere.
+ */
+function placesOf(
+  site: NodeOfType<"site"> | undefined,
+  check: GenericCheck,
+): (id: string) => string {
+  const places = new Map<string, string>();
+  const nodes = check.nodes as Record<string, RawNode | undefined>;
+  const visit = (id: string, place: string) => {
+    const node = nodes[id];
+    if (!node || places.has(id) || !isNodeType(node.type)) return;
+    places.set(id, place);
+    for (const [name, def] of Object.entries(siteSchema[node.type].properties) as [
+      string,
+      PropertyDef,
+    ][]) {
+      const value = node[name] as
+        | { nodes?: unknown[]; marks?: { node_id?: unknown }[] }
+        | string
+        | undefined;
+      if (def.type === "node" && typeof value === "string") visit(value, place);
+      if (typeof value !== "object" || value === null) continue;
+      for (const child of value.nodes ?? []) if (typeof child === "string") visit(child, place);
+      for (const range of value.marks ?? []) {
+        if (typeof range?.node_id === "string") visit(range.node_id, place);
+      }
+    }
+  };
+  if (site) {
+    for (const pageId of site.pages.nodes) {
+      const page = nodes[pageId];
+      if (page?.type === "page")
+        visit(pageId, `on ${pageLabel(page as unknown as { title: string })}`);
+    }
+    visit(site.nav, "in the menu");
+  }
+  return (id) => places.get(id) ?? "";
 }
 
 function checkSiteNode(site: NodeOfType<"site">, problems: Problems): void {
@@ -182,8 +245,8 @@ function checkPageSlug(
       "invalid-slug",
       page.id,
       normalized === ""
-        ? `${pageLabel(page)} needs a slug (its address).`
-        : `Slug "${page.slug}" must be lowercase letters, digits and dashes; try "${normalized}".`,
+        ? `${pageLabel(page)} needs an address.`
+        : `The address "${page.slug}" of ${pageLabel(page)} may only contain lowercase letters, digits and dashes; try "${normalized}".`,
       "slug",
     );
     return;
@@ -193,7 +256,7 @@ function checkPageSlug(
     problems.error(
       "duplicate-slug",
       page.id,
-      `${pageLabel(other)} and ${pageLabel(page)} both use the slug "${page.slug}".`,
+      `${pageLabel(other)} and ${pageLabel(page)} have the same address "${page.slug}".`,
       "slug",
     );
   } else {
@@ -268,7 +331,7 @@ function checkPageBlocks(
         problems.error(
           "heading-skip",
           sub.id,
-          `A level 3 subheading comes before any level 2 heading on ${pageLabel(page)}.`,
+          `On ${pageLabel(page)}, a smaller subheading comes before any main subheading; make the first one a main subheading.`,
           "level",
         );
       }
@@ -351,8 +414,10 @@ function checkImageBlock(
 function checkImage(
   image: NodeOfType<"image">,
   problems: Problems,
+  place: string,
   describedElsewhere = false,
 ): void {
+  const anImage = place ? `An image ${place}` : "An image";
   if (!(image.width > 0 && image.height > 0)) {
     problems.error(
       "missing-image-size",
@@ -365,7 +430,7 @@ function checkImage(
     problems.error(
       "invalid-media-key",
       image.id,
-      `Image source "${image.src}" must be a plain file name (letters, digits, dots, dashes, underscores).`,
+      `${anImage} has an invalid file name; choose it again from the media library.`,
       "src",
     );
   }
@@ -374,14 +439,14 @@ function checkImage(
     problems.error(
       "missing-alt",
       image.id,
-      `Describe image ${image.id} in its alt text, or mark it as decorative.`,
+      `${anImage} needs a description (alt text), or mark it as decorative.`,
       "alt",
     );
   } else if (image.decorative && hasAlt) {
     problems.error(
       "decorative-with-alt",
       image.id,
-      `Image ${image.id} is marked decorative, so its alt text must be empty.`,
+      `${anImage} is marked decorative, so it can't have a description.`,
       "alt",
     );
   }
@@ -392,7 +457,7 @@ function checkHref(nodeId: string, property: string, href: string, problems: Pro
     problems.error(
       "unsafe-link",
       nodeId,
-      `"${href}" is not an allowed link; use http(s), mailto, tel or a path starting with /.`,
+      `"${href}" isn't an allowed address; use https://, http://, mailto:, tel: or a path starting with /.`,
       property,
     );
   }

@@ -2,7 +2,13 @@
 import { type Problem, validateSite } from "@static-cms/site";
 import { tick, untrack } from "svelte";
 import { goto } from "$app/navigation";
-import { locateNode, pageFieldElementId, pageSettingsTarget, selectionFor } from "./locate";
+import {
+  locateMark,
+  locateNode,
+  pageFieldElementId,
+  pageSettingsTarget,
+  selectionFor,
+} from "./locate";
 import type { EditorState } from "./state.svelte";
 
 let { editor, focusCanvas }: { editor: EditorState; focusCanvas: () => void } = $props();
@@ -29,6 +35,7 @@ const errors = $derived(problems.filter((p) => p.severity === "error").length);
 function canShow(problem: Problem): boolean {
   const doc = editor.session.doc as unknown as Doc;
   if (pageSettingsTarget(doc, problem.nodeId, problem.property)) return true;
+  if (locateMark(doc, problem.nodeId)) return true;
   const location = locateNode(doc, problem.nodeId);
   if (!location) return false;
   return location.pageId !== undefined || selectionFor(doc, problem.nodeId, location) !== undefined;
@@ -48,6 +55,21 @@ async function show(problem: Problem) {
   if (target) {
     await showPage(target.pageId);
     document.getElementById(pageFieldElementId(target.field))?.focus();
+    return;
+  }
+  const mark = locateMark(doc, problem.nodeId);
+  if (mark) {
+    // A link inside text: select exactly the linked words.
+    await showPage(mark.pageId);
+    const at = locateMark(editor.session.doc as unknown as Doc, problem.nodeId);
+    if (!at) return;
+    editor.session.selection = {
+      type: "text",
+      path: at.path,
+      anchor_offset: at.start,
+      focus_offset: at.end,
+    };
+    focusCanvas();
     return;
   }
   const location = locateNode(doc, problem.nodeId);

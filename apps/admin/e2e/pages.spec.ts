@@ -202,7 +202,7 @@ test.describe("page settings", () => {
     await expect(canvas(page).locator(".hero h1")).toBeVisible();
 
     const problems = page.getByRole("region", { name: "Problems" });
-    await problems.getByRole("button", { name: /both use the slug "uvod"/ }).click();
+    await problems.getByRole("button", { name: /have the same address "uvod"/ }).click();
     await expect(canvas(page).locator("h1")).toHaveText("Kontakt");
     await expect(settings(page).getByLabel("Address (slug)")).toBeFocused();
   });

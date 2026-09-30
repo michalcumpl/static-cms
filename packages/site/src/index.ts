@@ -26,6 +26,7 @@ export {
 } from "./render/index.js";
 export * from "./schema/index.js";
 export { slugify, uniqueSlug } from "./slug.js";
+export { graphemeLength } from "./text.js";
 export {
   type Problem,
   type ProblemCategory,
