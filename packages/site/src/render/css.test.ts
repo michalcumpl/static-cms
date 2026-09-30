@@ -43,11 +43,20 @@ describe("theme stylesheet", () => {
     expect(BASE_CSS).not.toMatch(/border-radius:(?!\s*var\()/);
   });
 
+  it("has no comments, which scoping for the editor canvas would split at commas", () => {
+    expect(BASE_CSS).not.toContain("/*");
+  });
+
   it("styles every block type and the page landmarks", () => {
     for (const selector of [
       ".hero",
       ".rich-text",
       ".services",
+      ".twi-inner",
+      ".gallery-grid",
+      ".team-list",
+      ".portrait",
+      ".logo-row",
       ".site-header",
       ".site-nav",
       ".site-footer",

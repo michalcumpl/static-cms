@@ -4,6 +4,7 @@ import {
   blockInserters,
   insertableBlocks,
   insertListItem,
+  insertPerson,
   insertServiceItem,
 } from "./transforms";
 
@@ -134,12 +135,17 @@ export function itemInsertionPoint(
 ): { path: DocumentPath; index: number } | undefined {
   const selection = session.selection as AnySelection | null;
   if (!selection) return undefined;
-  // Walk up the selection path to the innermost `items` list of a list or services block.
+  // Walk up the selection path to the innermost item list of a list, services or team block.
+  // Gallery photos and logos need an image, so they come from the library instead.
   for (let end = selection.path.length; end > 0; end--) {
     const path = selection.path.slice(0, end);
-    if (path.at(-1) !== "items") continue;
+    const property = path.at(-1);
+    if (property !== "items" && property !== "people") continue;
     const owner = session.get(path.slice(0, -1)) as { type?: string } | undefined;
-    if (owner?.type !== "list" && owner?.type !== "services") continue;
+    const itemList =
+      (property === "items" && (owner?.type === "list" || owner?.type === "services")) ||
+      (property === "people" && owner?.type === "team");
+    if (!itemList) continue;
     const next = selection.path[end];
     if (typeof next === "number") return { path, index: next + 1 };
     if (selection.type === "node") {
@@ -149,7 +155,7 @@ export function itemInsertionPoint(
   return undefined;
 }
 
-/** Inserts an empty list item or service item after the current one. */
+/** Inserts an empty list item, service item or person after the current one. */
 export function insertItem(session: Session): boolean {
   const at = itemInsertionPoint(session);
   if (!at) return false;
@@ -161,7 +167,13 @@ export function insertItem(session: Session): boolean {
     anchor_offset: at.index,
     focus_offset: at.index,
   });
-  (owner.type === "services" ? insertServiceItem : insertListItem)(tr);
+  const inserter =
+    owner.type === "services"
+      ? insertServiceItem
+      : owner.type === "team"
+        ? insertPerson
+        : insertListItem;
+  inserter(tr);
   session.apply(tr);
   return true;
 }

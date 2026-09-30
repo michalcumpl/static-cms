@@ -73,7 +73,28 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
     if (theme) checkTheme(theme, problems);
   }
 
-  for (const image of all("image")) checkImage(image, problems);
+  // A logo's image is described by the logo's name, so it needs no alt text of its own.
+  const logoImages = new Set(all("logo_item").flatMap((logo) => logo.image.nodes));
+  for (const image of all("image")) checkImage(image, problems, logoImages.has(image.id));
+  for (const logo of all("logo_item")) {
+    if (logo.page_id !== "" && logo.url !== "") {
+      problems.error(
+        "invalid-value",
+        logo.id,
+        "A logo links either to a page or to an address, not both.",
+        "url",
+      );
+    }
+    if (site && logo.page_id !== "" && !pageIds.has(logo.page_id)) {
+      problems.error(
+        "missing-page",
+        logo.id,
+        "This logo links to a page that no longer exists.",
+        "page_id",
+      );
+    }
+    if (logo.url !== "") checkHref(logo.id, "url", logo.url, problems);
+  }
 
   for (const link of [...all("page_link"), ...all("internal_link")]) {
     if (site && !pageIds.has(link.page_id)) {
@@ -229,6 +250,11 @@ function checkPageBlocks(
     }
     const services = get(blockId, "services");
     if (services && !isBlank(services.heading)) hasH2 = true;
+    checkImageBlock(blockId, page, get, problems);
+    for (const type of ["text_with_image", "gallery", "team", "logos"] as const) {
+      const block = get(blockId, type);
+      if (block && !isBlank(block.heading)) hasH2 = true;
+    }
     const richText = get(blockId, "rich_text");
     for (const childId of richText?.body.nodes ?? []) {
       const sub = get(childId, "subheading");
@@ -250,7 +276,83 @@ function checkPageBlocks(
   });
 }
 
-function checkImage(image: NodeOfType<"image">, problems: Problems): void {
+/** The contents of gallery, team and logos blocks, and the image of a text with image block. */
+function checkImageBlock(
+  blockId: string,
+  page: NodeOfType<"page">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const on = pageLabel(page);
+  const tooMany = (id: string, count: number, what: string) => {
+    if (count > 1)
+      problems.error("too-many-items", id, `${what} can have at most one image.`, "image");
+  };
+  const textWithImage = get(blockId, "text_with_image");
+  if (textWithImage)
+    tooMany(textWithImage.id, textWithImage.image.nodes.length, "A text with image block");
+
+  const emptyBlock = (id: string, count: number, what: string, property: string) => {
+    if (count === 0) {
+      problems.warning("empty-block", id, `A ${what} on ${on} is empty.`, property);
+    }
+  };
+  const gallery = get(blockId, "gallery");
+  if (gallery) {
+    emptyBlock(gallery.id, gallery.items.nodes.length, "gallery", "items");
+    for (const itemId of gallery.items.nodes) {
+      const item = get(itemId, "gallery_item");
+      if (!item) continue;
+      if (item.image.nodes.length === 0) {
+        problems.error(
+          "missing-image",
+          item.id,
+          `A photo in the gallery on ${on} has no image.`,
+          "image",
+        );
+      }
+      tooMany(item.id, item.image.nodes.length, "A gallery photo");
+    }
+  }
+  const team = get(blockId, "team");
+  if (team) {
+    emptyBlock(team.id, team.people.nodes.length, "team", "people");
+    for (const personId of team.people.nodes) {
+      const person = get(personId, "person");
+      if (!person) continue;
+      if (isBlank(person.name)) {
+        problems.error("empty-name", person.id, `A person on ${on} needs a name.`, "name");
+      }
+      tooMany(person.id, person.image.nodes.length, "A person");
+    }
+  }
+  const logos = get(blockId, "logos");
+  if (logos) {
+    emptyBlock(logos.id, logos.items.nodes.length, "logo row", "items");
+    for (const itemId of logos.items.nodes) {
+      const logo = get(itemId, "logo_item");
+      if (!logo) continue;
+      if (isBlank(logo.name)) {
+        problems.error(
+          "empty-name",
+          logo.id,
+          `A logo on ${on} needs the partner's name; it is the logo's description.`,
+          "name",
+        );
+      }
+      if (logo.image.nodes.length === 0) {
+        problems.error("missing-image", logo.id, `A logo on ${on} has no image.`, "image");
+      }
+      tooMany(logo.id, logo.image.nodes.length, "A logo");
+    }
+  }
+}
+
+function checkImage(
+  image: NodeOfType<"image">,
+  problems: Problems,
+  describedElsewhere = false,
+): void {
   if (!(image.width > 0 && image.height > 0)) {
     problems.error(
       "missing-image-size",
@@ -268,7 +370,7 @@ function checkImage(image: NodeOfType<"image">, problems: Problems): void {
     );
   }
   const hasAlt = image.alt.trim() !== "";
-  if (!image.decorative && !hasAlt) {
+  if (!image.decorative && !hasAlt && !describedElsewhere) {
     problems.error(
       "missing-alt",
       image.id,

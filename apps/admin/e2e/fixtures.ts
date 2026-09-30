@@ -12,7 +12,7 @@ import { projectPaths } from "../src/lib/project-paths";
 import { createSession } from "../src/lib/server/auth";
 import { type Db, openDatabase } from "../src/lib/server/db/index";
 import { siteDocuments, versions } from "../src/lib/server/db/schema";
-import { demoSite } from "../src/lib/server/demo";
+import { demoSite, imageBlocksSite } from "../src/lib/server/demo";
 import { readSite, saveSite } from "../src/lib/server/site-documents";
 import { readState } from "./state";
 
@@ -52,6 +52,14 @@ export function storeVersion1Site(): void {
     .set({ document })
     .where(eq(versions.id, current?.versionId ?? ""))
     .run();
+}
+
+/** Replaces the project's site with the image blocks fixture (the demo plus a page "Galerie"). */
+export function storeImageBlocksSite(): void {
+  const { projectId, owner } = state();
+  const current = readSite(testDb(), projectId);
+  const result = saveSite(testDb(), projectId, owner.id, imageBlocksSite(), current?.version ?? "");
+  if (!result.ok) throw new Error("could not store the image blocks site");
 }
 
 /** Signs a browser context in as `user` by giving it a fresh session cookie. */

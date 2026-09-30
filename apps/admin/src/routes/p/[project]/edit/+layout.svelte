@@ -108,7 +108,12 @@ const BLOCK_LABELS: Record<BlockType, string> = {
   hero: "Hero",
   rich_text: "Text",
   services: "Services",
+  text_with_image: "Text + image",
+  gallery: "Gallery",
+  team: "Team",
+  logos: "Logos",
 };
+const BLOCK_ORDER = Object.keys(BLOCK_LABELS) as BlockType[];
 const insertable = $derived(
   editor.pageIndex < 0 ? [] : availableBlocks(session, editor.siteId, editor.pageIndex),
 );
@@ -134,6 +139,11 @@ let mediaLibrary: MediaLibrary | undefined = $state();
 editor.openLibrary = async (current) => {
   const chosen = await mediaLibrary?.open(current);
   // Focus left the canvas for the dialog; give it back before the image gets selected.
+  canvas?.focus_canvas();
+  return chosen;
+};
+editor.openLibraryMany = async () => {
+  const chosen = (await mediaLibrary?.openMany()) ?? [];
   canvas?.focus_canvas();
   return chosen;
 };
@@ -172,11 +182,11 @@ const statusText = $derived.by(() => {
       <span class="separator"></span>
       <span class="group" role="group" aria-label="Add block">
         Add:
-        {#each ["hero", "rich_text", "services"] as const as type (type)}
+        {#each BLOCK_ORDER as type (type)}
           <button type="button" onmousedown={(e) => e.preventDefault()} onclick={() => addBlock(type)} disabled={!insertable.includes(type)}>{BLOCK_LABELS[type]}</button>
         {/each}
       </span>
-      <button type="button" title="Add a list or service item after the current one" onmousedown={(e) => e.preventDefault()} onclick={() => insertItem(session)} disabled={!canAddItem}>Add item</button>
+      <button type="button" title="Add a list item, service or person after the current one" onmousedown={(e) => e.preventDefault()} onclick={() => insertItem(session)} disabled={!canAddItem}>Add item</button>
       <button type="button" aria-label="Move up" title="Move up (Alt+↑)" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.move_up?.execute()} disabled={commands?.move_up?.disabled ?? true}>↑</button>
       <button type="button" aria-label="Move down" title="Move down (Alt+↓)" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.move_down?.execute()} disabled={commands?.move_down?.disabled ?? true}>↓</button>
       <button type="button" title="Delete the selected block or item" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.delete_node?.execute()} disabled={commands?.delete_node?.disabled ?? true}>Delete</button>

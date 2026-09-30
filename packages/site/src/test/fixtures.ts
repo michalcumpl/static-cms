@@ -30,3 +30,11 @@ export function homeListedSecondSite(): SiteDocument {
   nodes.site_1.pages.nodes = ["page_contact", "page_home"];
   return doc;
 }
+
+/** The demo site plus an unlisted page "Galerie" with one block of each image block type. */
+export function editableImageBlocksSite(): { doc: SiteDocument; nodes: LooseNodes } {
+  const doc = JSON.parse(
+    readFileSync(new URL("image-blocks-site.json", fixturesDir), "utf8"),
+  ) as SiteDocument;
+  return { doc, nodes: doc.nodes as LooseNodes };
+}

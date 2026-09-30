@@ -7,6 +7,9 @@ let { path }: { path: DocumentPath } = $props();
 const svedit = getContext<SveditContext>("svedit");
 const editor = getEditor();
 const image = $derived(svedit.session.get(path));
+// Styled like the published image of its block (see the site stylesheet).
+const CLASS_BY_OWNER: Record<string, string> = { hero: "hero-image", person: "portrait" };
+const ownerType = $derived((svedit.session.get(path.slice(0, -2)) as { type?: string })?.type);
 </script>
 
 <!-- Selecting the image opens the Image panel: alt text, and replacing or removing it. -->
@@ -14,7 +17,7 @@ const image = $derived(svedit.session.get(path));
   <CustomProperty path={[...path, "src"]}>
     <div contenteditable="false">
       <img
-        class="hero-image"
+        class={CLASS_BY_OWNER[ownerType ?? ""]}
         src={editor.paths.image(image.src, image.width)}
         alt={image.decorative ? "" : image.alt}
         width={image.width || undefined}

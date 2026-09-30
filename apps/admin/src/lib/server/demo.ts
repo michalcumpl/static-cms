@@ -6,11 +6,17 @@ import { dirname, join } from "node:path";
 const require = createRequire(import.meta.url);
 const demoFile = require.resolve("@static-cms/site/fixtures/demo-site.json");
 const starterFile = require.resolve("@static-cms/site/fixtures/starter-site.json");
+const imageBlocksFile = require.resolve("@static-cms/site/fixtures/image-blocks-site.json");
 const demoMediaDir = join(dirname(demoFile), "media");
 
 /** The demo site document (tests, and the images of an imported Milestone 2 working copy). */
 export function demoSite(): unknown {
   return JSON.parse(readFileSync(demoFile, "utf8"));
+}
+
+/** The demo site plus an unlisted page "Galerie" with one block of each image block type (tests). */
+export function imageBlocksSite(): unknown {
+  return JSON.parse(readFileSync(imageBlocksFile, "utf8"));
 }
 
 /** The site a new project starts from, with its site name set to `name`. */

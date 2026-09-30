@@ -87,7 +87,15 @@ export const siteSchema = {
       seo_description: { type: "string" },
       blocks: {
         type: "node_array",
-        node_types: ["hero", "rich_text", "services"],
+        node_types: [
+          "hero",
+          "rich_text",
+          "services",
+          "text_with_image",
+          "gallery",
+          "team",
+          "logos",
+        ],
         default_node_type: "rich_text",
       },
     },
@@ -153,6 +161,67 @@ export const siteSchema = {
       name: { type: "text", allow_newlines: false },
       description: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
       price: { type: "text", allow_newlines: false },
+    },
+  },
+  text_with_image: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      body: {
+        type: "node_array",
+        node_types: ["paragraph", "list"],
+        default_node_type: "paragraph",
+      },
+      image: { type: "node_array", node_types: ["image"] },
+      image_side: { type: "string", values: ["left", "right"], default: "right" },
+    },
+  },
+  gallery: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      items: { type: "node_array", node_types: ["gallery_item"] },
+    },
+  },
+  gallery_item: {
+    kind: "block",
+    properties: {
+      image: { type: "node_array", node_types: ["image"] },
+      caption: { type: "text", allow_newlines: false },
+    },
+  },
+  team: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      people: { type: "node_array", node_types: ["person"], default_node_type: "person" },
+    },
+  },
+  person: {
+    kind: "block",
+    properties: {
+      name: { type: "text", allow_newlines: false },
+      role: { type: "text", allow_newlines: false },
+      text: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
+      image: { type: "node_array", node_types: ["image"] },
+    },
+  },
+  logos: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      items: { type: "node_array", node_types: ["logo_item"] },
+    },
+  },
+  logo_item: {
+    kind: "block",
+    properties: {
+      image: { type: "node_array", node_types: ["image"] },
+      name: { type: "text", allow_newlines: false },
+      /** A page of the site, or "" for none. At most one of `page_id` and `url` is set. */
+      page_id: { type: "string" },
+      /** An external address, or "" for none. */
+      url: { type: "string" },
     },
   },
   image: {

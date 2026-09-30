@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { projectPaths } from "$lib/project-paths";
 import { demoSite } from "$lib/server/demo";
 import { EditorState } from "./state.svelte";
-import { removeHeroImage, setHeroImage, setImageAlt, setImageDecorative } from "./transforms";
+import { removeImage, setImage, setImageAlt, setImageDecorative } from "./transforms";
 
 function session() {
   return new EditorState(
@@ -54,9 +54,9 @@ describe("hero image transforms", () => {
 
   it("adds an image to a hero without one, storing its key and size", () => {
     const s = session();
-    removeHeroImageNow(s);
+    removeImageNow(s);
     const tr = s.tr;
-    const id = setHeroImage(tr, "hero_1", pult);
+    const id = setImage(tr, "hero_1", pult);
     s.apply(tr);
     expect(hero(s).image.nodes).toEqual([id]);
     expect(s.get(id)).toMatchObject({
@@ -71,7 +71,7 @@ describe("hero image transforms", () => {
 
   it("removes the hero image, and undo brings it back with its alt text", () => {
     const s = session();
-    removeHeroImageNow(s);
+    removeImageNow(s);
     expect(hero(s).image.nodes).toEqual([]);
     expect(s.get("image_hero")).toBeUndefined();
     s.undo();
@@ -82,11 +82,11 @@ describe("hero image transforms", () => {
   it("replacing with a different image clears the alt text; the same image keeps it", () => {
     const s = session();
     let tr = s.tr;
-    setHeroImage(tr, "hero_1", { key: "hero.png", width: 320, height: 180 });
+    setImage(tr, "hero_1", { key: "hero.png", width: 320, height: 180 });
     s.apply(tr);
     expect(image(s).alt).toBe("Bochníky kváskového chleba na dřevěném pultu");
     tr = s.tr;
-    setHeroImage(tr, "hero_1", pult);
+    setImage(tr, "hero_1", pult);
     s.apply(tr);
     expect(s.get("image_hero")).toMatchObject({ src: "pult-3f9a2c1d", alt: "", width: 4032 });
     s.undo();
@@ -95,8 +95,8 @@ describe("hero image transforms", () => {
   });
 });
 
-function removeHeroImageNow(s: ReturnType<typeof session>) {
+function removeImageNow(s: ReturnType<typeof session>) {
   const tr = s.tr;
-  removeHeroImage(tr, "hero_1");
+  removeImage(tr, "hero_1");
   s.apply(tr);
 }

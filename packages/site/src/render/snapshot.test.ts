@@ -1,6 +1,6 @@
 import { HtmlValidate } from "html-validate";
 import { describe, expect, it } from "vitest";
-import { homeListedSecondSite, loadDemoSite } from "../test/fixtures.js";
+import { editableImageBlocksSite, homeListedSecondSite, loadDemoSite } from "../test/fixtures.js";
 import { renderSite } from "./index.js";
 
 function renderDemo(doc: unknown = loadDemoSite()) {
@@ -24,7 +24,16 @@ describe("demo site output", () => {
   });
 
   const homeSecond = renderDemo(homeListedSecondSite());
-  it.each([...site.pages, ...homeSecond.pages].map((p) => [p.path, p.html]))(
+  const imageBlocks = renderDemo(editableImageBlocksSite().doc);
+  const galerie = imageBlocks.pages.find((p) => p.path === "galerie/index.html");
+
+  it("matches the snapshot of the image blocks page", async () => {
+    await expect(galerie?.html).toMatchFileSnapshot(
+      "__snapshots__/image-blocks/galerie/index.html",
+    );
+  });
+
+  it.each([...site.pages, ...homeSecond.pages, ...imageBlocks.pages].map((p) => [p.path, p.html]))(
     "%s passes html-validate",
     async (_path, html) => {
       const validator = new HtmlValidate({

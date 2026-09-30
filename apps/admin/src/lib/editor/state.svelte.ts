@@ -118,6 +118,8 @@ export class EditorState {
    * the chosen image, or undefined when the owner closes the library without choosing.
    */
   openLibrary: (current?: string) => Promise<ChosenImage | undefined> = async () => undefined;
+  /** Opens the media library to choose several images; resolves with none when closed. */
+  openLibraryMany: () => Promise<ChosenImage[]> = async () => [];
 
   #drafts = new Set<() => void>();
 

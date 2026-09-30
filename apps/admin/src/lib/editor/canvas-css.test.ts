@@ -39,3 +39,12 @@ describe("canvasCss", () => {
     expect(css).toContain("--color-primary: #1f5a8a;");
   });
 });
+
+describe("canvasCss for image blocks", () => {
+  it("scopes the image block styles, including round portraits", () => {
+    const css = canvasCss(demoSite(), ".site-canvas");
+    for (const selector of [".portrait", ".gallery-grid img", ".logo-row img", ".twi-inner"]) {
+      expect(css, selector).toContain(`.site-canvas ${selector}`);
+    }
+  });
+});

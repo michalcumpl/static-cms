@@ -12,6 +12,14 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderRichText(block, ctx);
     case "services":
       return renderServices(block, ctx);
+    case "text_with_image":
+      return renderTextWithImage(block, ctx);
+    case "gallery":
+      return renderGallery(block, ctx);
+    case "team":
+      return renderTeam(block, ctx);
+    case "logos":
+      return renderLogos(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -36,26 +44,33 @@ function renderHero(hero: NodeOfType<"hero">, ctx: RenderContext): Html {
         </div>${
           image?.type === "image" &&
           html`
-        ${renderImage(image, ctx, { lazy: false, sizes: HERO_IMAGE_SIZES, className: "hero-image" })}`
+        ${renderImage(image, ctx, { lazy: false, sizes: IMAGE_SIZES.hero, className: "hero-image" })}`
         }
       </div>
     </section>`;
 }
 
 function renderRichText(block: NodeOfType<"rich_text">, ctx: RenderContext): Html {
-  const children = ctx.children(block.body).map((child) => {
-    switch (child.type) {
-      case "paragraph":
-        return html`
+  return html`<section class="block rich-text">
+      <div class="container">${ctx.children(block.body).map((child) => renderBodyChild(child, ctx))}
+      </div>
+    </section>`;
+}
+
+/** A paragraph, subheading or list of a text body. */
+function renderBodyChild(child: AnyNode, ctx: RenderContext): Html {
+  switch (child.type) {
+    case "paragraph":
+      return html`
         <p>${renderText(child.content, ctx)}</p>`;
-      case "subheading":
-        return child.level === 2
-          ? html`
+    case "subheading":
+      return child.level === 2
+        ? html`
         <h2>${renderText(child.content, ctx)}</h2>`
-          : html`
+        : html`
         <h3>${renderText(child.content, ctx)}</h3>`;
-      case "list":
-        return html`
+    case "list":
+      return html`
         <ul>${ctx.children(child.items).map(
           (item) =>
             item.type === "list_item" &&
@@ -63,12 +78,122 @@ function renderRichText(block: NodeOfType<"rich_text">, ctx: RenderContext): Htm
           <li>${renderText(item.content, ctx)}</li>`,
         )}
         </ul>`;
-      default:
-        throw new Error(`${child.id} of type ${child.type} cannot appear in rich text.`);
-    }
+    default:
+      throw new Error(`${child.id} of type ${child.type} cannot appear in rich text.`);
+  }
+}
+
+/** An optional block heading, always an `<h2>`. */
+function blockHeading(
+  heading: NodeOfType<"services">["heading"],
+  ctx: RenderContext,
+): Html | false {
+  return (
+    !isEmpty(heading) &&
+    html`
+        <h2>${renderText(heading, ctx)}</h2>`
+  );
+}
+
+/** The image of a node's 0..1 `image` list, if it has one. */
+function imageOf(owner: { image: { nodes: string[] } }, ctx: RenderContext) {
+  const [image] = ctx.children(owner.image);
+  return image?.type === "image" ? image : undefined;
+}
+
+function renderTextWithImage(block: NodeOfType<"text_with_image">, ctx: RenderContext): Html {
+  const image = imageOf(block, ctx);
+  return html`<section class="block text-with-image image-${block.image_side}">
+      <div class="container twi-inner">
+        <div class="twi-text">${blockHeading(block.heading, ctx)}${ctx
+          .children(block.body)
+          .map((child) => renderBodyChild(child, ctx))}
+        </div>${
+          image &&
+          html`
+        <div class="twi-image">${renderImage(image, ctx, { lazy: true, sizes: IMAGE_SIZES.textWithImage })}</div>`
+        }
+      </div>
+    </section>`;
+}
+
+function renderGallery(block: NodeOfType<"gallery">, ctx: RenderContext): Html {
+  const items = ctx.children(block.items).map((item) => {
+    if (item.type !== "gallery_item") return false;
+    const image = imageOf(item, ctx);
+    if (!image) return false;
+    // No script on published pages: the largest variant opens as a plain link.
+    const largest = imageVariants(image.width).at(-1) ?? image.width;
+    return html`
+          <li>
+            <figure>
+              <a href="${ctx.url(`assets/images/${imageFile(image.src, largest)}`)}">${renderImage(image, ctx, { lazy: true, sizes: IMAGE_SIZES.gallery })}</a>${
+                !isEmpty(item.caption) &&
+                html`
+              <figcaption>${renderText(item.caption, ctx)}</figcaption>`
+              }
+            </figure>
+          </li>`;
   });
-  return html`<section class="block rich-text">
-      <div class="container">${children}
+  return html`<section class="block gallery">
+      <div class="container">${blockHeading(block.heading, ctx)}
+        <ul class="gallery-grid">${items}
+        </ul>
+      </div>
+    </section>`;
+}
+
+function renderTeam(block: NodeOfType<"team">, ctx: RenderContext): Html {
+  // Names sit one level below the block heading, so no heading level is skipped.
+  const nameTag = isEmpty(block.heading) ? "h2" : "h3";
+  const people = ctx.children(block.people).map((person) => {
+    if (person.type !== "person") return false;
+    const image = imageOf(person, ctx);
+    const name = renderText(person.name, ctx);
+    return html`
+          <li class="person">${
+            image &&
+            html`
+            ${renderImage(image, ctx, { lazy: true, sizes: IMAGE_SIZES.portrait, className: "portrait" })}`
+          }
+            ${nameTag === "h2" ? html`<h2 class="person-name">${name}</h2>` : html`<h3 class="person-name">${name}</h3>`}${
+              !isEmpty(person.role) &&
+              html`
+            <p class="person-role">${renderText(person.role, ctx)}</p>`
+            }${
+              !isEmpty(person.text) &&
+              html`
+            <p class="person-text">${renderText(person.text, ctx)}</p>`
+            }
+          </li>`;
+  });
+  return html`<section class="block team">
+      <div class="container">${blockHeading(block.heading, ctx)}
+        <ul class="team-list">${people}
+        </ul>
+      </div>
+    </section>`;
+}
+
+function renderLogos(block: NodeOfType<"logos">, ctx: RenderContext): Html {
+  const logos = ctx.children(block.items).map((logo) => {
+    if (logo.type !== "logo_item") return false;
+    const image = imageOf(logo, ctx);
+    if (!image) return false;
+    // The partner's name is the logo's description.
+    const img = renderImage({ ...image, alt: logo.name.content, decorative: false }, ctx, {
+      lazy: true,
+      sizes: IMAGE_SIZES.logo,
+    });
+    const href =
+      logo.page_id !== "" ? ctx.pageUrl(logo.page_id) : logo.url !== "" ? ctx.href(logo.url) : "";
+    return html`
+          <li>${href ? html`<a href="${href}">${img}</a>` : img}</li>`;
+  });
+  return html`<section class="block logos">
+      <div class="container">${blockHeading(block.heading, ctx)}
+        <ul class="logo-row">${logos}
+        </ul>
       </div>
     </section>`;
 }
@@ -102,8 +227,20 @@ function renderServices(block: NodeOfType<"services">, ctx: RenderContext): Html
     </section>`;
 }
 
-/** `sizes` of the hero image: the image column is 2/5 of the hero from a 48rem wide layout. */
-export const HERO_IMAGE_SIZES = "(min-width: 48rem) 40vw, 100vw";
+/**
+ * `sizes` per block. They follow each block's layout (see css.ts) and never the theme, so a
+ * theme change leaves the HTML alone.
+ */
+export const IMAGE_SIZES = {
+  /** The image column is 2/5 of the hero from a 48rem wide layout. */
+  hero: "(min-width: 48rem) 40vw, 100vw",
+  /** Half the width beside the text from 48rem. */
+  textWithImage: "(min-width: 48rem) 50vw, 100vw",
+  /** Three columns from 48rem, two below. */
+  gallery: "(min-width: 48rem) 33vw, 50vw",
+  portrait: "10rem",
+  logo: "12rem",
+} as const;
 
 /**
  * An image as `<img>` over its WebP variants. `sizes` comes from the block, never the theme,

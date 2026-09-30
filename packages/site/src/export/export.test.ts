@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { usedImageFiles } from "../images.js";
 import {
   editableDemoSite,
+  editableImageBlocksSite,
   homeListedSecondSite,
   loadDemoMedia,
   loadDemoSite,
@@ -110,6 +111,14 @@ describe("exportSite", () => {
     nodes.hero_1.image.nodes = [];
     const result = exportSite(doc, new Map());
     expect(result.ok && [...result.files.keys()]).not.toContain("assets/images/hero.png-320.webp");
+  });
+
+  it("exports the image blocks page with the variants its images use", () => {
+    const { files } = exported(editableImageBlocksSite().doc);
+    expect(files.has("galerie/index.html")).toBe(true);
+    expect([...files.keys()].filter((k) => k.startsWith("assets/images/"))).toEqual([
+      "assets/images/hero.png-320.webp",
+    ]);
   });
 
   it("lists every page's absolute URL in the sitemap", () => {

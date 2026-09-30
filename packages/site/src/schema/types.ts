@@ -136,6 +136,68 @@ export interface ServiceItemNode {
   price: TextValue;
 }
 
+export interface TextWithImageNode {
+  id: string;
+  type: "text_with_image";
+  heading: TextValue;
+  /** Paragraphs and lists. */
+  body: NodeArrayValue;
+  /** Zero or one `image` node. */
+  image: NodeArrayValue;
+  image_side: "left" | "right";
+}
+
+export interface GalleryNode {
+  id: string;
+  type: "gallery";
+  heading: TextValue;
+  items: NodeArrayValue;
+}
+
+export interface GalleryItemNode {
+  id: string;
+  type: "gallery_item";
+  /** Exactly one `image` node. */
+  image: NodeArrayValue;
+  caption: TextValue;
+}
+
+export interface TeamNode {
+  id: string;
+  type: "team";
+  heading: TextValue;
+  people: NodeArrayValue;
+}
+
+export interface PersonNode {
+  id: string;
+  type: "person";
+  name: TextValue;
+  role: TextValue;
+  text: TextValue;
+  /** Zero or one portrait `image` node. */
+  image: NodeArrayValue;
+}
+
+export interface LogosNode {
+  id: string;
+  type: "logos";
+  heading: TextValue;
+  items: NodeArrayValue;
+}
+
+export interface LogoItemNode {
+  id: string;
+  type: "logo_item";
+  /** Exactly one `image` node; its description is `name`. */
+  image: NodeArrayValue;
+  name: TextValue;
+  /** A page of the site, or "" for none. */
+  page_id: string;
+  /** An external address, or "" for none. */
+  url: string;
+}
+
 export interface ImageNode {
   id: string;
   type: "image";
@@ -185,6 +247,13 @@ export type AnyNode =
   | ListItemNode
   | ServicesNode
   | ServiceItemNode
+  | TextWithImageNode
+  | GalleryNode
+  | GalleryItemNode
+  | TeamNode
+  | PersonNode
+  | LogosNode
+  | LogoItemNode
   | ImageNode
   | StrongNode
   | EmphasisNode

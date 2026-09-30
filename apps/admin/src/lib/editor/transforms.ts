@@ -1,6 +1,8 @@
 import type { Transaction } from "svedit";
+import { checkLinkAddress, type LinkAddressCheck } from "./links";
 
 type Tr = Transaction;
+type NodeList = { nodes: string[] };
 type TextValue = { content: string; marks: never[]; annotations: never[] };
 type NodeSelection = {
   type: "node";
@@ -112,18 +114,76 @@ export function insertHero(tr: Tr): boolean {
   return true;
 }
 
-export type BlockType = "hero" | "rich_text" | "services";
+/** A text block with a placeholder heading, an empty paragraph and no image yet. */
+export function insertTextWithImage(tr: Tr): boolean {
+  const paragraph = tr.generate_id();
+  const block = tr.generate_id();
+  tr.create({ id: paragraph, type: "paragraph", content: text() });
+  tr.create({
+    id: block,
+    type: "text_with_image",
+    heading: text("Nadpis"),
+    body: list([paragraph]),
+    image: list(),
+    image_side: "right",
+  });
+  insertAndFocus(tr, block, "heading");
+  return true;
+}
+
+/** A gallery, team or logos block with a placeholder heading and no items yet. */
+function insertItemsBlock(type: "gallery" | "team" | "logos", items: "items" | "people") {
+  return (tr: Tr): boolean => {
+    const block = tr.generate_id();
+    tr.create({ id: block, type, heading: text("Nadpis"), [items]: list() });
+    insertAndFocus(tr, block, "heading");
+    return true;
+  };
+}
+
+export const insertGallery = insertItemsBlock("gallery", "items");
+export const insertTeam = insertItemsBlock("team", "people");
+export const insertLogos = insertItemsBlock("logos", "items");
+
+/** A person without a portrait (Enter at the end of a person, or "Add item"). */
+export function insertPerson(tr: Tr): boolean {
+  const id = tr.generate_id();
+  tr.create({ id, type: "person", name: text(), role: text(), text: text(), image: list() });
+  insertAndFocus(tr, id, "name");
+  return true;
+}
+
+export type BlockType =
+  | "hero"
+  | "rich_text"
+  | "services"
+  | "text_with_image"
+  | "gallery"
+  | "team"
+  | "logos";
 
 export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   hero: insertHero,
   rich_text: insertRichText,
   services: insertServices,
+  text_with_image: insertTextWithImage,
+  gallery: insertGallery,
+  team: insertTeam,
+  logos: insertLogos,
 };
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
 export function insertableBlocks(blocks: { type: string }[], index: number): BlockType[] {
   const heroAllowed = index === 0 && !blocks.some((b) => b.type === "hero");
-  return heroAllowed ? ["hero", "rich_text", "services"] : ["rich_text", "services"];
+  const others: BlockType[] = [
+    "rich_text",
+    "services",
+    "text_with_image",
+    "gallery",
+    "team",
+    "logos",
+  ];
+  return heroAllowed ? ["hero", ...others] : others;
 }
 
 /** Sets an image's alt text. */
@@ -144,45 +204,138 @@ export interface ChosenImage {
   key: string;
   width: number;
   height: number;
+  /** The uploaded file's name, for naming logos. */
+  originalName?: string;
 }
 
 /**
- * Puts an image into a hero, or replaces its image. A different image starts without alt
- * text (the old description would describe the wrong picture); choosing the same image again
+ * Puts an image into its owner (a hero, text with image, person, gallery photo or logo), or
+ * replaces the owner's image. A different image starts without alt text (the old description
+ * would describe the wrong picture), or decorative when asked; choosing the same image again
  * keeps its alt text and decorative flag. Returns the image node's ID.
  */
-export function setHeroImage(tr: Tr, heroId: string, image: ChosenImage): string {
-  const hero = tr.get(heroId) as { image: { nodes: string[] } };
-  const [existing] = hero.image.nodes;
+export function setImage(
+  tr: Tr,
+  ownerId: string,
+  image: ChosenImage,
+  options: { decorative?: boolean } = {},
+): string {
+  const owner = tr.get(ownerId) as { image: { nodes: string[] } };
+  const [existing] = owner.image.nodes;
+  const decorative = options.decorative ?? false;
   if (existing) {
     const current = tr.get(existing) as { src: string };
     if (current.src !== image.key) {
       tr.set([existing, "alt"], "");
-      tr.set([existing, "decorative"], false);
+      tr.set([existing, "decorative"], decorative);
     }
     tr.set([existing, "src"], image.key);
     tr.set([existing, "width"], image.width);
     tr.set([existing, "height"], image.height);
     return existing;
   }
+  const id = createImage(tr, image, decorative);
+  tr.set([ownerId, "image"], list([id]));
+  return id;
+}
+
+/** Creates an image node for a chosen image; returns its ID. */
+export function createImage(tr: Tr, image: ChosenImage, decorative = false): string {
   const id = tr.generate_id();
   tr.create({
     id,
     type: "image",
     src: image.key,
     alt: "",
-    decorative: false,
+    decorative,
     width: image.width,
     height: image.height,
   });
-  tr.set([heroId, "image"], list([id]));
   return id;
 }
 
-/** Takes the image out of a hero; undo brings it back with its alt text. */
-export function removeHeroImage(tr: Tr, heroId: string): boolean {
-  const hero = tr.get(heroId) as { image: { nodes: string[] } };
-  if (hero.image.nodes.length === 0) return false;
-  tr.set([heroId, "image"], list());
+/** Takes the image out of its owner; undo brings it back with its alt text. */
+export function removeImage(tr: Tr, ownerId: string): boolean {
+  const owner = tr.get(ownerId) as { image: { nodes: string[] } };
+  if (owner.image.nodes.length === 0) return false;
+  tr.set([ownerId, "image"], list());
   return true;
+}
+
+/** Puts a text with image block's image on the left or the right of its text. */
+export function setImageSide(tr: Tr, blockId: string, side: "left" | "right"): boolean {
+  tr.set([blockId, "image_side"], side);
+  return true;
+}
+
+/** Where a logo links: a page of the site, an address, or nowhere. */
+export type LogoLink = { page: string } | { address: string } | null;
+
+/**
+ * Links a logo to a page or an address (checked like in the link dialog), or removes its link.
+ * Refused addresses leave the logo unchanged and return why.
+ */
+export function setLogoLink(
+  tr: Tr,
+  logoId: string,
+  link: LogoLink,
+): LinkAddressCheck | { ok: true } {
+  if (link && "address" in link) {
+    const check = checkLinkAddress(link.address);
+    if (!check.ok) return check;
+    tr.set([logoId, "page_id"], "");
+    tr.set([logoId, "url"], check.href);
+    return check;
+  }
+  tr.set([logoId, "page_id"], link ? link.page : "");
+  tr.set([logoId, "url"], "");
+  return { ok: true };
+}
+
+/** What a logo is first called: the image's file name without its extension. */
+export function logoNameFor(image: ChosenImage): string {
+  return (image.originalName ?? image.key).replace(/\.[^.]*$/, "");
+}
+
+/**
+ * Adds one item per image at the end of a gallery (a photo without a caption), a team (a person
+ * with a placeholder name and a decorative portrait) or a logos block (a logo named after the
+ * file), in the given order. Returns the new items' IDs.
+ */
+export function addItemsWithImages(tr: Tr, blockId: string, images: ChosenImage[]): string[] {
+  const block = tr.get(blockId) as { type: string; items?: NodeList; people?: NodeList };
+  const property = block.type === "team" ? "people" : "items";
+  const existing = (block[property] as NodeList | undefined)?.nodes ?? [];
+  const added = images.map((image) => {
+    const id = tr.generate_id();
+    if (block.type === "gallery") {
+      tr.create({
+        id,
+        type: "gallery_item",
+        image: list([createImage(tr, image)]),
+        caption: text(),
+      });
+    } else if (block.type === "team") {
+      tr.create({
+        id,
+        type: "person",
+        name: text("Jméno"),
+        role: text(),
+        text: text(),
+        image: list([createImage(tr, image, true)]),
+      });
+    } else {
+      tr.create({
+        id,
+        type: "logo_item",
+        image: list([createImage(tr, image)]),
+        name: text(logoNameFor(image)),
+        page_id: "",
+        url: "",
+      });
+    }
+    return id;
+  });
+  tr.set([blockId, property], list([...existing, ...added]));
+  return added;
 }

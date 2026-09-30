@@ -25,14 +25,18 @@ let dialog: HTMLDialogElement | undefined = $state();
 let images = $state<LibraryImage[]>([]);
 let uploads = $state<Upload[]>([]);
 let loadError = $state("");
-let selected = $state<string | undefined>();
+/** The chosen images, in the order they were chosen: one, or several in multi-select mode. */
+let selection = $state<string[]>([]);
+let multiple = $state(false);
 let dragging = $state(false);
-let resolveChoice: ((image: ChosenImage | undefined) => void) | undefined;
+let resolveChoice: ((images: ChosenImage[]) => void) | undefined;
 let nextUploadId = 0;
 
-/** Opens the library; resolves with the chosen image, or undefined when closed without one. */
-export function open(current?: string): Promise<ChosenImage | undefined> {
-  selected = current;
+const selected = $derived(selection.at(-1));
+
+function show(many: boolean, current?: string): Promise<ChosenImage[]> {
+  multiple = many;
+  selection = current ? [current] : [];
   uploads = [];
   loadError = "";
   dialog?.showModal();
@@ -40,6 +44,23 @@ export function open(current?: string): Promise<ChosenImage | undefined> {
   return new Promise((resolve) => {
     resolveChoice = resolve;
   });
+}
+
+/** Opens the library; resolves with the chosen image, or undefined when closed without one. */
+export async function open(current?: string): Promise<ChosenImage | undefined> {
+  return (await show(false, current))[0];
+}
+
+/** Opens the library to choose several images; resolves with them in the order chosen. */
+export function openMany(): Promise<ChosenImage[]> {
+  return show(true);
+}
+
+/** Selects an image: the only one, or one more (or one less) in multi-select mode. */
+function toggle(key: string) {
+  if (!multiple) selection = [key];
+  else if (selection.includes(key)) selection = selection.filter((k) => k !== key);
+  else selection = [...selection, key];
 }
 
 async function load() {
@@ -52,22 +73,34 @@ async function load() {
   }
 }
 
-function finish(image: ChosenImage | undefined) {
-  resolveChoice?.(image);
+function finish(chosen: ChosenImage[]) {
+  resolveChoice?.(chosen);
   resolveChoice = undefined;
   dialog?.close();
 }
 
 function choose() {
-  const image = images.find((i) => i.key === selected);
-  if (image) finish({ key: image.key, width: image.width, height: image.height });
+  const chosen = selection.flatMap((key) => {
+    const image = images.find((i) => i.key === key);
+    return image
+      ? [
+          {
+            key: image.key,
+            width: image.width,
+            height: image.height,
+            originalName: image.originalName,
+          },
+        ]
+      : [];
+  });
+  if (chosen.length > 0) finish(chosen);
 }
 
 async function remove(key: string) {
   const response = await fetch(editor.paths.media(key), { method: "DELETE" });
   if (response.ok || response.status === 404) {
     images = images.filter((i) => i.key !== key);
-    if (selected === key) selected = undefined;
+    selection = selection.filter((k) => k !== key);
   }
 }
 
@@ -92,7 +125,8 @@ function send(file: File, upload: Upload): Promise<void> {
       if (request.status === 200 || request.status === 201) {
         const image = body as LibraryImage;
         images = [image, ...images.filter((i) => i.key !== image.key)];
-        selected = image.key;
+        if (!selection.includes(image.key))
+          selection = multiple ? [...selection, image.key] : [image.key];
         update({ state: "done", progress: 1 });
       } else {
         const message =
@@ -159,7 +193,7 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
   bind:this={dialog}
   aria-labelledby="media-library-title"
   class="media-library"
-  onclose={() => finish(undefined)}
+  onclose={() => finish([])}
 >
   <div
     class="body"
@@ -222,24 +256,25 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
     {:else if images.length === 0}
       <p class="empty">No images yet.</p>
     {:else}
-      <ul class="grid" role="listbox" aria-label="Library">
+      <ul class="grid" role="listbox" aria-label="Library" aria-multiselectable={multiple}>
         {#each images as image (image.key)}
           <li
             role="option"
-            aria-selected={selected === image.key}
+            aria-selected={selection.includes(image.key)}
             tabindex="0"
-            onclick={() => (selected = image.key)}
+            onclick={() => toggle(image.key)}
             ondblclick={() => {
-              selected = image.key;
+              if (multiple) return;
+              selection = [image.key];
               choose();
             }}
             onkeydown={(e) => {
-              if (e.key === "Enter") {
-                selected = image.key;
+              if (e.key === "Enter" && !multiple) {
+                selection = [image.key];
                 choose();
               } else if (e.key === " ") {
                 e.preventDefault();
-                selected = image.key;
+                toggle(image.key);
               }
             }}
           >
@@ -254,14 +289,18 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
       <button
         type="button"
         class="danger"
-        disabled={!selected}
+        disabled={selection.length !== 1}
         onclick={() => selected && remove(selected)}
       >
         Remove from library
       </button>
       <span class="spacer"></span>
-      <button type="button" onclick={() => finish(undefined)}>Cancel</button>
-      <button type="button" disabled={!selected} onclick={choose}>Use this image</button>
+      <button type="button" onclick={() => finish([])}>Cancel</button>
+      <button type="button" disabled={selection.length === 0} onclick={choose}>
+        {multiple
+          ? `Add ${selection.length} ${selection.length === 1 ? "image" : "images"}`
+          : "Use this image"}
+      </button>
     </div>
   </div>
 </dialog>

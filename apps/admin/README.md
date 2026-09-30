@@ -101,6 +101,9 @@ ORIGIN=https://admin.example.cz BODY_SIZE_LIMIT=25M SMTP_URL=… MAIL_FROM=… n
 - Every upload is turned upright and stripped of all metadata (EXIF, GPS, XMP, IPTC). It is
   stored as a metadata-free original, which is never published, plus WebP variants 480, 960,
   1600 and 2400 px wide (never wider than the image). Pages use the variants through `srcset`.
+- Images appear in the hero, text with image, gallery, team and partner logos blocks. Each block
+  gives its images a fixed shape (gallery 4:3, round portraits, logos at most 4rem tall) and a
+  fixed `sizes`; the library's multi-select adds several photos, people or logos at once.
 - Uploads are processed one at a time; a 40-megapixel image needs about 160 MB of memory.
 - "Remove from library" only hides an image: pages, older versions and undo may still use it.
   `pnpm admin media-cleanup` deletes the files of removed images that no stored version uses.

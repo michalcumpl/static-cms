@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { editableDemoSite, type LooseNodes, loadDemoSite } from "../test/fixtures.js";
-import { HERO_IMAGE_SIZES, renderBlock, renderImage } from "./blocks.js";
+import { IMAGE_SIZES, renderBlock, renderImage } from "./blocks.js";
 import { RenderContext } from "./context.js";
 
 function render(id: string, edit?: (nodes: LooseNodes) => void) {
@@ -91,7 +91,7 @@ describe("renderImage", () => {
 
   it("lists every variant of a large image, with src at most 1600 px wide", () => {
     const large = { ...image, src: "pult-3f9a2c1d", width: 4032, height: 3024 };
-    const out = renderImage(large, ctx, { lazy: false, sizes: HERO_IMAGE_SIZES }).value;
+    const out = renderImage(large, ctx, { lazy: false, sizes: IMAGE_SIZES.hero }).value;
     expect(out).toContain('src="/assets/images/pult-3f9a2c1d-1600.webp"');
     expect(out).toContain(
       'srcset="/assets/images/pult-3f9a2c1d-480.webp 480w, /assets/images/pult-3f9a2c1d-960.webp 960w, /assets/images/pult-3f9a2c1d-1600.webp 1600w, /assets/images/pult-3f9a2c1d-2400.webp 2400w"',

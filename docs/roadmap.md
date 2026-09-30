@@ -117,15 +117,19 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
   - HEIC photos (iPhones) are converted to JPEG in the browser before upload
     ([`heic-upload`](../openspec/changes/archive/2026-09-30-heic-upload/)); the server itself
     still refuses HEIC.
-  - Known limits: only the hero image so far; no AVIF; no cropping.
-- Image display options, chosen in the Image panel rather than by dragging (a free pixel size
-  doesn't survive responsive layouts):
-  - size presets per image (small / medium / full width; for the hero: beside the text, wider,
-    or as the background);
-  - cropping to a shape (4:3, 16:9, square) and a focal point that stays visible when cut.
+  - Known limits: no AVIF; no cropping.
+- **Image blocks: done.**
+  - Change: [`image-blocks`](../openspec/changes/archive/2026-09-30-image-blocks/).
+  - **Text with image** (image left or right), **gallery** (4:3 grid, a click opens the largest
+    version through a plain link, no JavaScript), **team** (round portraits, names one heading
+    level below the block heading) and **partner logos** (the name is the logo's description,
+    optional link to a page or an address).
+  - Each block has a fixed shape and `sizes`; a multi-select library adds several photos,
+    people or logos in one go.
+- Cropping and focal points per image (the blocks' fixed shapes cover sizing for now).
 - SEO settings, favicon, site metadata.
-- More blocks: opening hours, contact, gallery, call to action, testimonials, maybe a map (mind
-  GDPR with third-party embeds).
+- More blocks: opening hours, contact, call to action, testimonials, maybe a map (mind GDPR with
+  third-party embeds).
 - From the M2 walk-through:
   - Problem messages readable for owners (no internal IDs); page problems are done.
   - Reconsider Cmd+A → Backspace emptying a whole section.

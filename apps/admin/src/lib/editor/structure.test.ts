@@ -67,16 +67,38 @@ describe("block insertion", () => {
   it("offers the hero only at the top of a page without one", () => {
     const { session, gap } = setup();
     gap(0);
-    expect(availableBlocks(session, "site_1", 0)).toEqual(["rich_text", "services"]); // home has a hero
+    expect(availableBlocks(session, "site_1", 0)).toEqual([
+      "rich_text",
+      "services",
+      "text_with_image",
+      "gallery",
+      "team",
+      "logos",
+    ]); // home has a hero
     session.selection = null;
-    expect(availableBlocks(session, "site_1", 1)).toEqual(["rich_text", "services"]); // end of Kontakt
+    expect(availableBlocks(session, "site_1", 1)).toEqual([
+      "rich_text",
+      "services",
+      "text_with_image",
+      "gallery",
+      "team",
+      "logos",
+    ]); // end of Kontakt
     session.selection = {
       type: "node",
       path: ["site_1", "pages", 1, "blocks"],
       anchor_offset: 0,
       focus_offset: 0,
     };
-    expect(availableBlocks(session, "site_1", 1)).toEqual(["hero", "rich_text", "services"]);
+    expect(availableBlocks(session, "site_1", 1)).toEqual([
+      "hero",
+      "rich_text",
+      "services",
+      "text_with_image",
+      "gallery",
+      "team",
+      "logos",
+    ]);
   });
 
   it("inserts after the block that holds the text selection", () => {
