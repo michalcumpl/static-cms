@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { editableDemoSite, type LooseNodes, loadDemoSite } from "../test/fixtures.js";
-import { renderBlock, renderImage } from "./blocks.js";
+import { HERO_IMAGE_SIZES, renderBlock, renderImage } from "./blocks.js";
 import { RenderContext } from "./context.js";
 
 function render(id: string, edit?: (nodes: LooseNodes) => void) {
@@ -22,7 +22,9 @@ describe("blocks", () => {
     expect(out).toContain("<h1>Čerstvý chléb každé ráno</h1>");
     expect(out).toContain('<p class="hero-text">Pečeme <strong>z vlastního kvasu</strong>');
     expect(out).toContain('<a class="button" href="/kontakt/">Objednat pečivo</a>');
-    expect(out).toContain('<img class="hero-image" src="/assets/images/hero.png"');
+    expect(out).toContain(
+      '<img class="hero-image" src="/assets/images/hero.png-320.webp" srcset="/assets/images/hero.png-320.webp 320w" sizes="(min-width: 48rem) 40vw, 100vw"',
+    );
   });
 
   it("leaves out optional hero parts", () => {
@@ -74,16 +76,27 @@ describe("renderImage", () => {
   const ctx = new RenderContext(doc, "/");
   const image = ctx.node("image_hero", "image");
 
-  it("renders alt text, size, and lazy loading outside the hero", () => {
-    expect(renderImage(image, ctx, { lazy: true }).value).toBe(
-      '<img src="/assets/images/hero.png" alt="Bochníky kváskového chleba na dřevěném pultu" width="320" height="180" loading="lazy">',
+  it("renders alt text, variants, size, and lazy loading outside the hero", () => {
+    expect(renderImage(image, ctx, { lazy: true, sizes: "100vw" }).value).toBe(
+      '<img src="/assets/images/hero.png-320.webp" srcset="/assets/images/hero.png-320.webp 320w" sizes="100vw" alt="Bochníky kváskového chleba na dřevěném pultu" width="320" height="180" loading="lazy">',
     );
   });
 
-  it("renders decorative images with empty alt and omits unknown sizes", () => {
-    const decorative = { ...image, decorative: true, alt: "", width: 0 };
-    expect(renderImage(decorative, ctx, { lazy: false }).value).toBe(
-      '<img src="/assets/images/hero.png" alt="">',
+  it("renders decorative images with empty alt", () => {
+    const decorative = { ...image, decorative: true, alt: "" };
+    expect(renderImage(decorative, ctx, { lazy: false, sizes: "100vw" }).value).toContain(
+      ' alt="" width="320"',
     );
+  });
+
+  it("lists every variant of a large image, with src at most 1600 px wide", () => {
+    const large = { ...image, src: "pult-3f9a2c1d", width: 4032, height: 3024 };
+    const out = renderImage(large, ctx, { lazy: false, sizes: HERO_IMAGE_SIZES }).value;
+    expect(out).toContain('src="/assets/images/pult-3f9a2c1d-1600.webp"');
+    expect(out).toContain(
+      'srcset="/assets/images/pult-3f9a2c1d-480.webp 480w, /assets/images/pult-3f9a2c1d-960.webp 960w, /assets/images/pult-3f9a2c1d-1600.webp 1600w, /assets/images/pult-3f9a2c1d-2400.webp 2400w"',
+    );
+    expect(out).toContain('width="4032" height="3024"');
+    expect(out).not.toContain("loading");
   });
 });

@@ -14,6 +14,7 @@ describe("openDatabase", () => {
     expect(tables).toEqual([
       "invitations",
       "login_tokens",
+      "media",
       "memberships",
       "projects",
       "sessions",
@@ -22,6 +23,18 @@ describe("openDatabase", () => {
       "versions",
       "workspaces",
     ]);
+  });
+
+  it("keeps one media row per file content and project", () => {
+    const db = openDatabase(":memory:");
+    const indexes = db
+      .all<{ name: string; unique: number }>(sql`pragma index_list('media')`)
+      .filter((i) => i.name === "media_project_sha256_idx");
+    expect(indexes).toEqual([expect.objectContaining({ unique: 1 })]);
+    const columns = db
+      .all<{ name: string }>(sql`pragma index_info('media_project_sha256_idx')`)
+      .map((c) => c.name);
+    expect(columns).toEqual(["project_id", "sha256"]);
   });
 
   it("enforces foreign keys", () => {

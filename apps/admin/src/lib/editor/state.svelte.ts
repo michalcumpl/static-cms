@@ -4,6 +4,7 @@ import { getContext, onDestroy, setContext } from "svelte";
 import type { ProjectPaths } from "../project-paths";
 import { createConfig } from "./config";
 import { editorSchema } from "./schema";
+import type { ChosenImage } from "./transforms";
 
 export interface EditorPage {
   id: string;
@@ -111,6 +112,12 @@ export class EditorState {
     this.session.selection = null;
     this.currentPageId = pageId;
   }
+
+  /**
+   * Opens the media library (set by the editor layout, which owns the dialog). Resolves with
+   * the chosen image, or undefined when the owner closes the library without choosing.
+   */
+  openLibrary: (current?: string) => Promise<ChosenImage | undefined> = async () => undefined;
 
   #drafts = new Set<() => void>();
 

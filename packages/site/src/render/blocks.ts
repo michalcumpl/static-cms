@@ -1,3 +1,4 @@
+import { imageFile, imageVariants, srcVariant } from "../images.js";
 import type { AnyNode, NodeOfType } from "../schema/index.js";
 import type { RenderContext } from "./context.js";
 import { type Html, html } from "./html.js";
@@ -35,7 +36,7 @@ function renderHero(hero: NodeOfType<"hero">, ctx: RenderContext): Html {
         </div>${
           image?.type === "image" &&
           html`
-        ${renderImage(image, ctx, { lazy: false, className: "hero-image" })}`
+        ${renderImage(image, ctx, { lazy: false, sizes: HERO_IMAGE_SIZES, className: "hero-image" })}`
         }
       </div>
     </section>`;
@@ -101,16 +102,24 @@ function renderServices(block: NodeOfType<"services">, ctx: RenderContext): Html
     </section>`;
 }
 
+/** `sizes` of the hero image: the image column is 2/5 of the hero from a 48rem wide layout. */
+export const HERO_IMAGE_SIZES = "(min-width: 48rem) 40vw, 100vw";
+
+/**
+ * An image as `<img>` over its WebP variants. `sizes` comes from the block, never the theme,
+ * so theme changes leave the HTML alone.
+ */
 export function renderImage(
   image: NodeOfType<"image">,
   ctx: RenderContext,
-  options: { lazy: boolean; className?: string },
+  options: { lazy: boolean; sizes: string; className?: string },
 ): Html {
   const alt = image.decorative ? "" : image.alt;
-  const size = image.width > 0 && image.height > 0;
-  return html`<img${options.className && html` class="${options.className}"`} src="${ctx.url(`assets/images/${image.src}`)}" alt="${alt}"${
-    size && html` width="${image.width}" height="${image.height}"`
-  }${options.lazy && html` loading="lazy"`}>`;
+  const file = (w: number) => ctx.url(`assets/images/${imageFile(image.src, w)}`);
+  const srcset = imageVariants(image.width)
+    .map((w) => `${file(w)} ${w}w`)
+    .join(", ");
+  return html`<img${options.className && html` class="${options.className}"`} src="${file(srcVariant(image.width) ?? image.width)}" srcset="${srcset}" sizes="${options.sizes}" alt="${alt}" width="${image.width}" height="${image.height}"${options.lazy && html` loading="lazy"`}>`;
 }
 
 /** A `page_link` or `external_link` node as an `<a>`. */

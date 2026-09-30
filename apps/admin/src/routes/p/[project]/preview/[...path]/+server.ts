@@ -1,10 +1,10 @@
-import { exportSite, type Problem } from "@static-cms/site";
+import { exportSite, type Problem, usedImageFiles } from "@static-cms/site";
 import { error } from "@sveltejs/kit";
 import { contentType } from "$lib/content-type";
 import { projectPaths } from "$lib/project-paths";
 import { requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
-import { projectMedia } from "$lib/server/project-media";
+import { mediaFiles } from "$lib/server/media";
 import { readSite } from "$lib/server/site-documents";
 import type { RequestHandler } from "./$types";
 
@@ -18,7 +18,8 @@ export const GET: RequestHandler = (event) => {
   const site = readSite(getDb(), params.project);
   if (!site) error(404, "Not found");
   const paths = projectPaths(params.project);
-  const result = exportSite(site.document, projectMedia(params.project), {
+  const media = mediaFiles(params.project, usedImageFiles(site.document));
+  const result = exportSite(site.document, media, {
     basePath: paths.preview,
   });
   if (!result.ok) return problemsPage(result.problems, paths.edit());

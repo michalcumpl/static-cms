@@ -18,7 +18,7 @@ async function downloadZip() {
   try {
     const { document: doc } = (await (await fetch(paths.api)).json()) as { document: unknown };
     const media = new Map<string, Uint8Array>();
-    for (const name of data.mediaNames) {
+    for (const name of data.imageFiles) {
       const response = await fetch(paths.media(name));
       media.set(name, new Uint8Array(await response.arrayBuffer()));
     }

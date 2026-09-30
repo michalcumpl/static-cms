@@ -10,6 +10,7 @@ import { type Db, openDatabase } from "./db/index";
 import { users } from "./db/schema";
 import { demoSite } from "./demo";
 import { newId } from "./ids";
+import { registerLegacyMedia } from "./media";
 import { createWorkspace } from "./members";
 import { createProject } from "./site-documents";
 
@@ -61,6 +62,8 @@ export function useTestProject(
     const projectId = createProject(db, workspaceId, "Pekárna U Lípy", demoSite());
     mkdirSync(join(mediaDir, projectId));
     copyFileSync(join(demoMediaDir, "hero.png"), join(mediaDir, projectId, "hero.png"));
+    // As on startup: the demo image becomes a library image with its variant.
+    await registerLegacyMedia(db, projectId, mediaDir);
     current = {
       db,
       owner,

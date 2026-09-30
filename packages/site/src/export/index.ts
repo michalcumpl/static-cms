@@ -1,7 +1,13 @@
 import { zipSync } from "fflate";
+import { imageFile, imageVariants } from "../images.js";
 import { escapeHtml } from "../render/html.js";
 import { renderSite } from "../render/index.js";
-import { type PropertyDef, type SiteDocument, siteSchema } from "../schema/index.js";
+import {
+  type NodeOfType,
+  type PropertyDef,
+  type SiteDocument,
+  siteSchema,
+} from "../schema/index.js";
 import { type Problem, problem } from "../validate/index.js";
 
 export interface ExportOptions {
@@ -17,8 +23,9 @@ export type ExportResult =
   | { ok: false; problems: Problem[] };
 
 /**
- * Renders a site document into its static file tree. `media` maps each image's media key
- * (its `src`) to the file's bytes; only images the site uses are included.
+ * Renders a site document into its static file tree. `media` maps image file names
+ * (`<media key>-<width>.webp`, see `usedImageFiles`) to their bytes; only files the site
+ * uses are included.
  */
 export function exportSite(
   input: unknown,
@@ -37,20 +44,21 @@ export function exportSite(
   files.push(["assets/style.css", encoder.encode(rendered.site.css)]);
 
   const missing: Problem[] = [];
+  // The same files as usedImageFiles(doc), walked per image to name the image when one is missing.
+  const added = new Set<string>();
   for (const image of usedImages(doc)) {
-    const bytes = media.get(image.src);
-    if (bytes) {
-      files.push([`assets/images/${image.src}`, bytes]);
-    } else {
-      missing.push(
-        problem(
-          "error",
-          "missing-media",
-          image.id,
-          `No file was supplied for image ${image.id}: ${image.src}.`,
-          "src",
-        ),
-      );
+    for (const width of imageVariants(image.width)) {
+      const name = imageFile(image.src, width);
+      if (added.has(name)) continue;
+      added.add(name);
+      const bytes = media.get(name);
+      if (bytes) {
+        files.push([`assets/images/${name}`, bytes]);
+      } else {
+        missing.push(
+          problem("error", "missing-media", image.id, `No file was supplied for ${name}.`, "src"),
+        );
+      }
     }
   }
   if (missing.length > 0) return { ok: false, problems: missing };
@@ -78,7 +86,7 @@ export function exportSite(
 /** Image nodes reachable from the site root, in a stable order, each media key once. */
 function usedImages(doc: SiteDocument) {
   const seen = new Set<string>();
-  const images = new Map<string, { id: string; src: string }>();
+  const images = new Map<string, NodeOfType<"image">>();
   const visit = (id: string): void => {
     const node = doc.nodes[id];
     if (!node || seen.has(id)) return;

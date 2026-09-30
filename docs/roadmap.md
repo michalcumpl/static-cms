@@ -67,7 +67,7 @@ Built `/edit/` in the admin app, where the owner edits the site on the page itse
 ### 3. A real website
 
 Carried over from Milestone 2: page management, navigation targets, theme editing and image
-upload are all out of M2 on purpose. Storage and pages are done; the rest follows.
+upload are all out of M2 on purpose. Storage, pages and media are done; the rest follows.
 
 - **Storage and accounts: done.**
   - Change: [`workspace-storage`](../openspec/changes/archive/2026-09-29-workspace-storage/).
@@ -98,7 +98,24 @@ upload are all out of M2 on purpose. Storage and pages are done; the rest follow
   - **Problem messages name pages by title.**
   - Known limits: no redirects from old slugs until Milestone 4; no dropdown menus or subpages;
     links to a deleted page stay in place and are listed as problems.
-- Media library and image upload.
+- **Media library and image upload: done (hero image).**
+  - Change: [`media-library`](../openspec/changes/archive/2026-09-30-media-library/).
+    Specs: [`media`](../openspec/specs/media/spec.md), and images in
+    [`site-rendering`](../openspec/specs/site-rendering/spec.md),
+    [`site-export`](../openspec/specs/site-export/spec.md),
+    [`site-editing`](../openspec/specs/site-editing/spec.md).
+  - **Processing with sharp on the server:** type checked from the file's bytes, turned
+    upright, all metadata (EXIF, GPS) removed, JPEG/PNG/WebP up to 20 MB and 40 megapixels.
+  - **WebP width ladder** 480/960/1600/2400 (never wider than the image), derived from the
+    image's key and width, so the document stays the only input to rendering. Pages use
+    `srcset`; the ZIP holds only the variants a site uses.
+  - **Keys** are `<slug of the file name>-<content hash>`; the same file uploaded twice is one
+    image. A `media` table holds the library.
+  - **Remove, then clean up:** "Remove from library" only hides an image;
+    `pnpm admin media-cleanup` deletes the files no stored version uses.
+  - Deployment needs `BODY_SIZE_LIMIT=25M` (adapter-node's default refuses photos).
+  - Known limits: only the hero image so far; no HEIC decoding on the server; no AVIF;
+    no cropping.
 - SEO settings, favicon, site metadata.
 - More blocks: opening hours, contact, gallery, call to action, testimonials, maybe a map (mind
   GDPR with third-party embeds).

@@ -5,6 +5,7 @@ import { beforeNavigate, goto } from "$app/navigation";
 import { canvasCss } from "$lib/editor/canvas-css";
 import ImagePanel from "$lib/editor/ImagePanel.svelte";
 import LinkDialog from "$lib/editor/LinkDialog.svelte";
+import MediaLibrary from "$lib/editor/MediaLibrary.svelte";
 import PageSettings from "$lib/editor/PageSettings.svelte";
 import PagesSidebar from "$lib/editor/PagesSidebar.svelte";
 import ProblemsPanel from "$lib/editor/ProblemsPanel.svelte";
@@ -129,6 +130,13 @@ function guardFixedLists(event: InputEvent) {
 }
 
 let linkDialog: LinkDialog | undefined = $state();
+let mediaLibrary: MediaLibrary | undefined = $state();
+editor.openLibrary = async (current) => {
+  const chosen = await mediaLibrary?.open(current);
+  // Focus left the canvas for the dialog; give it back before the image gets selected.
+  canvas?.focus_canvas();
+  return chosen;
+};
 let canvas: { focus_canvas: () => void } | undefined = $state();
 const linkEnabled = $derived(
   Boolean(commands && (!commands.link?.disabled || !commands.internal_link?.disabled)),
@@ -199,6 +207,7 @@ const statusText = $derived.by(() => {
 
 <!-- Focus left the canvas for the dialog; give it back, or Svedit restores a stale selection. -->
 <LinkDialog {editor} bind:this={linkDialog} onclose={() => canvas?.focus_canvas()} />
+<MediaLibrary {editor} bind:this={mediaLibrary} />
 
 {@render children()}
 

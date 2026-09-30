@@ -251,6 +251,14 @@ function checkPageBlocks(
 }
 
 function checkImage(image: NodeOfType<"image">, problems: Problems): void {
+  if (!(image.width > 0 && image.height > 0)) {
+    problems.error(
+      "missing-image-size",
+      image.id,
+      "This image's size is unknown; choose it again from the media library.",
+      image.width > 0 ? "height" : "width",
+    );
+  }
   if (!MEDIA_KEY.test(image.src)) {
     problems.error(
       "invalid-media-key",

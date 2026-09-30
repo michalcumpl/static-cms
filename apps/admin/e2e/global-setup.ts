@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { openDatabase } from "../src/lib/server/db/index";
 import { users } from "../src/lib/server/db/schema";
 import { demoSite } from "../src/lib/server/demo";
+import { registerLegacyMedia } from "../src/lib/server/media";
 import { listWorkspaces } from "../src/lib/server/members";
 import { createProject } from "../src/lib/server/site-documents";
 import { writeState } from "./state";
@@ -16,7 +17,7 @@ const require = createRequire(import.meta.url);
  * Creates the owner with the real admin command, gives their workspace a project with
  * the demo site and its image, and adds a user from another workspace.
  */
-export default function globalSetup(): void {
+export default async function globalSetup(): Promise<void> {
   const admin = (email: string, workspace: string) =>
     execFileSync("pnpm", ["admin", "create-user", email, workspace], {
       env: process.env,
@@ -40,6 +41,8 @@ export default function globalSetup(): void {
   mkdirSync(media, { recursive: true });
   const fixtures = dirname(require.resolve("@static-cms/site/fixtures/demo-site.json"));
   copyFileSync(join(fixtures, "media", "hero.png"), join(media, "hero.png"));
+  // As the server does at startup for files from before the library.
+  await registerLegacyMedia(db, projectId);
 
   writeState({ owner, outsider, workspaceId, projectId });
 }

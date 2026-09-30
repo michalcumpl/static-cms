@@ -1,5 +1,6 @@
 import { unzipSync } from "fflate";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { usedImageFiles } from "../images.js";
 import {
   editableDemoSite,
   homeListedSecondSite,
@@ -20,14 +21,16 @@ describe("exportSite", () => {
   it("lays out pages, stylesheet, images and sitemap", () => {
     const { files, warnings } = exported();
     expect([...files.keys()]).toEqual([
-      "assets/images/hero.png",
+      "assets/images/hero.png-320.webp",
       "assets/style.css",
       "index.html",
       "kontakt/index.html",
       "sitemap.xml",
     ]);
     expect(warnings).toEqual([]);
-    expect(files.get("assets/images/hero.png")).toEqual(loadDemoMedia().get("hero.png"));
+    expect(files.get("assets/images/hero.png-320.webp")).toEqual(
+      loadDemoMedia().get("hero.png-320.webp"),
+    );
     expect(decode(files.get("kontakt/index.html"))).toContain(
       "<title>Kontakt – Pekárna U Lípy</title>",
     );
@@ -44,7 +47,7 @@ describe("exportSite", () => {
   it("writes the home page to index.html when it is listed second", () => {
     const { files } = exported(homeListedSecondSite());
     expect([...files.keys()]).toEqual([
-      "assets/images/hero.png",
+      "assets/images/hero.png-320.webp",
       "assets/style.css",
       "index.html",
       "kontakt/index.html",
@@ -60,7 +63,7 @@ describe("exportSite", () => {
       ok: false,
       problems: [expect.objectContaining({ code: "missing-media", nodeId: "image_hero" })],
     });
-    expect(result.ok ? "" : result.problems[0]?.message).toContain("hero.png");
+    expect(result.ok ? "" : result.problems[0]?.message).toContain("hero.png-320.webp");
   });
 
   it("leaves out media no node uses", () => {
@@ -69,14 +72,44 @@ describe("exportSite", () => {
     const result = exportSite(loadDemoSite(), media);
     expect(
       result.ok && [...result.files.keys()].filter((k) => k.startsWith("assets/images/")),
-    ).toEqual(["assets/images/hero.png"]);
+    ).toEqual(["assets/images/hero.png-320.webp"]);
+  });
+
+  it("exports every variant of a used image and no original", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.image_hero.src = "pult-3f9a2c1d";
+    nodes.image_hero.width = 1000;
+    nodes.image_hero.height = 750;
+    const media = new Map<string, Uint8Array>();
+    for (const w of [480, 960, 1000]) media.set(`pult-3f9a2c1d-${w}.webp`, new Uint8Array([w]));
+    media.set("pult-3f9a2c1d.jpg", new Uint8Array([0]));
+    const result = exportSite(doc, media);
+    const images = result.ok
+      ? [...result.files.keys()].filter((k) => k.startsWith("assets/images/"))
+      : [];
+    expect(images).toEqual([
+      "assets/images/pult-3f9a2c1d-1000.webp",
+      "assets/images/pult-3f9a2c1d-480.webp",
+      "assets/images/pult-3f9a2c1d-960.webp",
+    ]);
+    expect(images.map((k) => k.slice("assets/images/".length))).toEqual(usedImageFiles(doc));
+  });
+
+  it("names the missing variant file", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.image_hero.src = "team-1a2b3c4d";
+    nodes.image_hero.width = 800;
+    const result = exportSite(doc, new Map([["team-1a2b3c4d-480.webp", new Uint8Array([1])]]));
+    expect(result.ok ? [] : result.problems.map((p) => p.message)).toEqual([
+      "No file was supplied for team-1a2b3c4d-800.webp.",
+    ]);
   });
 
   it("leaves out images of unreachable nodes", () => {
     const { doc, nodes } = editableDemoSite();
     nodes.hero_1.image.nodes = [];
     const result = exportSite(doc, new Map());
-    expect(result.ok && [...result.files.keys()]).not.toContain("assets/images/hero.png");
+    expect(result.ok && [...result.files.keys()]).not.toContain("assets/images/hero.png-320.webp");
   });
 
   it("lists every page's absolute URL in the sitemap", () => {

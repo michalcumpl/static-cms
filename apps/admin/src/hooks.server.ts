@@ -2,13 +2,22 @@ import type { Handle, ServerInit } from "@sveltejs/kit";
 import { getDb } from "$lib/server/app";
 import { getSessionUser } from "$lib/server/auth";
 import { importWorkingCopy } from "$lib/server/import-working-copy";
+import { bodySizeWarning, registerAllLegacyMedia } from "$lib/server/media";
 import { SESSION_COOKIE } from "$lib/server/session-cookie";
 
-/** Opens the database (applying migrations) and imports a Milestone 2 working copy once. */
-export const init: ServerInit = () => {
+/**
+ * Opens the database (applying migrations), imports a Milestone 2 working copy once, and
+ * registers image files from before the media library.
+ */
+export const init: ServerInit = async () => {
   const projectId = importWorkingCopy(getDb());
   if (projectId)
     console.log(`[import] Imported data/site.json into the "Default" workspace (${projectId}).`);
+  const warning = bodySizeWarning(process.env);
+  if (warning) console.warn(`[media] ${warning}`);
+  for (const [project, keys] of await registerAllLegacyMedia(getDb())) {
+    console.log(`[media] Registered ${keys.join(", ")} in project ${project}.`);
+  }
 };
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);

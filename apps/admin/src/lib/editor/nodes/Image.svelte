@@ -9,13 +9,13 @@ const editor = getEditor();
 const image = $derived(svedit.session.get(path));
 </script>
 
-<!-- Selecting the image opens its alt text panel; the file itself can't be changed in M2. -->
+<!-- Selecting the image opens the Image panel: alt text, and replacing or removing it. -->
 <Node {path} class="image-node">
   <CustomProperty path={[...path, "src"]}>
     <div contenteditable="false">
       <img
         class="hero-image"
-        src={editor.paths.media(image.src)}
+        src={editor.paths.image(image.src, image.width)}
         alt={image.decorative ? "" : image.alt}
         width={image.width || undefined}
         height={image.height || undefined}

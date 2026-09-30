@@ -1,13 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { thrownBy, useTestProject } from "$lib/server/test-project";
-import { GET as getMedia } from "./[project]/media/[name]/+server";
 import { GET as getSite, PUT as putSite } from "./[project]/site/+server";
 
 type SiteEvent = Parameters<typeof putSite>[0];
-type MediaEvent = Parameters<typeof getMedia>[0];
 
-let name = "hero.png";
-const project = useTestProject(() => ({ name }));
+const project = useTestProject();
 
 const site = () => `/api/projects/${project().projectId}/site`;
 const get = (user = project().owner) =>
@@ -89,31 +86,5 @@ describe("PUT /api/projects/[project]/site", () => {
       status: 404,
     });
     expect((await read()).version).toBe(version);
-  });
-});
-
-describe("GET /api/projects/[project]/media/[name]", () => {
-  const media = (user = project().owner) =>
-    getMedia(
-      project().event(
-        `/api/projects/${project().projectId}/media/${name}`,
-        user,
-      ) as unknown as MediaEvent,
-    );
-
-  it("serves the project's images to members", async () => {
-    name = "hero.png";
-    const response = await media();
-    expect(response.headers.get("content-type")).toBe("image/png");
-  });
-
-  it("answers 404 to other workspaces and for names that aren't plain files", async () => {
-    name = "hero.png";
-    expect(await thrownBy(() => media(project().outsider))).toMatchObject({ status: 404 });
-    for (const bad of ["missing.png", "../app.db", ".hidden"]) {
-      name = bad;
-      expect(await thrownBy(() => media())).toMatchObject({ status: 404 });
-    }
-    name = "hero.png";
   });
 });

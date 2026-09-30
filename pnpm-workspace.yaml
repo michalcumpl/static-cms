@@ -25,6 +25,7 @@ catalog:
   fflate: ^0.8.3
   html-validate: ^9.7.1
   nodemailer: ^10.0.12
+  sharp: ^0.35.5
   svelte: ^5.57.1
   svelte-check: ^4.7.6
   # Pre-1.0 and changing quickly: pinned exactly, upgrade deliberately.

@@ -35,6 +35,7 @@ export type ProblemCode =
   | "missing-alt"
   | "decorative-with-alt"
   | "invalid-media-key"
+  | "missing-image-size"
   | "empty-link-label"
   | "unsafe-link"
   | "invalid-color"
@@ -81,6 +82,7 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "missing-alt": "site",
   "decorative-with-alt": "site",
   "invalid-media-key": "site",
+  "missing-image-size": "site",
   "empty-link-label": "site",
   "unsafe-link": "site",
   "invalid-color": "site",

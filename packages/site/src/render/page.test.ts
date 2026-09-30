@@ -141,7 +141,7 @@ describe("renderSite: base path", () => {
     expect(home).toContain('<link rel="stylesheet" href="/preview/assets/style.css">');
     expect(home).toContain('<a class="site-name" href="/preview/">');
     expect(home).toContain('<li><a href="/preview/kontakt/">Kontakt</a></li>');
-    expect(home).toContain('src="/preview/assets/images/hero.png"');
+    expect(home).toContain('src="/preview/assets/images/hero.png-320.webp"');
     expect(home).toContain('<a href="/preview/kontakt/">stránce Kontakt</a>');
     expect(home).not.toMatch(/(href|src)="\/(?!preview\/)/);
   });

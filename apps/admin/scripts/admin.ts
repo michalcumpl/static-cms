@@ -2,11 +2,15 @@
 // Uses the same database settings as the app (DATABASE_PATH, MIGRATIONS_DIR).
 import { createUser } from "../src/lib/server/admin-commands";
 import { openDatabase } from "../src/lib/server/db/index";
+import { cleanupMedia } from "../src/lib/server/media";
 
 const usage = `Usage:
   pnpm admin create-user <email> "<workspace name>"
       Creates a user who owns a new workspace and prints a sign-in link (valid 15 minutes).
-      On an upgraded installation the first user owns the imported "Default" workspace.`;
+      On an upgraded installation the first user owns the imported "Default" workspace.
+  pnpm admin media-cleanup [--dry-run]
+      Deletes the files of images removed from a library that no stored version uses.
+      Uses MEDIA_DIR like the app. With --dry-run, only lists them.`;
 
 const [command, ...args] = process.argv.slice(2);
 const origin = process.env.ORIGIN ?? "http://localhost:5173";
@@ -28,6 +32,17 @@ if (command === "create-user" && args.length === 2) {
       : `Created ${email}, owner of "${workspace}".`,
   );
   console.log(`Sign in (valid 15 minutes): ${result.link}`);
+} else if (command === "media-cleanup" && (args.length === 0 || args[0] === "--dry-run")) {
+  const dryRun = args[0] === "--dry-run";
+  const deleted = cleanupMedia(openDatabase(), { dryRun });
+  for (const { projectId, key } of deleted) {
+    console.log(`${dryRun ? "Would delete" : "Deleted"} ${key} (project ${projectId})`);
+  }
+  console.log(
+    deleted.length === 0
+      ? "No unused removed images."
+      : `${deleted.length} image(s) ${dryRun ? "would be deleted" : "deleted"}.`,
+  );
 } else {
   console.error(usage);
   process.exit(command ? 1 : 0);

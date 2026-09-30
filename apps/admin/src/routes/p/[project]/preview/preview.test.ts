@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { siteDocuments, versions } from "$lib/server/db/schema";
+import { listLibrary, removeFromLibrary } from "$lib/server/media";
 import { readSite, saveSite } from "$lib/server/site-documents";
 import { thrownBy, useTestProject } from "$lib/server/test-project";
 import { GET } from "./[...path]/+server";
@@ -56,16 +57,19 @@ describe("/p/[project]/preview/[...path]", () => {
     const css = await get("assets/style.css");
     expect(css.headers.get("content-type")).toBe("text/css; charset=utf-8");
     expect(await css.text()).toContain("--color-primary");
-    const image = await get("assets/images/hero.png");
-    expect(image.headers.get("content-type")).toBe("image/png");
+    const image = await get("assets/images/hero.png-320.webp");
+    expect(image.headers.get("content-type")).toBe("image/webp");
   });
 
-  it.each(["missing/", "assets/images/nope.png", "../package.json", "assets"])(
-    "404s for %j",
-    async (at) => {
-      expect(await thrownBy(() => get(at))).toMatchObject({ status: 404 });
-    },
-  );
+  it.each([
+    "missing/",
+    "assets/images/hero.png",
+    "assets/images/nope.png",
+    "../package.json",
+    "assets",
+  ])("404s for %j", async (at) => {
+    expect(await thrownBy(() => get(at))).toMatchObject({ status: 404 });
+  });
 
   it("is only for members", async () => {
     expect(await thrownBy(() => get("", null))).toMatchObject({ status: 303 });
@@ -112,5 +116,14 @@ describe("/p/[project]/preview/[...path]", () => {
     const html = await response.text();
     expect(html).toContain("<title>Pekárna U Lípy</title>");
     expect(html).not.toContain("unsupported-version");
+  });
+
+  it("still shows an image the saved site uses after it is removed from the library", async () => {
+    const { db, projectId } = project();
+    expect(removeFromLibrary(db, projectId, "hero.png")).toBe(true);
+    expect(listLibrary(db, projectId)).toEqual([]);
+    const html = await (await get("")).text();
+    expect(html).toContain(`src="${base()}assets/images/hero.png-320.webp"`);
+    expect((await get("assets/images/hero.png-320.webp")).status).toBe(200);
   });
 });

@@ -138,3 +138,51 @@ export function setImageDecorative(tr: Tr, imageId: string, decorative: boolean)
   if (decorative) tr.set([imageId, "alt"], "");
   return true;
 }
+
+/** An image from the media library, as the document stores it. */
+export interface ChosenImage {
+  key: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * Puts an image into a hero, or replaces its image. A different image starts without alt
+ * text (the old description would describe the wrong picture); choosing the same image again
+ * keeps its alt text and decorative flag. Returns the image node's ID.
+ */
+export function setHeroImage(tr: Tr, heroId: string, image: ChosenImage): string {
+  const hero = tr.get(heroId) as { image: { nodes: string[] } };
+  const [existing] = hero.image.nodes;
+  if (existing) {
+    const current = tr.get(existing) as { src: string };
+    if (current.src !== image.key) {
+      tr.set([existing, "alt"], "");
+      tr.set([existing, "decorative"], false);
+    }
+    tr.set([existing, "src"], image.key);
+    tr.set([existing, "width"], image.width);
+    tr.set([existing, "height"], image.height);
+    return existing;
+  }
+  const id = tr.generate_id();
+  tr.create({
+    id,
+    type: "image",
+    src: image.key,
+    alt: "",
+    decorative: false,
+    width: image.width,
+    height: image.height,
+  });
+  tr.set([heroId, "image"], list([id]));
+  return id;
+}
+
+/** Takes the image out of a hero; undo brings it back with its alt text. */
+export function removeHeroImage(tr: Tr, heroId: string): boolean {
+  const hero = tr.get(heroId) as { image: { nodes: string[] } };
+  if (hero.image.nodes.length === 0) return false;
+  tr.set([heroId, "image"], list());
+  return true;
+}

@@ -5,6 +5,13 @@ export {
   type SiteFiles,
   zipFiles,
 } from "./export/index.js";
+export {
+  imageFile,
+  imageVariants,
+  srcVariant,
+  usedImageFiles,
+  WIDTH_LADDER,
+} from "./images.js";
 export { isSafeHref } from "./links.js";
 export { migrateSite } from "./migrate.js";
 export {

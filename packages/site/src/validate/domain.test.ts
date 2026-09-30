@@ -232,6 +232,27 @@ describe("validateSite: site rules", () => {
     },
   );
 
+  it("requires known image dimensions", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.image_hero.width = 0;
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({
+        code: "missing-image-size",
+        category: "site",
+        nodeId: "image_hero",
+        property: "width",
+      }),
+    ]);
+  });
+
+  it("refuses a path as an image source", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.image_hero.src = "../secret.png";
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({ code: "invalid-media-key", nodeId: "image_hero" }),
+    ]);
+  });
+
   it("checks external navigation links too", () => {
     const { doc, nodes } = editableDemoSite();
     nodes.ext_1 = {

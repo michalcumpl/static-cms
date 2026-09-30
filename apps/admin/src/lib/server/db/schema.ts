@@ -127,3 +127,30 @@ export const versions = sqliteTable(
   },
   (t) => [index("versions_document_idx").on(t.documentId)],
 );
+
+/**
+ * A project's uploaded images (media design.md decision 3). `key` is the media key documents
+ * use as an image's `src`; `removedAt` hides an image from the library without deleting files.
+ */
+export const media = sqliteTable(
+  "media",
+  {
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    sha256: text("sha256").notNull(),
+    originalName: text("original_name").notNull(),
+    format: text("format", { enum: ["jpeg", "png", "webp"] }).notNull(),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    bytes: integer("bytes").notNull(),
+    createdAt: createdAt(),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    removedAt: integer("removed_at", { mode: "timestamp_ms" }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.projectId, t.key] }),
+    uniqueIndex("media_project_sha256_idx").on(t.projectId, t.sha256),
+  ],
+);

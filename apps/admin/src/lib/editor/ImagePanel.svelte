@@ -1,4 +1,10 @@
 <script lang="ts">
+import {
+  chooseHeroImage,
+  heroOfSelectedImage,
+  IMAGE_ALT_FIELD,
+  removeImageFromHero,
+} from "./hero-image";
 import type { EditorState } from "./state.svelte";
 import { setImageAlt, setImageDecorative } from "./transforms";
 
@@ -9,6 +15,7 @@ const image = $derived.by(() => {
   const node = editor.session.selected_node as { type?: string } | null;
   return node?.type === "image" ? (node as ImageNode) : undefined;
 });
+const heroId = $derived(image ? heroOfSelectedImage(editor) : undefined);
 
 function onAltInput(event: Event & { currentTarget: HTMLTextAreaElement }) {
   if (!image) return;
@@ -30,6 +37,12 @@ function onDecorativeChange(event: Event & { currentTarget: HTMLInputElement }) 
   <section class="panel" aria-labelledby="image-panel-title">
     <h2 id="image-panel-title">Image</h2>
     <p class="file">{image.src}</p>
+    {#if heroId}
+      <div class="actions">
+        <button type="button" onclick={() => heroId && chooseHeroImage(editor, heroId)}>Replace…</button>
+        <button type="button" onclick={() => heroId && removeImageFromHero(editor, heroId)}>Remove</button>
+      </div>
+    {/if}
     <label>
       <input type="checkbox" checked={image.decorative} onchange={onDecorativeChange} />
       Decorative (adds nothing a reader needs)
@@ -37,6 +50,7 @@ function onDecorativeChange(event: Event & { currentTarget: HTMLInputElement }) 
     <label class="alt">
       Description (alt text)
       <textarea
+        id={IMAGE_ALT_FIELD}
         rows="3"
         value={image.alt}
         oninput={onAltInput}
@@ -69,6 +83,12 @@ function onDecorativeChange(event: Event & { currentTarget: HTMLInputElement }) 
     font-family: ui-monospace, monospace;
     font-size: 0.85rem;
     color: #555;
+  }
+
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
   label {
