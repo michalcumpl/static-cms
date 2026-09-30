@@ -37,7 +37,7 @@ The caller SHALL supply the bytes of every image file the document uses, keyed b
 - **THEN** the tree contains `assets/images/pult-3f9a2c1d-480.webp`, `…-960.webp` and `…-1000.webp`, and no original
 
 ### Requirement: Sitemap
-When the site has a base URL, export SHALL include a `sitemap.xml` listing the absolute URL of every page, with the home page at the base URL. When the site has no base URL, export SHALL omit `sitemap.xml` and report a warning.
+Export SHALL accept the same optional site address as rendering. The site's base URL SHALL be that site address when given, otherwise the document's base URL. When the site has a base URL, export SHALL include a `sitemap.xml` listing the absolute URL of every page, with the home page at the base URL. When the site has no base URL, export SHALL omit `sitemap.xml` and report a warning.
 
 #### Scenario: Sitemap with base URL
 - **WHEN** exporting a site with base URL `https://anideti.cz` and pages home and `kontakt`
@@ -50,6 +50,10 @@ When the site has a base URL, export SHALL include a `sitemap.xml` listing the a
 #### Scenario: No base URL
 - **WHEN** exporting a site with no base URL
 - **THEN** there is no `sitemap.xml` and the result includes a warning
+
+#### Scenario: Site address given to export
+- **WHEN** exporting a site whose document has no base URL, with site address `https://sc-p1.netlify.app`
+- **THEN** `sitemap.xml` lists `https://sc-p1.netlify.app/` and the pages' canonical links use that address
 
 ### Requirement: Invalid documents are not exported
 Export SHALL refuse a document that fails validation and SHALL return the validation errors.
@@ -71,3 +75,14 @@ Exporting the same document with the same media SHALL produce a byte-identical f
 #### Scenario: Repeated export
 - **WHEN** the same site is exported to a ZIP twice, at different times
 - **THEN** the two archives are byte-identical
+
+### Requirement: Redirects file
+Export SHALL accept an optional list of redirects, each from an address path to another address path. When the list is not empty, export SHALL include a `_redirects` file with one line per redirect, `<from> <to> 301`, in the given order. Each path SHALL start with `/`; a redirect whose path contains whitespace or doesn't start with `/` SHALL be rejected with an error.
+
+#### Scenario: Redirects written
+- **WHEN** exporting with the redirect from `/kontakt/` to `/napiste-nam/`
+- **THEN** the file tree contains `_redirects` with the line `/kontakt/ /napiste-nam/ 301`
+
+#### Scenario: No redirects
+- **WHEN** exporting without redirects
+- **THEN** the file tree has no `_redirects`

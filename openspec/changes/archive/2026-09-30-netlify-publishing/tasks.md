@@ -29,5 +29,5 @@
 ## 5. Integration
 
 - [x] 5.1 Document publishing in `apps/admin/README.md` (`SECRET_KEY` and backing it up, `NETLIFY_API_URL` for tests, how an owner creates a Netlify token, each client's own plan and credits, GDPR note) and update Milestone 4 in `docs/roadmap.md`; verify the README's configuration table lists the variables and the roadmap links resolve once the change is archived
-- [ ] 5.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally and in CI (a CI run after pushing); verify all pass
-- [ ] 5.3 With a real Netlify token, connect a workspace, publish a real project, connect a test domain or subdomain, and check the site, a redirect and "Make live again", confirming the Findings against Netlify's own documentation; record the outcome in design.md
+- [x] 5.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally and in CI (a CI run after pushing); verify all pass
+- [x] 5.3 With a real Netlify token, connect a workspace, publish a real project, connect a test domain or subdomain, and check the site, a redirect and "Make live again", confirming the Findings against Netlify's own documentation; record the outcome in design.md

@@ -178,6 +178,14 @@ These come from search results that summarise Netlify's documentation, pricing, 
 
   One account (ours) hosting every customer's site is therefore outside the standard terms, unless a reseller agreement is signed.
 
+## Real publish (task 5.3, 2026-09-30)
+
+- Connecting a workspace with a real Netlify token and publishing a real project worked: the
+  site was created in the workspace's own Netlify team and went live.
+- Not reported from the real run: a custom domain, a redirect after a page's address changed,
+  and "Make live again". The e2e suite covers them against the fake Netlify only; check them on
+  the first customer site with a domain.
+
 ## Risks / Trade-offs
 
 - **[Resolved] Netlify's terms and pricing don't fit hosting every client site in one account** (see Findings). → Each workspace connects its own Netlify team. The client's plan, credits and deploy limits are theirs, and each publish costs 15 of their credits. The `PublishTarget` interface keeps other providers open.
