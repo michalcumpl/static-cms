@@ -24,6 +24,8 @@ catalog:
   drizzle-orm: ^0.45.3
   fflate: ^0.8.3
   html-validate: ^9.7.1
+  # LGPL-3.0: loaded as its own chunk, only when a HEIC photo needs converting.
+  libheif-js: ^1.23.2
   nodemailer: ^10.0.12
   sharp: ^0.35.5
   svelte: ^5.57.1

@@ -203,6 +203,9 @@ catalogs:
     html-validate:
       specifier: ^9.7.1
       version: 9.7.1
+    libheif-js:
+      specifier: ^1.23.2
+      version: 1.23.2
     nodemailer:
       specifier: ^10.0.12
       version: 10.0.12
@@ -263,6 +266,9 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.3(@types/better-sqlite3@9.6.0)(better-sqlite3@12.11.1)
+      libheif-js:
+        specifier: 'catalog:'
+        version: 1.23.2
       nodemailer:
         specifier: 'catalog:'
         version: 10.0.12
@@ -1968,6 +1974,10 @@ packages:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
 
+  libheif-js@1.23.2:
+    resolution: {integrity: sha512-qvHIXtggEsw1lCNCWBYKloL2Z36DJBm0R9ThGiH2JnhKYdeZFLPFkP30Lw4yMskxxhx0bKg1gLrBHX1D2w2pSw==}
+    engines: {node: '>=8.0.0'}
+
   lightningcss-android-arm64@1.33.0:
     resolution: {integrity: sha512-gEpRTalKdosp4Bb8qWtc2iOgE5SeIHlpS1up9bFq2wAyYhl1UdTObYiHe98zEM9SQvSoqQZ1IQD0JNpg3Ml5pg==}
     engines: {node: '>= 12.0.0'}
@@ -3529,6 +3539,8 @@ snapshots:
   kleur@3.0.3: {}
 
   kleur@4.1.5: {}
+
+  libheif-js@1.23.2: {}
 
   lightningcss-android-arm64@1.33.0:
     optional: true

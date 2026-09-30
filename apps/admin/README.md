@@ -91,7 +91,13 @@ ORIGIN=https://admin.example.cz BODY_SIZE_LIMIT=25M SMTP_URL=… MAIL_FROM=… n
 ### Images
 
 - Members upload **JPEG, PNG and WebP** images of up to **20 MB** and **40 megapixels**. SVG,
-  HEIC, animated images and anything else are refused.
+  HEIC, animated images and anything else are refused by the server.
+- **HEIC/HEIF photos (iPhones) are converted to JPEG in the browser** before uploading, in the
+  editor's media library: Safari decodes them itself; other browsers load
+  [libheif](https://github.com/strukturag/libheif) (`libheif-js`, about 2 MB, LGPL-3.0) as a
+  separate chunk the first time a HEIC photo needs it. Converted photos are at most 4096 px on
+  their longer side (iOS Safari can't draw larger canvases; the widest published variant is
+  2400 px). The server itself still refuses HEIC.
 - Every upload is turned upright and stripped of all metadata (EXIF, GPS, XMP, IPTC). It is
   stored as a metadata-free original, which is never published, plus WebP variants 480, 960,
   1600 and 2400 px wide (never wider than the image). Pages use the variants through `srcset`.

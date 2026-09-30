@@ -114,8 +114,10 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
   - **Remove, then clean up:** "Remove from library" only hides an image;
     `pnpm admin media-cleanup` deletes the files no stored version uses.
   - Deployment needs `BODY_SIZE_LIMIT=25M` (adapter-node's default refuses photos).
-  - Known limits: only the hero image so far; no HEIC decoding on the server; no AVIF;
-    no cropping.
+  - HEIC photos (iPhones) are converted to JPEG in the browser before upload
+    ([`heic-upload`](../openspec/changes/archive/2026-09-30-heic-upload/)); the server itself
+    still refuses HEIC.
+  - Known limits: only the hero image so far; no AVIF; no cropping.
 - Image display options, chosen in the Image panel rather than by dragging (a free pixel size
   doesn't survive responsive layouts):
   - size presets per image (small / medium / full width; for the hero: beside the text, wider,

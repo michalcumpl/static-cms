@@ -19,6 +19,7 @@
     "@static-cms/site": "workspace:*",
     "better-sqlite3": "catalog:",
     "drizzle-orm": "catalog:",
+    "libheif-js": "catalog:",
     "nodemailer": "catalog:",
     "sharp": "catalog:",
     "svedit": "catalog:",

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { convertHeic, isHeic, UPLOAD_ACCEPT } from "./heic";
 import type { EditorState } from "./state.svelte";
 import type { ChosenImage } from "./transforms";
 
@@ -16,11 +17,9 @@ interface Upload {
   name: string;
   /** 0–1 while sending; 1 while the server processes it. */
   progress: number;
-  state: "uploading" | "processing" | "done" | "failed";
+  state: "converting" | "uploading" | "processing" | "done" | "failed";
   message?: string;
 }
-
-const ACCEPT = "image/jpeg,image/png,image/webp";
 
 let dialog: HTMLDialogElement | undefined = $state();
 let images = $state<LibraryImage[]>([]);
@@ -118,15 +117,33 @@ function send(file: File, upload: Upload): Promise<void> {
 
 async function uploadFiles(files: FileList | File[]) {
   const list = [...files];
-  const added = list.map((file) => ({
+  const added: Upload[] = list.map((file) => ({
     id: nextUploadId++,
     name: file.name,
     progress: 0,
-    state: "uploading" as const,
+    state: "uploading",
   }));
   uploads = [...uploads, ...added];
-  // One at a time: the server processes them one at a time anyway.
-  for (const [index, file] of list.entries()) await send(file, added[index] as Upload);
+  // One at a time: conversions and the server both handle one image at a time.
+  for (const [index, original] of list.entries()) {
+    const upload = added[index] as Upload;
+    const update = (changes: Partial<Upload>) => {
+      uploads = uploads.map((u) => (u.id === upload.id ? { ...u, ...changes } : u));
+    };
+    let file = original;
+    // iPhone photos (HEIC) become JPEGs here: the server only takes JPEG, PNG and WebP.
+    if (await isHeic(original)) {
+      update({ state: "converting" });
+      const converted = await convertHeic(original);
+      if (!converted.ok) {
+        update({ state: "failed", message: converted.message });
+        continue;
+      }
+      file = converted.file;
+      update({ state: "uploading", name: file.name });
+    }
+    await send(file, upload);
+  }
 }
 
 function onDrop(event: DragEvent) {
@@ -164,7 +181,7 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
         Choose files…
         <input
           type="file"
-          accept={ACCEPT}
+          accept={UPLOAD_ACCEPT}
           multiple
           onchange={(e) => {
             const input = e.currentTarget;
@@ -173,7 +190,10 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
           }}
         />
       </label>
-      <p class="hint">JPEG, PNG or WebP, up to 20 MB. Location and camera data are removed.</p>
+      <p class="hint">
+        JPEG, PNG, WebP or HEIC (converted in your browser), up to 20 MB. Location and camera data
+        are removed.
+      </p>
     </div>
 
     {#if uploads.length > 0}
@@ -181,7 +201,9 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
         {#each uploads as upload (upload.id)}
           <li class={upload.state}>
             <span class="name">{upload.name}</span>
-            {#if upload.state === "uploading"}
+            {#if upload.state === "converting"}
+              <span>Converting…</span>
+            {:else if upload.state === "uploading"}
               <progress max="1" value={upload.progress}>{Math.round(upload.progress * 100)} %</progress>
             {:else if upload.state === "processing"}
               <span>Processing…</span>
