@@ -2,7 +2,7 @@
 
 ## 1. Spike: what browsers upload
 
-- [ ] 1.1 Check what iOS Safari (photo library, `accept="image/jpeg,image/png,image/webp"`) and macOS Safari/Chrome (a `.heic` file) actually send, using a throwaway page that logs the file's type, name and first bytes; record the outcome in design.md (Risks) and verify it names the follow-up, if one is needed
+- [x] 1.1 Check what iOS Safari (photo library, `accept="image/jpeg,image/png,image/webp"`) and macOS Safari/Chrome (a `.heic` file) actually send, using a throwaway page that logs the file's type, name and first bytes; record the outcome in design.md (Risks) and verify it names the follow-up, if one is needed
 
 ## 2. Width ladder and rendering
 
@@ -12,7 +12,7 @@
 
 ## 3. Storage and processing
 
-- [ ] 3.1 Add `sharp` to the catalog and `apps/admin`, and check whether an `allowBuilds` entry is needed; verify `pnpm install --frozen-lockfile` and a one-line sharp resize run locally, and that CI installs its linux binary (a CI run)
+- [x] 3.1 Add `sharp` to the catalog and `apps/admin`, and check whether an `allowBuilds` entry is needed; verify `pnpm install --frozen-lockfile` and a one-line sharp resize run locally, and that CI installs its linux binary (a CI run)
 - [x] 3.2 Add the `media` table (design.md decision 3) with a Drizzle migration; verify with a unit test that a fresh in-memory database has the table with its unique `(project_id, sha256)` index
 - [x] 3.3 Implement `uploadImage` in `$lib/server/media.ts` (type check, limits, `rotate()`, metadata-free original, WebP variants, key, duplicate handling, one-at-a-time queue, temp files renamed into place); verify with unit tests on generated images for the media scenarios Upload a photo, Disguised file refused, Too large, Location removed (EXIF with GPS is gone from every stored file), Rotated photo, Same file twice, Variants of a large photo and Variants of a small image, and an animated WebP being refused
 - [x] 3.4 Implement `listLibrary`, `removeFromLibrary` and re-upload restoring an image; verify with unit tests for List after upload, Remove an image in use (the variant file stays readable) and a removed image returning when uploaded again
@@ -33,5 +33,5 @@
 ## 6. Cleanup and integration
 
 - [x] 6.1 Add the `media-cleanup [--dry-run]` admin command (design.md decision 8); verify with a unit test for the Cleanup scenario and a dry run that deletes nothing
-- [ ] 6.2 Walk through end to end in Playwright: upload a phone-sized JPEG with GPS EXIF, use it in the hero, describe it, save, export the ZIP, and check that it holds the variants and no EXIF; verify that `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite pass locally and in CI
+- [x] 6.2 Walk through end to end in Playwright: upload a phone-sized JPEG with GPS EXIF, use it in the hero, describe it, save, export the ZIP, and check that it holds the variants and no EXIF; verify that `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite pass locally and in CI
 - [x] 6.3 Mark "Media library and image upload" as done in `docs/roadmap.md` Milestone 3, with the change link, the decisions (sharp, WebP width ladder, hashed keys, remove-then-cleanup) and the known limits (hero only, no HEIC from Mac, no AVIF); verify the links resolve once the change is archived

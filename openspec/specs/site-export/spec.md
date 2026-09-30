@@ -22,15 +22,19 @@ Export SHALL produce a file tree in which the home page (the page named by the s
 - **THEN** the file layout is unchanged and `index.html` links the stylesheet as `/web/assets/style.css`
 
 ### Requirement: Media files
-The caller SHALL supply the bytes of every image the document references. Export SHALL include exactly the referenced images, and SHALL fail with an error naming the missing file if a referenced image's bytes were not supplied.
+The caller SHALL supply the bytes of every image file the document uses, keyed by file name (the variant files `<media key>-<width>.webp`). Export SHALL include exactly those files under `assets/images/`, and SHALL fail with an error naming the missing file if a used file's bytes were not supplied.
 
 #### Scenario: Missing media
-- **WHEN** a hero image references `team.webp` and no bytes were supplied for it
-- **THEN** export fails with an error naming `team.webp`
+- **WHEN** a hero image has media key `team-1a2b3c4d` and width 800, and no bytes were supplied for `team-1a2b3c4d-800.webp`
+- **THEN** export fails with an error naming `team-1a2b3c4d-800.webp`
 
 #### Scenario: Unused media
-- **WHEN** bytes are supplied for an image that no node references
+- **WHEN** bytes are supplied for an image file that no node uses
 - **THEN** that file is not included in the export
+
+#### Scenario: All variants exported
+- **WHEN** exporting a site whose hero image is 1000 pixels wide with media key `pult-3f9a2c1d`
+- **THEN** the tree contains `assets/images/pult-3f9a2c1d-480.webp`, `…-960.webp` and `…-1000.webp`, and no original
 
 ### Requirement: Sitemap
 When the site has a base URL, export SHALL include a `sitemap.xml` listing the absolute URL of every page, with the home page at the base URL. When the site has no base URL, export SHALL omit `sitemap.xml` and report a warning.

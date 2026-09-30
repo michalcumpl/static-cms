@@ -74,13 +74,6 @@ A project's preview and its ZIP download SHALL use the project's saved document.
 - **WHEN** the saved document has an empty heading
 - **THEN** the project's preview shows the problems instead of the page
 
-### Requirement: Project media
-Images SHALL be stored per project, and served only to members of the project's workspace.
-
-#### Scenario: Media of another workspace
-- **WHEN** a member of workspace A requests an image of a project in workspace B
-- **THEN** the response is "not found"
-
 ### Requirement: Upgrading stored documents
 Whenever the server reads a stored document (for the editor, the preview, the ZIP download, or the import of the earlier working copy), it SHALL upgrade a version-1 document to version 2 before validating or returning it. The stored document and its versions SHALL NOT be rewritten by reading; the upgraded document SHALL be stored by the next accepted save. The version value returned with an upgraded document SHALL be the stored version, so the next save based on it is accepted.
 

@@ -128,7 +128,15 @@ sharp(bytes).rotate()           -- apply EXIF orientation to pixels
 
 - **[Risk] `BODY_SIZE_LIMIT` is forgotten in production, so every real photo fails with 413.** → The README deployment section says to set it. On startup the server logs a warning when it is set below 25M, or unset when `NODE_ENV=production`. A Playwright test uploads a 5 MB file (the dev server has no limit), and a unit test covers the handler's own 20 MB check.
 - **[Risk] Large uploads use a lot of memory and take seconds.** → One upload at a time, `limitInputPixels`, and no sharp cache. The dialog shows a progress bar during upload and a "Processing…" state afterwards.
-- **[Risk] HEIC from a Mac is refused.** → Refused with a clear message (JPEG, PNG, WebP). Task 1 checks what iOS and macOS browsers actually send; if Mac uploads matter, browser-side conversion becomes a follow-up change.
+- **[Risk] HEIC photos.** Checked on 2026-09-30 (task 1.1) with a picker like the editor's (`accept` = JPEG, PNG, WebP) and one without `accept`, using an iPhone photo stored as HEIC:
+
+  | Browser | Editor's picker | Picker without `accept` |
+  |---|---|---|
+  | iOS 18 Safari | JPEG, original name (`IMG_5420.jpeg`) | JPEG |
+  | macOS Safari 26 | JPEG, but a temporary name (`tempImage….jpg`), EXIF included | raw HEIC |
+  | macOS Chrome 153 | `.heic` files can't be selected | raw HEIC |
+
+  → iPhone uploads work, and Safari on the Mac works (with a meaningless file name, so a meaningless key). **Chrome on the Mac can't upload HEIC photos at all**: the file picker greys them out, and a dropped HEIC file is refused with the formats message. **Follow-up change:** convert HEIC to JPEG in the browser (a lazily loaded libheif WebAssembly decoder, used only when a HEIC file is chosen or dropped, with `image/heic` added to `accept`). Until then, the refusal message is the owner's only hint.
 - **[Trade-off] Removed images stay on disk until someone runs the cleanup command.** This is deliberate: undo, older versions and Milestone 4 rollback depend on it. It costs a few MB per photo.
 - **[Trade-off] Legacy keys like `hero.png` give variant names like `hero.png-320.webp`.** They look odd but are valid, and they avoid rewriting stored documents.
 - **[Risk] A document's `width` disagrees with the real image (a hand-edited or imported document), so the renderer asks for a variant that doesn't exist.** → Export fails with `missing-media` naming the file, instead of publishing a broken image. The picker always writes the real dimensions.
