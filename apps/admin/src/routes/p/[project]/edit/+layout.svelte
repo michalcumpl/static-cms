@@ -5,6 +5,7 @@ import { beforeNavigate, goto } from "$app/navigation";
 import BlockInserter from "$lib/editor/BlockInserter.svelte";
 import BlockPanel from "$lib/editor/BlockPanel.svelte";
 import BusinessSettings from "$lib/editor/BusinessSettings.svelte";
+import ButtonPanel from "$lib/editor/ButtonPanel.svelte";
 import { canvasCss } from "$lib/editor/canvas-css";
 import ImagePanel from "$lib/editor/ImagePanel.svelte";
 import LinkDialog from "$lib/editor/LinkDialog.svelte";
@@ -255,6 +256,7 @@ const statusText = $derived.by(() => {
         <BusinessSettings {editor} />
       {/if}
     </div>
+    <ButtonPanel {editor} />
     <BlockPanel {editor} />
     <ImagePanel {editor} />
     <ProblemsPanel {editor} focusCanvas={() => canvas?.focus_canvas()} />

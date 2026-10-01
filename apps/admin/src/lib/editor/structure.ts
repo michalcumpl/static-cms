@@ -6,6 +6,7 @@ import {
   insertListItem,
   insertPerson,
   insertServiceItem,
+  insertTestimonial,
 } from "./transforms";
 
 type NodeSelection = {
@@ -23,8 +24,8 @@ type AnySelection = {
 type NodeList = { nodes: string[]; marks: unknown[]; annotations: unknown[] };
 
 /**
- * Node lists whose structure M2 keeps fixed: the navigation (no page management yet),
- * the site's pages, and the hero's single image and call to action.
+ * Node lists whose structure the canvas keeps fixed: the navigation and the site's pages (the
+ * sidebar manages them), images (the image slots do), and buttons (the button panel does).
  */
 export function isFixedList(session: Session, path: DocumentPath): boolean {
   const owner = session.get(path.slice(0, -1)) as { type?: string } | undefined;
@@ -33,7 +34,14 @@ export function isFixedList(session: Session, path: DocumentPath): boolean {
 
 /** The fixed-list rule on its own: the owning node's type and the list property's name. */
 export function isFixedListProperty(ownerType: string | undefined, property: unknown): boolean {
-  if (property === "pages" || property === "image" || property === "action") return true;
+  if (
+    property === "pages" ||
+    property === "image" ||
+    property === "action" ||
+    property === "actions"
+  ) {
+    return true;
+  }
   return property === "items" && ownerType === "nav";
 }
 
@@ -135,7 +143,8 @@ export function itemInsertionPoint(
 ): { path: DocumentPath; index: number } | undefined {
   const selection = session.selection as AnySelection | null;
   if (!selection) return undefined;
-  // Walk up the selection path to the innermost item list of a list, services or team block.
+  // Walk up the selection path to the innermost item list of a list, services, team or
+  // testimonials block.
   // Gallery photos and logos need an image, so they come from the library instead.
   for (let end = selection.path.length; end > 0; end--) {
     const path = selection.path.slice(0, end);
@@ -143,7 +152,8 @@ export function itemInsertionPoint(
     if (property !== "items" && property !== "people") continue;
     const owner = session.get(path.slice(0, -1)) as { type?: string } | undefined;
     const itemList =
-      (property === "items" && (owner?.type === "list" || owner?.type === "services")) ||
+      (property === "items" &&
+        (owner?.type === "list" || owner?.type === "services" || owner?.type === "testimonials")) ||
       (property === "people" && owner?.type === "team");
     if (!itemList) continue;
     const next = selection.path[end];
@@ -172,7 +182,9 @@ export function insertItem(session: Session): boolean {
       ? insertServiceItem
       : owner.type === "team"
         ? insertPerson
-        : insertListItem;
+        : owner.type === "testimonials"
+          ? insertTestimonial
+          : insertListItem;
   inserter(tr);
   session.apply(tr);
   return true;

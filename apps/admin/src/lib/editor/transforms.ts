@@ -184,6 +184,56 @@ export function insertOpeningHours(tr: Tr): boolean {
   return true;
 }
 
+/** A call to action with a placeholder heading and one button to the home page. */
+export function insertCallToAction(tr: Tr): boolean {
+  const site = tr.doc.nodes[tr.doc.document_id] as unknown as { home_page_id: string };
+  const button = tr.generate_id();
+  tr.create({ id: button, type: "page_link", label: text("Tlačítko"), page_id: site.home_page_id });
+  const block = tr.generate_id();
+  tr.create({
+    id: block,
+    type: "call_to_action",
+    heading: text("Nadpis"),
+    text: text(),
+    actions: list([button]),
+  });
+  insertAndFocus(tr, block, "heading");
+  return true;
+}
+
+function createTestimonial(tr: Tr): string {
+  const id = tr.generate_id();
+  tr.create({
+    id,
+    type: "testimonial",
+    quote: text(),
+    name: text(),
+    detail: text(),
+    image: list(),
+  });
+  return id;
+}
+
+/** A testimonials block with a placeholder heading and one empty testimonial. */
+export function insertTestimonials(tr: Tr): boolean {
+  const block = tr.generate_id();
+  tr.create({
+    id: block,
+    type: "testimonials",
+    heading: text("Nadpis"),
+    items: list([createTestimonial(tr)]),
+  });
+  insertAndFocus(tr, block, "heading");
+  return true;
+}
+
+/** An empty testimonial (Enter at the end of one, or "Add item"). */
+export function insertTestimonial(tr: Tr): boolean {
+  const id = createTestimonial(tr);
+  insertAndFocus(tr, id, "quote");
+  return true;
+}
+
 export type BlockType =
   | "hero"
   | "rich_text"
@@ -193,7 +243,9 @@ export type BlockType =
   | "team"
   | "logos"
   | "contact"
-  | "opening_hours";
+  | "opening_hours"
+  | "call_to_action"
+  | "testimonials";
 
 export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   hero: insertHero,
@@ -205,6 +257,8 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   logos: insertLogos,
   contact: insertContact,
   opening_hours: insertOpeningHours,
+  call_to_action: insertCallToAction,
+  testimonials: insertTestimonials,
 };
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
@@ -219,6 +273,8 @@ export function insertableBlocks(blocks: { type: string }[], index: number): Blo
     "logos",
     "contact",
     "opening_hours",
+    "call_to_action",
+    "testimonials",
   ];
   return heroAllowed ? ["hero", ...others] : others;
 }

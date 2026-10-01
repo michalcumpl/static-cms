@@ -25,6 +25,10 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderContact(block, ctx);
     case "opening_hours":
       return renderOpeningHours(block, ctx);
+    case "call_to_action":
+      return renderCallToAction(block, ctx);
+    case "testimonials":
+      return renderTestimonials(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -239,6 +243,63 @@ function renderOpeningHours(block: NodeOfType<"opening_hours">, ctx: RenderConte
     </section>`;
 }
 
+/** A band with a heading, an optional text and one or two buttons (the second secondary). */
+function renderCallToAction(block: NodeOfType<"call_to_action">, ctx: RenderContext): Html {
+  const buttons = ctx
+    .children(block.actions)
+    .map((link, index) =>
+      renderLink(link, ctx, index === 0 ? "button" : "button button-secondary"),
+    );
+  return html`<section class="block cta">
+      <div class="container">
+        <h2>${renderText(block.heading, ctx)}</h2>${
+          !isEmpty(block.text) &&
+          html`
+        <p class="cta-text">${renderText(block.text, ctx)}</p>`
+        }${
+          buttons.length > 0 &&
+          html`
+        <p class="cta-actions">${buttons.map(
+          (button) => html`
+          ${button}`,
+        )}
+        </p>`
+        }
+      </div>
+    </section>`;
+}
+
+/** Quotes with the person's name, detail and optional photo; no review markup (decision 4). */
+function renderTestimonials(block: NodeOfType<"testimonials">, ctx: RenderContext): Html {
+  const items = ctx.children(block.items).map((item) => {
+    if (item.type !== "testimonial") return false;
+    const image = imageOf(item, ctx);
+    return html`
+          <li>
+            <figure class="testimonial">
+              <blockquote><p>${renderText(item.quote, ctx)}</p></blockquote>
+              <figcaption>${
+                image &&
+                html`
+                ${renderImage(image, ctx, { lazy: true, sizes: IMAGE_SIZES.testimonial, className: "testimonial-photo" })}`
+              }
+                <span class="testimonial-name">${renderText(item.name, ctx)}</span>${
+                  !isEmpty(item.detail) &&
+                  html`
+                <span class="testimonial-detail">${renderText(item.detail, ctx)}</span>`
+                }
+              </figcaption>
+            </figure>
+          </li>`;
+  });
+  return html`<section class="block testimonials">
+      <div class="container">${blockHeading(block.heading, ctx)}
+        <ul class="testimonial-list">${items}
+        </ul>
+      </div>
+    </section>`;
+}
+
 function renderServices(block: NodeOfType<"services">, ctx: RenderContext): Html {
   const items = ctx.children(block.items).map(
     (item) =>
@@ -281,6 +342,7 @@ export const IMAGE_SIZES = {
   gallery: "(min-width: 48rem) 33vw, 50vw",
   portrait: "10rem",
   logo: "12rem",
+  testimonial: "4rem",
 } as const;
 
 /**

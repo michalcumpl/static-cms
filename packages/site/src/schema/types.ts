@@ -246,6 +246,33 @@ export interface InternalLinkNode {
   page_id: string;
 }
 
+/** A band asking visitors to do one thing, with one or two buttons. */
+export interface CallToActionNode {
+  id: string;
+  type: "call_to_action";
+  heading: TextValue;
+  text: TextValue;
+  /** One or two `page_link` / `external_link` nodes. */
+  actions: NodeArrayValue;
+}
+
+export interface TestimonialsNode {
+  id: string;
+  type: "testimonials";
+  heading: TextValue;
+  items: NodeArrayValue;
+}
+
+export interface TestimonialNode {
+  id: string;
+  type: "testimonial";
+  quote: TextValue;
+  name: TextValue;
+  detail: TextValue;
+  /** At most one `image` node: the person's photo. */
+  image: NodeArrayValue;
+}
+
 /** Shows the site's business details; holds none of its own. */
 export interface ContactNode {
   id: string;
@@ -340,6 +367,9 @@ export type AnyNode =
   | LogoItemNode
   | ContactNode
   | OpeningHoursNode
+  | CallToActionNode
+  | TestimonialsNode
+  | TestimonialNode
   | BusinessNode
   | OpeningDayNode
   | TimeRangeNode

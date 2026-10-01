@@ -94,6 +94,28 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
     show_map: true,
   };
   nodes.page_contact.blocks.nodes.push("contact_1");
+  nodes.t_1 = {
+    id: "t_1",
+    type: "testimonial",
+    quote: { content: "", marks: [], annotations: [] },
+    name: { content: "", marks: [], annotations: [] },
+    detail: { content: "", marks: [], annotations: [] },
+    image: { nodes: [], marks: [], annotations: [] },
+  };
+  nodes.testimonials_1 = {
+    id: "testimonials_1",
+    type: "testimonials",
+    heading: { content: "Reference", marks: [], annotations: [] },
+    items: { nodes: ["t_1"], marks: [], annotations: [] },
+  };
+  nodes.cta_1 = {
+    id: "cta_1",
+    type: "call_to_action",
+    heading: { content: "", marks: [], annotations: [] },
+    text: { content: "", marks: [], annotations: [] },
+    actions: { nodes: [], marks: [], annotations: [] },
+  };
+  nodes.page_contact.blocks.nodes.push("testimonials_1", "cta_1");
   return { doc, nodes };
 }
 
@@ -127,6 +149,7 @@ describe("owners' words", () => {
       "invalid-email",
       "invalid-hours",
       "nothing-to-show",
+      "empty-quote",
     ]) {
       expect(codes, code).toContain(code);
     }

@@ -58,7 +58,8 @@ export type ProblemCode =
   | "invalid-map-url"
   | "invalid-country"
   | "invalid-hours"
-  | "nothing-to-show";
+  | "nothing-to-show"
+  | "empty-quote";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -119,6 +120,7 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "invalid-country": "site",
   "invalid-hours": "site",
   "nothing-to-show": "site",
+  "empty-quote": "site",
 };
 
 export function problemCategory(code: ProblemCode): ProblemCategory {

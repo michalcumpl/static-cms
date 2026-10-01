@@ -121,6 +121,8 @@ export const siteSchema = {
           "logos",
           "contact",
           "opening_hours",
+          "call_to_action",
+          "testimonials",
         ],
         default_node_type: "rich_text",
       },
@@ -264,6 +266,32 @@ export const siteSchema = {
     kind: "block",
     properties: {
       heading: { type: "text", allow_newlines: false },
+    },
+  },
+  call_to_action: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      text: { type: "text", allow_newlines: false },
+      /** One or two buttons; added and removed only through the button panel. */
+      actions: { type: "node_array", node_types: LINK_TYPES },
+    },
+  },
+  testimonials: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      items: { type: "node_array", node_types: ["testimonial"], default_node_type: "testimonial" },
+    },
+  },
+  testimonial: {
+    kind: "block",
+    properties: {
+      quote: { type: "text", allow_newlines: false },
+      name: { type: "text", allow_newlines: false },
+      /** Optional, e.g. "zákaznice od roku 2015". */
+      detail: { type: "text", allow_newlines: false },
+      image: { type: "node_array", node_types: ["image"] },
     },
   },
   business: {

@@ -17,6 +17,8 @@ const BLOCK_LABELS: Record<BlockType, string> = {
   logos: "Logos",
   contact: "Contact",
   opening_hours: "Hours",
+  call_to_action: "Call to action",
+  testimonials: "Testimonials",
 };
 const BLOCK_ORDER = Object.keys(BLOCK_LABELS) as BlockType[];
 const insertable = $derived(

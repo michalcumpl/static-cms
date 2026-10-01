@@ -536,7 +536,17 @@ function checkPageBlocks(
     const services = get(blockId, "services");
     if (services && !isBlank(services.heading)) hasH2 = true;
     checkImageBlock(blockId, page, get, problems);
-    for (const type of ["text_with_image", "gallery", "team", "logos"] as const) {
+    checkContentBlock(blockId, page, get, problems);
+    for (const type of [
+      "text_with_image",
+      "gallery",
+      "team",
+      "logos",
+      "contact",
+      "opening_hours",
+      "call_to_action",
+      "testimonials",
+    ] as const) {
       const block = get(blockId, type);
       if (block && !isBlank(block.heading)) hasH2 = true;
     }
@@ -559,6 +569,75 @@ function checkPageBlocks(
       }
     }
   });
+}
+
+/** The call to action's heading and buttons, and testimonials (cta-and-testimonials decision 5). */
+function checkContentBlock(
+  blockId: string,
+  page: NodeOfType<"page">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const on = pageLabel(page);
+  const cta = get(blockId, "call_to_action");
+  if (cta) {
+    if (isBlank(cta.heading)) {
+      problems.error(
+        "empty-heading",
+        cta.id,
+        `The call to action on ${on} needs a heading.`,
+        "heading",
+      );
+    }
+    if (cta.actions.nodes.length === 0) {
+      problems.warning(
+        "empty-block",
+        cta.id,
+        `The call to action on ${on} has no button.`,
+        "actions",
+      );
+    } else if (cta.actions.nodes.length > 2) {
+      problems.error(
+        "too-many-items",
+        cta.id,
+        `The call to action on ${on} can have at most two buttons.`,
+        "actions",
+      );
+    }
+  }
+  const testimonials = get(blockId, "testimonials");
+  if (!testimonials) return;
+  if (testimonials.items.nodes.length === 0) {
+    problems.warning(
+      "empty-block",
+      testimonials.id,
+      `A testimonials block on ${on} is empty.`,
+      "items",
+    );
+  }
+  for (const itemId of testimonials.items.nodes) {
+    const item = get(itemId, "testimonial");
+    if (!item) continue;
+    if (isBlank(item.quote)) {
+      problems.error("empty-quote", item.id, `A testimonial on ${on} needs its quote.`, "quote");
+    }
+    if (isBlank(item.name)) {
+      problems.error(
+        "empty-name",
+        item.id,
+        `A testimonial on ${on} needs the person's name.`,
+        "name",
+      );
+    }
+    if (item.image.nodes.length > 1) {
+      problems.error(
+        "too-many-items",
+        item.id,
+        "A testimonial can have at most one photo.",
+        "image",
+      );
+    }
+  }
 }
 
 /** The contents of gallery, team and logos blocks, and the image of a text with image block. */

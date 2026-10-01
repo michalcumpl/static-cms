@@ -7,7 +7,11 @@ let { path }: { path: DocumentPath } = $props();
 const svedit = getContext<SveditContext>("svedit");
 const editor = getEditor();
 const link = $derived(svedit.session.get(path));
-const isAction = $derived(path.at(-2) === "action");
+// Buttons: the hero's call to action, and a call to action block's (the second secondary).
+const isAction = $derived(path.at(-2) === "action" || path.at(-2) === "actions");
+const buttonClass = $derived(
+  path.at(-2) === "actions" && path.at(-1) === 1 ? "button button-secondary" : "button",
+);
 const isCurrent = $derived(!isAction && link.page_id === editor.currentPageId);
 </script>
 
@@ -15,7 +19,7 @@ const isCurrent = $derived(!isAction && link.page_id === editor.currentPageId);
 <Node
   {path}
   tag="span"
-  class={isAction ? "button" : "link"}
+  class={isAction ? buttonClass : "link"}
   aria-current={isCurrent ? "page" : undefined}
 >
   <TextProperty tag="span" path={[...path, "label"]} placeholder="Odkaz" />

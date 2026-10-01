@@ -158,6 +158,7 @@ img {
 .button {
   display: inline-block;
   padding: 0.75rem 1.5rem;
+  border: 2px solid var(--color-primary);
   border-radius: var(--radius);
   background: var(--color-primary);
   color: var(--color-background);
@@ -298,6 +299,79 @@ img {
   width: auto;
 }
 
+.cta {
+  background: var(--color-secondary);
+}
+
+.cta-text {
+  margin: 0 0 1rem;
+}
+
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.button-secondary {
+  background: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.button-secondary:hover {
+  background: var(--color-background);
+}
+
+.testimonial-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.testimonial {
+  margin: 0;
+  padding: 1.25rem;
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-secondary);
+  border-radius: var(--radius);
+}
+
+.testimonial blockquote {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.testimonial blockquote p {
+  margin: 0;
+}
+
+.testimonial figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+}
+
+.testimonial-photo {
+  width: 4rem;
+  aspect-ratio: 1;
+  object-fit: cover;
+  clip-path: circle(50%);
+}
+
+.testimonial-name {
+  font-weight: 700;
+}
+
+.testimonial-detail {
+  color: var(--color-text);
+  opacity: 0.8;
+}
+
 .contact-details {
   font-style: normal;
 }
@@ -365,6 +439,10 @@ img {
   }
 
   .footer-business {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .testimonial-list {
     grid-template-columns: 1fr 1fr;
   }
 

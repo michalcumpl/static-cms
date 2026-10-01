@@ -152,7 +152,14 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
   - Why data: with one document per language (Milestone 5), these facts stay identical across
     languages and can be copied between them unchanged.
   - Later: dated exceptions to the hours (holidays), several locations.
-- Next blocks: call to action and testimonials (`cta-and-testimonials`).
+- **Call to action and testimonials: done.**
+  - Change: [`cta-and-testimonials`](../openspec/changes/archive/2026-10-01-cta-and-testimonials/).
+  - **Call to action:** a heading, an optional text and one or two buttons (the second
+    secondary), each to a page or an address (`tel:` and `mailto:` included).
+  - **Testimonials:** quote, name, optional detail and round photo, as `<figure>`/`<blockquote>`.
+    No review markup: Google ignores (and may penalise) reviews a business publishes about itself.
+  - **Button panel:** where a hero's or call to action's button points, adding and removing
+    buttons. Until now the hero's button target couldn't be changed in the editor.
 - **Editor polish: done.** Cmd/Ctrl+A selects only the current field's text; problem messages
   name pages and never show internal IDs; problems about links inside text select the linked
   words ([`editor-polish`](../openspec/changes/archive/2026-09-30-editor-polish/)).

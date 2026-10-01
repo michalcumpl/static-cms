@@ -76,6 +76,8 @@ describe("block insertion", () => {
       "logos",
       "contact",
       "opening_hours",
+      "call_to_action",
+      "testimonials",
     ]); // home has a hero
     session.selection = null;
     expect(availableBlocks(session, "site_1", 1)).toEqual([
@@ -87,6 +89,8 @@ describe("block insertion", () => {
       "logos",
       "contact",
       "opening_hours",
+      "call_to_action",
+      "testimonials",
     ]); // end of Kontakt
     session.selection = {
       type: "node",
@@ -104,6 +108,8 @@ describe("block insertion", () => {
       "logos",
       "contact",
       "opening_hours",
+      "call_to_action",
+      "testimonials",
     ]);
   });
 

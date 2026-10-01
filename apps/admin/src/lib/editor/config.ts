@@ -1,5 +1,6 @@
 import type { Component } from "svelte";
 import { createCommandsAndKeymap } from "./commands";
+import CallToAction from "./nodes/CallToAction.svelte";
 import Contact from "./nodes/Contact.svelte";
 import ExternalLink from "./nodes/ExternalLink.svelte";
 import Gallery from "./nodes/Gallery.svelte";
@@ -25,6 +26,8 @@ import Services from "./nodes/Services.svelte";
 import Site from "./nodes/Site.svelte";
 import Subheading from "./nodes/Subheading.svelte";
 import Team from "./nodes/Team.svelte";
+import Testimonial from "./nodes/Testimonial.svelte";
+import Testimonials from "./nodes/Testimonials.svelte";
 import TextWithImage from "./nodes/TextWithImage.svelte";
 import {
   insertListItem,
@@ -32,6 +35,7 @@ import {
   insertPerson,
   insertRichText,
   insertServiceItem,
+  insertTestimonial,
 } from "./transforms";
 
 // biome-ignore lint/suspicious/noExplicitAny: node components take Svedit's path props.
@@ -58,6 +62,9 @@ export const nodeComponents: Record<string, Component<any>> = {
   logo_item: LogoItem,
   contact: Contact,
   opening_hours: OpeningHours,
+  call_to_action: CallToAction,
+  testimonials: Testimonials,
+  testimonial: Testimonial,
   image: Image,
   strong: MarkStrong,
   emphasis: MarkEmphasis,
@@ -77,6 +84,7 @@ export function createConfig() {
       service_item: insertServiceItem,
       // Gallery photos and logos need an image, so they only come from the library.
       person: insertPerson,
+      testimonial: insertTestimonial,
       rich_text: insertRichText,
     },
     create_commands_and_keymap: createCommandsAndKeymap,

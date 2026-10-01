@@ -11,14 +11,24 @@ import { addItemsWithImages, removeImage, setImage } from "./transforms";
 export const IMAGE_ALT_FIELD = "image-alt";
 
 /** Node types whose image may be taken away; gallery photos and logos always keep one. */
-export const OPTIONAL_IMAGE_OWNERS: readonly string[] = ["hero", "text_with_image", "person"];
+export const OPTIONAL_IMAGE_OWNERS: readonly string[] = [
+  "hero",
+  "text_with_image",
+  "person",
+  "testimonial",
+];
 
 type Doc = Parameters<typeof locateNode>[0];
+
+/** Portraits and testimonial photos sit next to the person's name, which describes them. */
+export function startsDecorative(ownerType: string): boolean {
+  return ownerType === "person" || ownerType === "testimonial";
+}
 
 /**
  * Lets the owner pick an image in the media library, then puts it into its owner (one undoable
  * action), selects it, and focuses its alt text so it gets described right away. A person's
- * portrait starts decorative: the name is next to it.
+ * portrait and a testimonial's photo start decorative: the name is next to them.
  */
 export async function chooseImage(editor: EditorState, ownerId: string): Promise<void> {
   const { session } = editor;
@@ -31,7 +41,7 @@ export async function chooseImage(editor: EditorState, ownerId: string): Promise
   const ownerPath = locateNode(session.doc as unknown as Doc, ownerId)?.path;
   if (!ownerPath) return;
   const tr = session.tr;
-  setImage(tr, ownerId, chosen, { decorative: owner.type === "person" });
+  setImage(tr, ownerId, chosen, { decorative: startsDecorative(owner.type) });
   tr.set_selection({ type: "property", path: [...ownerPath, "image", 0, "src"] as DocumentPath });
   session.apply(tr);
   await tick();
