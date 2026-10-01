@@ -106,6 +106,10 @@ Messages follow the existing page-naming pattern ("A testimonial on "Úvod" need
   - give the hero a button;
   - insert testimonials, add a second one with a photo, and check the preview.
 
+## Real publish (task 3.3, 2026-10-01)
+
+The owner added a call to action with a call button and a testimonials block to a real site, published it, and checked it on a phone. They reported that everything worked: the call button dials, and the buttons and testimonials wrap well.
+
 ## Risks / Trade-offs
 
 - **[Replacing a link node when its kind changes]** A selection inside the old node goes away. → The panel re-selects the new button after the change, so the panel stays open.
