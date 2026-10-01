@@ -45,7 +45,7 @@ Every node reference SHALL point to an existing node of an allowed type. All nod
 
 ### Requirement: Site node
 The root node SHALL be of type `site`. It SHALL carry:
-- the schema version (`4`);
+- the schema version (`5`);
 - the site name;
 - a language tag (for example `cs`);
 - an optional base URL;
@@ -71,7 +71,7 @@ The home page ID SHALL name a page in the site's list of pages. The position of 
 - **THEN** validation reports a missing-home error
 
 #### Scenario: Unsupported schema version
-- **WHEN** a document has schema version 3
+- **WHEN** a document has schema version 4
 - **THEN** validation reports an unsupported-schema-version error
 
 #### Scenario: Two favicons
@@ -239,7 +239,7 @@ Upgrading a document of the current version SHALL return it unchanged.
 
 #### Scenario: Upgrade a two-page site
 - **WHEN** a version-1 document with pages "Úvod" (slug empty) and "Kontakt" (slug `kontakt`) is upgraded
-- **THEN** the result has schema version 4, the home page ID points at "Úvod", and "Úvod" has slug `uvod`
+- **THEN** the result has schema version 5, the home page ID points at "Úvod", and "Úvod" has slug `uvod`
 - **AND** its other content is unchanged apart from the fields and nodes the later upgrades add
 
 #### Scenario: Title slug is taken
@@ -247,7 +247,7 @@ Upgrading a document of the current version SHALL return it unchanged.
 - **THEN** the first page gets slug `kontakt-2`
 
 #### Scenario: Already upgraded
-- **WHEN** a version-4 document is upgraded
+- **WHEN** a version-5 document is upgraded
 - **THEN** the same document is returned
 
 ### Requirement: Image source and dimensions
@@ -298,8 +298,8 @@ It SHALL give every page no share image, and then upgrade the result as a versio
 
 #### Scenario: Upgrade a version-2 site
 - **WHEN** a version-2 document with pages "Úvod" and "Kontakt" is upgraded
-- **THEN** the result has schema version 4, an empty site description, empty favicon and share image lists, both AI switches on, and each page has an empty share image list
-- **AND** every other node and property is unchanged apart from the business details the upgrade of version-3 documents adds
+- **THEN** the result has schema version 5, an empty site description, empty favicon and share image lists, both AI switches on, and each page has an empty share image list
+- **AND** every other node and property is unchanged apart from the business details and translation keys the later upgrades add
 
 ### Requirement: Share images
 Every page SHALL have a share image: a list of at most one `image` node, used when the page is shared as a link. When a page has none, the site's default share image SHALL be used. A share image narrower than 600 pixels SHALL be reported as a warning, because link previews show it blurred.
@@ -398,17 +398,17 @@ A `contact` block whose shown details are all empty, or an `opening_hours` block
 - **THEN** validation reports a warning that the contact block on "Kontakt" has nothing to show yet
 
 ### Requirement: Upgrading version-3 documents
-A version-3 document SHALL be upgradable to version 4 without losing content. The upgrade SHALL add:
+A version-3 document SHALL be upgradable to the current version without losing content. The upgrade SHALL add:
 - a `business` node with every field empty except the country (`CZ`), the type `LocalBusiness` and the footer switch on;
 - seven closed `opening_day` nodes;
 - the site's reference to the business node.
 
-It SHALL set the schema version to 4. New node IDs SHALL NOT collide with existing ones.
+It SHALL then upgrade the result as a version-4 document. New node IDs SHALL NOT collide with existing ones.
 
 #### Scenario: Upgrade a version-3 site
 - **WHEN** a version-3 document is upgraded
-- **THEN** the result has schema version 4, and its site references a business node with empty details, the country `CZ`, the type `LocalBusiness`, the footer switch on, and seven days from Monday to Sunday without ranges
-- **AND** every other node and property is unchanged
+- **THEN** the result has schema version 5, and its site references a business node with empty details, the country `CZ`, the type `LocalBusiness`, the footer switch on, and seven days from Monday to Sunday without ranges
+- **AND** every other node and property is unchanged apart from the pages' translation keys
 
 ### Requirement: Call to action and testimonial contents
 - A `call_to_action` block SHALL have a non-empty heading and at most two buttons; a block without buttons SHALL be reported as a warning.
@@ -438,3 +438,22 @@ Messages SHALL name the page, as other block messages do.
 #### Scenario: Button to a removed page
 - **WHEN** a call to action's button links to `page_gone`, which is not a page of the site
 - **THEN** validation reports a missing-page error saying a button on that page points to a page that no longer exists
+
+### Requirement: Page translation keys
+Every page SHALL have a translation key: a non-empty identifier that pairs it with its counterparts in the project's other languages. Pages with the same translation key in two languages SHALL be treated as the same page in those languages. Within one document, no two pages SHALL share a translation key; a duplicate SHALL be reported as an error naming both pages.
+
+#### Scenario: Duplicate key
+- **WHEN** the pages "Kontakt" and "Napište nám" of one document have the same translation key
+- **THEN** validation reports a duplicate-translation-key error naming both pages
+
+#### Scenario: Empty key
+- **WHEN** a page's translation key is empty
+- **THEN** validation reports an invalid-value error for that page
+
+### Requirement: Upgrading version-4 documents
+A version-4 document SHALL be upgradable to version 5 without losing content. The upgrade SHALL give every page its own node ID as its translation key, and set the schema version to 5.
+
+#### Scenario: Upgrade a version-4 site
+- **WHEN** a version-4 document with pages `page_home` and `page_contact` is upgraded
+- **THEN** the result has schema version 5, `page_home` has the translation key `page_home` and `page_contact` has `page_contact`
+- **AND** every other node and property is unchanged

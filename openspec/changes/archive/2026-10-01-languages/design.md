@@ -140,6 +140,10 @@ The single-language path passes no `languages`, so snapshots stay unchanged.
   - preview `/en/` while hidden;
   - publish English, and the live site has `/en/`, alternates and the switcher.
 
+## Real publish (task 4.3, 2026-10-01)
+
+The owner added English to a real project, translated pages, changed the phone in Czech, published both languages, and checked the live site. They reported that it works. An earlier attempt had shown English pages without styles and images, which was fixed (decision 5) before this check.
+
 ## Risks / Trade-offs
 
 - **[Stored non-primary documents hold stale shared values]** → They're always applied on read. Restoring an old English version later (version history, not built yet) would also get current shared values, which is what owners expect.
