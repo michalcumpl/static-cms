@@ -1,6 +1,7 @@
 // Database schema (design.md decision 1). Token-like IDs (sessions, login tokens, invitations)
 // are SHA-256 hashes of the secret; the secret itself is never stored.
 import {
+  type AnySQLiteColumn,
   index,
   integer,
   primaryKey,
@@ -128,6 +129,10 @@ export const versions = sqliteTable(
     document: text("document", { mode: "json" }).notNull(),
     createdAt: createdAt(),
     createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    /** The version a restore copied (version-history design.md decision 1); null for edits. */
+    restoredFrom: text("restored_from").references((): AnySQLiteColumn => versions.id, {
+      onDelete: "set null",
+    }),
   },
   (t) => [index("versions_document_idx").on(t.documentId)],
 );

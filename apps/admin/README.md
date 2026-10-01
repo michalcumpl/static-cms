@@ -204,6 +204,15 @@ theme, favicon, default share image, AI switches and business details are shared
 primary and applied to every other language whenever it is read, never stored in it. Removing a
 language deletes its document and versions; hiding keeps them.
 
+### History
+
+Every save is kept as a version, per language, with who saved it. The History page
+(`/p/<project>/history`, linked from the editor and the project page) lists them, previews any of
+them read-only, and restores one: the old document is saved again as the newest version, so
+nothing is lost and a restore can be undone. Restoring the primary language also brings back its
+shared fields (theme, favicon, business details) for every language. Versions are never pruned;
+each is the whole document as JSON, typically 20–200 KB.
+
 ### Upgrading: site document format 5
 
 Pages gain a `translation_key` (their own ID for existing pages) in format 5, upgraded on read as

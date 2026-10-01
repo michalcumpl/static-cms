@@ -97,6 +97,7 @@ export function saveSite(
   document: unknown,
   baseVersion: string,
   lang?: string,
+  options: { restoredFrom?: string } = {},
 ): SaveResult {
   const { problems } = validateSite(document);
   const broken = problems.filter((p) => p.category === "structure" && p.severity === "error");
@@ -127,6 +128,7 @@ export function saveSite(
         document,
         createdAt: new Date(),
         createdBy: userId,
+        restoredFrom: options.restoredFrom ?? null,
       })
       .run();
     return true;

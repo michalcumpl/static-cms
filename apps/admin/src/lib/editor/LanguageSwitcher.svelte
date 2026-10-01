@@ -27,6 +27,8 @@ function switchTo(lang: string) {
 let selected = $state(untrack(() => editor.lang));
 </script>
 
+<p class="history-link"><a href={editor.paths.history}>History</a></p>
+
 {#if editor.languages.length > 1}
   <div class="language-switcher">
     <label for="editor-language">Language</label>
@@ -45,6 +47,12 @@ let selected = $state(untrack(() => editor.lang));
 {/if}
 
 <style>
+  .history-link {
+    margin: 0;
+    padding: 1rem 1rem 0;
+    font-size: 0.9rem;
+  }
+
   .language-switcher {
     display: flex;
     flex-direction: column;

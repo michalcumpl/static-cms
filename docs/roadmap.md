@@ -164,8 +164,12 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
   name pages and never show internal IDs; problems about links inside text select the linked
   words ([`editor-polish`](../openspec/changes/archive/2026-09-30-editor-polish/)).
 
-Still open: open sign-up (a switch, when billing exists), Google sign-in, and a version history
-UI (versions are already stored).
+- **Version history: done** ([`version-history`](../openspec/changes/archive/2026-10-01-version-history/)).
+  A History page per project and language lists every saved version (who, when; marked current,
+  live, published, restored from); any version can be previewed read-only and restored, which
+  saves it as a new version, so restores can be undone too. Every version is kept.
+
+Still open: open sign-up (a switch, when billing exists) and Google sign-in.
 
 ### 4. Publishing
 

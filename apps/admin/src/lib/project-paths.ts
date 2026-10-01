@@ -19,6 +19,13 @@ export interface ProjectPaths {
   copyPage(lang: string): string;
   /** GET every language's pages and what each still needs. */
   translations: string;
+  /** The History page of the language (`?lang=` for other languages than the primary). */
+  history: string;
+  /** Base path of a version's read-only preview. */
+  version(versionId: string): string;
+  /** GET a language's versions; POST `…/<version>/restore` restores one. */
+  versions: string;
+  restoreVersion(versionId: string): string;
   /** GET the library, POST an upload. */
   library: string;
   media(name: string): string;
@@ -54,6 +61,10 @@ export function projectPaths(projectId: string, lang?: string): ProjectPaths {
     language: (lang) => `/api/projects/${projectId}/languages/${encodeURIComponent(lang)}`,
     copyPage: (lang) => `/api/projects/${projectId}/languages/${encodeURIComponent(lang)}/pages`,
     translations: `/api/projects/${projectId}/translations`,
+    history: `${base}history${query}`,
+    version: (versionId) => `${base}history/${versionId}/`,
+    versions: `/api/projects/${projectId}/versions${query}`,
+    restoreVersion: (versionId) => `/api/projects/${projectId}/versions/${versionId}/restore`,
     library: `/api/projects/${projectId}/media`,
     publishing: `${base}publishing/`,
     publish: `/api/projects/${projectId}/publish`,

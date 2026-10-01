@@ -57,7 +57,10 @@ async function downloadZip() {
 <main>
   <p class="crumbs"><a href="/">← All projects</a></p>
   <h1>{data.project.name}</h1>
-  <p><a href={paths.edit()}>Open the editor</a> · <a href={paths.preview}>Preview</a></p>
+  <p>
+    <a href={paths.edit()}>Open the editor</a> · <a href={paths.preview}>Preview</a> ·
+    <a href={paths.history}>History</a>
+  </p>
 
   <section aria-labelledby="publishing">
     <h2 id="publishing">Publishing</h2>
