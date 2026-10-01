@@ -529,3 +529,10 @@ In a language other than the primary, the editor's page list SHALL mark pages th
 #### Scenario: Mark goes away
 - **WHEN** the English page "Kontakt" (not translated yet) is renamed "Contact" with slug `contact`
 - **THEN** its "Not translated" mark goes away
+
+### Requirement: History from the editor
+The editor's left column SHALL link to the history of the language being edited. When the editor has unsaved changes, following the link SHALL ask first, as leaving the editor does. After a restore of the language being edited, opening the editor SHALL show the restored document.
+
+#### Scenario: Open the English history
+- **WHEN** the owner edits English and follows the History link
+- **THEN** the English history opens

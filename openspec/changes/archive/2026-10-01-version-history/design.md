@@ -87,6 +87,10 @@ The current state that shapes the approach:
   - restore Czech, and English shows the restored phone number;
   - Live and Published marks after publishing to the fake Netlify.
 
+## Real publish (task 3.3, 2026-10-01)
+
+On a real project, the owner made a few edits, previewed an older version from History, restored it, restored the newer version again, and published, then checked the Live and Published marks. They confirmed it all works.
+
 ## Risks / Trade-offs
 
 - **[Restoring loses later edits]** Edits made after the restored version are no longer current. → They're still versions in the history, one restore away, and the confirmation says so.

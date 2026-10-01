@@ -17,5 +17,5 @@
 ## 3. Docs and checks
 
 - [x] 3.1 Update the README (history, restore, retention) and the roadmap (version history done). Verify by reading both.
-- [ ] 3.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
-- [ ] 3.3 Manual check by the owner: on a real project, make a few edits, preview an older version, restore it, then restore the newer one again, and publish. Record the outcome in design.md.
+- [x] 3.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
+- [x] 3.3 Manual check by the owner: on a real project, make a few edits, preview an older version, restore it, then restore the newer one again, and publish. Record the outcome in design.md.
