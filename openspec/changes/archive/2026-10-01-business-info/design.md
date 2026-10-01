@@ -181,6 +181,10 @@ These follow the theme's colours and fonts like other blocks.
   - an overlap problem focuses Wednesday;
   - publish to the fake Netlify, and the home page has the `LocalBusiness` JSON-LD.
 
+## Real publish (task 4.4, 2026-10-01)
+
+The owner filled in a real business in the Business tab, published, and checked the contact block, the footer, the phone link and the map link on a phone. They reported that all of it worked. Whether the optional Rich Results Test was run wasn't reported.
+
 ## Risks / Trade-offs
 
 - **[A lunch break doubles the JSON-LD entries]** Some days appear twice in `openingHoursSpecification`. → This is the documented way to express split hours.

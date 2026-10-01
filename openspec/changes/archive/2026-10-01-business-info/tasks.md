@@ -22,5 +22,5 @@
 
 - [x] 4.1 e2e: fill in the business details and hours, save, and publish to the fake Netlify. The deployed home page has the `LocalBusiness` (or chosen type) JSON-LD and the footer details, and the preview shows the contact block.
 - [x] 4.2 Update the roadmap (Milestone 3: business details, contact and opening hours blocks done; call to action and testimonials next) and the README (document format 4, and the map link's privacy). Verify by reading both.
-- [ ] 4.3 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
-- [ ] 4.4 Manual check by the owner: fill in a real business in the Business tab, publish, and check the contact block, footer and map link on a phone. Optionally run the published home page through Google's Rich Results Test. Record the outcome in design.md.
+- [x] 4.3 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
+- [x] 4.4 Manual check by the owner: fill in a real business in the Business tab, publish, and check the contact block, footer and map link on a phone. Optionally run the published home page through Google's Rich Results Test. Record the outcome in design.md.
