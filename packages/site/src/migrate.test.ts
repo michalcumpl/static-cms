@@ -11,6 +11,7 @@ function loadFixture(name: string): { document_id: string; nodes: LooseNodes } {
 const loadDemoSiteV1 = () => loadFixture("demo-site-v1.json");
 const loadDemoSiteV2 = () => loadFixture("demo-site-v2.json");
 const loadDemoSiteV3 = () => loadFixture("demo-site-v3.json");
+const loadDemoSiteV4 = () => loadFixture("demo-site-v4.json");
 const BUSINESS_IDS = [
   "business_1",
   ...["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((d) => `day_${d}`),
@@ -25,7 +26,7 @@ describe("migrateSite", () => {
   it("upgrades a two-page version-1 site", () => {
     const v1 = loadDemoSiteV1();
     const result = migrateSite(v1) as { nodes: LooseNodes };
-    expect(result.nodes.site_1).toMatchObject({ schema_version: 4, home_page_id: "page_home" });
+    expect(result.nodes.site_1).toMatchObject({ schema_version: 5, home_page_id: "page_home" });
     expect(result.nodes.page_home.slug).toBe("uvod");
     const { site_1: _s, page_home: _h, page_contact: _c, ...rest } = withoutBusiness(result.nodes);
     const { site_1: _s1, page_home: _h1, page_contact: _c1, ...restV1 } = v1.nodes;
@@ -33,15 +34,16 @@ describe("migrateSite", () => {
     expect(result.nodes.page_contact).toEqual({
       ...v1.nodes.page_contact,
       share_image: { nodes: [], marks: [], annotations: [] },
+      translation_key: "page_contact",
     });
   });
 
-  it("upgrades a version-2 site to version 4", () => {
+  it("upgrades a version-2 site to version 5", () => {
     const v2 = loadDemoSiteV2();
     const result = migrateSite(v2) as { nodes: LooseNodes };
     expect(result.nodes.site_1).toEqual({
       ...v2.nodes.site_1,
-      schema_version: 4,
+      schema_version: 5,
       business: "business_1",
       description: "",
       favicon: { nodes: [], marks: [], annotations: [] },
@@ -53,6 +55,7 @@ describe("migrateSite", () => {
       expect(result.nodes[id]).toEqual({
         ...v2.nodes[id],
         share_image: { nodes: [], marks: [], annotations: [] },
+        translation_key: id,
       });
     }
     const { site_1: _s, page_home: _h, page_contact: _c, ...rest } = withoutBusiness(result.nodes);
@@ -60,12 +63,12 @@ describe("migrateSite", () => {
     expect(rest).toEqual(restV2);
   });
 
-  it("upgrades a version-3 site to version 4: empty business details, every day closed", () => {
+  it("upgrades a version-3 site: empty business details, every day closed", () => {
     const v3 = loadDemoSiteV3();
     const result = migrateSite(v3) as { nodes: LooseNodes };
     expect(result.nodes.site_1).toEqual({
       ...v3.nodes.site_1,
-      schema_version: 4,
+      schema_version: 5,
       business: "business_1",
     });
     expect(result.nodes.business_1).toEqual({
@@ -90,9 +93,21 @@ describe("migrateSite", () => {
       day: "sun",
       ranges: { nodes: [], marks: [], annotations: [] },
     });
-    const { site_1: _s, ...rest } = withoutBusiness(result.nodes);
-    const { site_1: _s3, ...restV3 } = v3.nodes;
+    const { site_1: _s, page_home: _h, page_contact: _c, ...rest } = withoutBusiness(result.nodes);
+    const { site_1: _s3, page_home: _h3, page_contact: _c3, ...restV3 } = v3.nodes;
     expect(rest).toEqual(restV3);
+  });
+
+  it("upgrades a version-4 site: every page's translation key is its ID", () => {
+    const v4 = loadDemoSiteV4();
+    const result = migrateSite(v4) as { nodes: LooseNodes };
+    expect(result.nodes.site_1).toEqual({ ...v4.nodes.site_1, schema_version: 5 });
+    for (const id of ["page_home", "page_contact"]) {
+      expect(result.nodes[id]).toEqual({ ...v4.nodes[id], translation_key: id });
+    }
+    const { site_1: _s, page_home: _h, page_contact: _c, ...rest } = result.nodes;
+    const { site_1: _s4, page_home: _h4, page_contact: _c4, ...restV4 } = v4.nodes;
+    expect(rest).toEqual(restV4);
   });
 
   it("gives the business nodes free IDs", () => {
@@ -105,12 +120,13 @@ describe("migrateSite", () => {
     expect(result.nodes.business_1.type).toBe("hero");
   });
 
-  it("produces the version-4 demo site from versions 2 and 3", () => {
+  it("produces the current demo site from versions 2, 3 and 4", () => {
     expect(migrateSite(loadDemoSiteV2())).toEqual(loadDemoSite());
     expect(migrateSite(loadDemoSiteV3())).toEqual(loadDemoSite());
+    expect(migrateSite(loadDemoSiteV4())).toEqual(loadDemoSite());
   });
 
-  it("produces the version-4 demo site, which validates without problems", () => {
+  it("produces the current demo site, which validates without problems", () => {
     const result = migrateSite(loadDemoSiteV1());
     expect(result).toEqual(loadDemoSite());
     expect(validateSite(result).problems).toEqual([]);
@@ -144,7 +160,7 @@ describe("migrateSite", () => {
     expect(v2).toEqual(before);
   });
 
-  it("returns a version-4 document unchanged", () => {
+  it("returns a current document unchanged", () => {
     const v4 = loadDemoSite();
     expect(migrateSite(v4)).toBe(v4);
   });

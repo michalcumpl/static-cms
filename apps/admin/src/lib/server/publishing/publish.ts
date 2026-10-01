@@ -1,10 +1,10 @@
-import { exportSite, type Problem, usedMediaFiles } from "@static-cms/site";
-import { and, desc, eq } from "drizzle-orm";
+import { exportSiteLanguages, type Problem, usedMediaFiles } from "@static-cms/site";
+import { and, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "../db/index";
-import { projectHosting, projects, publishes, users } from "../db/schema";
+import { projectHosting, projects, publishDocuments, publishes, users } from "../db/schema";
 import { newId } from "../ids";
 import { mediaFiles } from "../media";
-import { readSite } from "../site-documents";
+import { type LanguageSite, languageErrors, readLanguages } from "../site-documents";
 import { type NetlifyEnv, publishTarget } from "./connection";
 import { dnsRecords } from "./domains";
 import { earlierAddresses } from "./redirects";
@@ -67,8 +67,9 @@ export function startPublish(
   options: NetlifyEnv & { pollDelays?: number[] } = {},
 ): StartResult {
   const workspaceId = workspaceOf(db, projectId);
-  const site = readSite(db, projectId);
-  if (!workspaceId || !site) return { ok: false, reason: "not-found", message: "Not found" };
+  const sites = readLanguages(db, projectId, "published");
+  const primary = sites.find((site) => site.primary);
+  if (!workspaceId || !primary) return { ok: false, reason: "not-found", message: "Not found" };
   const connection = publishTarget(db, workspaceId, options);
   if (!connection) return { ok: false, reason: "not-connected", message: NOT_CONNECTED };
   const running = db
@@ -77,21 +78,28 @@ export function startPublish(
     .where(and(eq(publishes.projectId, projectId), eq(publishes.state, "running")))
     .get();
   if (running) return { ok: false, reason: "running", message: ALREADY_RUNNING };
-  const errors = site.problems.filter((p) => p.severity === "error");
+  const errors = languageErrors(sites);
   if (errors.length > 0) return { ok: false, reason: "invalid", problems: errors };
 
   const publishId = newId("pb");
-  db.insert(publishes)
-    .values({
-      id: publishId,
-      projectId,
-      versionId: site.versionId,
-      state: "running",
-      publishedBy: userId,
-      startedAt: new Date(),
-    })
-    .run();
-  const run = () => runPublish(db, projectId, publishId, site.document, connection);
+  db.transaction((tx) => {
+    tx.insert(publishes)
+      .values({
+        id: publishId,
+        projectId,
+        versionId: primary.versionId,
+        state: "running",
+        publishedBy: userId,
+        startedAt: new Date(),
+      })
+      .run();
+    for (const site of sites) {
+      tx.insert(publishDocuments)
+        .values({ publishId, lang: site.lang, versionId: site.versionId })
+        .run();
+    }
+  });
+  const run = () => runPublish(db, projectId, publishId, sites, connection);
   queue = queue.then(run, run);
   return { ok: true, publishId };
 }
@@ -142,15 +150,28 @@ async function runPublish(
   db: Db,
   projectId: string,
   publishId: string,
-  document: unknown,
+  sites: readonly LanguageSite[],
   connection: { target: PublishTarget; accountSlug: string },
 ): Promise<void> {
   try {
     const hosting = await ensureSite(db, projectId, connection.target, connection.accountSlug);
     const url = siteAddress(hosting) as string;
-    const redirects = earlierAddresses(db, projectId, document);
-    const media = await mediaFiles(projectId, usedMediaFiles(document));
-    const exported = exportSite(document, media, { siteUrl: url, redirects });
+    const redirects = sites.flatMap((site) =>
+      earlierAddresses(
+        db,
+        projectId,
+        site.lang,
+        site.document,
+        site.primary ? "/" : `/${site.lang}/`,
+      ),
+    );
+    const names = new Set(sites.flatMap((site) => usedMediaFiles(site.document)));
+    const media = await mediaFiles(projectId, [...names]);
+    const exported = exportSiteLanguages(
+      sites.map(({ lang, document, primary }) => ({ lang, document, primary })),
+      media,
+      { siteUrl: url, redirects },
+    );
     if (!exported.ok) {
       throw new PublishError("failed", exported.problems.map((p) => p.message).join(" "));
     }
@@ -188,6 +209,19 @@ export interface PublishSummary {
   startedAt: Date;
   finishedAt: Date | null;
   live: boolean;
+  /** The languages the publish included, the primary first. */
+  languages: string[];
+}
+
+/** The languages a publish included, in the order they were recorded (the primary first). */
+function languagesOf(db: Db, publishId: string): string[] {
+  return db
+    .select({ lang: publishDocuments.lang })
+    .from(publishDocuments)
+    .where(eq(publishDocuments.publishId, publishId))
+    .orderBy(sql`rowid`)
+    .all()
+    .map((row) => row.lang);
 }
 
 /** A project's hosting (address, domain) and its publishes, newest first. */
@@ -212,7 +246,11 @@ export function publishingState(db: Db, projectId: string) {
     .where(eq(publishes.projectId, projectId))
     .orderBy(desc(publishes.startedAt), desc(publishes.id))
     .all()
-    .map((row) => ({ ...row, live: row.id === hosting?.livePublishId }));
+    .map((row) => ({
+      ...row,
+      live: row.id === hosting?.livePublishId,
+      languages: languagesOf(db, row.id),
+    }));
   return {
     address: siteAddress(hosting) ?? null,
     siteName: hosting?.siteName ?? null,

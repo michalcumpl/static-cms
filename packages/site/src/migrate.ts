@@ -7,7 +7,8 @@ type RawDoc = { document_id: string; nodes: Record<string, RawNode> };
  * Upgrades a stored site document to the current schema version, one version at a time.
  * Version 2 names the home page and gives every page a slug; version 3 adds the site's
  * description, favicon, share image and AI crawler switches, and each page's share image;
- * version 4 adds the business details, empty, with every day closed.
+ * version 4 adds the business details, empty, with every day closed; version 5 gives every page
+ * a translation key, its own ID.
  * Anything that isn't a site of an older version is returned unchanged, for validation to
  * judge. The input is not modified.
  */
@@ -17,6 +18,7 @@ export function migrateSite(doc: unknown): unknown {
   if (siteOf(current)?.schema_version === 1) current = toVersion2(current);
   if (siteOf(current)?.schema_version === 2) current = toVersion3(current);
   if (siteOf(current)?.schema_version === 3) current = toVersion4(current);
+  if (siteOf(current)?.schema_version === 4) current = toVersion5(current);
   return current;
 }
 
@@ -113,6 +115,19 @@ function toVersion4<T extends RawDoc>(doc: T): T {
     days: { nodes: dayIds, marks: [], annotations: [] },
   };
   upgraded[doc.document_id] = { ...site, schema_version: 4, business: businessId };
+  return { ...doc, nodes: upgraded };
+}
+
+/** Version 5 pairs pages across languages: each page's translation key is its own ID. */
+function toVersion5<T extends RawDoc>(doc: T): T {
+  const site = siteOf(doc) as RawNode;
+  const upgraded: Record<string, RawNode> = { ...doc.nodes };
+  upgraded[doc.document_id] = { ...site, schema_version: 5 };
+  for (const id of pageIdsOf(site)) {
+    const page = typeof id === "string" ? doc.nodes[id] : undefined;
+    if (isObject(page) && page.type === "page")
+      upgraded[id as string] = { ...page, translation_key: id };
+  }
   return { ...doc, nodes: upgraded };
 }
 

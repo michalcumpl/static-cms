@@ -23,6 +23,14 @@ export type MenuEntry =
   | { kind: "page"; itemId: string; index: number; page: EditorPage }
   | { kind: "external"; itemId: string; index: number; label: string; url: string };
 
+/** One of the project's languages, as the editor's language switcher lists it. */
+export interface EditorLanguageInfo {
+  lang: string;
+  name: string;
+  primary: boolean;
+  published: boolean;
+}
+
 export interface SiteData {
   document: unknown;
   version: string;
@@ -76,10 +84,25 @@ export class EditorState {
     this.#lastSavedJson = JSON.stringify(doc);
   }
 
+  /** Set while the editor reloads for another language, after the owner confirmed. */
+  leaving = false;
+  /** The language being edited, the project's primary one, and all its languages. */
+  readonly lang: string;
+  readonly primaryLang: string;
+  readonly languages: readonly EditorLanguageInfo[];
+
   constructor(
     data: SiteData,
     readonly paths: ProjectPaths,
+    languages: {
+      lang: string;
+      primaryLang: string;
+      languages: readonly EditorLanguageInfo[];
+    } = { lang: "cs", primaryLang: "cs", languages: [] },
   ) {
+    this.lang = languages.lang;
+    this.primaryLang = languages.primaryLang;
+    this.languages = languages.languages;
     const document = data.document as Document;
     this.session = new Session(editorSchema, document, createConfig());
     this.siteId = document.document_id;
@@ -87,6 +110,16 @@ export class EditorState {
     this.version = data.version;
     this.savedProblems = data.problems;
     this.currentPageId = this.homeId;
+  }
+
+  /** Whether shared fields are read-only here: they're edited in the primary language. */
+  get sharedReadOnly(): boolean {
+    return this.lang !== this.primaryLang;
+  }
+
+  /** The primary language's name, for "Edited in …". */
+  get primaryName(): string {
+    return this.languages.find((l) => l.primary)?.name ?? this.primaryLang;
   }
 
   get homeId(): string {

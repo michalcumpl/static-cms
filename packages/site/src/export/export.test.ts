@@ -164,7 +164,7 @@ describe("exportSite", () => {
 
   it("returns validation errors instead of files", () => {
     const { doc, nodes } = editableDemoSite();
-    nodes.page_x = { ...nodes.page_contact, id: "page_x" };
+    nodes.page_x = { ...nodes.page_contact, id: "page_x", translation_key: "page_x" };
     nodes.site_1.pages.nodes.push("page_x");
     const result = exportSite(doc, loadDemoMedia());
     expect(result.ok).toBe(false);

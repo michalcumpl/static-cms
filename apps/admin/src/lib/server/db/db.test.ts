@@ -19,6 +19,7 @@ describe("openDatabase", () => {
       "memberships",
       "project_hosting",
       "projects",
+      "publish_documents",
       "publishes",
       "sessions",
       "site_documents",

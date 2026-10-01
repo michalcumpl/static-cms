@@ -7,8 +7,14 @@ export interface ProjectPaths {
   edit(pageId?: string): string;
   /** Base path the preview renders with. */
   preview: string;
-  /** GET/PUT the project's site document. */
+  /** GET/PUT the project's site document (in a language with `?lang=`). */
   api: string;
+  /** GET the published languages' documents and media names, for the ZIP download. */
+  exportInput: string;
+  /** GET the project's languages, POST adds one. */
+  languages: string;
+  /** PATCH publishes or hides a language, DELETE removes it. */
+  language(lang: string): string;
   /** GET the library, POST an upload. */
   library: string;
   media(name: string): string;
@@ -26,14 +32,22 @@ export interface ProjectPaths {
   domainCheck: string;
 }
 
-export function projectPaths(projectId: string): ProjectPaths {
+/**
+ * A project's URLs. With `lang` (a language other than the primary), the editor's addresses and
+ * the site API carry `?lang=`; the other paths are the same for every language.
+ */
+export function projectPaths(projectId: string, lang?: string): ProjectPaths {
   const base = `/p/${projectId}/`;
+  const query = lang ? `?lang=${encodeURIComponent(lang)}` : "";
   const media = (name: string) => `/api/projects/${projectId}/media/${encodeURIComponent(name)}`;
   return {
     overview: base,
-    edit: (pageId = "") => (pageId ? `${base}edit/${pageId}/` : `${base}edit/`),
+    edit: (pageId = "") => (pageId ? `${base}edit/${pageId}/${query}` : `${base}edit/${query}`),
     preview: `${base}preview/`,
-    api: `/api/projects/${projectId}/site`,
+    api: `/api/projects/${projectId}/site${query}`,
+    exportInput: `/api/projects/${projectId}/export-input`,
+    languages: `/api/projects/${projectId}/languages`,
+    language: (lang) => `/api/projects/${projectId}/languages/${encodeURIComponent(lang)}`,
     library: `/api/projects/${projectId}/media`,
     publishing: `${base}publishing/`,
     publish: `/api/projects/${projectId}/publish`,

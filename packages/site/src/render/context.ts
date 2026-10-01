@@ -10,6 +10,20 @@ export function isValidBasePath(basePath: string): boolean {
   return BASE_PATH.test(basePath);
 }
 
+/** One of the site's languages, as rendering needs it for alternates and the switcher. */
+export interface SiteLanguage {
+  lang: string;
+  /** The language's name in that language, e.g. "English". */
+  name: string;
+  /** Where the language is served: `/` for the primary, `/en/` for English. */
+  basePath: string;
+  primary: boolean;
+  /** Each page's URL (including the base path) by its translation key. */
+  pages: ReadonlyMap<string, string>;
+  /** The language's home page URL. */
+  home: string;
+}
+
 export interface PageRoute {
   /** Output file path relative to the site root: `index.html`, `kontakt/index.html`. */
   path: string;
@@ -33,6 +47,13 @@ export class RenderContext {
     readonly basePath: string,
     /** The site's address without a trailing slash, like `https://anideti.cz`, when known. */
     readonly siteUrl?: string,
+    /** The site's languages, when it has several (alternates and the language switcher). */
+    readonly languages: readonly SiteLanguage[] = [],
+    /**
+     * Where the site's shared files (stylesheet, images, icons) are served: the site's root,
+     * which differs from `basePath` for a language under `/<lang>/`.
+     */
+    readonly assetBasePath: string = basePath,
   ) {
     this.nodes = doc.nodes;
     this.site = this.node(doc.document_id, "site");
@@ -83,15 +104,28 @@ export class RenderContext {
     return ids.nodes.flatMap((id) => this.nodes[id] ?? []);
   }
 
-  /** A URL for a path inside the site, e.g. `assets/style.css`. */
+  /**
+   * A URL for one of the site's shared files, e.g. `assets/style.css`: at the site's root, which
+   * every language shares.
+   */
   url(path: string): string {
-    return this.basePath + path;
+    return this.assetBasePath + path;
   }
 
   /** The absolute URL of a path inside the site; only called when the site address is known. */
   absoluteUrl(path: string): string {
     if (this.siteUrl === undefined) throw new Error("The site's address is unknown.");
     return this.siteUrl + this.url(path);
+  }
+
+  /** Whether pages get alternates and a language switcher: with two or more languages. */
+  get multilingual(): boolean {
+    return this.languages.length >= 2;
+  }
+
+  /** A path inside the site as a link: absolute when the site's address is known. */
+  link(path: string): string {
+    return this.siteUrl === undefined ? path : this.siteUrl + path;
   }
 
   /** A page's absolute URL for canonical links, or undefined without a site address. */
@@ -102,7 +136,7 @@ export class RenderContext {
   pageUrl(pageId: string): string {
     const route = this.routes.get(pageId);
     if (!route) throw new Error(`Page ${pageId} is not part of the site.`);
-    return this.url(route.route);
+    return this.basePath + route.route;
   }
 
   /** An href from document data; validation already rejected unsafe ones. */

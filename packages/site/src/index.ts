@@ -6,6 +6,7 @@ export {
   type SiteFiles,
   zipFiles,
 } from "./export/index.js";
+export { exportSiteLanguages, type LanguageDocument } from "./export/languages.js";
 export {
   ICON_SIZES,
   type IconSize,
@@ -17,6 +18,7 @@ export {
   usedMediaFiles,
   WIDTH_LADDER,
 } from "./images.js";
+export { applySharedFields } from "./languages.js";
 export { isSafeHref } from "./links.js";
 export { migrateSite } from "./migrate.js";
 export {
@@ -37,9 +39,17 @@ export {
   type RenderResult,
   renderSite,
   type SiteCssOptions,
+  type SiteLanguage,
   siteCss,
 } from "./render/index.js";
-export { type SiteStrings, siteStrings } from "./render/strings.js";
+export {
+  isLanguageCode,
+  LANGUAGES,
+  type LanguageCode,
+  languageName,
+  type SiteStrings,
+  siteStrings,
+} from "./render/strings.js";
 export * from "./schema/index.js";
 export { slugify, uniqueSlug } from "./slug.js";
 export { graphemeLength } from "./text.js";

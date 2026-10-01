@@ -12,7 +12,7 @@ import { businessFieldElementId } from "./locate";
 import type { EditorState } from "./state.svelte";
 
 // The week: each day's ranges as pairs of time fields (business-info design.md decision 7).
-let { editor }: { editor: EditorState } = $props();
+let { editor, disabled = false }: { editor: EditorState; disabled?: boolean } = $props();
 
 const DAY_NAMES: Record<Weekday, string> = {
   mon: "Monday",
@@ -26,7 +26,7 @@ const DAY_NAMES: Record<Weekday, string> = {
 const week = $derived(WEEK.map((day) => ({ day, ranges: rangesOf(editor.session.doc, day) })));
 </script>
 
-<fieldset class="hours" aria-describedby="hours-hint">
+<fieldset class="hours" aria-describedby="hours-hint" {disabled}>
   <legend>Opening hours</legend>
   <p class="hint" id="hours-hint">A day without times is closed. Add a second range for a break.</p>
   {#each week as { day, ranges }, dayIndex (day)}

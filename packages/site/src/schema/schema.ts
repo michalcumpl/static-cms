@@ -53,7 +53,7 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 4 },
+      schema_version: { type: "integer", min: 1, default: 5 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
@@ -108,6 +108,8 @@ export const siteSchema = {
       title: { type: "string" },
       slug: { type: "string" },
       seo_description: { type: "string" },
+      /** Pairs the page with its counterparts in the project's other languages. */
+      translation_key: { type: "string" },
       share_image: { type: "node_array", node_types: ["image"] },
       blocks: {
         type: "node_array",

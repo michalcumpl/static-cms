@@ -186,18 +186,21 @@ UI (versions are already stored).
 
 ### 5. Multi-language
 
-Model A: the project holds **one Svedit document per language**. Pages may differ between
-languages.
-
-- Default language at `/`, others at `/en/`, `/de/`. The renderer's `basePath` option already
-  supports this, and export merges the per-language file trees.
-- Pages match across languages through a shared `translation_key`, which drives the `hreflang`
-  alternates, the language switcher in the header, and one sitemap with alternates.
-- `lang` per document, and validation per document as today.
-- The editor gets a language switcher; each language is its own Svedit session.
-- Known cost: facts that don't depend on language (prices, opening hours, phone) are edited per
-  language. Possible fixes later: a shared business-info record that blocks reference, or AI
-  translation sync (Milestone 6).
+- **Languages: done** ([`languages`](../openspec/changes/archive/2026-10-01-languages/)).
+  - A project has a **primary language** (Czech for existing projects) and can add Slovak,
+    English, German or Polish. A new language starts as a **copy** of the primary (same page
+    IDs, so pages pair through a `translation_key`) and stays **hidden** until published.
+  - **Shared fields** (theme, favicon, default share image, AI switches, business data and
+    opening hours) come from the primary whenever another language is read; they're read-only
+    there. Texts, pages and the menu are per language. Document format 5.
+  - The primary stays at `/`, other languages at `/<lang>/`. Pages carry `hreflang` alternates
+    (with `x-default`), the header a language switcher; one sitemap lists every language with
+    alternates. No redirects by browser language.
+  - Publishing deploys every published language at once, with redirects per language; the preview
+    shows hidden languages too; the ZIP download holds the published ones.
+- Next: **language tools** (`language-tools`): link an unpaired page to one in another language,
+  copy a page into another language, and a "not translated yet" checklist.
+- Later: changing the primary language, a domain per language, machine translation (Milestone 6).
 
 ### 6. AI
 

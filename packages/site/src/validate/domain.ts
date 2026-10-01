@@ -22,7 +22,7 @@ const MIN_TEXT_CONTRAST = 4.5;
 const MIN_SHARE_WIDTH = 600;
 /** The largest icon made from a favicon that phones show on their home screens. */
 const MIN_FAVICON_SIZE = 180;
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -56,6 +56,7 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
   if (site) {
     checkSiteNode(site, problems);
     const seen = new Map<string, NodeOfType<"page">>();
+    const keys = new Map<string, NodeOfType<"page">>();
     for (const pageId of site.pages.nodes) {
       const page = get(pageId, "page");
       if (pageIds.has(pageId)) {
@@ -70,6 +71,7 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
       pageIds.add(pageId);
       if (!page) continue;
       checkPageSlug(page, seen, problems);
+      checkTranslationKey(page, keys, problems);
       if (page.share_image.nodes.length > 1) {
         problems.error(
           "too-many-items",
@@ -451,6 +453,35 @@ function hasSomethingToShow(
     (block.show_map &&
       (filled(business.map_url) || filled(business.street) || filled(business.city)))
   );
+}
+
+/** Each page's translation key is non-empty and unique within the document. */
+function checkTranslationKey(
+  page: NodeOfType<"page">,
+  keys: Map<string, NodeOfType<"page">>,
+  problems: Problems,
+): void {
+  const key = page.translation_key.trim();
+  if (key === "") {
+    problems.error(
+      "invalid-value",
+      page.id,
+      `${pageLabel(page)} isn't paired with the other languages; its translation key is empty.`,
+      "translation_key",
+    );
+    return;
+  }
+  const other = keys.get(key);
+  if (other) {
+    problems.error(
+      "duplicate-translation-key",
+      page.id,
+      `${pageLabel(other)} and ${pageLabel(page)} are paired with the same page in other languages; only one of them can be.`,
+      "translation_key",
+    );
+  } else {
+    keys.set(key, page);
+  }
 }
 
 function checkPageSlug(

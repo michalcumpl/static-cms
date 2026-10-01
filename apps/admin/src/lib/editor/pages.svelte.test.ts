@@ -298,3 +298,19 @@ describe("menu", () => {
     expect(s.doc).toBe(before);
   });
 });
+
+describe("translation keys", () => {
+  it("gives a new page its own key", () => {
+    const { session: s } = editor();
+    const id = addPage(s, "Ceník") as string;
+    expect(node(s, id).translation_key).toBe(id);
+  });
+
+  it("gives a duplicate its own key, leaving the original's pairing alone", () => {
+    const { session: s } = editor();
+    const copy = duplicatePage(s, "page_contact") as string;
+    expect(node(s, copy).translation_key).toBe(copy);
+    expect(node(s, "page_contact").translation_key).toBe("page_contact");
+    expect(errors(s)).toEqual([]);
+  });
+});

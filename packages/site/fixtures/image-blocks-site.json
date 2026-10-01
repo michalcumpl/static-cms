@@ -266,6 +266,7 @@
       "title": "Úvod",
       "slug": "uvod",
       "seo_description": "Rodinná pekárna U Lípy – kváskový chléb, rohlíky a dorty na objednávku.",
+      "translation_key": "page_home",
       "share_image": {
         "nodes": [],
         "marks": [],
@@ -405,6 +406,7 @@
       "title": "Kontakt",
       "slug": "kontakt",
       "seo_description": "Adresa, telefon a otevírací doba pekárny U Lípy v Kolíně.",
+      "translation_key": "page_contact",
       "share_image": {
         "nodes": [],
         "marks": [],
@@ -705,6 +707,7 @@
       "title": "Galerie",
       "slug": "galerie",
       "seo_description": "Fotografie z pekárny U Lípy, náš tým a partneři.",
+      "translation_key": "page_gallery",
       "share_image": {
         "nodes": [],
         "marks": [],
@@ -719,7 +722,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 4,
+      "schema_version": 5,
       "name": "Pekárna U Lípy",
       "lang": "cs",
       "base_url": "https://pekarna-ulipy.example",

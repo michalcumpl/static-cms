@@ -9,7 +9,7 @@ import {
   shareFile,
 } from "../images.js";
 import { escapeHtml } from "../render/html.js";
-import { renderSite } from "../render/index.js";
+import { renderSite, type SiteLanguage } from "../render/index.js";
 import {
   type NodeOfType,
   type PropertyDef,
@@ -27,6 +27,10 @@ export interface ExportOptions {
   siteUrl?: string;
   /** Redirects written to `_redirects` (Netlify's format), in this order. */
   redirects?: readonly Redirect[];
+  /** Where shared files are linked from, when not at `basePath` (see `exportSiteLanguages`). */
+  assetBasePath?: string;
+  /** The site's languages, for alternates and the language switcher (see `exportSiteLanguages`). */
+  languages?: readonly SiteLanguage[];
 }
 
 /** A permanent redirect from one address path to another, both starting with `/`. */

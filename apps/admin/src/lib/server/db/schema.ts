@@ -92,6 +92,8 @@ export const projects = sqliteTable(
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    /** The language the project was created in: served at the root, the source of shared fields. */
+    primaryLang: text("primary_lang").notNull().default("cs"),
     createdAt: createdAt(),
   },
   (t) => [index("projects_workspace_idx").on(t.workspaceId)],
@@ -106,6 +108,8 @@ export const siteDocuments = sqliteTable(
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
     lang: text("lang").notNull(),
+    /** Whether the language is part of publishes; the primary language always is. */
+    published: integer("published", { mode: "boolean" }).notNull().default(true),
     version: text("version").notNull(),
     // Not a foreign key: versions reference documents, and a cycle would complicate inserts.
     currentVersionId: text("current_version_id").notNull(),
@@ -216,4 +220,19 @@ export const publishes = sqliteTable(
     finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
   },
   (t) => [index("publishes_project_idx").on(t.projectId, t.startedAt)],
+);
+
+/** The saved version of each language a publish included (languages design.md decision 2). */
+export const publishDocuments = sqliteTable(
+  "publish_documents",
+  {
+    publishId: text("publish_id")
+      .notNull()
+      .references(() => publishes.id, { onDelete: "cascade" }),
+    lang: text("lang").notNull(),
+    versionId: text("version_id")
+      .notNull()
+      .references(() => versions.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.publishId, t.lang] })],
 );

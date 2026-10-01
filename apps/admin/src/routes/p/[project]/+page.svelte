@@ -1,5 +1,6 @@
 <script lang="ts">
-import { exportSite, zipFiles } from "@static-cms/site";
+import { exportSiteLanguages, type LanguageDocument, zipFiles } from "@static-cms/site";
+import LanguagesSection from "$lib/LanguagesSection.svelte";
 import PublishButton from "$lib/PublishButton.svelte";
 import { projectPaths } from "$lib/project-paths";
 import type { PageProps } from "./$types";
@@ -12,18 +13,24 @@ const warnings = $derived(data.problems.filter((p) => p.severity === "warning"))
 let downloading = $state(false);
 let downloadError = $state("");
 
-/** Builds the ZIP entirely in the browser, from the saved document and the project's images. */
+/**
+ * Builds the ZIP entirely in the browser, from the published languages' saved documents and the
+ * project's images.
+ */
 async function downloadZip() {
   downloading = true;
   downloadError = "";
   try {
-    const { document: doc } = (await (await fetch(paths.api)).json()) as { document: unknown };
+    const input = (await (await fetch(paths.exportInput)).json()) as {
+      languages: LanguageDocument[];
+      mediaFiles: string[];
+    };
     const media = new Map<string, Uint8Array>();
-    for (const name of data.mediaFiles) {
+    for (const name of input.mediaFiles) {
       const response = await fetch(paths.media(name));
       media.set(name, new Uint8Array(await response.arrayBuffer()));
     }
-    const result = exportSite(doc, media);
+    const result = exportSiteLanguages(input.languages, media);
     if (!result.ok) {
       downloadError = result.problems.map((p) => p.message).join(" ");
       return;
@@ -57,6 +64,8 @@ async function downloadZip() {
     <PublishButton {paths} />
     <p><a href={paths.publishing}>Address, domain and history</a></p>
   </section>
+
+  <LanguagesSection projectId={data.project.id} {paths} languages={data.languages} />
 
   <section aria-labelledby="validation">
     <h2 id="validation">Validation</h2>

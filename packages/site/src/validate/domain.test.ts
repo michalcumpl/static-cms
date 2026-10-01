@@ -14,6 +14,7 @@ function addPage(nodes: LooseNodes, id: string, slug: string, title = id) {
     title,
     slug,
     seo_description: `${title}.`,
+    translation_key: id,
     share_image: { nodes: [], marks: [], annotations: [] },
     blocks: { nodes: [], marks: [], annotations: [] },
   };
@@ -47,11 +48,37 @@ describe("validateSite: site rules", () => {
     ]);
   });
 
-  it("rejects schema version 3, which must be upgraded first", () => {
+  it("rejects schema version 4, which must be upgraded first", () => {
     const { doc, nodes } = editableDemoSite();
-    nodes.site_1.schema_version = 3;
+    nodes.site_1.schema_version = 4;
     expect(errors(doc).map((p) => p.code)).toEqual(["unsupported-version"]);
-    expect(validateSite(loadFixture("demo-site-v3.json")).valid).toBe(false);
+    expect(validateSite(loadFixture("demo-site-v4.json")).valid).toBe(false);
+  });
+
+  it("reports two pages with the same translation key, naming both", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.page_contact.translation_key = "page_home";
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({
+        code: "duplicate-translation-key",
+        category: "site",
+        nodeId: "page_contact",
+        message:
+          '"Úvod" and "Kontakt" are paired with the same page in other languages; only one of them can be.',
+      }),
+    ]);
+  });
+
+  it("reports an empty translation key", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.page_contact.translation_key = " ";
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({
+        code: "invalid-value",
+        nodeId: "page_contact",
+        property: "translation_key",
+      }),
+    ]);
   });
 
   it("treats the page named by home_page_id as home, wherever it is listed", () => {

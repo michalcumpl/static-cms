@@ -13,7 +13,12 @@ import { createSession } from "../src/lib/server/auth";
 import { type Db, openDatabase } from "../src/lib/server/db/index";
 import { siteDocuments, versions } from "../src/lib/server/db/schema";
 import { demoSite, imageBlocksSite } from "../src/lib/server/demo";
-import { readSite, saveSite } from "../src/lib/server/site-documents";
+import {
+  projectLanguages,
+  readSite,
+  removeLanguage,
+  saveSite,
+} from "../src/lib/server/site-documents";
 import { readState } from "./state";
 
 let db: Db | undefined;
@@ -29,6 +34,10 @@ export const paths = () => projectPaths(state().projectId);
 /** Puts the demo site back into the project, whatever the previous test saved. */
 function resetSite(): void {
   const { projectId, owner } = state();
+  // Back to Czech only: languages added by an earlier test go.
+  for (const language of projectLanguages(testDb(), projectId)) {
+    if (!language.primary) removeLanguage(testDb(), projectId, language.lang);
+  }
   const current = readSite(testDb(), projectId);
   const result = saveSite(testDb(), projectId, owner.id, demoSite(), current?.version ?? "");
   if (!result.ok) throw new Error("could not reset the project");

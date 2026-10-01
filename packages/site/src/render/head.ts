@@ -35,6 +35,7 @@ export function renderHead(ctx: RenderContext, options: HeadOptions): Html {
   lines.push(html`<link rel="stylesheet" href="${ctx.url("assets/style.css")}">`);
   const canonical = page && ctx.canonicalUrl(page.id);
   if (canonical) lines.push(html`<link rel="canonical" href="${canonical}">`);
+  if (page && ctx.multilingual) lines.push(...alternates(ctx, page.translation_key));
   if (ctx.site.favicon.nodes.length > 0) {
     lines.push(
       html`<link rel="icon" href="${ctx.url("favicon.ico")}" sizes="32x32">`,
@@ -50,6 +51,22 @@ export function renderHead(ctx: RenderContext, options: HeadOptions): Html {
     }
   }
   return raw(lines.map((line) => `\n    ${line.value}`).join(""));
+}
+
+/** `hreflang` links to the page in every language that has it, and `x-default` (the primary's). */
+function alternates(ctx: RenderContext, key: string): Html[] {
+  const links: Html[] = [];
+  let primary: string | undefined;
+  for (const language of ctx.languages) {
+    const url = language.pages.get(key);
+    if (url === undefined) continue;
+    links.push(html`<link rel="alternate" hreflang="${language.lang}" href="${ctx.link(url)}">`);
+    if (language.primary) primary = url;
+  }
+  if (primary !== undefined) {
+    links.push(html`<link rel="alternate" hreflang="x-default" href="${ctx.link(primary)}">`);
+  }
+  return links;
 }
 
 function shareMetadata(

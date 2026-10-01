@@ -195,6 +195,21 @@ notes apply.
 The contact block's "Show on map" is a plain link (the business's own map listing, or a Google
 Maps search for its address); published sites load nothing from Google until a visitor clicks it.
 
+### Languages
+
+A project's primary language is the one it was created in (Czech for every project from before
+languages). Others are added on the project page as a copy of the primary, hidden until
+published; the editor switches between them at the top of the left column (`?lang=en`). The
+theme, favicon, default share image, AI switches and business details are shared: edited in the
+primary and applied to every other language whenever it is read, never stored in it. Removing a
+language deletes its document and versions; hiding keeps them.
+
+### Upgrading: site document format 5
+
+Pages gain a `translation_key` (their own ID for existing pages) in format 5, upgraded on read as
+before. The database migration adds `projects.primary_lang`, `site_documents.published` and the
+`publish_documents` table, and fills it in for earlier publishes so their redirects keep working.
+
 ## Scripts
 
 ```sh

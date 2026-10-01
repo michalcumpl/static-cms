@@ -88,6 +88,8 @@ export interface PageNode {
   /** Every page has one; the home page's is used only if it stops being home. */
   slug: string;
   seo_description: string;
+  /** Pairs the page with its counterparts in the project's other languages. */
+  translation_key: string;
   /** At most one image, shown when the page is shared as a link. */
   share_image: NodeArrayValue;
   blocks: NodeArrayValue;

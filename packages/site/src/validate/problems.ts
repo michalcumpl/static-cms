@@ -59,7 +59,8 @@ export type ProblemCode =
   | "invalid-country"
   | "invalid-hours"
   | "nothing-to-show"
-  | "empty-quote";
+  | "empty-quote"
+  | "duplicate-translation-key";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -121,6 +122,7 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "invalid-hours": "site",
   "nothing-to-show": "site",
   "empty-quote": "site",
+  "duplicate-translation-key": "site",
 };
 
 export function problemCategory(code: ProblemCode): ProblemCategory {

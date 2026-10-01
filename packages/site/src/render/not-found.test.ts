@@ -36,7 +36,7 @@ describe("not-found page", () => {
   });
 
   it("falls back to English for other languages", () => {
-    const html = notFound("de");
+    const html = notFound("fr");
     expect(html).toContain('<h1 class="page-title">Page not found</h1>');
     expect(html).toContain('<a href="/">Go to the home page</a>');
   });

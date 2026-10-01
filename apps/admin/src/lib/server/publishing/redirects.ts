@@ -1,7 +1,7 @@
 import { migrateSite, type Redirect } from "@static-cms/site";
 import { and, asc, eq } from "drizzle-orm";
 import type { Db } from "../db/index";
-import { publishes, versions } from "../db/schema";
+import { publishDocuments, publishes, versions } from "../db/schema";
 
 // Earlier addresses of still-existing pages redirect to their current ones (netlify-publishing
 // design.md decision 5). Pages that no longer exist get no redirect.
@@ -46,18 +46,39 @@ export function redirectsFrom(earlier: readonly unknown[], current: unknown): Re
     .sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
 }
 
-/** The documents of a project's successful publishes, oldest first. */
-export function publishedDocuments(db: Db, projectId: string): unknown[] {
+/** A language's documents in a project's successful publishes, oldest first. */
+export function publishedDocuments(db: Db, projectId: string, lang: string): unknown[] {
   return db
     .select({ document: versions.document })
     .from(publishes)
-    .innerJoin(versions, eq(versions.id, publishes.versionId))
-    .where(and(eq(publishes.projectId, projectId), eq(publishes.state, "ready")))
+    .innerJoin(publishDocuments, eq(publishDocuments.publishId, publishes.id))
+    .innerJoin(versions, eq(versions.id, publishDocuments.versionId))
+    .where(
+      and(
+        eq(publishes.projectId, projectId),
+        eq(publishes.state, "ready"),
+        eq(publishDocuments.lang, lang),
+      ),
+    )
     .orderBy(asc(publishes.startedAt))
     .all()
     .map((row) => row.document);
 }
 
-export function earlierAddresses(db: Db, projectId: string, current: unknown): Redirect[] {
-  return redirectsFrom(publishedDocuments(db, projectId), current);
+/**
+ * Redirects from a language's earlier published addresses to its current ones, under the
+ * language's base path (`/` for the primary, `/en/` for English).
+ */
+export function earlierAddresses(
+  db: Db,
+  projectId: string,
+  lang: string,
+  current: unknown,
+  basePath = "/",
+): Redirect[] {
+  const prefix = basePath.replace(/\/+$/, "");
+  return redirectsFrom(publishedDocuments(db, projectId, lang), current).map(({ from, to }) => ({
+    from: prefix + from,
+    to: prefix + to,
+  }));
 }

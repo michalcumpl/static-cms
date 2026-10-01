@@ -122,6 +122,24 @@ img {
   text-decoration: none;
 }
 
+.language-switcher ul {
+  display: flex;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.language-switcher a {
+  color: var(--color-text);
+}
+
+.language-switcher a[aria-current="true"] {
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .site-nav a:hover,
 .site-nav a[aria-current="page"] {
   color: var(--color-primary);

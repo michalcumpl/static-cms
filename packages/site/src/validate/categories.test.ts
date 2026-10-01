@@ -86,6 +86,7 @@ describe("problem categories", () => {
       "invalid-hours": true,
       "nothing-to-show": true,
       "empty-quote": true,
+      "duplicate-translation-key": true,
     };
     for (const code of Object.keys(codes) as ProblemCode[]) {
       expect(["structure", "site"], code).toContain(problemCategory(code));

@@ -25,7 +25,13 @@ export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
     (block) => html`
       ${indent(renderBlock(block, ctx), "  ")}`,
   )}`;
-  return renderDocument(ctx, renderHead(ctx, { title, description, page }), main, page.id);
+  return renderDocument(
+    ctx,
+    renderHead(ctx, { title, description, page }),
+    main,
+    page.id,
+    page.translation_key,
+  );
 }
 
 /**
@@ -46,7 +52,13 @@ export function renderNotFound(ctx: RenderContext): Html {
 }
 
 /** A whole HTML document: head, the site's header and menu, `main`, and the footer. */
-function renderDocument(ctx: RenderContext, head: Html, main: Html, currentPageId?: string): Html {
+function renderDocument(
+  ctx: RenderContext,
+  head: Html,
+  main: Html,
+  currentPageId?: string,
+  translationKey?: string,
+): Html {
   const { site } = ctx;
   const nav = ctx.node(site.nav, "nav");
   return html`<!doctype html>
@@ -57,13 +69,13 @@ function renderDocument(ctx: RenderContext, head: Html, main: Html, currentPageI
     <header class="site-header">
       <div class="container">
         <a class="site-name" href="${ctx.pageUrl(ctx.homeId)}">${site.name}</a>
-        <nav class="site-nav">
+        <nav class="site-nav"${ctx.multilingual && html` aria-label="${ctx.strings.menuLabel}"`}>
           <ul>${ctx.children(nav.items).map(
             (item) => html`
             <li>${renderLink(item, ctx, undefined, item.type === "page_link" && item.page_id === currentPageId)}</li>`,
           )}
           </ul>
-        </nav>
+        </nav>${languageSwitcher(ctx, translationKey)}
       </div>
     </header>
     <main>${main}
@@ -76,6 +88,26 @@ function renderDocument(ctx: RenderContext, head: Html, main: Html, currentPageI
   </body>
 </html>
 `;
+}
+
+/**
+ * Links to the other languages: the same page (by translation key) where it exists, else that
+ * language's home page. Only for sites with two or more languages.
+ */
+function languageSwitcher(ctx: RenderContext, translationKey?: string): Html | false {
+  if (!ctx.multilingual) return false;
+  const items = ctx.languages.map((language) => {
+    const href =
+      (translationKey !== undefined && language.pages.get(translationKey)) || language.home;
+    const current = language.lang === ctx.site.lang && html` aria-current="true"`;
+    return html`
+            <li><a href="${href}" lang="${language.lang}" hreflang="${language.lang}"${current}>${language.name}</a></li>`;
+  });
+  return html`
+        <nav class="language-switcher" aria-label="${ctx.strings.languageLabel}">
+          <ul>${items}
+          </ul>
+        </nav>`;
 }
 
 /**

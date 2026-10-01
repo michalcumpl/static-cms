@@ -2,21 +2,31 @@ import type { SiteDocument } from "../schema/index.js";
 import { isValidBaseUrl } from "../validate/domain.js";
 import type { Problem } from "../validate/index.js";
 import { problem, validateSite } from "../validate/index.js";
-import { isValidBasePath, RenderContext } from "./context.js";
+import { isValidBasePath, RenderContext, type SiteLanguage } from "./context.js";
 import { siteCss } from "./css.js";
 import { renderNotFound, renderPage } from "./page.js";
 
-export { isValidBasePath } from "./context.js";
+export { isValidBasePath, type SiteLanguage } from "./context.js";
 export { type SiteCssOptions, siteCss } from "./css.js";
 
 export interface RenderOptions {
   /** Where the site is served from: `/` (default) or a subdirectory like `/preview/`. */
   basePath?: string;
   /**
+   * Where the site's shared files (stylesheet, images, icons) are, when not at `basePath`: the
+   * site's root, for a language rendered under `/<lang>/`.
+   */
+  assetBasePath?: string;
+  /**
    * The site's address, like `https://anideti.cz`, when it is known (published sites). Pages
    * then get canonical links.
    */
   siteUrl?: string;
+  /**
+   * The site's languages with their pages, when it has several: every page then gets
+   * `hreflang` alternates and a language switcher. The rendered document is one of them.
+   */
+  languages?: readonly SiteLanguage[];
 }
 
 export interface RenderedPage {
@@ -57,6 +67,19 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
       ],
     };
   }
+  if (options.assetBasePath !== undefined && !isValidBasePath(options.assetBasePath)) {
+    return {
+      ok: false,
+      problems: [
+        problem(
+          "error",
+          "invalid-base-path",
+          "",
+          `Base path "${options.assetBasePath}" must start and end with "/", like "/" or "/preview/".`,
+        ),
+      ],
+    };
+  }
   if (options.siteUrl !== undefined && !isValidBaseUrl(options.siteUrl)) {
     return {
       ok: false,
@@ -74,7 +97,13 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
   if (!validation.valid) return { ok: false, problems: validation.problems };
 
   const doc = input as SiteDocument;
-  const ctx = new RenderContext(doc, basePath, options.siteUrl?.replace(/\/+$/, ""));
+  const ctx = new RenderContext(
+    doc,
+    basePath,
+    options.siteUrl?.replace(/\/+$/, ""),
+    options.languages,
+    options.assetBasePath ?? basePath,
+  );
   const pages = ctx.site.pages.nodes.map((pageId): RenderedPage => {
     const route = ctx.routes.get(pageId);
     if (!route) throw new Error(`Page ${pageId} has no route.`);

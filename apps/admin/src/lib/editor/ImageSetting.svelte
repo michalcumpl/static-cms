@@ -13,6 +13,7 @@ let {
   altFieldId,
   square = false,
   emptyNote = "",
+  locked = false,
 }: {
   editor: EditorState;
   ownerId: string;
@@ -26,6 +27,8 @@ let {
   square?: boolean;
   /** Said when there is no image, such as which image is used instead. */
   emptyNote?: string;
+  /** The image itself can't be changed here (shared, edited in the primary language). */
+  locked?: boolean;
 } = $props();
 
 const image = $derived(slotImage(editor.session.doc, ownerId, slot));
@@ -48,13 +51,20 @@ async function choose() {
     <p class="hint">{emptyNote}</p>
   {/if}
   <div class="buttons">
-    <button type="button" id={fieldId} aria-describedby="{fieldId}-label" onclick={choose}>
+    <button
+      type="button"
+      id={fieldId}
+      aria-describedby="{fieldId}-label"
+      disabled={locked}
+      onclick={choose}
+    >
       {image ? "Change…" : "Choose…"}
     </button>
     {#if image}
       <button
         type="button"
         aria-describedby="{fieldId}-label"
+        disabled={locked}
         onclick={() => setSlotImage(editor.session, ownerId, slot, undefined)}
       >
         Remove

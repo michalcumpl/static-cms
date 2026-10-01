@@ -90,6 +90,7 @@
       "title": "Úvod",
       "slug": "uvod",
       "seo_description": "",
+      "translation_key": "page_home",
       "share_image": {
         "nodes": [],
         "marks": [],
@@ -104,7 +105,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 4,
+      "schema_version": 5,
       "name": "Můj web",
       "lang": "cs",
       "base_url": "",

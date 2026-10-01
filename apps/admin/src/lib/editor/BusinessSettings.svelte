@@ -11,6 +11,7 @@ import {
 } from "./business";
 import { businessFieldElementId } from "./locate";
 import OpeningHoursEditor from "./OpeningHoursEditor.svelte";
+import SharedNote from "./SharedNote.svelte";
 import type { EditorState } from "./state.svelte";
 
 // The business the site is for (business-info design.md decision 7): facts stored once, shown
@@ -18,6 +19,8 @@ import type { EditorState } from "./state.svelte";
 let { editor }: { editor: EditorState } = $props();
 
 const business = $derived(businessOf(editor.session.doc));
+// Outside the primary language only the name and the hours note are this language's own.
+const shared = $derived(editor.sharedReadOnly);
 const siteName = $derived(
   (editor.session.doc.nodes[editor.siteId] as unknown as { name: string }).name,
 );
@@ -55,6 +58,7 @@ $effect(() => editor.registerDraft(commitPhone));
 {#if business}
   <section class="panel" aria-labelledby="business-panel-title" data-history-keys>
     <h2 id="business-panel-title">Business</h2>
+    {#if shared}<SharedNote {editor} tab="business" />{/if}
 
     <label for={businessFieldElementId("name")}>Name</label>
     <input
@@ -69,6 +73,7 @@ $effect(() => editor.registerDraft(commitPhone));
     <select
       id={businessFieldElementId("business_type")}
       value={business.business_type}
+      disabled={shared}
       onchange={(e) => setBusinessType(editor.session, e.currentTarget.value)}
     >
       {#each TYPES as [value, label] (value)}
@@ -82,6 +87,7 @@ $effect(() => editor.registerDraft(commitPhone));
         id={businessFieldElementId(field)}
         type="text"
         {autocomplete}
+      disabled={shared}
         value={business[field]}
         oninput={(e) => setBusinessField(editor.session, field, e.currentTarget.value)}
       />
@@ -93,6 +99,7 @@ $effect(() => editor.registerDraft(commitPhone));
       type="text"
       maxlength="2"
       class="short"
+      disabled={shared}
       value={business.country}
       oninput={(e) =>
         setBusinessField(editor.session, "country", e.currentTarget.value.toUpperCase())}
@@ -102,6 +109,7 @@ $effect(() => editor.registerDraft(commitPhone));
     <input
       id={businessFieldElementId("phone")}
       type="tel"
+      disabled={shared}
       bind:value={phoneDraft}
       onchange={commitPhone}
       onkeydown={(e) => e.key === "Enter" && commitPhone()}
@@ -111,6 +119,7 @@ $effect(() => editor.registerDraft(commitPhone));
     <input
       id={businessFieldElementId("email")}
       type="email"
+      disabled={shared}
       value={business.email}
       oninput={(e) => setBusinessField(editor.session, "email", e.currentTarget.value)}
     />
@@ -119,6 +128,7 @@ $effect(() => editor.registerDraft(commitPhone));
     <input
       id={businessFieldElementId("map_url")}
       type="url"
+      disabled={shared}
       value={business.map_url}
       aria-describedby="business-map-hint"
       oninput={(e) => setBusinessField(editor.session, "map_url", e.currentTarget.value)}
@@ -128,7 +138,7 @@ $effect(() => editor.registerDraft(commitPhone));
       searches for the address.
     </p>
 
-    <OpeningHoursEditor {editor} />
+    <OpeningHoursEditor {editor} disabled={shared} />
 
     <label for={businessFieldElementId("hours_note")}>Note on the opening hours</label>
     <input
@@ -143,6 +153,7 @@ $effect(() => editor.registerDraft(commitPhone));
       <input
         type="checkbox"
         checked={business.show_in_footer}
+      disabled={shared}
         onchange={(e) => setShowInFooter(editor.session, e.currentTarget.checked)}
       />
       Show contact details in the footer

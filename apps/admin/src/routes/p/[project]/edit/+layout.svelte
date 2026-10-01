@@ -8,6 +8,7 @@ import BusinessSettings from "$lib/editor/BusinessSettings.svelte";
 import ButtonPanel from "$lib/editor/ButtonPanel.svelte";
 import { canvasCss } from "$lib/editor/canvas-css";
 import ImagePanel from "$lib/editor/ImagePanel.svelte";
+import LanguageSwitcher from "$lib/editor/LanguageSwitcher.svelte";
 import LinkDialog from "$lib/editor/LinkDialog.svelte";
 import MediaLibrary from "$lib/editor/MediaLibrary.svelte";
 import PageSettings from "$lib/editor/PageSettings.svelte";
@@ -25,10 +26,21 @@ let { data, children }: LayoutProps = $props();
 const editor = setEditor(
   new EditorState(
     untrack(() => data.site),
-    projectPaths(untrack(() => data.project.id)),
+    projectPaths(
+      untrack(() => data.project.id),
+      untrack(() => (data.lang === data.primaryLang ? undefined : data.lang)),
+    ),
+    {
+      lang: untrack(() => data.lang),
+      primaryLang: untrack(() => data.primaryLang),
+      languages: untrack(() => data.languages),
+    },
   ),
   untrack(() => data.project.id),
 );
+untrack(() => {
+  if (data.tab) editor.settingsTab = data.tab;
+});
 const session = editor.session;
 
 // Svedit pushes the focused document's shortcuts on top of the app-level ones.
@@ -90,14 +102,19 @@ $effect(() => {
 });
 
 beforeNavigate(({ to, cancel }) => {
-  const staysInEditor = to?.url.pathname.startsWith(editor.paths.edit());
+  // Pages of the same language stay in the editor; switching languages reloads it.
+  const staysInEditor =
+    to?.url.pathname.startsWith(projectPaths(data.project.id).edit()) &&
+    (to.url.searchParams.get("lang") ?? editor.primaryLang) === editor.lang &&
+    !to.url.searchParams.has("key");
+  if (editor.leaving) return;
   if (editor.dirty && !staysInEditor && !confirm("You have unsaved changes. Leave anyway?")) {
     cancel();
   }
 });
 
 function onbeforeunload(event: BeforeUnloadEvent) {
-  if (editor.dirty) event.preventDefault();
+  if (editor.dirty && !editor.leaving) event.preventDefault();
 }
 
 const commands = $derived(
@@ -158,6 +175,7 @@ const statusText = $derived.by(() => {
 
 <div class="editor">
   <div class="left-column">
+    <LanguageSwitcher {editor} projectId={data.project.id} />
     <PagesSidebar {editor} projectName={data.project.name} />
     <BlockInserter {editor} />
   </div>

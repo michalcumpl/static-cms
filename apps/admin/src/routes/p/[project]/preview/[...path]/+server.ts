@@ -1,27 +1,34 @@
-import { exportSite, type Problem, usedMediaFiles } from "@static-cms/site";
+import { exportSiteLanguages, type Problem, usedMediaFiles } from "@static-cms/site";
 import { error } from "@sveltejs/kit";
 import { contentType } from "$lib/content-type";
 import { projectPaths } from "$lib/project-paths";
 import { requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { mediaFiles } from "$lib/server/media";
-import { readSite } from "$lib/server/site-documents";
+import { readLanguages } from "$lib/server/site-documents";
 import type { RequestHandler } from "./$types";
 
 // Rendered links end in a slash (`…/preview/kontakt/`); don't redirect them away.
 export const trailingSlash = "ignore";
 
-/** Serves the project's saved site as exported files, rendered for its preview base path. */
+/**
+ * Serves the project's saved site in all its languages as exported files, rendered for its
+ * preview base path (other languages under `<lang>/`).
+ */
 export const GET: RequestHandler = async (event) => {
   const { params } = event;
   requireMember(event, params.project);
-  const site = readSite(getDb(), params.project);
-  if (!site) error(404, "Not found");
+  // Every language, hidden ones too, so they can be checked before they're published.
+  const sites = readLanguages(getDb(), params.project, "all");
+  if (sites.length === 0) error(404, "Not found");
   const paths = projectPaths(params.project);
-  const media = await mediaFiles(params.project, usedMediaFiles(site.document));
-  const result = exportSite(site.document, media, {
-    basePath: paths.preview,
-  });
+  const names = new Set(sites.flatMap((site) => usedMediaFiles(site.document)));
+  const media = await mediaFiles(params.project, [...names]);
+  const result = exportSiteLanguages(
+    sites.map(({ lang, document, primary }) => ({ lang, document, primary })),
+    media,
+    { basePath: paths.preview },
+  );
   if (!result.ok) return problemsPage(result.problems, paths.edit());
   const path = params.path.replace(/\/+$/, "");
   const file = path === "" ? "index.html" : result.files.has(path) ? path : `${path}/index.html`;

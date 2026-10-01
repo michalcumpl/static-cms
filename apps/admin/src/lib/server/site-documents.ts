@@ -1,12 +1,19 @@
 import { randomUUID } from "node:crypto";
-import { migrateSite, type Problem, validateSite } from "@static-cms/site";
-import { and, eq } from "drizzle-orm";
+import {
+  applySharedFields,
+  isLanguageCode,
+  languageName,
+  migrateSite,
+  type Problem,
+  validateSite,
+} from "@static-cms/site";
+import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "./db/index";
 import { projects, siteDocuments, versions } from "./db/schema";
 import { starterSite } from "./demo";
 import { newId } from "./ids";
 
-/** Until Milestone 5 every project has exactly one document, in this language. */
+/** The language new projects are created in, and their primary language. */
 export const DEFAULT_LANG = "cs";
 
 export interface SiteSnapshot {
@@ -23,12 +30,8 @@ export type SaveResult =
   | { ok: false; reason: "conflict" }
   | { ok: false; reason: "invalid"; problems: Problem[] };
 
-/**
- * A project's current document, its version and its problems, or undefined if there is none.
- * Documents stored in an older format are upgraded here, on every read; the upgrade is stored
- * by the next save, which the returned (stored) version allows.
- */
-export function readSite(db: Db, projectId: string): SiteSnapshot | undefined {
+/** A stored document's row and its current, upgraded document. */
+function currentDocument(db: Db, projectId: string, lang: string) {
   const row = db
     .select({
       version: siteDocuments.version,
@@ -37,10 +40,38 @@ export function readSite(db: Db, projectId: string): SiteSnapshot | undefined {
     })
     .from(siteDocuments)
     .innerJoin(versions, eq(versions.id, siteDocuments.currentVersionId))
-    .where(and(eq(siteDocuments.projectId, projectId), eq(siteDocuments.lang, DEFAULT_LANG)))
+    .where(and(eq(siteDocuments.projectId, projectId), eq(siteDocuments.lang, lang)))
     .get();
+  return row ? { ...row, document: migrateSite(row.document) } : undefined;
+}
+
+/** The project's primary language, or undefined when there is no such project. */
+export function primaryLanguage(db: Db, projectId: string): string | undefined {
+  return db
+    .select({ lang: projects.primaryLang })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .get()?.lang;
+}
+
+/**
+ * A project's current document in a language (the primary when none is given), its version and
+ * its problems, or undefined if there is none. Documents stored in an older format are upgraded
+ * here, on every read; the upgrade is stored by the next save, which the returned (stored)
+ * version allows. Another language gets the primary's shared fields (languages design.md
+ * decision 1).
+ */
+export function readSite(db: Db, projectId: string, lang?: string): SiteSnapshot | undefined {
+  const primary = primaryLanguage(db, projectId);
+  if (primary === undefined) return undefined;
+  const wanted = lang ?? primary;
+  const row = currentDocument(db, projectId, wanted);
   if (!row) return undefined;
-  const document = migrateSite(row.document);
+  let document = row.document;
+  if (wanted !== primary) {
+    const source = currentDocument(db, projectId, primary);
+    if (source) document = applySharedFields(source.document, document);
+  }
   return {
     document,
     version: row.version,
@@ -50,9 +81,10 @@ export function readSite(db: Db, projectId: string): SiteSnapshot | undefined {
 }
 
 /**
- * Saves a project's document based on `baseVersion`. Structurally broken documents are
- * refused; site-rule problems are saved and returned. The version check and the write
- * happen in one transaction, so two saves on the same base can't both succeed.
+ * Saves a project's document in a language (the primary when none is given) based on
+ * `baseVersion`. Structurally broken documents are refused; site-rule problems are saved and
+ * returned. The version check and the write happen in one transaction, so two saves on the same
+ * base can't both succeed. Other languages are never changed.
  */
 export function saveSite(
   db: Db,
@@ -60,10 +92,13 @@ export function saveSite(
   userId: string | null,
   document: unknown,
   baseVersion: string,
+  lang?: string,
 ): SaveResult {
   const { problems } = validateSite(document);
   const broken = problems.filter((p) => p.category === "structure" && p.severity === "error");
   if (broken.length > 0) return { ok: false, reason: "invalid", problems: broken };
+  const wanted = lang ?? primaryLanguage(db, projectId);
+  if (wanted === undefined) return { ok: false, reason: "conflict" };
 
   const version = randomUUID();
   const versionId = newId("v");
@@ -71,7 +106,7 @@ export function saveSite(
     const doc = tx
       .select({ id: siteDocuments.id })
       .from(siteDocuments)
-      .where(and(eq(siteDocuments.projectId, projectId), eq(siteDocuments.lang, DEFAULT_LANG)))
+      .where(and(eq(siteDocuments.projectId, projectId), eq(siteDocuments.lang, wanted)))
       .get();
     if (!doc) return false;
     const updated = tx
@@ -93,6 +128,164 @@ export function saveSite(
     return true;
   });
   return accepted ? { ok: true, version, problems } : { ok: false, reason: "conflict" };
+}
+
+export interface ProjectLanguage {
+  lang: string;
+  name: string;
+  primary: boolean;
+  /** Part of publishes; always true for the primary. */
+  published: boolean;
+}
+
+/** A project's languages: the primary first, then the others in the order they were added. */
+export function projectLanguages(db: Db, projectId: string): ProjectLanguage[] {
+  const primary = primaryLanguage(db, projectId);
+  if (primary === undefined) return [];
+  const rows = db
+    .select({ lang: siteDocuments.lang, published: siteDocuments.published })
+    .from(siteDocuments)
+    .where(eq(siteDocuments.projectId, projectId))
+    .orderBy(sql`rowid`)
+    .all();
+  const languages = rows.map((row) => ({
+    lang: row.lang,
+    name: languageName(row.lang),
+    primary: row.lang === primary,
+    published: row.lang === primary || row.published,
+  }));
+  return [...languages.filter((l) => l.primary), ...languages.filter((l) => !l.primary)];
+}
+
+export interface LanguageSite extends SiteSnapshot {
+  lang: string;
+  primary: boolean;
+}
+
+/**
+ * The current document of each of a project's languages, the primary first, with shared fields
+ * applied: every language (the preview) or only the published ones (publish, ZIP download).
+ */
+export function readLanguages(
+  db: Db,
+  projectId: string,
+  which: "all" | "published",
+): LanguageSite[] {
+  return projectLanguages(db, projectId)
+    .filter((language) => which === "all" || language.published)
+    .flatMap((language) => {
+      const site = readSite(db, projectId, language.lang);
+      return site ? [{ ...site, lang: language.lang, primary: language.primary }] : [];
+    });
+}
+
+/** Errors of several languages, each named by its language when there are several. */
+export function languageErrors(sites: readonly LanguageSite[]): Problem[] {
+  return sites.flatMap((site) =>
+    site.problems
+      .filter((p) => p.severity === "error")
+      .map((p) =>
+        sites.length > 1 ? { ...p, message: `${languageName(site.lang)}: ${p.message}` } : p,
+      ),
+  );
+}
+
+export type LanguageChange =
+  | { ok: true }
+  | { ok: false; reason: "not-found" | "exists" | "not-offered" | "primary"; message: string };
+
+/**
+ * Adds a language as a copy of the primary's current document (same nodes and IDs, so pages
+ * stay paired), hidden until published. The copy is the new document's first version.
+ */
+export function addLanguage(
+  db: Db,
+  projectId: string,
+  lang: string,
+  userId: string | null,
+): LanguageChange {
+  if (!isLanguageCode(lang)) {
+    return {
+      ok: false,
+      reason: "not-offered",
+      message: `"${lang}" is not a language sites can have.`,
+    };
+  }
+  const primary = primaryLanguage(db, projectId);
+  const source = primary === undefined ? undefined : currentDocument(db, projectId, primary);
+  if (!source) return { ok: false, reason: "not-found", message: "There is no such project." };
+  if (projectLanguages(db, projectId).some((l) => l.lang === lang)) {
+    return {
+      ok: false,
+      reason: "exists",
+      message: `The project already has ${languageName(lang)}.`,
+    };
+  }
+  const doc = source.document as { document_id: string; nodes: Record<string, object> };
+  const copy = {
+    ...doc,
+    nodes: { ...doc.nodes, [doc.document_id]: { ...doc.nodes[doc.document_id], lang } },
+  };
+  const documentId = newId("d");
+  const versionId = newId("v");
+  const version = randomUUID();
+  db.transaction((tx) => {
+    tx.insert(siteDocuments)
+      .values({
+        id: documentId,
+        projectId,
+        lang,
+        published: false,
+        version,
+        currentVersionId: versionId,
+      })
+      .run();
+    tx.insert(versions)
+      .values({
+        id: versionId,
+        documentId,
+        version,
+        document: copy,
+        createdAt: new Date(),
+        createdBy: userId,
+      })
+      .run();
+  });
+  return { ok: true };
+}
+
+/** Publishes or hides a language other than the primary. */
+export function setLanguagePublished(
+  db: Db,
+  projectId: string,
+  lang: string,
+  published: boolean,
+): LanguageChange {
+  if (primaryLanguage(db, projectId) === lang) {
+    return { ok: false, reason: "primary", message: "The primary language is always published." };
+  }
+  const result = db
+    .update(siteDocuments)
+    .set({ published })
+    .where(and(eq(siteDocuments.projectId, projectId), eq(siteDocuments.lang, lang)))
+    .run();
+  return result.changes > 0
+    ? { ok: true }
+    : { ok: false, reason: "not-found", message: "The project has no such language." };
+}
+
+/** Removes a language other than the primary, with its versions. */
+export function removeLanguage(db: Db, projectId: string, lang: string): LanguageChange {
+  if (primaryLanguage(db, projectId) === lang) {
+    return { ok: false, reason: "primary", message: "The primary language can't be removed." };
+  }
+  const result = db
+    .delete(siteDocuments)
+    .where(and(eq(siteDocuments.projectId, projectId), eq(siteDocuments.lang, lang)))
+    .run();
+  return result.changes > 0
+    ? { ok: true }
+    : { ok: false, reason: "not-found", message: "The project has no such language." };
 }
 
 /** Creates a project with its first document (the starter site, named after the project). */

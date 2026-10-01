@@ -1,6 +1,7 @@
 <script lang="ts">
 import ImageSetting from "./ImageSetting.svelte";
 import { siteFieldElementId } from "./locate";
+import SharedNote from "./SharedNote.svelte";
 import { setAiSearch, setAiTraining, setSiteDescription, setSiteName, siteSettings } from "./site";
 import type { EditorState } from "./state.svelte";
 
@@ -13,6 +14,7 @@ const site = $derived(siteSettings(editor.session.doc));
 
 <section class="panel" aria-labelledby="site-panel-title" data-history-keys>
   <h2 id="site-panel-title">Site</h2>
+  {#if editor.sharedReadOnly}<SharedNote {editor} tab="site" />{/if}
 
   <label for={siteFieldElementId("name")}>Name</label>
   <input
@@ -38,6 +40,7 @@ const site = $derived(siteSettings(editor.session.doc));
     slot="favicon"
     label="Favicon (the icon in browser tabs)"
     fieldId={siteFieldElementId("favicon")}
+    locked={editor.sharedReadOnly}
     square
     emptyNote="No favicon: browsers show a blank page icon."
   />
@@ -48,6 +51,7 @@ const site = $derived(siteSettings(editor.session.doc));
     slot="share_image"
     label="Share image (shown when a link is shared)"
     fieldId={siteFieldElementId("share_image")}
+    locked={editor.sharedReadOnly}
     altFieldId={siteFieldElementId("share_image_alt")}
     emptyNote="No share image: links are shared with their title and description only."
   />
@@ -58,6 +62,7 @@ const site = $derived(siteSettings(editor.session.doc));
       <input
         type="checkbox"
         checked={site.allow_ai_search}
+        disabled={editor.sharedReadOnly}
         aria-describedby="site-ai-search-hint"
         onchange={(e) => setAiSearch(editor.session, e.currentTarget.checked)}
       />
@@ -71,6 +76,7 @@ const site = $derived(siteSettings(editor.session.doc));
       <input
         type="checkbox"
         checked={site.allow_ai_training}
+        disabled={editor.sharedReadOnly}
         aria-describedby="site-ai-training-hint"
         onchange={(e) => setAiTraining(editor.session, e.currentTarget.checked)}
       />

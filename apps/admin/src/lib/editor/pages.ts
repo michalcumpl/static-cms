@@ -61,6 +61,8 @@ export function addPage(session: Session, title: string): string | undefined {
     title: name,
     slug: uniqueSlug(slugify(name), slugsExcept(doc)),
     seo_description: "",
+    // Its own key: not paired with a page in another language.
+    translation_key: id,
     share_image: list([]),
     blocks: list([createRichText(tr)]),
   });
@@ -84,6 +86,8 @@ export function duplicatePage(session: Session, pageId: string): string | undefi
   const copyId = tr.build(pageId, doc.nodes as never);
   const title = `${page.title} (copy)`;
   tr.set([copyId, "title"], title);
+  // A copy is a new page, not another language's version of the original.
+  tr.set([copyId, "translation_key"], copyId);
   tr.set([copyId, "slug"], uniqueSlug(slugify(title), slugsExcept(doc)));
   const pages = [...siteOf(doc).pages.nodes];
   pages.splice(pages.indexOf(pageId) + 1, 0, copyId);
