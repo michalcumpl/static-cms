@@ -67,8 +67,47 @@ describe("/p/[project]/preview/[...path]", () => {
     "assets/images/nope.png",
     "../package.json",
     "assets",
-  ])("404s for %j", async (at) => {
-    expect(await thrownBy(() => get(at))).toMatchObject({ status: 404 });
+  ])("answers %j with the site's own not-found page", async (at) => {
+    const response = await get(at);
+    expect(response.status).toBe(404);
+    expect(response.headers.get("content-type")).toBe("text/html; charset=utf-8");
+    const html = await response.text();
+    expect(html).toContain('<h1 class="page-title">Stránka nenalezena</h1>');
+    expect(html).toContain(`<a href="${base()}">Přejít na úvodní stránku</a>`);
+  });
+
+  it("serves the favicon and share image made from library images", async () => {
+    save((doc) => {
+      const image = (id: string) => ({
+        id,
+        type: "image",
+        src: "hero.png",
+        alt: "",
+        decorative: false,
+        width: 320,
+        height: 180,
+      });
+      doc.nodes.image_logo = image("image_logo");
+      doc.nodes.image_share = { ...image("image_share"), alt: "Pult" };
+      doc.nodes.site_1.favicon = { nodes: ["image_logo"], marks: [], annotations: [] };
+      doc.nodes.site_1.share_image = { nodes: ["image_share"], marks: [], annotations: [] };
+    });
+    const html = await (await get("")).text();
+    expect(html).toContain(`<link rel="icon" href="${base()}favicon.ico" sizes="32x32">`);
+    const ico = await get("favicon.ico");
+    expect(ico.headers.get("content-type")).toBe("image/x-icon");
+    expect(new Uint8Array(await ico.arrayBuffer()).slice(0, 4)).toEqual(
+      new Uint8Array([0, 0, 1, 0]),
+    );
+    expect((await get("apple-touch-icon.png")).headers.get("content-type")).toBe("image/png");
+    const share = await get("assets/images/hero.png-share.jpg");
+    expect(share.headers.get("content-type")).toBe("image/jpeg");
+  });
+
+  it("serves robots.txt as text", async () => {
+    const response = await get("robots.txt");
+    expect(response.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+    expect(await response.text()).toContain("User-agent: *");
   });
 
   it("is only for members", async () => {

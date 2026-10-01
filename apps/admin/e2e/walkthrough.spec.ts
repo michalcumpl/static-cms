@@ -63,10 +63,12 @@ test("a version-1 project: add, duplicate, set as home, delete, save, preview an
   const { readFileSync } = await import("node:fs");
   const names = zipNames(readFileSync((await download.path()) as string));
   expect(names).toEqual([
+    "404.html",
     "assets/images/hero.png-320.webp",
     "assets/style.css",
     "index.html",
     "kontakt/index.html",
+    "robots.txt",
     "sitemap.xml",
     "uvod/index.html",
   ]);

@@ -199,7 +199,8 @@ describe("project documents", () => {
     const projectId = createProject(db, workspaceId, "Kadeřnictví Eva");
     const site = readSite(db, projectId);
     if (!site) throw new Error("project has no document");
-    expect(site.problems).toEqual([]);
+    // A new site only lacks a description, which the owner adds while editing.
+    expect(site.problems.map((p) => p.code)).toEqual(["no-description"]);
     expect((site.document as Doc).nodes.site_1.name).toBe("Kadeřnictví Eva");
     expect(() => validate_document(starterSite("X") as never, editorSchema)).not.toThrow();
   });
@@ -218,11 +219,26 @@ describe("upgrading stored documents", () => {
     const site = readSite(db, projectId);
     if (!site) throw new Error("project has no document");
     const doc = site.document as Doc;
-    expect(doc.nodes.site_1).toMatchObject({ schema_version: 2, home_page_id: "page_home" });
+    expect(doc.nodes.site_1).toMatchObject({ schema_version: 3, home_page_id: "page_home" });
     expect(doc.nodes.page_home.slug).toBe("uvod");
     expect(site.problems).toEqual([]);
     expect(storedDoc(db, projectId)).toEqual(demoSiteV1());
     expect(readSite(db, projectId)?.version).toBe(site.version);
+  });
+
+  it("returns a version-2 document upgraded to version 3", () => {
+    const db = openDatabase(":memory:");
+    const { workspaceId } = setup(db);
+    const v2 = JSON.parse(
+      readFileSync(require.resolve("@static-cms/site/fixtures/demo-site-v2.json"), "utf8"),
+    ) as Doc;
+    const projectId = createProject(db, workspaceId, "Stará pekárna", v2);
+    const site = readSite(db, projectId);
+    if (!site) throw new Error("project has no document");
+    const doc = site.document as Doc;
+    expect(doc.nodes.site_1).toMatchObject({ schema_version: 3, allow_ai_training: true });
+    expect(doc.nodes.page_contact.share_image.nodes).toEqual([]);
+    expect(site.problems).toEqual([]);
   });
 
   it("stores the upgrade with the next save based on the returned version", () => {
@@ -235,7 +251,7 @@ describe("upgrading stored documents", () => {
     const result = saveSite(db, projectId, userId, doc, site.version);
     expect(result.ok).toBe(true);
     const stored = storedDoc(db, projectId);
-    expect(stored.nodes.site_1.schema_version).toBe(2);
+    expect(stored.nodes.site_1.schema_version).toBe(3);
     expect(stored.nodes.hero_1.heading.content).toBe("Nový chléb");
   });
 });

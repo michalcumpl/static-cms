@@ -58,6 +58,27 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
   delete nodes.person_martina;
   delete nodes.image_katerina;
   nodes.page_home.blocks.nodes = ["services_1", "hero_1", "rich_text_about"];
+  nodes.page_home.seo_description = "";
+  nodes.image_share = {
+    id: "image_share",
+    type: "image",
+    src: "share",
+    alt: "",
+    decorative: false,
+    width: 300,
+    height: 200,
+  };
+  nodes.page_home.share_image = { nodes: ["image_share"], marks: [], annotations: [] };
+  nodes.image_favicon = {
+    id: "image_favicon",
+    type: "image",
+    src: "logo",
+    alt: "",
+    decorative: false,
+    width: 32,
+    height: 32,
+  };
+  nodes.site_1.favicon = { nodes: ["image_favicon"], marks: [], annotations: [] };
   return { doc, nodes };
 }
 
@@ -84,6 +105,9 @@ describe("owners' words", () => {
       "empty-block",
       "empty-heading",
       "hero-not-first",
+      "no-description",
+      "small-share-image",
+      "small-favicon",
     ]) {
       expect(codes, code).toContain(code);
     }

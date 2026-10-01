@@ -54,6 +54,7 @@ describe("resolvePage", () => {
       title: "Nová",
       slug: "nova",
       seo_description: "",
+      share_image: { nodes: [], marks: [], annotations: [] },
       blocks: { nodes: [], marks: [], annotations: [] },
     });
     tr.set(["site_1", "pages"], {

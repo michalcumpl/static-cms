@@ -50,7 +50,8 @@ describe("/w/[workspace]/new", () => {
     expect(thrown?.status).toBe(303);
     const projectId = /^\/p\/(p_[^/]+)\/edit\/$/.exec(thrown?.location ?? "")?.[1] ?? "";
     const site = readSite(project().db, projectId);
-    expect(site?.problems).toEqual([]);
+    // A new site only lacks a description, which the owner adds while editing.
+    expect(site?.problems.map((p) => p.code)).toEqual(["no-description"]);
     const names = listWorkspaces(project().db, project().owner.id)[0]?.projects.map((p) => p.name);
     expect(names).toEqual(["Kadeřnictví Eva", "Pekárna U Lípy"]);
   });

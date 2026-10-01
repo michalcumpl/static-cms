@@ -61,6 +61,7 @@ export function addPage(session: Session, title: string): string | undefined {
     title: name,
     slug: uniqueSlug(slugify(name), slugsExcept(doc)),
     seo_description: "",
+    share_image: list([]),
     blocks: list([createRichText(tr)]),
   });
   tr.set([doc.document_id, "pages"], list([...siteOf(doc).pages.nodes, id]));

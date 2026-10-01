@@ -1,4 +1,4 @@
-import { renderSite, usedImageFiles } from "@static-cms/site";
+import { renderSite, usedMediaFiles } from "@static-cms/site";
 import { error } from "@sveltejs/kit";
 import { projectPaths } from "$lib/project-paths";
 import { getDb } from "$lib/server/app";
@@ -15,5 +15,5 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     ? rendered.site.pages.map((page) => ({ id: page.pageId, path: page.path, url: page.url }))
     : [];
   // The ZIP download fetches only the image files the saved site uses.
-  return { valid, problems: site.problems, pages, imageFiles: usedImageFiles(site.document) };
+  return { valid, problems: site.problems, pages, mediaFiles: usedMediaFiles(site.document) };
 };

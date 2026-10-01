@@ -41,7 +41,7 @@ describe("/p/[project] overview", () => {
     const { projectId, owner } = project();
     const event = { ...project().event(`/p/${projectId}/`, owner), parent: async () => ({}) };
     const data = await load(event as unknown as PageEvent);
-    expect(data).toMatchObject({ valid: true, problems: [], imageFiles: ["hero.png-320.webp"] });
+    expect(data).toMatchObject({ valid: true, problems: [], mediaFiles: ["hero.png-320.webp"] });
     expect(data?.pages).toEqual([
       { id: "page_home", path: "index.html", url: `/p/${projectId}/preview/` },
       { id: "page_contact", path: "kontakt/index.html", url: `/p/${projectId}/preview/kontakt/` },

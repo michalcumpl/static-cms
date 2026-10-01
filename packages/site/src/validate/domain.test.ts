@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editableDemoSite, type LooseNodes } from "../test/fixtures.js";
+import { editableDemoSite, type LooseNodes, loadFixture } from "../test/fixtures.js";
 import { contrastRatio } from "./domain.js";
 import { validateSite } from "./index.js";
 
@@ -13,7 +13,8 @@ function addPage(nodes: LooseNodes, id: string, slug: string, title = id) {
     type: "page",
     title,
     slug,
-    seo_description: "",
+    seo_description: `${title}.`,
+    share_image: { nodes: [], marks: [], annotations: [] },
     blocks: { nodes: [], marks: [], annotations: [] },
   };
   nodes.site_1.pages.nodes.push(id);
@@ -44,6 +45,13 @@ describe("validateSite: site rules", () => {
       "invalid-language",
       "invalid-base-url",
     ]);
+  });
+
+  it("rejects schema version 2, which must be upgraded first", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.site_1.schema_version = 2;
+    expect(errors(doc).map((p) => p.code)).toEqual(["unsupported-version"]);
+    expect(validateSite(loadFixture("demo-site-v2.json")).valid).toBe(false);
   });
 
   it("treats the page named by home_page_id as home, wherever it is listed", () => {

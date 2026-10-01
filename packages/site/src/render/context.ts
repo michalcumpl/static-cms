@@ -76,6 +76,12 @@ export class RenderContext {
     return this.basePath + path;
   }
 
+  /** The absolute URL of a path inside the site; only called when the site address is known. */
+  absoluteUrl(path: string): string {
+    if (this.siteUrl === undefined) throw new Error("The site's address is unknown.");
+    return this.siteUrl + this.url(path);
+  }
+
   /** A page's absolute URL for canonical links, or undefined without a site address. */
   canonicalUrl(pageId: string): string | undefined {
     return this.siteUrl === undefined ? undefined : this.siteUrl + this.pageUrl(pageId);

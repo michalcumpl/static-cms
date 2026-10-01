@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { demoSite } from "$lib/server/demo";
-import { locateMark, locateNode, pageSettingsTarget, selectionFor } from "./locate";
+import { locateMark, locateNode, selectionFor, settingsTarget } from "./locate";
 
 type Doc = Parameters<typeof locateNode>[0];
 const doc = () => demoSite() as Doc;
@@ -70,32 +70,87 @@ describe("selectionFor", () => {
   });
 });
 
-describe("pageSettingsTarget", () => {
+describe("settingsTarget", () => {
   it("leads a page's title, slug and SEO problems to that page's field", () => {
-    expect(pageSettingsTarget(doc(), "page_contact", "slug")).toEqual({
+    expect(settingsTarget(doc(), "page_contact", "slug")).toEqual({
+      tab: "page",
       pageId: "page_contact",
       field: "slug",
     });
-    expect(pageSettingsTarget(doc(), "page_home", "title")).toEqual({
+    expect(settingsTarget(doc(), "page_home", "title")).toEqual({
+      tab: "page",
       pageId: "page_home",
       field: "title",
     });
-    expect(pageSettingsTarget(doc(), "page_home", "seo_description")?.field).toBe(
-      "seo_description",
-    );
+    expect(settingsTarget(doc(), "page_home", "seo_description")?.field).toBe("seo_description");
   });
 
   it("leads a home page problem to the home setting of the current page", () => {
-    expect(pageSettingsTarget(doc(), "site_1", "home_page_id")).toEqual({
+    expect(settingsTarget(doc(), "site_1", "home_page_id")).toEqual({
+      tab: "page",
       pageId: undefined,
       field: "home",
     });
   });
 
+  it("leads site problems to the site settings", () => {
+    expect(settingsTarget(doc(), "site_1", "name")).toEqual({ tab: "site", field: "name" });
+    expect(settingsTarget(doc(), "site_1", "favicon")).toEqual({ tab: "site", field: "favicon" });
+    expect(settingsTarget(doc(), "site_1", "share_image")).toEqual({
+      tab: "site",
+      field: "share_image",
+    });
+  });
+
+  it("leads problems of the favicon's and share images' own nodes to their fields", () => {
+    const d = doc();
+    const image = (id: string) => ({
+      id,
+      type: "image",
+      src: id,
+      alt: "",
+      decorative: false,
+      width: 100,
+      height: 100,
+    });
+    const list = (ids: string[]) => ({ nodes: ids, marks: [], annotations: [] });
+    Object.assign(d.nodes, {
+      image_logo: image("image_logo"),
+      image_site_share: image("image_site_share"),
+      image_page_share: image("image_page_share"),
+    });
+    Object.assign(d.nodes.site_1 as object, {
+      favicon: list(["image_logo"]),
+      share_image: list(["image_site_share"]),
+    });
+    Object.assign(d.nodes.page_contact as object, { share_image: list(["image_page_share"]) });
+
+    expect(settingsTarget(d, "image_logo", "width")).toEqual({ tab: "site", field: "favicon" });
+    expect(settingsTarget(d, "image_site_share", "alt")).toEqual({
+      tab: "site",
+      field: "share_image_alt",
+    });
+    expect(settingsTarget(d, "image_site_share", "width")).toEqual({
+      tab: "site",
+      field: "share_image",
+    });
+    expect(settingsTarget(d, "image_page_share", "alt")).toEqual({
+      tab: "page",
+      pageId: "page_contact",
+      field: "share_image_alt",
+    });
+    expect(settingsTarget(d, "page_contact", "share_image")).toEqual({
+      tab: "page",
+      pageId: "page_contact",
+      field: "share_image",
+    });
+  });
+
   it("is undefined for problems about other nodes or properties", () => {
-    expect(pageSettingsTarget(doc(), "hero_1", "heading")).toBeUndefined();
-    expect(pageSettingsTarget(doc(), "page_home", "blocks")).toBeUndefined();
-    expect(pageSettingsTarget(doc(), "site_1", "name")).toBeUndefined();
+    expect(settingsTarget(doc(), "hero_1", "heading")).toBeUndefined();
+    expect(settingsTarget(doc(), "page_home", "blocks")).toBeUndefined();
+    expect(settingsTarget(doc(), "site_1", "theme")).toBeUndefined();
+    expect(settingsTarget(doc(), "image_hero", "alt")).toBeUndefined();
   });
 });
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 import { slugify } from "@static-cms/site";
 import { goto } from "$app/navigation";
+import ImageSetting from "./ImageSetting.svelte";
 import { pageFieldElementId } from "./locate";
 import {
   cannotDelete,
@@ -13,6 +14,7 @@ import {
   setSeoDescription,
   showInMenu,
 } from "./pages";
+import { slotImage } from "./site";
 import type { EditorState } from "./state.svelte";
 
 let { editor }: { editor: EditorState } = $props();
@@ -22,6 +24,7 @@ type PageNode = { id: string; title: string; slug: string; seo_description: stri
 const page = $derived(editor.currentPage);
 const node = $derived(page ? (editor.session.get(page.id) as PageNode | undefined) : undefined);
 const deleteReason = $derived(page ? cannotDelete(editor.session.doc, page.id) : undefined);
+const siteShareImage = $derived(slotImage(editor.session.doc, editor.siteId, "share_image"));
 
 // The slug is typed into a draft and applied on change (design.md decision 8): applying every
 // keystroke would slugify half-typed input. The draft follows the document whenever the
@@ -97,6 +100,18 @@ function confirmDelete(event: SubmitEvent) {
       value={node.seo_description}
       oninput={(e) => setSeoDescription(editor.session, node.id, e.currentTarget.value)}
     ></textarea>
+
+    <ImageSetting
+      {editor}
+      ownerId={node.id}
+      slot="share_image"
+      label="Share image (shown when a link is shared)"
+      fieldId={pageFieldElementId("share_image")}
+      altFieldId={pageFieldElementId("share_image_alt")}
+      emptyNote={siteShareImage
+        ? "The site's share image is used."
+        : "No share image: links to this page are shared with their title and description only."}
+    />
 
     <label class="check">
       <input

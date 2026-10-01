@@ -4,7 +4,7 @@ import type { Problem } from "../validate/index.js";
 import { problem, validateSite } from "../validate/index.js";
 import { isValidBasePath, RenderContext } from "./context.js";
 import { siteCss } from "./css.js";
-import { renderPage } from "./page.js";
+import { renderNotFound, renderPage } from "./page.js";
 
 export { isValidBasePath } from "./context.js";
 export { type SiteCssOptions, siteCss } from "./css.js";
@@ -33,6 +33,8 @@ export interface RenderedSite {
   pages: RenderedPage[];
   /** Contents of `assets/style.css`. */
   css: string;
+  /** The page for addresses the site doesn't have, exported as `404.html`. */
+  notFound: string;
 }
 
 export type RenderResult =
@@ -84,5 +86,6 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
     };
   });
   const css = siteCss(ctx.node(ctx.site.theme, "theme"));
-  return { ok: true, site: { pages, css }, warnings: validation.problems };
+  const notFound = renderNotFound(ctx).value;
+  return { ok: true, site: { pages, css, notFound }, warnings: validation.problems };
 }

@@ -58,8 +58,10 @@ describe("starter site fixture", () => {
     readFileSync(new URL("../../fixtures/starter-site.json", import.meta.url), "utf8"),
   );
 
-  it("is a valid one-page site with no problems and no images", () => {
-    expect(validateSite(starter)).toEqual({ valid: true, problems: [] });
+  it("is a valid one-page site with no images, only missing a description", () => {
+    const result = validateSite(starter);
+    expect(result.valid).toBe(true);
+    expect(result.problems.map((p) => p.code)).toEqual(["no-description"]);
     expect(starter.nodes[starter.document_id].pages.nodes).toEqual(["page_home"]);
     expect(Object.values(starter.nodes).some((n) => (n as { type: string }).type === "image")).toBe(
       false,

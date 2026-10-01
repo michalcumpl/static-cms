@@ -1,5 +1,13 @@
 import { zipSync } from "fflate";
-import { imageFile, imageVariants } from "../images.js";
+import {
+  ICON_SIZES,
+  type IconSize,
+  iconFile,
+  imageFile,
+  imageVariants,
+  isDerivedImageProperty,
+  shareFile,
+} from "../images.js";
 import { escapeHtml } from "../render/html.js";
 import { renderSite } from "../render/index.js";
 import {
@@ -9,6 +17,8 @@ import {
   siteSchema,
 } from "../schema/index.js";
 import { type Problem, problem } from "../validate/index.js";
+import { pngToIco } from "./ico.js";
+import { robotsTxt } from "./robots.js";
 
 export interface ExportOptions {
   /** Where the site will be served from: `/` (default) or a subdirectory like `/web/`. */
@@ -36,7 +46,7 @@ export type ExportResult =
 
 /**
  * Renders a site document into its static file tree. `media` maps image file names
- * (`<media key>-<width>.webp`, see `usedImageFiles`) to their bytes; only files the site
+ * (`<media key>-<width>.webp`, see `usedMediaFiles`) to their bytes; only files the site
  * uses are included.
  */
 export function exportSite(
@@ -69,30 +79,59 @@ export function exportSite(
   const files: [string, Uint8Array][] = [];
 
   for (const page of rendered.site.pages) files.push([page.path, encoder.encode(page.html)]);
+  files.push(["404.html", encoder.encode(rendered.site.notFound)]);
   files.push(["assets/style.css", encoder.encode(rendered.site.css)]);
 
+  // The same files as usedMediaFiles(doc), walked per image to name the image when one is missing.
   const missing: Problem[] = [];
-  // The same files as usedImageFiles(doc), walked per image to name the image when one is missing.
   const added = new Set<string>();
+  const place = (
+    image: NodeOfType<"image">,
+    name: string,
+    path: string,
+    wrap = (b: Uint8Array) => b,
+  ) => {
+    if (added.has(path)) return;
+    added.add(path);
+    const bytes = media.get(name);
+    if (bytes) {
+      files.push([path, wrap(bytes)]);
+    } else {
+      missing.push(
+        problem("error", "missing-media", image.id, `No file was supplied for ${name}.`, "src"),
+      );
+    }
+  };
   for (const image of usedImages(doc)) {
     for (const width of imageVariants(image.width)) {
       const name = imageFile(image.src, width);
-      if (added.has(name)) continue;
-      added.add(name);
-      const bytes = media.get(name);
-      if (bytes) {
-        files.push([`assets/images/${name}`, bytes]);
-      } else {
-        missing.push(
-          problem("error", "missing-media", image.id, `No file was supplied for ${name}.`, "src"),
-        );
-      }
+      place(image, name, `assets/images/${name}`);
     }
+  }
+  const site = doc.nodes[doc.document_id] as NodeOfType<"site">;
+  const favicon = imageOf(doc, site.favicon.nodes[0]);
+  if (favicon) {
+    const icons: Record<IconSize, string> = {
+      32: "favicon.ico",
+      180: "apple-touch-icon.png",
+      512: "icon-512.png",
+    };
+    for (const size of ICON_SIZES) {
+      const wrap = size === 32 ? (png: Uint8Array) => pngToIco(png, 32) : undefined;
+      place(favicon, iconFile(favicon.src, size), icons[size], wrap);
+    }
+  }
+  const shareImages = [
+    site.share_image.nodes[0],
+    ...site.pages.nodes.map((id) => (doc.nodes[id] as NodeOfType<"page">).share_image.nodes[0]),
+  ];
+  for (const id of shareImages) {
+    const image = imageOf(doc, id);
+    if (image) place(image, shareFile(image.src), `assets/images/${shareFile(image.src)}`);
   }
   if (missing.length > 0) return { ok: false, problems: missing };
 
-  const site = doc.nodes[doc.document_id];
-  const baseUrl = options.siteUrl ?? (site?.type === "site" ? site.base_url : "");
+  const baseUrl = options.siteUrl ?? site.base_url;
   if (baseUrl !== "") {
     const routes = rendered.site.pages.map((p) => p.path.replace(/index\.html$/, ""));
     files.push(["sitemap.xml", encoder.encode(sitemap(baseUrl, routes))]);
@@ -102,11 +141,23 @@ export function exportSite(
         "warning",
         "no-base-url",
         doc.document_id,
-        "The site has no base URL, so sitemap.xml was left out.",
+        "The site has no address yet, so the sitemap, page addresses in link previews, share images and structured data were left out.",
         "base_url",
       ),
     );
   }
+
+  const sitemapUrl = baseUrl === "" ? undefined : `${baseUrl.replace(/\/+$/, "")}/sitemap.xml`;
+  files.push([
+    "robots.txt",
+    encoder.encode(
+      robotsTxt({
+        allowAiSearch: site.allow_ai_search,
+        allowAiTraining: site.allow_ai_training,
+        sitemapUrl,
+      }),
+    ),
+  ]);
 
   if (options.redirects && options.redirects.length > 0) {
     const lines = options.redirects.map((r) => `${r.from} ${r.to} 301\n`).join("");
@@ -117,7 +168,15 @@ export function exportSite(
   return { ok: true, files: new Map(files), warnings };
 }
 
-/** Image nodes reachable from the site root, in a stable order, each media key once. */
+function imageOf(doc: SiteDocument, id: string | undefined): NodeOfType<"image"> | undefined {
+  const node = id === undefined ? undefined : doc.nodes[id];
+  return node?.type === "image" ? node : undefined;
+}
+
+/**
+ * Image nodes shown on the site's pages, in a stable order, each media key once. Favicons and
+ * share images aren't shown, so they're left out: they get derived files instead of variants.
+ */
 function usedImages(doc: SiteDocument) {
   const seen = new Set<string>();
   const images = new Map<string, NodeOfType<"image">>();
@@ -128,6 +187,7 @@ function usedImages(doc: SiteDocument) {
     if (node.type === "image" && !images.has(node.src)) images.set(node.src, node);
     const properties: Record<string, PropertyDef> = siteSchema[node.type].properties;
     for (const [name, def] of Object.entries(properties)) {
+      if (isDerivedImageProperty(node.type, name)) continue;
       const value = (node as unknown as Record<string, unknown>)[name];
       if (def.type === "node") visit(value as string);
       if (def.type === "node_array")

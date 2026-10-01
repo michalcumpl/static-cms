@@ -112,6 +112,11 @@ ORIGIN=https://admin.example.cz BODY_SIZE_LIMIT=25M SMTP_URL=… MAIL_FROM=… n
   `pnpm admin media-cleanup` deletes the files of removed images that no stored version uses.
 - Image files from before the library (such as an imported `hero.png`) are registered at
   startup under their file name and get their variants; the file itself stays in place.
+- A site's favicon and share images get extra files, made from the original the first time a
+  preview, download or publish needs them and kept next to the variants: square PNG icons of
+  32, 180 and 512 px (the whole image fitted in, on transparent padding, white for the 180 px
+  phone icon) and a 1200 × 630 JPEG cut from the middle of the image. Cleanup deletes them with
+  the rest of an image's files.
 
 ### Publishing
 
@@ -136,6 +141,18 @@ ORIGIN=https://admin.example.cz BODY_SIZE_LIMIT=25M SMTP_URL=… MAIL_FROM=… n
   clients.
 - A publish runs inside the server process; a restart interrupts it and marks it failed. The
   site keeps showing its previous publish.
+- Every published site has a favicon (when set in the editor's Site settings), link previews
+  (Open Graph and Twitter tags with the share image), structured data for search engines on the
+  home page, its own "page not found" page (`404.html`, which Netlify serves automatically) and
+  a `robots.txt` naming the sitemap. The ZIP download has no address, so it leaves out what needs
+  one: the sitemap, page addresses in link previews, share images and structured data.
+- **AI crawlers:** the Site settings' switches *AI search and answers* and *AI training* add
+  `Disallow` groups for those crawlers to `robots.txt` (the lists are in
+  `packages/site/src/export/robots.ts`, checked against the vendors' documentation on
+  2026-09-30). `robots.txt` is a request, not a lock: well-known crawlers follow it, but some
+  fetchers acting on a user's request say they may not (ChatGPT-User, Perplexity-User,
+  Meta-ExternalFetcher), and nothing stops a crawler that ignores it. Search engines and
+  link-preview fetchers are never blocked.
 
 ### Backups
 
@@ -160,6 +177,13 @@ saved with the project's next save. There is no database migration and nothing t
   redeploy the newer build.
 - Editor addresses changed from `/p/<project>/edit/<slug>/` to `/p/<project>/edit/<page-id>/`;
   old bookmarks show "not found". `/p/<project>/edit/` still opens the home page.
+
+### Upgrading: site document format 3
+
+Site settings (description, favicon, share images, AI switches) store site documents in format
+3. As with format 2, older documents are upgraded when the server reads them and saved in the
+new format with the project's next save; take a backup before deploying, and a rollback to an
+older build needs the pre-upgrade backup for projects saved since.
 
 ## Scripts
 

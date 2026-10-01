@@ -84,7 +84,7 @@ describe("uploadImage", () => {
       [1600, 1200],
       [2400, 1800],
     ] as const) {
-      const bytes = mediaFile(projectId, `${key}-${width}.webp`, root);
+      const bytes = await mediaFile(projectId, `${key}-${width}.webp`, root);
       if (!bytes) throw new Error(`no ${width} variant`);
       expect(await sharp(bytes).metadata()).toMatchObject({ format: "webp", width, height });
     }
@@ -180,7 +180,7 @@ describe("uploadImage", () => {
     const result = await upload("bokem.jpg", new Uint8Array(sideways));
     if (!result.ok) throw new Error(result.message);
     expect(result.media).toMatchObject({ width: 600, height: 1200 });
-    const variant = mediaFile(projectId, `${result.media.key}-600.webp`, root);
+    const variant = await mediaFile(projectId, `${result.media.key}-600.webp`, root);
     expect(await sharp(variant).metadata()).toMatchObject({ width: 600, height: 1200 });
   });
 
@@ -220,7 +220,7 @@ describe("library", () => {
     const { key } = result.media;
     expect(removeFromLibrary(db, projectId, key)).toBe(true);
     expect(listLibrary(db, projectId)).toEqual([]);
-    expect(mediaFile(projectId, `${key}-480.webp`, root)).toBeDefined();
+    expect(await mediaFile(projectId, `${key}-480.webp`, root)).toBeDefined();
     expect(removeFromLibrary(db, projectId, key)).toBe(false);
 
     await upload("znovu.jpg", bytes);
@@ -233,10 +233,10 @@ describe("mediaFile", () => {
     const result = await upload("pult.jpg", await image(500, 500));
     if (!result.ok) throw new Error(result.message);
     const { key } = result.media;
-    expect(mediaFile(projectId, `${key}-480.webp`, root)).toBeDefined();
-    expect(mediaFile(projectId, `${key}.jpg`, root)).toBeUndefined();
-    expect(mediaFile(projectId, `originals/${key}.jpg`, root)).toBeUndefined();
-    expect(mediaFile(projectId, "../x-1.webp", root)).toBeUndefined();
+    expect(await mediaFile(projectId, `${key}-480.webp`, root)).toBeDefined();
+    expect(await mediaFile(projectId, `${key}.jpg`, root)).toBeUndefined();
+    expect(await mediaFile(projectId, `originals/${key}.jpg`, root)).toBeUndefined();
+    expect(await mediaFile(projectId, "../x-1.webp", root)).toBeUndefined();
   });
 });
 
@@ -254,7 +254,7 @@ describe("media from before the library", () => {
     expect(listLibrary(db, projectId)).toEqual([
       expect.objectContaining({ key: "hero.png", width: 320, height: 180 }),
     ]);
-    const variant = mediaFile(projectId, "hero.png-320.webp", root);
+    const variant = await mediaFile(projectId, "hero.png-320.webp", root);
     expect(await sharp(variant).metadata()).toMatchObject({ format: "webp", width: 320 });
     expect(readdirSync(join(root, projectId))).toContain("hero.png");
   });
@@ -278,7 +278,7 @@ describe("media from before the library", () => {
       "jak-pracujeme-0.webp-800.webp",
       "katerina-350.webp-350.webp",
     ]) {
-      expect(mediaFile(projectId, file, root), file).toBeDefined();
+      expect(await mediaFile(projectId, file, root), file).toBeDefined();
     }
     // Their generated variants are recognised as such on the next start.
     expect(await registerAllLegacyMedia(db, root)).toEqual(new Map());
@@ -343,16 +343,39 @@ describe("cleanupMedia", () => {
     expect(cleanupMedia(db, { dryRun: true, root })).toEqual([
       { projectId, key: unused.media.key },
     ]);
-    expect(mediaFile(projectId, `${unused.media.key}-480.webp`, root)).toBeDefined();
+    expect(await mediaFile(projectId, `${unused.media.key}-480.webp`, root)).toBeDefined();
 
     expect(cleanupMedia(db, { root })).toEqual([{ projectId, key: unused.media.key }]);
     const left = readdirSync(join(root, projectId)).concat(
       readdirSync(join(root, projectId, "originals")),
     );
     expect(left.some((name) => name.startsWith(unused.media.key))).toBe(false);
-    expect(mediaFile(projectId, `${older.media.key}-600.webp`, root)).toBeDefined();
-    expect(mediaFile(projectId, `${kept.media.key}-600.webp`, root)).toBeDefined();
+    expect(await mediaFile(projectId, `${older.media.key}-600.webp`, root)).toBeDefined();
+    expect(await mediaFile(projectId, `${kept.media.key}-600.webp`, root)).toBeDefined();
     expect(listLibrary(db, projectId).map((m) => m.key)).toEqual([kept.media.key]);
     expect(cleanupMedia(db, { root })).toEqual([]);
+  });
+
+  it("deletes a removed favicon's icon and share files with it, and keeps a used image's", async () => {
+    const favicon = await upload("logo.png", await image(300, 300, "png", "#444"));
+    const used = await upload("pult.jpg", await image(600, 600, "jpeg", "#555"));
+    if (!favicon.ok || !used.ok) throw new Error("upload failed");
+    const derived = (key: string) => [
+      `${key}-icon-32.png`,
+      `${key}-icon-180.png`,
+      `${key}-icon-512.png`,
+      `${key}-share.jpg`,
+    ];
+    for (const name of [...derived(favicon.media.key), ...derived(used.media.key)]) {
+      expect(await mediaFile(projectId, name, root), name).toBeDefined();
+    }
+    saveWithHeroImage(used.media.key, 600);
+    removeFromLibrary(db, projectId, favicon.media.key);
+    removeFromLibrary(db, projectId, used.media.key);
+
+    expect(cleanupMedia(db, { root })).toEqual([{ projectId, key: favicon.media.key }]);
+    const left = readdirSync(join(root, projectId));
+    expect(left.filter((name) => name.startsWith(favicon.media.key))).toEqual([]);
+    for (const name of derived(used.media.key)) expect(left, name).toContain(name);
   });
 });

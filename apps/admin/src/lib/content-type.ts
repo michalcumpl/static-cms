@@ -9,6 +9,8 @@ const TYPES: Record<string, string> = {
   webp: "image/webp",
   avif: "image/avif",
   gif: "image/gif",
+  ico: "image/x-icon",
+  txt: "text/plain; charset=utf-8",
 };
 
 /** Content type for the file types a site export can contain; undefined for anything else. */

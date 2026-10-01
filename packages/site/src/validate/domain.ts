@@ -17,7 +17,11 @@ const FONT_STACK = /^[A-Za-z0-9 ,'"-]+$/;
 const CSS_LENGTH = /^(0|\d+(\.\d+)?(px|rem|em|%|ch|vw))$/;
 const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const MIN_TEXT_CONTRAST = 4.5;
-export const SCHEMA_VERSION = 2;
+/** Link previews show share images narrower than this blurred. */
+const MIN_SHARE_WIDTH = 600;
+/** The largest icon made from a favicon that phones show on their home screens. */
+const MIN_FAVICON_SIZE = 180;
+export const SCHEMA_VERSION = 3;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -65,6 +69,14 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
       pageIds.add(pageId);
       if (!page) continue;
       checkPageSlug(page, seen, problems);
+      if (page.share_image.nodes.length > 1) {
+        problems.error(
+          "too-many-items",
+          page.id,
+          `${pageLabel(page)} can have at most one share image.`,
+          "share_image",
+        );
+      }
       checkPageBlocks(page, get, problems);
     }
     if (site.pages.nodes.length > 0 && !pageIds.has(site.home_page_id)) {
@@ -81,10 +93,44 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
     if (theme) checkTheme(theme, problems);
   }
 
-  // A logo's image is described by the logo's name, so it needs no alt text of its own.
-  const logoImages = new Set(all("logo_item").flatMap((logo) => logo.image.nodes));
+  // A logo's image is described by the logo's name, and the favicon is never shown as an
+  // image on a page, so neither needs alt text of its own.
+  const undescribed = new Set(all("logo_item").flatMap((logo) => logo.image.nodes));
+  const favicon = site?.favicon.nodes ?? [];
+  for (const id of favicon) undescribed.add(id);
+  // Share images are named by what they're for, not by where they are.
+  const subjects = new Map<string, string>();
+  for (const id of site?.share_image.nodes ?? []) subjects.set(id, "The site's share image");
+  for (const pageId of pageIds) {
+    const page = get(pageId, "page");
+    for (const id of page?.share_image.nodes ?? []) {
+      subjects.set(id, `The share image of ${pageLabel(page as NodeOfType<"page">)}`);
+    }
+  }
   for (const image of all("image")) {
-    checkImage(image, problems, where(image.id), logoImages.has(image.id));
+    const place = where(image.id);
+    const subject = subjects.get(image.id) ?? (place ? `An image ${place}` : "An image");
+    checkImage(image, problems, subject, undescribed.has(image.id));
+    if (subjects.has(image.id) && image.width > 0 && image.width < MIN_SHARE_WIDTH) {
+      problems.warning(
+        "small-share-image",
+        image.id,
+        `${subject} is only ${image.width} pixels wide; link previews need at least ${MIN_SHARE_WIDTH} (1200 is best).`,
+        "width",
+      );
+    }
+  }
+  const faviconImage = favicon[0] ? get(favicon[0], "image") : undefined;
+  if (faviconImage) {
+    const size = Math.max(faviconImage.width, faviconImage.height);
+    if (size > 0 && size < MIN_FAVICON_SIZE) {
+      problems.warning(
+        "small-favicon",
+        faviconImage.id,
+        `The favicon is only ${size} pixels; use an image at least ${MIN_FAVICON_SIZE} pixels wide or tall, or it will look blurred on phones.`,
+        "width",
+      );
+    }
   }
   for (const logo of all("logo_item")) {
     if (logo.page_id !== "" && logo.url !== "") {
@@ -121,6 +167,21 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
   for (const link of [...all("page_link"), ...all("external_link")]) {
     if (isBlank(link.label)) {
       problems.error("empty-link-label", link.id, `${linkLabel(link.id)} needs a label.`, "label");
+    }
+  }
+
+  // Last, so that the errors owners must fix come first.
+  if (site && site.description.trim() === "") {
+    for (const pageId of pageIds) {
+      const page = get(pageId, "page");
+      if (page && page.seo_description.trim() === "") {
+        problems.warning(
+          "no-description",
+          page.id,
+          `${pageLabel(page)} has no description for search engines and link previews. Add one to the page, or a description of the whole site.`,
+          "seo_description",
+        );
+      }
     }
   }
 
@@ -215,6 +276,17 @@ function checkSiteNode(site: NodeOfType<"site">, problems: Problems): void {
   }
   if (site.pages.nodes.length === 0) {
     problems.error("no-pages", site.id, "The site needs at least one page.", "pages");
+  }
+  if (site.favicon.nodes.length > 1) {
+    problems.error("too-many-items", site.id, "The site can have only one favicon.", "favicon");
+  }
+  if (site.share_image.nodes.length > 1) {
+    problems.error(
+      "too-many-items",
+      site.id,
+      "The site can have only one share image.",
+      "share_image",
+    );
   }
 }
 
@@ -415,10 +487,9 @@ function checkImageBlock(
 function checkImage(
   image: NodeOfType<"image">,
   problems: Problems,
-  place: string,
+  anImage: string,
   describedElsewhere = false,
 ): void {
-  const anImage = place ? `An image ${place}` : "An image";
   if (!(image.width > 0 && image.height > 0)) {
     problems.error(
       "missing-image-size",

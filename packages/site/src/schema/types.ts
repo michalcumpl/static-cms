@@ -28,6 +28,16 @@ export interface SiteNode {
   lang: string;
   /** Absolute URL the site is published at, e.g. `https://anideti.cz`. Empty when unknown. */
   base_url: string;
+  /** Used by pages without a description of their own. */
+  description: string;
+  /** At most one image, fitted into the site's square icons. */
+  favicon: NodeArrayValue;
+  /** At most one image: the share image of pages without their own. */
+  share_image: NodeArrayValue;
+  /** Whether AI search and answer crawlers may read the site (robots.txt). */
+  allow_ai_search: boolean;
+  /** Whether AI training crawlers may read the site (robots.txt). */
+  allow_ai_training: boolean;
   theme: string;
   nav: string;
   pages: NodeArrayValue;
@@ -76,6 +86,8 @@ export interface PageNode {
   /** Every page has one; the home page's is used only if it stops being home. */
   slug: string;
   seo_description: string;
+  /** At most one image, shown when the page is shared as a link. */
+  share_image: NodeArrayValue;
   blocks: NodeArrayValue;
 }
 

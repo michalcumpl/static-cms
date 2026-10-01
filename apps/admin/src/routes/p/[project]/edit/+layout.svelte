@@ -9,6 +9,7 @@ import MediaLibrary from "$lib/editor/MediaLibrary.svelte";
 import PageSettings from "$lib/editor/PageSettings.svelte";
 import PagesSidebar from "$lib/editor/PagesSidebar.svelte";
 import ProblemsPanel from "$lib/editor/ProblemsPanel.svelte";
+import SiteSettings from "$lib/editor/SiteSettings.svelte";
 import { EditorState, setEditor } from "$lib/editor/state.svelte";
 import {
   availableBlocks,
@@ -218,7 +219,39 @@ const statusText = $derived.by(() => {
   </div>
 
   <aside class="panels" aria-label="Details">
-    <PageSettings {editor} />
+    <div class="tabs" role="tablist" aria-label="Settings">
+      <button
+        type="button"
+        role="tab"
+        id="settings-tab-page"
+        aria-selected={editor.settingsTab === "page"}
+        aria-controls="settings-panel"
+        onclick={() => (editor.settingsTab = "page")}
+      >
+        Page
+      </button>
+      <button
+        type="button"
+        role="tab"
+        id="settings-tab-site"
+        aria-selected={editor.settingsTab === "site"}
+        aria-controls="settings-panel"
+        onclick={() => (editor.settingsTab = "site")}
+      >
+        Site
+      </button>
+    </div>
+    <div
+      id="settings-panel"
+      role="tabpanel"
+      aria-labelledby={editor.settingsTab === "page" ? "settings-tab-page" : "settings-tab-site"}
+    >
+      {#if editor.settingsTab === "page"}
+        <PageSettings {editor} />
+      {:else}
+        <SiteSettings {editor} />
+      {/if}
+    </div>
     <ImagePanel {editor} />
     <ProblemsPanel {editor} focusCanvas={() => canvas?.focus_canvas()} />
   </aside>
@@ -242,6 +275,26 @@ const statusText = $derived.by(() => {
     border-left: 1px solid #ddd;
     background: #fafafa;
     font-family: system-ui, sans-serif;
+  }
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .tabs button {
+    flex: 1;
+    padding: 0.5rem;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .tabs button[aria-selected="true"] {
+    border-bottom-color: #1f5a8a;
+    font-weight: 600;
   }
 
   .workspace {

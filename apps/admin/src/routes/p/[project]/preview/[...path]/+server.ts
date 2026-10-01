@@ -1,4 +1,4 @@
-import { exportSite, type Problem, usedImageFiles } from "@static-cms/site";
+import { exportSite, type Problem, usedMediaFiles } from "@static-cms/site";
 import { error } from "@sveltejs/kit";
 import { contentType } from "$lib/content-type";
 import { projectPaths } from "$lib/project-paths";
@@ -12,13 +12,13 @@ import type { RequestHandler } from "./$types";
 export const trailingSlash = "ignore";
 
 /** Serves the project's saved site as exported files, rendered for its preview base path. */
-export const GET: RequestHandler = (event) => {
+export const GET: RequestHandler = async (event) => {
   const { params } = event;
   requireMember(event, params.project);
   const site = readSite(getDb(), params.project);
   if (!site) error(404, "Not found");
   const paths = projectPaths(params.project);
-  const media = mediaFiles(params.project, usedImageFiles(site.document));
+  const media = await mediaFiles(params.project, usedMediaFiles(site.document));
   const result = exportSite(site.document, media, {
     basePath: paths.preview,
   });
@@ -27,8 +27,16 @@ export const GET: RequestHandler = (event) => {
   const file = path === "" ? "index.html" : result.files.has(path) ? path : `${path}/index.html`;
   const bytes = result.files.get(file);
   const type = contentType(file);
-  if (!bytes || !type) error(404, "Not found");
-  return new Response(new Uint8Array(bytes), { headers: { "content-type": type } });
+  if (bytes && type) {
+    return new Response(new Uint8Array(bytes), { headers: { "content-type": type } });
+  }
+  // What visitors of the published site see for addresses it doesn't have.
+  const notFound = result.files.get("404.html");
+  if (!notFound) error(404, "Not found");
+  return new Response(new Uint8Array(notFound), {
+    status: 404,
+    headers: { "content-type": "text/html; charset=utf-8" },
+  });
 };
 
 const ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };

@@ -1,6 +1,6 @@
 import { unzipSync } from "fflate";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { usedImageFiles } from "../images.js";
+import { usedMediaFiles } from "../images.js";
 import {
   editableDemoSite,
   editableImageBlocksSite,
@@ -22,10 +22,12 @@ describe("exportSite", () => {
   it("lays out pages, stylesheet, images and sitemap", () => {
     const { files, warnings } = exported();
     expect([...files.keys()]).toEqual([
+      "404.html",
       "assets/images/hero.png-320.webp",
       "assets/style.css",
       "index.html",
       "kontakt/index.html",
+      "robots.txt",
       "sitemap.xml",
     ]);
     expect(warnings).toEqual([]);
@@ -48,10 +50,12 @@ describe("exportSite", () => {
   it("writes the home page to index.html when it is listed second", () => {
     const { files } = exported(homeListedSecondSite());
     expect([...files.keys()]).toEqual([
+      "404.html",
       "assets/images/hero.png-320.webp",
       "assets/style.css",
       "index.html",
       "kontakt/index.html",
+      "robots.txt",
       "sitemap.xml",
     ]);
     expect(decode(files.get("index.html"))).toContain("<title>Pekárna U Lípy</title>");
@@ -93,7 +97,7 @@ describe("exportSite", () => {
       "assets/images/pult-3f9a2c1d-480.webp",
       "assets/images/pult-3f9a2c1d-960.webp",
     ]);
-    expect(images.map((k) => k.slice("assets/images/".length))).toEqual(usedImageFiles(doc));
+    expect(images.map((k) => k.slice("assets/images/".length))).toEqual(usedMediaFiles(doc));
   });
 
   it("names the missing variant file", () => {
@@ -139,6 +143,7 @@ describe("exportSite", () => {
     expect(sitemap).toContain("<loc>https://pekarna-ulipy.example/</loc>");
     expect(sitemap).toContain("<loc>https://pekarna-ulipy.example/kontakt/</loc>");
     expect(sitemap).not.toContain("/uvod/");
+    expect(sitemap).not.toContain("404");
   });
 
   it("omits the sitemap and warns when there is no base URL", () => {
@@ -147,7 +152,13 @@ describe("exportSite", () => {
     const { files, warnings } = exported(doc);
     expect(files.has("sitemap.xml")).toBe(false);
     expect(warnings).toEqual([
-      expect.objectContaining({ severity: "warning", code: "no-base-url", nodeId: "site_1" }),
+      expect.objectContaining({
+        severity: "warning",
+        code: "no-base-url",
+        nodeId: "site_1",
+        message:
+          "The site has no address yet, so the sitemap, page addresses in link previews, share images and structured data were left out.",
+      }),
     ]);
   });
 

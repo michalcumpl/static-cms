@@ -7,10 +7,14 @@ export {
   zipFiles,
 } from "./export/index.js";
 export {
+  ICON_SIZES,
+  type IconSize,
+  iconFile,
   imageFile,
   imageVariants,
+  shareFile,
   srcVariant,
-  usedImageFiles,
+  usedMediaFiles,
   WIDTH_LADDER,
 } from "./images.js";
 export { isSafeHref } from "./links.js";

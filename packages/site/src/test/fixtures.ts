@@ -3,6 +3,11 @@ import type { SiteDocument } from "../schema/index.js";
 
 const fixturesDir = new URL("../../fixtures/", import.meta.url);
 
+/** A fresh copy of any fixture document, such as `demo-site-v2.json`. */
+export function loadFixture(name: string): unknown {
+  return JSON.parse(readFileSync(new URL(name, fixturesDir), "utf8"));
+}
+
 /** A fresh, mutable copy of the demo site for each call. */
 export function loadDemoSite(): SiteDocument {
   return JSON.parse(readFileSync(new URL("demo-site.json", fixturesDir), "utf8")) as SiteDocument;

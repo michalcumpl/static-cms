@@ -28,20 +28,53 @@ export function srcVariant(width: number): number | undefined {
   return variants.filter((w) => w <= SRC_MAX_WIDTH).at(-1) ?? variants[0];
 }
 
+/** Sizes of the square icons made from a site's favicon. */
+export const ICON_SIZES = [32, 180, 512] as const;
+export type IconSize = (typeof ICON_SIZES)[number];
+
+/** The file name of one of a favicon's square PNG icons: `<media key>-icon-<size>.png`. */
+export function iconFile(key: string, size: IconSize): string {
+  return `${key}-icon-${size}.png`;
+}
+
+/** The file name of an image's 1200 × 630 share image: `<media key>-share.jpg`. */
+export function shareFile(key: string): string {
+  return `${key}-share.jpg`;
+}
+
+/** Properties whose images aren't shown on pages, and so get derived files instead of variants. */
+const DERIVED: Record<string, Record<string, (key: string) => string[]>> = {
+  site: {
+    favicon: (key) => ICON_SIZES.map((size) => iconFile(key, size)),
+    share_image: (key) => [shareFile(key)],
+  },
+  page: { share_image: (key) => [shareFile(key)] },
+};
+
+/** Whether a node's property holds images that get derived files instead of variants. */
+export function isDerivedImageProperty(type: string, property: string): boolean {
+  return DERIVED[type]?.[property] !== undefined;
+}
+
 type LooseNode = { type?: unknown; [key: string]: unknown };
 
 /**
- * The image files a document's pages use: every variant of every image reachable from the
- * site root, each once, sorted. Works on any document, valid or not, so callers can use it
- * to decide which files to supply.
+ * The media files a document's exported site uses, each once, sorted: every variant of every
+ * image reachable from the site root through its pages, the favicon's icons, and the share
+ * file of the site's and each page's share image. Works on any document, valid or not, so
+ * callers can use it to decide which files to supply.
  */
-export function usedImageFiles(doc: unknown): string[] {
+export function usedMediaFiles(doc: unknown): string[] {
   const files = new Set<string>();
   if (typeof doc !== "object" || doc === null) return [];
   const { document_id: rootId, nodes } = doc as { document_id?: unknown; nodes?: unknown };
   if (typeof rootId !== "string" || typeof nodes !== "object" || nodes === null) return [];
   const all = nodes as Record<string, LooseNode>;
   const seen = new Set<string>();
+  const childrenOf = (value: unknown): unknown[] => {
+    const children = (value as { nodes?: unknown } | undefined)?.nodes;
+    return Array.isArray(children) ? children : [];
+  };
   const visit = (id: unknown): void => {
     if (typeof id !== "string" || seen.has(id)) return;
     seen.add(id);
@@ -50,14 +83,20 @@ export function usedImageFiles(doc: unknown): string[] {
     if (node.type === "image" && typeof node.src === "string" && typeof node.width === "number") {
       for (const w of imageVariants(node.width)) files.add(imageFile(node.src, w));
     }
+    const derived = DERIVED[node.type] ?? {};
     const properties: Record<string, PropertyDef> = siteSchema[node.type].properties;
     for (const [name, def] of Object.entries(properties)) {
       const value = node[name];
-      if (def.type === "node") visit(value);
-      if (def.type === "node_array") {
-        const children = (value as { nodes?: unknown } | undefined)?.nodes;
-        if (Array.isArray(children)) for (const child of children) visit(child);
+      const derive = derived[name];
+      if (derive) {
+        for (const child of childrenOf(value)) {
+          const src = typeof child === "string" ? all[child]?.src : undefined;
+          if (typeof src === "string") for (const file of derive(src)) files.add(file);
+        }
+        continue;
       }
+      if (def.type === "node") visit(value);
+      if (def.type === "node_array") for (const child of childrenOf(value)) visit(child);
     }
   };
   visit(rootId);

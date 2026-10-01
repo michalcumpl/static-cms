@@ -1,32 +1,56 @@
 import type { NodeOfType } from "../schema/index.js";
 import { renderBlock, renderLink } from "./blocks.js";
 import type { RenderContext } from "./context.js";
+import { renderHead } from "./head.js";
 import { type Html, html, raw } from "./html.js";
+import { siteStrings } from "./strings.js";
 
 export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
   const { site } = ctx;
   const isHome = ctx.homeId === page.id;
   const title = isHome ? site.name : `${page.title} – ${site.name}`;
-  const canonical = ctx.canonicalUrl(page.id);
+  const own = page.seo_description.trim() !== "" ? page.seo_description : site.description;
+  const description = own.trim() === "" ? "" : own;
   const blocks = ctx.children(page.blocks);
   const heroIsH1 = blocks[0]?.type === "hero";
-  const nav = ctx.node(site.nav, "nav");
 
+  const main = html`${
+    !heroIsH1 &&
+    html`
+      <div class="container">
+        <h1 class="page-title">${page.title}</h1>
+      </div>`
+  }${blocks.map(
+    (block) => html`
+      ${indent(renderBlock(block, ctx), "  ")}`,
+  )}`;
+  return renderDocument(ctx, renderHead(ctx, { title, description, page }), main, page.id);
+}
+
+/**
+ * The page served for addresses the site doesn't have (`404.html`): the site's header, menu
+ * and footer around a heading and a link home, in the site's language. Its links are absolute
+ * paths, so it works at any address.
+ */
+export function renderNotFound(ctx: RenderContext): Html {
+  const strings = siteStrings(ctx.site.lang);
+  const title = `${strings.notFoundHeading} – ${ctx.site.name}`;
+  const main = html`
+      <div class="container">
+        <h1 class="page-title">${strings.notFoundHeading}</h1>
+        <p>${strings.notFoundText}</p>
+        <p><a href="${ctx.pageUrl(ctx.homeId)}">${strings.backHome}</a></p>
+      </div>`;
+  return renderDocument(ctx, renderHead(ctx, { title, description: "" }), main);
+}
+
+/** A whole HTML document: head, the site's header and menu, `main`, and the footer. */
+function renderDocument(ctx: RenderContext, head: Html, main: Html, currentPageId?: string): Html {
+  const { site } = ctx;
+  const nav = ctx.node(site.nav, "nav");
   return html`<!doctype html>
 <html lang="${site.lang}">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${title}</title>${
-      page.seo_description.trim() !== "" &&
-      html`
-    <meta name="description" content="${page.seo_description}">`
-    }
-    <link rel="stylesheet" href="${ctx.url("assets/style.css")}">${
-      canonical &&
-      html`
-    <link rel="canonical" href="${canonical}">`
-    }
+  <head>${head}
   </head>
   <body>
     <header class="site-header">
@@ -35,22 +59,13 @@ export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
         <nav class="site-nav">
           <ul>${ctx.children(nav.items).map(
             (item) => html`
-            <li>${renderLink(item, ctx, undefined, item.type === "page_link" && item.page_id === page.id)}</li>`,
+            <li>${renderLink(item, ctx, undefined, item.type === "page_link" && item.page_id === currentPageId)}</li>`,
           )}
           </ul>
         </nav>
       </div>
     </header>
-    <main>${
-      !heroIsH1 &&
-      html`
-      <div class="container">
-        <h1 class="page-title">${page.title}</h1>
-      </div>`
-    }${blocks.map(
-      (block) => html`
-      ${indent(renderBlock(block, ctx), "  ")}`,
-    )}
+    <main>${main}
     </main>
     <footer class="site-footer">
       <div class="container">

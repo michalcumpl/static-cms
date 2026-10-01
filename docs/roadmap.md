@@ -127,7 +127,18 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
   - Each block has a fixed shape and `sizes`; a multi-select library adds several photos,
     people or logos in one go.
 - Cropping and focal points per image (the blocks' fixed shapes cover sizing for now).
-- SEO settings, favicon, site metadata.
+- **SEO settings, favicon and site metadata: done.**
+  - Change: [`seo-and-metadata`](../openspec/changes/archive/2026-09-30-seo-and-metadata/).
+  - **Site settings** in the editor (a Site tab next to Page): name, description (the fallback
+    for pages without their own), favicon, default share image, and switches for AI search and
+    AI training. Pages get their own share image. Document format 3.
+  - **Published pages** carry Open Graph and Twitter tags, favicon links, and on the home page
+    JSON-LD `WebSite` and `Organization`. Export adds `favicon.ico` and icons, 1200 × 630 share
+    JPEGs, `robots.txt` (AI crawlers disallowed per switch) and a `404.html` in the site's
+    language.
+  - A warning lists pages without any description.
+  - Later: `LocalBusiness` structured data with the contact and opening-hours blocks (from the
+    same data they show), `llms.txt`, noindex per page, a focal point for share images.
 - More blocks: opening hours, contact, call to action, testimonials, maybe a map (mind GDPR with
   third-party embeds).
 - **Editor polish: done.** Cmd/Ctrl+A selects only the current field's text; problem messages

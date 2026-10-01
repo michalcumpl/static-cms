@@ -116,6 +116,24 @@ describe("GET /api/projects/[project]/media/[name]", () => {
     expect(response.headers.get("content-type")).toBe("image/webp");
   });
 
+  it("serves icon and share files to members, and not to others", async () => {
+    const created = await (await upload(await jpeg(600, 400), "logo.jpg")).json();
+    const icon = await file(`${created.key}-icon-180.png`);
+    expect(icon.headers.get("content-type")).toBe("image/png");
+    expect(await sharp(new Uint8Array(await icon.arrayBuffer())).metadata()).toMatchObject({
+      width: 180,
+      height: 180,
+    });
+    const share = await file(`${created.key}-share.jpg`);
+    expect(share.headers.get("content-type")).toBe("image/jpeg");
+    expect(
+      await thrownBy(() => file(`${created.key}-share.jpg`, project().outsider)),
+    ).toMatchObject({ status: 404 });
+    expect(await thrownBy(() => file(`${created.key}-icon-64.png`))).toMatchObject({
+      status: 404,
+    });
+  });
+
   it("answers 404 for originals, legacy files, other names and other workspaces", async () => {
     const created = await (await upload(await jpeg(600, 400), "pult.jpg")).json();
     for (const bad of [

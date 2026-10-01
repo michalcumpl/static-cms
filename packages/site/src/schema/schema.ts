@@ -36,10 +36,15 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 2 },
+      schema_version: { type: "integer", min: 1, default: 3 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
+      description: { type: "string" },
+      favicon: { type: "node_array", node_types: ["image"] },
+      share_image: { type: "node_array", node_types: ["image"] },
+      allow_ai_search: { type: "boolean", default: true },
+      allow_ai_training: { type: "boolean", default: true },
       theme: { type: "node", node_types: ["theme"] },
       nav: { type: "node", node_types: ["nav"] },
       pages: { type: "node_array", node_types: ["page"], default_node_type: "page" },
@@ -85,6 +90,7 @@ export const siteSchema = {
       title: { type: "string" },
       slug: { type: "string" },
       seo_description: { type: "string" },
+      share_image: { type: "node_array", node_types: ["image"] },
       blocks: {
         type: "node_array",
         node_types: [

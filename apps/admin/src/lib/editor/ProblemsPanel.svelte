@@ -6,8 +6,9 @@ import {
   locateMark,
   locateNode,
   pageFieldElementId,
-  pageSettingsTarget,
   selectionFor,
+  settingsTarget,
+  siteFieldElementId,
 } from "./locate";
 import type { EditorState } from "./state.svelte";
 
@@ -29,12 +30,12 @@ $effect(() => {
 const errors = $derived(problems.filter((p) => p.severity === "error").length);
 
 /**
- * Clickable when it leads somewhere: a page settings field, a node the editor can select,
- * or at least its page.
+ * Clickable when it leads somewhere: a page or site settings field, a node the editor can
+ * select, or at least its page.
  */
 function canShow(problem: Problem): boolean {
   const doc = editor.session.doc as unknown as Doc;
-  if (pageSettingsTarget(doc, problem.nodeId, problem.property)) return true;
+  if (settingsTarget(doc, problem.nodeId, problem.property)) return true;
   if (locateMark(doc, problem.nodeId)) return true;
   const location = locateNode(doc, problem.nodeId);
   if (!location) return false;
@@ -51,9 +52,17 @@ async function showPage(pageId: string | undefined) {
 
 async function show(problem: Problem) {
   const doc = editor.session.doc as unknown as Doc;
-  const target = pageSettingsTarget(doc, problem.nodeId, problem.property);
+  const target = settingsTarget(doc, problem.nodeId, problem.property);
+  if (target?.tab === "site") {
+    editor.settingsTab = "site";
+    await tick();
+    document.getElementById(siteFieldElementId(target.field))?.focus();
+    return;
+  }
   if (target) {
+    editor.settingsTab = "page";
     await showPage(target.pageId);
+    await tick();
     document.getElementById(pageFieldElementId(target.field))?.focus();
     return;
   }

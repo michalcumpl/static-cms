@@ -49,7 +49,10 @@ export type ProblemCode =
   | "invalid-site-url"
   | "invalid-redirect"
   | "missing-media"
-  | "no-base-url";
+  | "no-base-url"
+  | "no-description"
+  | "small-share-image"
+  | "small-favicon";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -101,6 +104,9 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "invalid-redirect": "site",
   "missing-media": "site",
   "no-base-url": "site",
+  "no-description": "site",
+  "small-share-image": "site",
+  "small-favicon": "site",
 };
 
 export function problemCategory(code: ProblemCode): ProblemCategory {

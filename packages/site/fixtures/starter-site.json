@@ -90,6 +90,11 @@
       "title": "Úvod",
       "slug": "uvod",
       "seo_description": "",
+      "share_image": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
       "blocks": {
         "nodes": ["hero_1", "rich_text_about"],
         "marks": [],
@@ -99,10 +104,23 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 2,
+      "schema_version": 3,
       "name": "Můj web",
       "lang": "cs",
       "base_url": "",
+      "description": "",
+      "favicon": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "share_image": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "allow_ai_search": true,
+      "allow_ai_training": true,
       "theme": "theme_1",
       "nav": "nav_1",
       "pages": {

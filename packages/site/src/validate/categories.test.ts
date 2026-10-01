@@ -76,6 +76,9 @@ describe("problem categories", () => {
       "invalid-redirect": true,
       "missing-media": true,
       "no-base-url": true,
+      "no-description": true,
+      "small-share-image": true,
+      "small-favicon": true,
     };
     for (const code of Object.keys(codes) as ProblemCode[]) {
       expect(["structure", "site"], code).toContain(problemCategory(code));

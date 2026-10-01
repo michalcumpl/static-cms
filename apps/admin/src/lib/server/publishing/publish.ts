@@ -1,4 +1,4 @@
-import { exportSite, type Problem, usedImageFiles } from "@static-cms/site";
+import { exportSite, type Problem, usedMediaFiles } from "@static-cms/site";
 import { and, desc, eq } from "drizzle-orm";
 import type { Db } from "../db/index";
 import { projectHosting, projects, publishes, users } from "../db/schema";
@@ -149,7 +149,7 @@ async function runPublish(
     const hosting = await ensureSite(db, projectId, connection.target, connection.accountSlug);
     const url = siteAddress(hosting) as string;
     const redirects = earlierAddresses(db, projectId, document);
-    const media = mediaFiles(projectId, usedImageFiles(document));
+    const media = await mediaFiles(projectId, usedMediaFiles(document));
     const exported = exportSite(document, media, { siteUrl: url, redirects });
     if (!exported.ok) {
       throw new PublishError("failed", exported.problems.map((p) => p.message).join(" "));

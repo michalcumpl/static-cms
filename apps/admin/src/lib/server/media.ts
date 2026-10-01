@@ -1,9 +1,18 @@
 // A project's images (media design.md decisions 1–3): upload and processing with sharp,
-// the library, and reading the published variant files.
+// the library, and reading the published variant files and the icon and share files made
+// from them.
 import { createHash, randomBytes } from "node:crypto";
 import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { imageFile, imageVariants, slugify } from "@static-cms/site";
+import {
+  ICON_SIZES,
+  type IconSize,
+  iconFile,
+  imageFile,
+  imageVariants,
+  shareFile,
+  slugify,
+} from "@static-cms/site";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import sharp, { type Metadata } from "sharp";
 import type { Db } from "./db/index";
@@ -27,6 +36,13 @@ export const ACCEPTED_MESSAGE = "Only JPEG, PNG and WebP images can be uploaded.
 // The site validator's rule for image sources: a plain file name that can't leave the folder.
 const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const VARIANT_FILE = /^([A-Za-z0-9][A-Za-z0-9._-]*)-(\d+)\.webp$/;
+// Icon and share files (seo-and-metadata design.md decision 3), matching the names that
+// `iconFile` and `shareFile` give.
+const DERIVED_FILE = /^([A-Za-z0-9][A-Za-z0-9._-]*)-(?:icon-(32|180|512)\.png|share\.jpg)$/;
+type DerivedKind = IconSize | "share";
+const SHARE_WIDTH = 1200;
+const SHARE_HEIGHT = 630;
+const SHARE_QUALITY = 82;
 
 /** The request body limit uploads need; adapter-node's default of 512 KB refuses every photo. */
 export const REQUIRED_BODY_SIZE_LIMIT = 25 * 1024 * 1024;
@@ -263,35 +279,118 @@ export function removeFromLibrary(db: Db, projectId: string, key: string): boole
   return result.changes > 0;
 }
 
-/**
- * A published variant file (`<key>-<width>.webp`) of a project, or undefined for anything else:
- * originals and other files are never served.
- */
-export function mediaFile(
+/** A variant file (`<key>-<width>.webp`) of a project, or undefined when it doesn't exist. */
+function variantFile(
   projectId: string,
   name: string,
-  root = mediaRoot(),
+  root: string,
 ): Uint8Array<ArrayBuffer> | undefined {
   if (!VARIANT_FILE.test(name)) return undefined;
+  return readIfExists(join(projectFolder(projectId, root), name));
+}
+
+function readIfExists(path: string): Uint8Array<ArrayBuffer> | undefined {
   try {
-    return new Uint8Array(readFileSync(join(projectFolder(projectId, root), name)));
+    return new Uint8Array(readFileSync(path));
   } catch {
     return undefined;
   }
 }
 
-/** The bytes of the given variant files that exist, keyed by name (for preview and export). */
-export function mediaFiles(
+/**
+ * The image a derived file is made from (seo-and-metadata design.md decision 3): its
+ * metadata-free original, else the largest of its variants (images used before the library).
+ */
+function derivedSource(projectId: string, key: string, root: string): Uint8Array | undefined {
+  for (const extension of Object.values(EXTENSIONS)) {
+    const original = readIfExists(join(originalsFolder(projectId, root), `${key}.${extension}`));
+    if (original) return original;
+  }
+  let names: string[];
+  try {
+    names = readdirSync(projectFolder(projectId, root));
+  } catch {
+    return undefined;
+  }
+  const widths = names.flatMap((name) => {
+    const match = VARIANT_FILE.exec(name);
+    return match?.[1] === key ? [Number(match[2])] : [];
+  });
+  if (widths.length === 0) return undefined;
+  return variantFile(projectId, imageFile(key, Math.max(...widths)), root);
+}
+
+/** Makes a derived file's bytes from its source image. */
+async function makeDerived(source: Uint8Array, kind: DerivedKind): Promise<Buffer> {
+  const upright = sharp(source, { limitInputPixels: MAX_PIXELS, failOn: "error" }).rotate();
+  if (kind === "share") {
+    return upright
+      .resize(SHARE_WIDTH, SHARE_HEIGHT, { fit: "cover", position: "centre" })
+      .flatten({ background: "#ffffff" })
+      .jpeg({ quality: SHARE_QUALITY })
+      .toBuffer();
+  }
+  // Phones show transparency in home-screen icons as black, so that icon gets white.
+  const white = kind === 180;
+  const icon = upright.resize(kind, kind, {
+    fit: "contain",
+    background: white ? "#ffffff" : { r: 0, g: 0, b: 0, alpha: 0 },
+  });
+  return (white ? icon.flatten({ background: "#ffffff" }) : icon).png().toBuffer();
+}
+
+/**
+ * An icon or share file of a project's image (media spec, "Icon and share files"), made from
+ * the image when first asked for and kept next to its variants. Undefined for other names and
+ * for images without a source.
+ */
+export async function derivedFile(
+  projectId: string,
+  name: string,
+  root = mediaRoot(),
+): Promise<Uint8Array<ArrayBuffer> | undefined> {
+  const match = DERIVED_FILE.exec(name);
+  const key = match?.[1];
+  if (!match || key === undefined) return undefined;
+  const path = join(projectFolder(projectId, root), name);
+  const kept = readIfExists(path);
+  if (kept) return kept;
+  const kind: DerivedKind = match[2] === undefined ? "share" : (Number(match[2]) as IconSize);
+  return serially(async () => {
+    const madeMeanwhile = readIfExists(path);
+    if (madeMeanwhile) return madeMeanwhile;
+    const source = derivedSource(projectId, key, root);
+    if (!source) return undefined;
+    const bytes = new Uint8Array(await makeDerived(source, kind));
+    writeAtomically(path, bytes);
+    return bytes;
+  });
+}
+
+/**
+ * A file the project's sites use: a variant (`<key>-<width>.webp`), or an icon or share file,
+ * made on first use. Undefined for anything else: originals and other files are never served.
+ */
+export async function mediaFile(
+  projectId: string,
+  name: string,
+  root = mediaRoot(),
+): Promise<Uint8Array<ArrayBuffer> | undefined> {
+  return variantFile(projectId, name, root) ?? (await derivedFile(projectId, name, root));
+}
+
+/** The bytes of the given media files that exist, keyed by name (for preview and export). */
+export async function mediaFiles(
   projectId: string,
   names: readonly string[],
   root = mediaRoot(),
-): Map<string, Uint8Array> {
-  return new Map(
-    names.flatMap((name) => {
-      const bytes = mediaFile(projectId, name, root);
-      return bytes ? [[name, bytes] as const] : [];
-    }),
-  );
+): Promise<Map<string, Uint8Array>> {
+  const files = new Map<string, Uint8Array>();
+  for (const name of names) {
+    const bytes = await mediaFile(projectId, name, root);
+    if (bytes) files.set(name, bytes);
+  }
+  return files;
 }
 
 /**
@@ -423,6 +522,8 @@ export function cleanupMedia(
     for (const width of imageVariants(row.width)) {
       rmSync(join(folder, imageFile(row.key, width)), { force: true });
     }
+    for (const size of ICON_SIZES) rmSync(join(folder, iconFile(row.key, size)), { force: true });
+    rmSync(join(folder, shareFile(row.key)), { force: true });
     rmSync(join(originalsFolder(row.projectId, root), `${row.key}.${EXTENSIONS[row.format]}`), {
       force: true,
     });
