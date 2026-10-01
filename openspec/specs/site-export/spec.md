@@ -14,6 +14,7 @@ Export SHALL produce a file tree in which:
 - the stylesheet is `assets/style.css`;
 - `robots.txt` is at the root;
 - every image variant and share file used by the site is under `assets/images/`;
+- every font file and font licence the theme needs is under `assets/fonts/`;
 - when the site has a favicon, `favicon.ico`, `icon-512.png` and `apple-touch-icon.png` are at the root.
 
 The home page SHALL NOT also be written under its slug. Export SHALL accept the same optional base path as rendering (default `/`). Rendered links SHALL resolve correctly when the tree is served at that path.
@@ -156,3 +157,18 @@ When any document has validation errors, export SHALL fail with them, each namin
 #### Scenario: An English error
 - **WHEN** the English document has an image without a description
 - **THEN** export fails, and the problem says it is in the English version
+
+### Requirement: Font files
+Rendering SHALL be able to report the font files a document's theme needs (see "Font files of a theme" in the theming capability). The caller SHALL supply their bytes, keyed by file name, separately from media. Export SHALL place each under `assets/fonts/` with its own name, include no other font files, and fail with an error naming the missing file if a needed file's bytes were not supplied. With several languages, the fonts SHALL be the primary's.
+
+#### Scenario: Webfonts exported
+- **WHEN** exporting a site whose theme uses `lora` for headings and `system-sans` for the body, with the Lora files supplied
+- **THEN** the tree contains `assets/fonts/lora-latin-normal.woff2`, `assets/fonts/lora-latin-ext-normal.woff2` and `assets/fonts/lora-OFL.txt`, and no other file under `assets/fonts/`
+
+#### Scenario: Missing font file
+- **WHEN** exporting a site whose body font is `inter`, and no bytes were supplied for `inter-latin-italic.woff2`
+- **THEN** export fails with an error naming `inter-latin-italic.woff2`
+
+#### Scenario: System fonts only
+- **WHEN** exporting a site that uses only system fonts
+- **THEN** the tree has no `assets/fonts/` files

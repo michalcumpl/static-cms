@@ -45,12 +45,13 @@ Every node reference SHALL point to an existing node of an allowed type. All nod
 
 ### Requirement: Site node
 The root node SHALL be of type `site`. It SHALL carry:
-- the schema version (`5`);
+- the schema version (`6`);
 - the site name;
 - a language tag (for example `cs`);
 - an optional base URL;
 - a site description, which may be empty;
-- a favicon and a default share image, each a list of at most one `image` node;
+- a favicon, a default share image and a logo, each a list of at most one `image` node;
+- a switch "show the site name in the header", `true` or `false`;
 - two switches, "allow AI search" and "allow AI training", each `true` or `false`;
 - a reference to the theme, a reference to the navigation, and a reference to the business details;
 - an ordered list of pages;
@@ -71,11 +72,15 @@ The home page ID SHALL name a page in the site's list of pages. The position of 
 - **THEN** validation reports a missing-home error
 
 #### Scenario: Unsupported schema version
-- **WHEN** a document has schema version 4
+- **WHEN** a document has schema version 5
 - **THEN** validation reports an unsupported-schema-version error
 
 #### Scenario: Two favicons
 - **WHEN** the site's favicon list holds two image nodes
+- **THEN** validation reports a too-many-items error
+
+#### Scenario: Two logos
+- **WHEN** the site's logo list holds two image nodes
 - **THEN** validation reports a too-many-items error
 
 ### Requirement: Pages and slugs
@@ -154,7 +159,12 @@ A `hero` block SHALL only appear as the first block of a page.
 - **THEN** validation reports an error that the hero must be the first block
 
 ### Requirement: Image accessibility
-Every `image` node SHALL either have non-empty alt text or be explicitly marked decorative. Two kinds of image are exempt: the image of a logo item, whose alt text is the partner's name, and the site's favicon, which is never shown as an image on a page. An image marked decorative SHALL have empty alt text.
+Every `image` node SHALL either have non-empty alt text or be explicitly marked decorative. Three kinds of image are exempt:
+- the image of a logo item, whose alt text is the partner's name;
+- the site's favicon, which is never shown as an image on a page;
+- the site's logo, whose alt text is the site name, or empty when the name is shown next to it.
+
+An image marked decorative SHALL have empty alt text.
 
 #### Scenario: Missing alt text
 - **WHEN** an image has empty alt text and is not marked decorative
@@ -176,6 +186,10 @@ Every `image` node SHALL either have non-empty alt text or be explicitly marked 
 - **WHEN** the site's favicon image has empty alt text and is not marked decorative
 - **THEN** the document is valid
 
+#### Scenario: Site logo without description
+- **WHEN** the site's logo image has empty alt text and is not marked decorative
+- **THEN** the document is valid
+
 #### Scenario: Share image without description
 - **WHEN** a page's share image has empty alt text and is not marked decorative
 - **THEN** validation reports a missing-alt error saying that the share image of that page needs a description
@@ -188,11 +202,19 @@ Links in marks, navigation items and calls-to-action SHALL either reference a pa
 - **THEN** validation reports an unsafe-link error
 
 ### Requirement: Theme
-The theme SHALL define colors (primary, secondary, background, text), a heading font and a body font, a corner radius, and a content width. Color values SHALL be hex colors (`#rgb` or `#rrggbb`), and the text-on-background color pair SHALL meet WCAG 2.2 AA contrast for body text (4.5:1).
+The theme SHALL define colors (primary, secondary, background, text), a heading font and a body font, a corner radius, and a content width. Color values SHALL be hex colors (`#rgb` or `#rrggbb`). Each font SHALL be an ID from the font catalog (see the theming capability). The radius and content width SHALL be CSS lengths. The colors SHALL meet the contrast rules of the theming capability: text on background, primary on background, text on secondary and primary on secondary, each at least 4.5:1.
 
 #### Scenario: Low-contrast theme
 - **WHEN** the theme's text color is `#999999` on background `#ffffff`
 - **THEN** validation reports a contrast error with the measured ratio
+
+#### Scenario: Font list instead of an ID
+- **WHEN** the theme's body font is `Georgia, serif`
+- **THEN** validation reports an invalid-theme-value error saying the body font must be chosen from the catalog
+
+#### Scenario: Low-contrast links
+- **WHEN** the theme's primary color is `#7fb2e5` on background `#ffffff`
+- **THEN** validation reports a contrast error for links and buttons
 
 ### Requirement: Validation result
 Validation SHALL return all problems found, not only the first. Each problem SHALL have a severity (`error` or `warning`), a category, a machine-readable code, a human-readable message, and the ID of the node (and property, when applicable) it concerns. The category SHALL be `structure` for problems with the document's shape (identifiers, node types, property values, references, mark ranges, cycles, reachability) and `site` for problems with the site rules (pages, home page, slugs, menu, links, headings, images, theme). Messages about a page, or about a link to a page, SHALL name the page by its title rather than by its node ID. Messages of `site` problems about pages, links, images, headings and blocks SHALL NOT contain node IDs or internal property names; a problem about an image or a link SHALL say which page it is on, by title. A document with any error SHALL be considered invalid. Warnings alone SHALL NOT make a document invalid.
@@ -456,4 +478,22 @@ A version-4 document SHALL be upgradable to version 5 without losing content. Th
 #### Scenario: Upgrade a version-4 site
 - **WHEN** a version-4 document with pages `page_home` and `page_contact` is upgraded
 - **THEN** the result has schema version 5, `page_home` has the translation key `page_home` and `page_contact` has `page_contact`
+- **AND** every other node and property is unchanged
+
+### Requirement: Site name in the header without a logo
+The switch "show the site name in the header" SHALL only be off when the site has a logo. A site with the switch off and no logo SHALL get a warning, and its header SHALL show the name.
+
+#### Scenario: Name hidden without a logo
+- **WHEN** a site has no logo and the switch "show the site name in the header" is off
+- **THEN** validation reports a warning that the header shows the name until a logo is chosen, and the document is valid
+
+### Requirement: Upgrading version-5 documents
+A version-5 document SHALL be upgradable to version 6 without losing content. The upgrade SHALL:
+- replace each theme font list with a catalog ID: a list whose first font is Georgia, or that ends in the generic family `serif`, becomes `georgia`; any other list becomes `system-sans`;
+- give the site an empty logo list and the switch "show the site name in the header" on;
+- set the schema version to 6.
+
+#### Scenario: Upgrade the starter theme
+- **WHEN** a version-5 document with heading font `Georgia, 'Times New Roman', serif` and body font `system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif` is upgraded
+- **THEN** the result has schema version 6, heading font `georgia`, body font `system-sans`, no logo and the site name shown in the header
 - **AND** every other node and property is unchanged
