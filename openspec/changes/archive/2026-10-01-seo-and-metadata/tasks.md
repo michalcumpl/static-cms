@@ -36,5 +36,5 @@
 
 - [x] 6.1 e2e: set the site name, description, favicon and share image; the preview page's head has the description, `og:*` and icon links, and the preview serves `favicon.ico`. Then switch off AI training and publish to the fake Netlify: the deployed `robots.txt` disallows `GPTBot`, `404.html` is deployed, and the home page has JSON-LD with the netlify.app address.
 - [x] 6.2 Update the README (`robots.txt` and the AI switches, and what they can't enforce) and the roadmap (Milestone 3: SEO settings, favicon and site metadata done; `LocalBusiness` with the business blocks). Verify by reading both.
-- [ ] 6.3 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
-- [ ] 6.4 Manual check by the owner after publishing a real site: paste a page's link into WhatsApp or Messenger and check the preview (title, description, image), check the favicon in a browser tab, and open a missing address to see the 404 page. Record the outcome in design.md.
+- [x] 6.3 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
+- [x] 6.4 Manual check by the owner after publishing a real site: paste a page's link into WhatsApp or Messenger and check the preview (title, description, image), check the favicon in a browser tab, and open a missing address to see the 404 page. Record the outcome in design.md.

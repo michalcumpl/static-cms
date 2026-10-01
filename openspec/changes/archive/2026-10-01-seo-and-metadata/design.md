@@ -205,6 +205,13 @@ Editor operations go in `lib/editor/site.ts`: `setSiteName`, `setSiteDescription
   - switch off AI training and publish to the fake Netlify: the deployed `robots.txt` disallows `GPTBot`, and `404.html` is deployed;
   - a missing-description problem selects the page's description field.
 
+## Real publish (task 6.4, 2026-10-01)
+
+After publishing a real site with the new settings, the owner confirmed:
+- the link preview in a messaging app showed the page's title, description and share image;
+- the favicon appeared in the browser tab;
+- a missing address showed the site's own "Stránka nenalezena" page.
+
 ## Risks / Trade-offs
 
 - **[Crawler user agents change]** → They're kept in one module with a date comment, and the README says the switches are only as good as crawlers' compliance with `robots.txt`.

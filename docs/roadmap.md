@@ -128,7 +128,7 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
     people or logos in one go.
 - Cropping and focal points per image (the blocks' fixed shapes cover sizing for now).
 - **SEO settings, favicon and site metadata: done.**
-  - Change: [`seo-and-metadata`](../openspec/changes/archive/2026-09-30-seo-and-metadata/).
+  - Change: [`seo-and-metadata`](../openspec/changes/archive/2026-10-01-seo-and-metadata/).
   - **Site settings** in the editor (a Site tab next to Page): name, description (the fallback
     for pages without their own), favicon, default share image, and switches for AI search and
     AI training. Pages get their own share image. Document format 3.
