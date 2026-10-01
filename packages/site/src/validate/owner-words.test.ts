@@ -79,6 +79,21 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
     height: 32,
   };
   nodes.site_1.favicon = { nodes: ["image_favicon"], marks: [], annotations: [] };
+  nodes.business_1.phone = "321 123";
+  nodes.business_1.email = "objednavky";
+  nodes.range_a = { id: "range_a", type: "time_range", opens: "08:00", closes: "13:00" };
+  nodes.range_b = { id: "range_b", type: "time_range", opens: "12:00", closes: "07:00" };
+  nodes.day_wed.ranges = { nodes: ["range_a", "range_b"], marks: [], annotations: [] };
+  nodes.contact_1 = {
+    id: "contact_1",
+    type: "contact",
+    heading: { content: "Kontakt", marks: [], annotations: [] },
+    show_address: true,
+    show_phone: false,
+    show_email: false,
+    show_map: true,
+  };
+  nodes.page_contact.blocks.nodes.push("contact_1");
   return { doc, nodes };
 }
 
@@ -108,6 +123,10 @@ describe("owners' words", () => {
       "no-description",
       "small-share-image",
       "small-favicon",
+      "invalid-phone",
+      "invalid-email",
+      "invalid-hours",
+      "nothing-to-show",
     ]) {
       expect(codes, code).toContain(code);
     }
@@ -116,6 +135,8 @@ describe("owners' words", () => {
   it.each(problems.map((p) => [p.code, p.message]))("%s: %s", (_code, message) => {
     for (const id of ids) expect(message, `node ID ${id}`).not.toMatch(new RegExp(`\\b${id}\\b`));
     expect(message).not.toMatch(/\bslug\b/i);
-    expect(message).not.toMatch(/\b(seo_description|page_id|image_side|home_page_id|href|src)\b/);
+    expect(message).not.toMatch(
+      /\b(seo_description|page_id|image_side|home_page_id|href|src|map_url|postal_code|hours_note|show_in_footer|business_type|opens|closes|time_range|opening_day)\b/,
+    );
   });
 });

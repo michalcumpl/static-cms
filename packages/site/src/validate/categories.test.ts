@@ -79,6 +79,12 @@ describe("problem categories", () => {
       "no-description": true,
       "small-share-image": true,
       "small-favicon": true,
+      "invalid-phone": true,
+      "invalid-email": true,
+      "invalid-map-url": true,
+      "invalid-country": true,
+      "invalid-hours": true,
+      "nothing-to-show": true,
     };
     for (const code of Object.keys(codes) as ProblemCode[]) {
       expect(["structure", "site"], code).toContain(problemCategory(code));

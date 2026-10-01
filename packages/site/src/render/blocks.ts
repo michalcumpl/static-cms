@@ -1,7 +1,8 @@
 import { imageFile, imageVariants, srcVariant } from "../images.js";
 import type { AnyNode, NodeOfType } from "../schema/index.js";
+import { contactDetails, openingHoursTable } from "./business.js";
 import type { RenderContext } from "./context.js";
-import { type Html, html } from "./html.js";
+import { type Html, html, raw } from "./html.js";
 import { isEmpty, renderText } from "./text.js";
 
 export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
@@ -20,6 +21,10 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderTeam(block, ctx);
     case "logos":
       return renderLogos(block, ctx);
+    case "contact":
+      return renderContact(block, ctx);
+    case "opening_hours":
+      return renderOpeningHours(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -194,6 +199,42 @@ function renderLogos(block: NodeOfType<"logos">, ctx: RenderContext): Html {
       <div class="container">${blockHeading(block.heading, ctx)}
         <ul class="logo-row">${logos}
         </ul>
+      </div>
+    </section>`;
+}
+
+/** Indents every line after the first of a fragment written from column 0. */
+function nested(markup: Html | false, by: string): Html | false {
+  return markup && raw(markup.value.replaceAll("\n", `\n${by}`));
+}
+
+/** The site's contact details; the block holds only its heading and which parts to show. */
+function renderContact(block: NodeOfType<"contact">, ctx: RenderContext): Html {
+  const details = contactDetails(ctx.business, ctx.strings, {
+    address: block.show_address,
+    phone: block.show_phone,
+    email: block.show_email,
+    map: block.show_map,
+  });
+  return html`<section class="block contact">
+      <div class="container">${blockHeading(block.heading, ctx)}${
+        details &&
+        html`
+        ${nested(details, "        ")}`
+      }
+      </div>
+    </section>`;
+}
+
+/** The site's opening hours; the block holds only its heading. */
+function renderOpeningHours(block: NodeOfType<"opening_hours">, ctx: RenderContext): Html {
+  const table = openingHoursTable(ctx.business, ctx.strings);
+  return html`<section class="block opening-hours">
+      <div class="container">${blockHeading(block.heading, ctx)}${
+        table &&
+        html`
+        ${nested(table, "        ")}`
+      }
       </div>
     </section>`;
 }

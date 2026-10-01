@@ -40,6 +40,8 @@ export interface SiteNode {
   allow_ai_training: boolean;
   theme: string;
   nav: string;
+  /** The business the site is for: contact details and opening hours. */
+  business: string;
   pages: NodeArrayValue;
   /** ID of the home page, served at the site root. Its position in `pages` doesn't matter. */
   home_page_id: string;
@@ -244,6 +246,76 @@ export interface InternalLinkNode {
   page_id: string;
 }
 
+/** Shows the site's business details; holds none of its own. */
+export interface ContactNode {
+  id: string;
+  type: "contact";
+  heading: TextValue;
+  show_address: boolean;
+  show_phone: boolean;
+  show_email: boolean;
+  show_map: boolean;
+}
+
+/** Shows the site's opening hours; holds none of its own. */
+export interface OpeningHoursNode {
+  id: string;
+  type: "opening_hours";
+  heading: TextValue;
+}
+
+export type BusinessType =
+  | "LocalBusiness"
+  | "Bakery"
+  | "CafeOrCoffeeShop"
+  | "Restaurant"
+  | "Store"
+  | "HairSalon"
+  | "BeautySalon"
+  | "ProfessionalService"
+  | "MedicalBusiness"
+  | "SportsActivityLocation";
+
+export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+/** The business details, once per site; every text may be empty. */
+export interface BusinessNode {
+  id: string;
+  type: "business";
+  /** Empty: the site name is used. */
+  name: string;
+  street: string;
+  postal_code: string;
+  city: string;
+  /** Two-letter ISO code, e.g. `CZ`. */
+  country: string;
+  /** International form without spaces, e.g. `+420321123456`. */
+  phone: string;
+  email: string;
+  /** The business's own map listing (https), or "" to generate one from the address. */
+  map_url: string;
+  business_type: BusinessType;
+  hours_note: string;
+  show_in_footer: boolean;
+  /** Seven `opening_day` nodes, Monday first. */
+  days: NodeArrayValue;
+}
+
+export interface OpeningDayNode {
+  id: string;
+  type: "opening_day";
+  day: Weekday;
+  /** `time_range` nodes in time order; none means closed. */
+  ranges: NodeArrayValue;
+}
+
+export interface TimeRangeNode {
+  id: string;
+  type: "time_range";
+  opens: string;
+  closes: string;
+}
+
 export type AnyNode =
   | SiteNode
   | ThemeNode
@@ -266,6 +338,11 @@ export type AnyNode =
   | PersonNode
   | LogosNode
   | LogoItemNode
+  | ContactNode
+  | OpeningHoursNode
+  | BusinessNode
+  | OpeningDayNode
+  | TimeRangeNode
   | ImageNode
   | StrongNode
   | EmphasisNode

@@ -3,6 +3,7 @@ import { type Problem, validateSite } from "@static-cms/site";
 import { tick, untrack } from "svelte";
 import { goto } from "$app/navigation";
 import {
+  businessFieldElementId,
   locateMark,
   locateNode,
   pageFieldElementId,
@@ -53,6 +54,12 @@ async function showPage(pageId: string | undefined) {
 async function show(problem: Problem) {
   const doc = editor.session.doc as unknown as Doc;
   const target = settingsTarget(doc, problem.nodeId, problem.property);
+  if (target?.tab === "business") {
+    editor.settingsTab = "business";
+    await tick();
+    document.getElementById(businessFieldElementId(target.field))?.focus();
+    return;
+  }
   if (target?.tab === "site") {
     editor.settingsTab = "site";
     await tick();

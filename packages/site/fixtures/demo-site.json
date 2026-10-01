@@ -419,7 +419,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 3,
+      "schema_version": 4,
       "name": "Pekárna U Lípy",
       "lang": "cs",
       "base_url": "https://pekarna-ulipy.example",
@@ -438,12 +438,103 @@
       "allow_ai_training": true,
       "theme": "theme_1",
       "nav": "nav_1",
+      "business": "business_1",
       "pages": {
         "nodes": ["page_home", "page_contact"],
         "marks": [],
         "annotations": []
       },
       "home_page_id": "page_home"
+    },
+    "day_mon": {
+      "id": "day_mon",
+      "type": "opening_day",
+      "day": "mon",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_tue": {
+      "id": "day_tue",
+      "type": "opening_day",
+      "day": "tue",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_wed": {
+      "id": "day_wed",
+      "type": "opening_day",
+      "day": "wed",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_thu": {
+      "id": "day_thu",
+      "type": "opening_day",
+      "day": "thu",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_fri": {
+      "id": "day_fri",
+      "type": "opening_day",
+      "day": "fri",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_sat": {
+      "id": "day_sat",
+      "type": "opening_day",
+      "day": "sat",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_sun": {
+      "id": "day_sun",
+      "type": "opening_day",
+      "day": "sun",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "business_1": {
+      "id": "business_1",
+      "type": "business",
+      "name": "",
+      "street": "",
+      "postal_code": "",
+      "city": "",
+      "country": "CZ",
+      "phone": "",
+      "email": "",
+      "map_url": "",
+      "business_type": "LocalBusiness",
+      "hours_note": "",
+      "show_in_footer": true,
+      "days": {
+        "nodes": ["day_mon", "day_tue", "day_wed", "day_thu", "day_fri", "day_sat", "day_sun"],
+        "marks": [],
+        "annotations": []
+      }
     }
   }
 }

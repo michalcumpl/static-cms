@@ -298,6 +298,45 @@ img {
   width: auto;
 }
 
+.contact-details {
+  font-style: normal;
+}
+
+.contact-details p {
+  margin: 0 0 0.5rem;
+}
+
+.business-name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.hours {
+  border-collapse: collapse;
+}
+
+.hours th,
+.hours td {
+  padding: 0.2rem 1.5rem 0.2rem 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.hours th {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.hours-note {
+  margin: 0.75rem 0 0;
+}
+
+.footer-business {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
 .site-footer {
   margin-top: 2rem;
   border-top: 1px solid var(--color-secondary);
@@ -323,6 +362,10 @@ img {
 
   .gallery-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .footer-business {
+    grid-template-columns: 1fr 1fr;
   }
 
   .block {

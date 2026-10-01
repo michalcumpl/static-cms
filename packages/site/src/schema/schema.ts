@@ -25,6 +25,23 @@ export interface NodeSchema {
   properties: Record<string, PropertyDef>;
 }
 
+/** The schema.org types a business can be (business-info design.md decision 1). */
+export const BUSINESS_TYPES = [
+  "LocalBusiness",
+  "Bakery",
+  "CafeOrCoffeeShop",
+  "Restaurant",
+  "Store",
+  "HairSalon",
+  "BeautySalon",
+  "ProfessionalService",
+  "MedicalBusiness",
+  "SportsActivityLocation",
+] as const;
+
+/** The days of the week, Monday first, as `opening_day` nodes name them. */
+export const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+
 const INLINE_MARKS: readonly NodeType[] = ["strong", "emphasis", "link", "internal_link"];
 const LINK_TYPES: readonly NodeType[] = ["page_link", "external_link"];
 
@@ -36,7 +53,7 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 3 },
+      schema_version: { type: "integer", min: 1, default: 4 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
@@ -47,6 +64,7 @@ export const siteSchema = {
       allow_ai_training: { type: "boolean", default: true },
       theme: { type: "node", node_types: ["theme"] },
       nav: { type: "node", node_types: ["nav"] },
+      business: { type: "node", node_types: ["business"] },
       pages: { type: "node_array", node_types: ["page"], default_node_type: "page" },
       home_page_id: { type: "string" },
     },
@@ -101,6 +119,8 @@ export const siteSchema = {
           "gallery",
           "team",
           "logos",
+          "contact",
+          "opening_hours",
         ],
         default_node_type: "rich_text",
       },
@@ -228,6 +248,55 @@ export const siteSchema = {
       page_id: { type: "string" },
       /** An external address, or "" for none. */
       url: { type: "string" },
+    },
+  },
+  contact: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      show_address: { type: "boolean", default: true },
+      show_phone: { type: "boolean", default: true },
+      show_email: { type: "boolean", default: true },
+      show_map: { type: "boolean", default: true },
+    },
+  },
+  opening_hours: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+    },
+  },
+  business: {
+    kind: "block",
+    properties: {
+      name: { type: "string" },
+      street: { type: "string" },
+      postal_code: { type: "string" },
+      city: { type: "string" },
+      country: { type: "string", default: "CZ" },
+      phone: { type: "string" },
+      email: { type: "string" },
+      map_url: { type: "string" },
+      business_type: { type: "string", values: BUSINESS_TYPES, default: "LocalBusiness" },
+      hours_note: { type: "string" },
+      show_in_footer: { type: "boolean", default: true },
+      days: { type: "node_array", node_types: ["opening_day"] },
+    },
+  },
+  opening_day: {
+    kind: "block",
+    properties: {
+      day: { type: "string", values: WEEKDAYS },
+      ranges: { type: "node_array", node_types: ["time_range"] },
+    },
+  },
+  time_range: {
+    kind: "block",
+    properties: {
+      /** `HH:MM`, 24-hour time. */
+      opens: { type: "string" },
+      /** `HH:MM`, 24-hour time; `24:00` is midnight at the end of the day. */
+      closes: { type: "string" },
     },
   },
   image: {

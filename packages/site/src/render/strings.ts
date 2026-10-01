@@ -3,6 +3,13 @@ export interface SiteStrings {
   notFoundHeading: string;
   notFoundText: string;
   backHome: string;
+  /** Day abbreviations, Monday first. */
+  days: readonly [string, string, string, string, string, string, string];
+  closed: string;
+  showOnMap: string;
+  /** Placeholder headings of new contact and opening hours blocks. */
+  contactHeading: string;
+  hoursHeading: string;
 }
 
 const STRINGS: Record<string, SiteStrings> = {
@@ -10,11 +17,21 @@ const STRINGS: Record<string, SiteStrings> = {
     notFoundHeading: "Stránka nenalezena",
     notFoundText: "Tuto stránku jsme nenašli. Možná byla přesunuta nebo smazána.",
     backHome: "Přejít na úvodní stránku",
+    days: ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"],
+    closed: "zavřeno",
+    showOnMap: "Zobrazit na mapě",
+    contactHeading: "Kontakt",
+    hoursHeading: "Otevírací doba",
   },
   en: {
     notFoundHeading: "Page not found",
     notFoundText: "We couldn't find this page. It may have been moved or deleted.",
     backHome: "Go to the home page",
+    days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    closed: "Closed",
+    showOnMap: "Show on map",
+    contactHeading: "Contact",
+    hoursHeading: "Opening hours",
   },
 };
 

@@ -52,8 +52,8 @@ export class EditorState {
   /** Pages without a menu item. */
   readonly unlisted: EditorPage[] = $derived(this.pages.filter((p) => p.menuIndex === undefined));
   width = $state<"desktop" | "mobile">("desktop");
-  /** Which settings the details column shows: the current page's, or the whole site's. */
-  settingsTab = $state<"page" | "site">("page");
+  /** Which settings the details column shows: the current page's, the site's, or the business's. */
+  settingsTab = $state<"page" | "site" | "business">("page");
   version = $state("");
   status = $state<SaveStatus>({ kind: "idle" });
   /** Problems the server reported for the last saved (or loaded) document. */

@@ -207,9 +207,7 @@ const lastIndex = $derived(editor.menu.at(-1)?.index ?? 0);
 
 <style>
   .sidebar {
-    border-right: 1px solid #ddd;
     padding: 1rem;
-    background: #f7f7f7;
   }
 
   h2 {

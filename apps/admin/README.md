@@ -185,6 +185,16 @@ Site settings (description, favicon, share images, AI switches) store site docum
 new format with the project's next save; take a backup before deploying, and a rollback to an
 older build needs the pre-upgrade backup for projects saved since.
 
+### Upgrading: site document format 4
+
+Business details (address, phone, opening hours) store site documents in format 4. Older
+documents are upgraded the same way, with empty details, every day closed and the footer switch
+on, so sites look the same until an owner fills in the Business tab. The same backup and rollback
+notes apply.
+
+The contact block's "Show on map" is a plain link (the business's own map listing, or a Google
+Maps search for its address); published sites load nothing from Google until a visitor clicks it.
+
 ## Scripts
 
 ```sh

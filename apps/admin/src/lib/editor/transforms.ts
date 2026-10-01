@@ -1,3 +1,4 @@
+import { siteStrings } from "@static-cms/site";
 import type { Transaction } from "svedit";
 import { checkLinkAddress, type LinkAddressCheck } from "./links";
 
@@ -153,6 +154,36 @@ export function insertPerson(tr: Tr): boolean {
   return true;
 }
 
+/** Strings in the site's language, for placeholder headings of business blocks. */
+function stringsOf(tr: Tr) {
+  const site = tr.doc.nodes[tr.doc.document_id] as unknown as { lang?: string };
+  return siteStrings(site?.lang ?? "");
+}
+
+/** A contact block showing every part of the business details, with a placeholder heading. */
+export function insertContact(tr: Tr): boolean {
+  const block = tr.generate_id();
+  tr.create({
+    id: block,
+    type: "contact",
+    heading: text(stringsOf(tr).contactHeading),
+    show_address: true,
+    show_phone: true,
+    show_email: true,
+    show_map: true,
+  });
+  insertAndFocus(tr, block, "heading");
+  return true;
+}
+
+/** An opening hours block with a placeholder heading. */
+export function insertOpeningHours(tr: Tr): boolean {
+  const block = tr.generate_id();
+  tr.create({ id: block, type: "opening_hours", heading: text(stringsOf(tr).hoursHeading) });
+  insertAndFocus(tr, block, "heading");
+  return true;
+}
+
 export type BlockType =
   | "hero"
   | "rich_text"
@@ -160,7 +191,9 @@ export type BlockType =
   | "text_with_image"
   | "gallery"
   | "team"
-  | "logos";
+  | "logos"
+  | "contact"
+  | "opening_hours";
 
 export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   hero: insertHero,
@@ -170,6 +203,8 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   gallery: insertGallery,
   team: insertTeam,
   logos: insertLogos,
+  contact: insertContact,
+  opening_hours: insertOpeningHours,
 };
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
@@ -182,6 +217,8 @@ export function insertableBlocks(blocks: { type: string }[], index: number): Blo
     "gallery",
     "team",
     "logos",
+    "contact",
+    "opening_hours",
   ];
   return heroAllowed ? ["hero", ...others] : others;
 }

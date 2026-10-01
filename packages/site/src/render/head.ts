@@ -92,7 +92,61 @@ function shareImage(ctx: RenderContext, page: NodeOfType<"page">): NodeOfType<"i
   return id === undefined ? undefined : ctx.node(id, "image");
 }
 
-/** JSON-LD `WebSite` and `Organization` for the home page, when the site's address is known. */
+const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+/**
+ * The organization entry (business-info design.md decision 5): an `Organization` until the
+ * business has a street, city or phone, then the business's own type with its address, phone,
+ * email, map and opening hours. The `@id` stays the same, so the website's publisher matches.
+ */
+function organizationData(ctx: RenderContext, url: string): Record<string, unknown> {
+  const { site, business } = ctx;
+  const filled = (value: string) => value.trim() !== "";
+  const isPlace = filled(business.street) || filled(business.city) || filled(business.phone);
+  const organization: Record<string, unknown> = {
+    "@type": isPlace ? business.business_type : "Organization",
+    "@id": `${url}#organization`,
+    name: filled(business.name) ? business.name : site.name,
+    url,
+  };
+  if (site.favicon.nodes.length > 0) organization.logo = ctx.absoluteUrl("icon-512.png");
+  if (!isPlace) return organization;
+
+  const address: Record<string, string> = { "@type": "PostalAddress" };
+  if (filled(business.street)) address.streetAddress = business.street;
+  if (filled(business.postal_code)) address.postalCode = business.postal_code;
+  if (filled(business.city)) address.addressLocality = business.city;
+  if (filled(business.country)) address.addressCountry = business.country;
+  // The default country alone says nothing about where the business is.
+  if (Object.keys(address).some((key) => key !== "@type" && key !== "addressCountry")) {
+    organization.address = address;
+  }
+  if (filled(business.phone)) organization.telephone = business.phone;
+  if (filled(business.email)) organization.email = business.email;
+  if (filled(business.map_url)) organization.hasMap = business.map_url;
+
+  // One entry per distinct range, listing the days that have it, in order of first use.
+  const byRange = new Map<string, { opens: string; closes: string; days: string[] }>();
+  business.days.forEach((day, index) => {
+    for (const range of day.ranges) {
+      const key = `${range.opens}-${range.closes}`;
+      const entry = byRange.get(key) ?? { ...range, days: [] };
+      entry.days.push(DAY_NAMES[index] as string);
+      byRange.set(key, entry);
+    }
+  });
+  if (byRange.size > 0) {
+    organization.openingHoursSpecification = [...byRange.values()].map((entry) => ({
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: entry.days,
+      opens: entry.opens,
+      closes: entry.closes,
+    }));
+  }
+  return organization;
+}
+
+/** JSON-LD `WebSite` and the organization for the home page, when the site's address is known. */
 function structuredData(ctx: RenderContext): Html | undefined {
   const { site } = ctx;
   const url = ctx.canonicalUrl(ctx.homeId);
@@ -106,13 +160,7 @@ function structuredData(ctx: RenderContext): Html | undefined {
   };
   if (site.description.trim() !== "") website.description = site.description;
   website.publisher = { "@id": `${url}#organization` };
-  const organization: Record<string, unknown> = {
-    "@type": "Organization",
-    "@id": `${url}#organization`,
-    name: site.name,
-    url,
-  };
-  if (site.favicon.nodes.length > 0) organization.logo = ctx.absoluteUrl("icon-512.png");
+  const organization = organizationData(ctx, url);
   const json = JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [website, organization],

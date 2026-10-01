@@ -1,5 +1,6 @@
 import type { NodeOfType } from "../schema/index.js";
 import { renderBlock, renderLink } from "./blocks.js";
+import { contactDetails, openingHoursTable } from "./business.js";
 import type { RenderContext } from "./context.js";
 import { renderHead } from "./head.js";
 import { type Html, html, raw } from "./html.js";
@@ -68,13 +69,34 @@ function renderDocument(ctx: RenderContext, head: Html, main: Html, currentPageI
     <main>${main}
     </main>
     <footer class="site-footer">
-      <div class="container">
+      <div class="container">${footerDetails(ctx)}
         <p>© ${site.name}</p>
       </div>
     </footer>
   </body>
 </html>
 `;
+}
+
+/**
+ * The business's contact details and opening hours for the footer, when its switch is on and
+ * anything is filled in; the business name is shown when it differs from the site's.
+ */
+function footerDetails(ctx: RenderContext): Html | false {
+  const { business, strings, site } = ctx;
+  if (!business.show_in_footer) return false;
+  const name = business.name.trim() !== "" && business.name !== site.name ? business.name : "";
+  const contact = contactDetails(business, strings, undefined, name);
+  const hours = openingHoursTable(business, strings);
+  if (!contact && !hours) return false;
+  return html`
+        <div class="footer-business">${[contact, hours].map(
+          (part) =>
+            part &&
+            html`
+          ${indent(part, "          ")}`,
+        )}
+        </div>`;
 }
 
 /** Indents every line after the first; block markup is written relative to its own start. */

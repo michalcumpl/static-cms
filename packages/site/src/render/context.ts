@@ -1,5 +1,7 @@
 import { isSafeHref } from "../links.js";
 import type { AnyNode, NodeOfType, NodeType, SiteDocument, SiteNode } from "../schema/index.js";
+import { type BusinessInfo, businessInfo } from "./business.js";
+import { type SiteStrings, siteStrings } from "./strings.js";
 
 const BASE_PATH = /^\/((?!\.\.?\/)[A-Za-z0-9._~-]+\/)*$/;
 
@@ -21,6 +23,11 @@ export class RenderContext {
   readonly routes = new Map<string, PageRoute>();
   private readonly nodes: Record<string, AnyNode>;
 
+  /** The site's business details, resolved. */
+  readonly business: BusinessInfo;
+  /** Text the renderer writes itself, in the site's language. */
+  readonly strings: SiteStrings;
+
   constructor(
     doc: SiteDocument,
     readonly basePath: string,
@@ -29,6 +36,11 @@ export class RenderContext {
   ) {
     this.nodes = doc.nodes;
     this.site = this.node(doc.document_id, "site");
+    this.business = businessInfo(
+      doc.nodes as unknown as Record<string, Record<string, unknown>>,
+      this.site.business,
+    );
+    this.strings = siteStrings(this.site.lang);
     for (const pageId of this.site.pages.nodes) {
       const { slug } = this.node(pageId, "page");
       this.routes.set(

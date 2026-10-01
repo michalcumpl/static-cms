@@ -6,6 +6,7 @@ import {
   type PropertyDef,
   siteSchema,
   type TextValue,
+  WEEKDAYS,
 } from "../schema/index.js";
 import { slugify } from "../slug.js";
 import type { GenericCheck } from "./generic.js";
@@ -21,7 +22,7 @@ const MIN_TEXT_CONTRAST = 4.5;
 const MIN_SHARE_WIDTH = 600;
 /** The largest icon made from a favicon that phones show on their home screens. */
 const MIN_FAVICON_SIZE = 180;
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -170,6 +171,20 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
     }
   }
 
+  const business = site ? get(site.business, "business") : undefined;
+  if (business) checkBusiness(business, get, problems);
+  for (const block of [...all("contact"), ...all("opening_hours")]) {
+    if (business && !hasSomethingToShow(block, business, get)) {
+      const what = block.type === "contact" ? "contact block" : "opening hours block";
+      const fill = block.type === "contact" ? "business details" : "opening hours";
+      problems.warning(
+        "nothing-to-show",
+        block.id,
+        `The ${what} ${where(block.id)} has nothing to show yet; fill in the ${fill} on the Business tab.`,
+      );
+    }
+  }
+
   // Last, so that the errors owners must fix come first.
   if (site && site.description.trim() === "") {
     for (const pageId of pageIds) {
@@ -304,6 +319,140 @@ export function isValidBaseUrl(value: string): boolean {
 }
 
 /** Every page, the home page included, needs a normalized slug that no other page uses. */
+const PHONE = /^\+[1-9][0-9]{6,14}$/;
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const COUNTRY = /^[A-Z]{2}$/;
+const OPENS = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
+const CLOSES = /^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$/;
+const DAY_NAMES: Record<string, string> = {
+  mon: "Monday",
+  tue: "Tuesday",
+  wed: "Wednesday",
+  thu: "Thursday",
+  fri: "Friday",
+  sat: "Saturday",
+  sun: "Sunday",
+};
+
+/** Minutes since midnight of a valid `HH:MM` time. */
+function minutes(time: string): number {
+  const [hours = 0, mins = 0] = time.split(":").map(Number);
+  return hours * 60 + mins;
+}
+
+/** The business details and opening hours (business-info design.md decision 6). */
+function checkBusiness(
+  business: NodeOfType<"business">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  if (business.phone !== "" && !PHONE.test(business.phone)) {
+    problems.error(
+      "invalid-phone",
+      business.id,
+      `The phone number "${business.phone}" must be in international form, like +420 321 123 456.`,
+      "phone",
+    );
+  }
+  if (business.email !== "" && !EMAIL.test(business.email)) {
+    problems.error(
+      "invalid-email",
+      business.id,
+      `"${business.email}" is not an email address.`,
+      "email",
+    );
+  }
+  if (business.map_url !== "" && !/^https:\/\/[^\s]+$/.test(business.map_url)) {
+    problems.error(
+      "invalid-map-url",
+      business.id,
+      "The map address must be a link starting with https://, such as the business's Google Maps or Mapy.com listing.",
+      "map_url",
+    );
+  }
+  if (!COUNTRY.test(business.country)) {
+    problems.error(
+      "invalid-country",
+      business.id,
+      `The country must be a two-letter code, like CZ, not "${business.country}".`,
+      "country",
+    );
+  }
+  const days = business.days.nodes.map((id) => get(id, "opening_day"));
+  const inOrder =
+    days.length === WEEKDAYS.length && days.every((day, i) => day?.day === WEEKDAYS[i]);
+  if (!inOrder) {
+    problems.error(
+      "invalid-value",
+      business.id,
+      "The opening hours must list each day from Monday to Sunday once.",
+      "days",
+    );
+  }
+  for (const day of days) {
+    if (!day) continue;
+    const name = DAY_NAMES[day.day] ?? day.day;
+    let previousClose = -1;
+    for (const rangeId of day.ranges.nodes) {
+      const range = get(rangeId, "time_range");
+      if (!range) continue;
+      const opensOk = OPENS.test(range.opens);
+      const closesOk = CLOSES.test(range.closes);
+      if (!opensOk || !closesOk) {
+        const bad = opensOk ? range.closes : range.opens;
+        problems.error(
+          "invalid-value",
+          range.id,
+          `${name}'s hours: "${bad}" is not a time; use hours and minutes, like 08:30.`,
+          opensOk ? "closes" : "opens",
+        );
+        continue;
+      }
+      const opens = minutes(range.opens);
+      const closes = minutes(range.closes);
+      if (closes <= opens) {
+        problems.error(
+          "invalid-hours",
+          range.id,
+          `${name}'s hours close before they open (${range.opens}–${range.closes}).`,
+          "closes",
+        );
+      } else if (opens < previousClose) {
+        problems.error(
+          "invalid-hours",
+          range.id,
+          `${name}'s hours overlap or are out of order; each range must start after the previous one ends.`,
+          "opens",
+        );
+      }
+      previousClose = Math.max(previousClose, closes);
+    }
+  }
+}
+
+/** Whether a contact or opening hours block would show anything of the business. */
+function hasSomethingToShow(
+  block: NodeOfType<"contact"> | NodeOfType<"opening_hours">,
+  business: NodeOfType<"business">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+): boolean {
+  if (block.type === "opening_hours") {
+    const open = business.days.nodes.some(
+      (id) => (get(id, "opening_day")?.ranges.nodes.length ?? 0) > 0,
+    );
+    return open || business.hours_note.trim() !== "";
+  }
+  const filled = (value: string) => value.trim() !== "";
+  const address = filled(business.street) || filled(business.city) || filled(business.postal_code);
+  return (
+    (block.show_address && address) ||
+    (block.show_phone && filled(business.phone)) ||
+    (block.show_email && filled(business.email)) ||
+    (block.show_map &&
+      (filled(business.map_url) || filled(business.street) || filled(business.city)))
+  );
+}
+
 function checkPageSlug(
   page: NodeOfType<"page">,
   seen: Map<string, NodeOfType<"page">>,

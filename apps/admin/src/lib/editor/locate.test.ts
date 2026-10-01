@@ -146,6 +146,34 @@ describe("settingsTarget", () => {
     });
   });
 
+  it("leads business problems to the Business tab's fields", () => {
+    expect(settingsTarget(doc(), "business_1", "phone")).toEqual({
+      tab: "business",
+      field: "phone",
+    });
+    expect(settingsTarget(doc(), "business_1", "map_url")?.field).toBe("map_url");
+    expect(settingsTarget(doc(), "business_1", "days")).toEqual({
+      tab: "business",
+      field: "hours_mon",
+    });
+    expect(settingsTarget(doc(), "day_wed", undefined)).toEqual({
+      tab: "business",
+      field: "hours_wed",
+    });
+  });
+
+  it("leads a time range's problem to its day", () => {
+    const d = doc();
+    Object.assign(d.nodes, {
+      range_x: { id: "range_x", type: "time_range", opens: "12:00", closes: "08:00" },
+    });
+    (d.nodes.day_thu as unknown as { ranges: { nodes: string[] } }).ranges.nodes = ["range_x"];
+    expect(settingsTarget(d, "range_x", "closes")).toEqual({
+      tab: "business",
+      field: "hours_thu",
+    });
+  });
+
   it("is undefined for problems about other nodes or properties", () => {
     expect(settingsTarget(doc(), "hero_1", "heading")).toBeUndefined();
     expect(settingsTarget(doc(), "page_home", "blocks")).toBeUndefined();

@@ -137,10 +137,22 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
     JPEGs, `robots.txt` (AI crawlers disallowed per switch) and a `404.html` in the site's
     language.
   - A warning lists pages without any description.
-  - Later: `LocalBusiness` structured data with the contact and opening-hours blocks (from the
-    same data they show), `llms.txt`, noindex per page, a focal point for share images.
-- More blocks: opening hours, contact, call to action, testimonials, maybe a map (mind GDPR with
-  third-party embeds).
+  - Later: `llms.txt`, noindex per page, a focal point for share images.
+- **Business details, contact and opening hours blocks: done.**
+  - Change: [`business-info`](../openspec/changes/archive/2026-10-01-business-info/).
+  - **Facts once, as data:** a Business tab edits the name, address, phone (stored in
+    international form), email, map address, type of business and weekly opening hours (any
+    number of ranges per day, and a note). Document format 4.
+  - The **contact** and **opening hours** blocks only show those facts (rendered by the same code
+    on the canvas and the site), and the footer shows them on every page unless switched off.
+  - The home page's structured data becomes `LocalBusiness` (or the chosen type) with the address,
+    phone and `openingHoursSpecification`.
+  - **Map:** a "Show on map" link only, the owner's listing or a Google Maps search. No embed,
+    so nothing loads from third parties.
+  - Why data: with one document per language (Milestone 5), these facts stay identical across
+    languages and can be copied between them unchanged.
+  - Later: dated exceptions to the hours (holidays), several locations.
+- Next blocks: call to action and testimonials (`cta-and-testimonials`).
 - **Editor polish: done.** Cmd/Ctrl+A selects only the current field's text; problem messages
   name pages and never show internal IDs; problems about links inside text select the linked
   words ([`editor-polish`](../openspec/changes/archive/2026-09-30-editor-polish/)).

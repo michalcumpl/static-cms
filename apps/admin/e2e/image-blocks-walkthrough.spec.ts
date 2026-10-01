@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
-import { canvas, expect, openEditor, paths, selectText, test } from "./fixtures";
+import { blockButton, canvas, expect, openEditor, paths, selectText, test } from "./fixtures";
 
 const toolbar = (page: Page) => page.getByRole("toolbar", { name: "Editing" });
 const library = (page: Page) => page.getByRole("dialog", { name: "Images" });
@@ -27,7 +27,7 @@ async function insertBlock(page: Page, label: string) {
     .first()
     .click();
   await page.keyboard.press("End");
-  await toolbar(page).getByRole("button", { name: label, exact: true }).click();
+  await blockButton(page, label).click();
 }
 
 async function pickFromLibrary(page: Page, button: string) {

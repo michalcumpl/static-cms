@@ -1,5 +1,6 @@
 import type { Component } from "svelte";
 import { createCommandsAndKeymap } from "./commands";
+import Contact from "./nodes/Contact.svelte";
 import ExternalLink from "./nodes/ExternalLink.svelte";
 import Gallery from "./nodes/Gallery.svelte";
 import GalleryItem from "./nodes/GalleryItem.svelte";
@@ -13,6 +14,7 @@ import MarkEmphasis from "./nodes/MarkEmphasis.svelte";
 import MarkLink from "./nodes/MarkLink.svelte";
 import MarkStrong from "./nodes/MarkStrong.svelte";
 import Nav from "./nodes/Nav.svelte";
+import OpeningHours from "./nodes/OpeningHours.svelte";
 import Page from "./nodes/Page.svelte";
 import PageLink from "./nodes/PageLink.svelte";
 import Paragraph from "./nodes/Paragraph.svelte";
@@ -54,6 +56,8 @@ export const nodeComponents: Record<string, Component<any>> = {
   person: Person,
   logos: Logos,
   logo_item: LogoItem,
+  contact: Contact,
+  opening_hours: OpeningHours,
   image: Image,
   strong: MarkStrong,
   emphasis: MarkEmphasis,

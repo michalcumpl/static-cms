@@ -137,6 +137,10 @@ export async function caretAtEnd(page: Page, text: Locator): Promise<void> {
   await page.waitForTimeout(100);
 }
 
+/** A button of the left column's "Add block" section. */
+export const blockButton = (page: Page, name: string) =>
+  page.getByRole("group", { name: "Add block" }).getByRole("button", { name, exact: true });
+
 export const toolbarButton = (page: Page, name: string) =>
   page.getByRole("toolbar", { name: "Editing" }).getByRole("button", { name, exact: true });
 

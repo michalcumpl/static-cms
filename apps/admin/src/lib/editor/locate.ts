@@ -149,10 +149,40 @@ export type PageField =
 /** A field of the site settings panel. */
 export type SiteField = "name" | "description" | "favicon" | "share_image" | "share_image_alt";
 
-/** Where a problem is fixed in the settings column: a page's field, or the site's. */
+type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+/** A field of the Business tab; a day's hours lead to that day's first time field. */
+export type BusinessField =
+  | "name"
+  | "business_type"
+  | "street"
+  | "postal_code"
+  | "city"
+  | "country"
+  | "phone"
+  | "email"
+  | "map_url"
+  | "hours_note"
+  | `hours_${Weekday}`;
+
+const BUSINESS_FIELDS: readonly string[] = [
+  "name",
+  "business_type",
+  "street",
+  "postal_code",
+  "city",
+  "country",
+  "phone",
+  "email",
+  "map_url",
+  "hours_note",
+];
+
+/** Where a problem is fixed in the settings column: a page's field, the site's or the business's. */
 export type SettingsTarget =
   | { tab: "page"; pageId: string | undefined; field: PageField }
-  | { tab: "site"; field: SiteField };
+  | { tab: "site"; field: SiteField }
+  | { tab: "business"; field: BusinessField };
 
 const PAGE_FIELDS: readonly string[] = ["title", "slug", "seo_description", "share_image"];
 const SITE_FIELDS: readonly string[] = ["name", "description", "favicon", "share_image"];
@@ -182,6 +212,23 @@ export function settingsTarget(
     }
     return undefined;
   }
+  if (node?.type === "business") {
+    if (property !== undefined && BUSINESS_FIELDS.includes(property)) {
+      return { tab: "business", field: property as BusinessField };
+    }
+    return { tab: "business", field: "hours_mon" };
+  }
+  if (node?.type === "opening_day") {
+    return { tab: "business", field: `hours_${(node as unknown as { day: Weekday }).day}` };
+  }
+  if (node?.type === "time_range") {
+    const day = Object.values(doc.nodes).find(
+      (candidate) =>
+        candidate?.type === "opening_day" &&
+        (candidate as unknown as { ranges: { nodes: string[] } }).ranges.nodes.includes(nodeId),
+    ) as unknown as { day: Weekday } | undefined;
+    return day ? { tab: "business", field: `hours_${day.day}` } : undefined;
+  }
   if (node?.type !== "image") return undefined;
   const aboutAlt = property === "alt";
   const site = doc.nodes[doc.document_id] as unknown as
@@ -202,6 +249,11 @@ export function settingsTarget(
     }
   }
   return undefined;
+}
+
+/** The element ID of a Business tab field, for focusing it from elsewhere. */
+export function businessFieldElementId(field: BusinessField): string {
+  return `business-settings-${field}`;
 }
 
 /** The element ID of a site settings field, for focusing it from elsewhere. */

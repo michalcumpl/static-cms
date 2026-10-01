@@ -6,7 +6,8 @@ type RawDoc = { document_id: string; nodes: Record<string, RawNode> };
 /**
  * Upgrades a stored site document to the current schema version, one version at a time.
  * Version 2 names the home page and gives every page a slug; version 3 adds the site's
- * description, favicon, share image and AI crawler switches, and each page's share image.
+ * description, favicon, share image and AI crawler switches, and each page's share image;
+ * version 4 adds the business details, empty, with every day closed.
  * Anything that isn't a site of an older version is returned unchanged, for validation to
  * judge. The input is not modified.
  */
@@ -15,6 +16,7 @@ export function migrateSite(doc: unknown): unknown {
   let current = doc as RawDoc & Record<string, unknown>;
   if (siteOf(current)?.schema_version === 1) current = toVersion2(current);
   if (siteOf(current)?.schema_version === 2) current = toVersion3(current);
+  if (siteOf(current)?.schema_version === 3) current = toVersion4(current);
   return current;
 }
 
@@ -70,6 +72,47 @@ function toVersion3<T extends RawDoc>(doc: T): T {
       upgraded[id as string] = { ...page, share_image: { nodes: [], marks: [], annotations: [] } };
     }
   }
+  return { ...doc, nodes: upgraded };
+}
+
+const WEEK = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+const emptyList = () => ({ nodes: [], marks: [], annotations: [] });
+
+/**
+ * Version 4 adds the business node (every field empty, the footer switch on) and its seven
+ * closed days. IDs are readable and deterministic, with a suffix when one is taken.
+ */
+function toVersion4<T extends RawDoc>(doc: T): T {
+  const site = siteOf(doc) as RawNode;
+  const upgraded: Record<string, RawNode> = { ...doc.nodes };
+  const freeId = (base: string) => {
+    let id = base;
+    for (let n = 2; Object.hasOwn(upgraded, id); n++) id = `${base}_${n}`;
+    return id;
+  };
+  const dayIds = WEEK.map((day) => {
+    const id = freeId(`day_${day}`);
+    upgraded[id] = { id, type: "opening_day", day, ranges: emptyList() };
+    return id;
+  });
+  const businessId = freeId("business_1");
+  upgraded[businessId] = {
+    id: businessId,
+    type: "business",
+    name: "",
+    street: "",
+    postal_code: "",
+    city: "",
+    country: "CZ",
+    phone: "",
+    email: "",
+    map_url: "",
+    business_type: "LocalBusiness",
+    hours_note: "",
+    show_in_footer: true,
+    days: { nodes: dayIds, marks: [], annotations: [] },
+  };
+  upgraded[doc.document_id] = { ...site, schema_version: 4, business: businessId };
   return { ...doc, nodes: upgraded };
 }
 

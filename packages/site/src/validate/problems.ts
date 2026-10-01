@@ -52,7 +52,13 @@ export type ProblemCode =
   | "no-base-url"
   | "no-description"
   | "small-share-image"
-  | "small-favicon";
+  | "small-favicon"
+  | "invalid-phone"
+  | "invalid-email"
+  | "invalid-map-url"
+  | "invalid-country"
+  | "invalid-hours"
+  | "nothing-to-show";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -107,6 +113,12 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "no-description": "site",
   "small-share-image": "site",
   "small-favicon": "site",
+  "invalid-phone": "site",
+  "invalid-email": "site",
+  "invalid-map-url": "site",
+  "invalid-country": "site",
+  "invalid-hours": "site",
+  "nothing-to-show": "site",
 };
 
 export function problemCategory(code: ProblemCode): ProblemCategory {

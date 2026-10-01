@@ -1,6 +1,14 @@
 import type { Page } from "@playwright/test";
 import sharp from "sharp";
-import { canvas, expect, openEditor, paths, storeImageBlocksSite, test } from "./fixtures";
+import {
+  blockButton,
+  canvas,
+  expect,
+  openEditor,
+  paths,
+  storeImageBlocksSite,
+  test,
+} from "./fixtures";
 
 const toolbar = (page: Page) => page.getByRole("toolbar", { name: "Editing" });
 const imagePanel = (page: Page) => page.getByRole("region", { name: "Image" });
@@ -42,7 +50,7 @@ test.describe("inserting image blocks", () => {
     test(`insert a ${label} block`, async ({ page }) => {
       await openEditor(page, paths().edit("page_contact"));
       await caretInLastBlock(page);
-      await toolbar(page).getByRole("button", { name: label, exact: true }).click();
+      await blockButton(page, label).click();
       const block = canvas(page).locator(cls);
       await expect(block).toHaveCount(1);
       await expect(block.locator("h2")).toHaveText("Nadpis");

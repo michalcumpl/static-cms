@@ -47,11 +47,11 @@ describe("validateSite: site rules", () => {
     ]);
   });
 
-  it("rejects schema version 2, which must be upgraded first", () => {
+  it("rejects schema version 3, which must be upgraded first", () => {
     const { doc, nodes } = editableDemoSite();
-    nodes.site_1.schema_version = 2;
+    nodes.site_1.schema_version = 3;
     expect(errors(doc).map((p) => p.code)).toEqual(["unsupported-version"]);
-    expect(validateSite(loadFixture("demo-site-v2.json")).valid).toBe(false);
+    expect(validateSite(loadFixture("demo-site-v3.json")).valid).toBe(false);
   });
 
   it("treats the page named by home_page_id as home, wherever it is listed", () => {
