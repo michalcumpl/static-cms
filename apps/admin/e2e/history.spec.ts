@@ -68,6 +68,7 @@ test("restoring Czech brings its phone number back in English", async ({ page })
   saveSite(testDb(), projectId, owner.id, doc, site?.version ?? "");
 
   await page.goto(paths().history);
+  await page.waitForLoadState("networkidle");
   await page
     .getByRole("listitem")
     .filter({ has: page.locator(`a[href$="/history/${original}/"]`) })
@@ -94,6 +95,7 @@ test("the history marks the live and published versions", async ({ page }) => {
   await save(page);
 
   await page.goto(paths().history);
+  await page.waitForLoadState("networkidle");
   await expect(versions(page).first()).toContainText("Current");
   await expect(versions(page).nth(1)).toContainText("Live");
 });
