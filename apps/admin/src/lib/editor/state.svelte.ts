@@ -5,6 +5,7 @@ import type { ProjectPaths } from "../project-paths";
 import { createConfig } from "./config";
 import { editorSchema } from "./schema";
 import type { ChosenImage } from "./transforms";
+import type { EditorTranslations } from "./translations";
 
 export interface EditorPage {
   id: string;
@@ -82,6 +83,15 @@ export class EditorState {
   #markSaved(doc: Document): void {
     this.lastSaved = doc;
     this.#lastSavedJson = JSON.stringify(doc);
+  }
+
+  /** Every language's saved pages, for pairing pages and spotting untranslated ones. */
+  translations = $state.raw<EditorTranslations[]>([]);
+
+  /** Loads the languages' pages again (after a page was copied into another language). */
+  async reloadTranslations(): Promise<void> {
+    const response = await fetch(this.paths.translations);
+    if (response.ok) this.translations = await response.json();
   }
 
   /** Set while the editor reloads for another language, after the owner confirmed. */

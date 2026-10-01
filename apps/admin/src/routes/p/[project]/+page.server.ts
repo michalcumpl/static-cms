@@ -2,7 +2,7 @@ import { renderSite, usedMediaFiles } from "@static-cms/site";
 import { error } from "@sveltejs/kit";
 import { projectPaths } from "$lib/project-paths";
 import { getDb } from "$lib/server/app";
-import { projectLanguages, readSite } from "$lib/server/site-documents";
+import { projectLanguages, projectTranslations, readSite } from "$lib/server/site-documents";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
@@ -21,5 +21,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     pages,
     mediaFiles: usedMediaFiles(site.document),
     languages: projectLanguages(getDb(), params.project),
+    translations: projectTranslations(getDb(), params.project),
   };
 };

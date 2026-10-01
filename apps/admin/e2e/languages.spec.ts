@@ -94,7 +94,7 @@ test("switch to Čeština on the same page", async ({ page }) => {
   });
   await openEditor(page, english().edit("page_contact"));
   await expect(canvas(page).locator("h1")).toHaveText("Contact");
-  await page.getByLabel("Language").selectOption({ label: "Čeština" });
+  await page.getByLabel("Language", { exact: true }).selectOption({ label: "Čeština" });
   await expect(page).toHaveURL(/\/edit\/page_contact\/$/);
   await expect(canvas(page).locator("h1")).toHaveText("Kontakt");
 });

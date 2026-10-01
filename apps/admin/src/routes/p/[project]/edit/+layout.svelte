@@ -40,6 +40,7 @@ const editor = setEditor(
 );
 untrack(() => {
   if (data.tab) editor.settingsTab = data.tab;
+  editor.translations = data.translations;
 });
 const session = editor.session;
 

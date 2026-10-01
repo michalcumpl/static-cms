@@ -65,7 +65,12 @@ async function downloadZip() {
     <p><a href={paths.publishing}>Address, domain and history</a></p>
   </section>
 
-  <LanguagesSection projectId={data.project.id} {paths} languages={data.languages} />
+  <LanguagesSection
+    projectId={data.project.id}
+    {paths}
+    languages={data.languages}
+    translations={data.translations}
+  />
 
   <section aria-labelledby="validation">
     <h2 id="validation">Validation</h2>

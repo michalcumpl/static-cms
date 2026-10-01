@@ -1,5 +1,6 @@
 import { error, redirect } from "@sveltejs/kit";
 import type { SiteData } from "$lib/editor/state.svelte";
+import type { EditorTranslations } from "$lib/editor/translations";
 import { projectPaths } from "$lib/project-paths";
 import type { LayoutLoad } from "./$types";
 
@@ -22,14 +23,18 @@ export interface EditorLanguage {
 export const load: LayoutLoad = async ({ fetch, params, url }) => {
   const lang = url.searchParams.get("lang") ?? undefined;
   const paths = projectPaths(params.project, lang);
-  const [siteResponse, languagesResponse] = await Promise.all([
+  const [siteResponse, languagesResponse, translationsResponse] = await Promise.all([
     fetch(paths.api),
     fetch(paths.languages),
+    fetch(paths.translations),
   ]);
   if (!siteResponse.ok) error(siteResponse.status, "Could not load the site.");
   if (!languagesResponse.ok) error(languagesResponse.status, "Could not load the languages.");
   const site = (await siteResponse.json()) as SiteData;
   const languages = (await languagesResponse.json()) as EditorLanguage[];
+  const translations = translationsResponse.ok
+    ? ((await translationsResponse.json()) as EditorTranslations[])
+    : [];
 
   const key = url.searchParams.get("key");
   if (key !== null) {
@@ -51,6 +56,7 @@ export const load: LayoutLoad = async ({ fetch, params, url }) => {
   return {
     site,
     languages,
+    translations,
     lang: lang ?? primary,
     primaryLang: primary,
     tab: tab === "site" || tab === "business" ? (tab as "site" | "business") : undefined,

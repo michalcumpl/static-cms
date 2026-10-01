@@ -198,8 +198,13 @@ UI (versions are already stored).
     alternates. No redirects by browser language.
   - Publishing deploys every published language at once, with redirects per language; the preview
     shows hidden languages too; the ZIP download holds the published ones.
-- Next: **language tools** (`language-tools`): link an unpaired page to one in another language,
-  copy a page into another language, and a "not translated yet" checklist.
+- **Language tools: done** ([`language-tools`](../openspec/changes/archive/2026-10-01-language-tools/)).
+  - Page settings show the page "In other languages": its counterparts, or **Copy here** (the
+    saved page copied into that language, paired, with a unique slug, a menu item and links
+    pointed at that language's pages) and **Link to an existing page**; pages can be unlinked.
+  - The project page lists, per language, pages **not translated yet** (title, or slug except for
+    the home page, still the primary's) and the primary's pages **missing** there; the editor's
+    page list marks untranslated pages. Hints only: nothing blocks publishing.
 - Later: changing the primary language, a domain per language, machine translation (Milestone 6).
 
 ### 6. AI

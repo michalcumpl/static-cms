@@ -1,10 +1,14 @@
 import { randomUUID } from "node:crypto";
 import {
   applySharedFields,
+  copyPageInto,
   isLanguageCode,
   languageName,
   migrateSite,
   type Problem,
+  type TranslationPage,
+  translationStatus,
+  translationSummary,
   validateSite,
 } from "@static-cms/site";
 import { and, eq, sql } from "drizzle-orm";
@@ -188,6 +192,88 @@ export function languageErrors(sites: readonly LanguageSite[]): Problem[] {
         sites.length > 1 ? { ...p, message: `${languageName(site.lang)}: ${p.message}` } : p,
       ),
   );
+}
+
+export type CopyPageResult =
+  | { ok: true; pageId: string; title: string }
+  | { ok: false; reason: "not-found" | "exists" | "conflict"; message: string };
+
+/**
+ * Copies a page, as last saved in `from`, into the language `to` (language-tools design.md
+ * decision 3), saved as one new version of `to`'s document. Other languages are untouched.
+ */
+export function copyPageToLanguage(
+  db: Db,
+  projectId: string,
+  from: string,
+  pageId: string,
+  to: string,
+  userId: string | null,
+): CopyPageResult {
+  const source = readSite(db, projectId, from);
+  const target = readSite(db, projectId, to);
+  if (!source || !target || from === to) {
+    return { ok: false, reason: "not-found", message: "The project has no such language." };
+  }
+  return copyPageOnto(db, projectId, source.document, pageId, to, target, userId);
+}
+
+/**
+ * The copy itself, onto a given snapshot of the target language: saved based on the snapshot's
+ * version, so a target changed since the snapshot is a conflict and nothing is written.
+ */
+export function copyPageOnto(
+  db: Db,
+  projectId: string,
+  source: unknown,
+  pageId: string,
+  to: string,
+  target: SiteSnapshot,
+  userId: string | null,
+): CopyPageResult {
+  const copied = copyPageInto(source, pageId, target.document, () => `n${randomUUID()}`);
+  if (!copied.ok) return copied;
+  const saved = saveSite(db, projectId, userId, copied.document, target.version, to);
+  if (!saved.ok) {
+    return {
+      ok: false,
+      reason: "conflict",
+      message: `${languageName(to)} was changed meanwhile. Try again.`,
+    };
+  }
+  const page = (copied.document as { nodes: Record<string, { title?: string }> }).nodes[
+    copied.pageId
+  ];
+  return { ok: true, pageId: copied.pageId, title: page?.title ?? "" };
+}
+
+export interface LanguageTranslations {
+  lang: string;
+  name: string;
+  primary: boolean;
+  pages: TranslationPage[];
+  /** Compared with the primary: pages not translated yet, and the primary's missing pages. */
+  untranslated: TranslationPage[];
+  missing: TranslationPage[];
+}
+
+/** Every language's pages, and what each one still needs compared with the primary. */
+export function projectTranslations(db: Db, projectId: string): LanguageTranslations[] {
+  const sites = readLanguages(db, projectId, "all");
+  const primary = sites.find((site) => site.primary);
+  return sites.map((site) => {
+    const status =
+      primary && !site.primary
+        ? translationStatus(primary.document, site.document)
+        : { untranslated: [], missing: [] };
+    return {
+      lang: site.lang,
+      name: languageName(site.lang),
+      primary: site.primary,
+      pages: translationSummary(site.document),
+      ...status,
+    };
+  });
 }
 
 export type LanguageChange =

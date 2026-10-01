@@ -1,5 +1,5 @@
 <script lang="ts">
-import { LANGUAGES } from "@static-cms/site";
+import { LANGUAGES, type TranslationPage } from "@static-cms/site";
 import { invalidateAll } from "$app/navigation";
 import type { ProjectPaths } from "$lib/project-paths";
 import { projectPaths } from "$lib/project-paths";
@@ -13,11 +13,26 @@ interface Language {
   published: boolean;
 }
 
+interface Translations {
+  lang: string;
+  untranslated: TranslationPage[];
+  missing: TranslationPage[];
+}
+
 let {
   projectId,
   paths,
   languages,
-}: { projectId: string; paths: ProjectPaths; languages: Language[] } = $props();
+  translations = [],
+}: {
+  projectId: string;
+  paths: ProjectPaths;
+  languages: Language[];
+  translations?: Translations[];
+} = $props();
+
+const primaryLanguage = $derived(languages.find((l) => l.primary));
+const todo = (lang: string) => translations.find((t) => t.lang === lang);
 
 const available = $derived(
   Object.entries(LANGUAGES).filter(([lang]) => !languages.some((l) => l.lang === lang)),
@@ -89,6 +104,30 @@ async function confirmRemove(event: SubmitEvent) {
           <button type="button" class="danger" onclick={() => askRemove(language)}>
             Remove<span class="visually-hidden"> {language.name}</span>
           </button>
+          {@const left = todo(language.lang)}
+          {#if left}
+            <div class="todo">
+              {#if left.untranslated.length === 0 && left.missing.length === 0}
+                <span class="done">Fully translated</span>
+              {:else}
+                <span class="todo-title">To translate:</span>
+                <ul>
+                  {#each left.untranslated as page (page.key)}
+                    <li>
+                      <a href={projectPaths(projectId, language.lang).edit(page.pageId)}>{page.title}</a>
+                      <span class="why">not translated yet</span>
+                    </li>
+                  {/each}
+                  {#each left.missing as page (page.key)}
+                    <li>
+                      <a href={projectPaths(projectId).edit(page.pageId)}>{page.title}</a>
+                      <span class="why">missing: copy it from {primaryLanguage?.name}</span>
+                    </li>
+                  {/each}
+                </ul>
+              {/if}
+            </div>
+          {/if}
         {/if}
       </li>
     {/each}
@@ -142,6 +181,26 @@ async function confirmRemove(event: SubmitEvent) {
     flex-wrap: wrap;
     gap: 0.75rem;
     align-items: center;
+  }
+
+  .todo {
+    flex-basis: 100%;
+    padding-left: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .todo ul {
+    margin: 0.2rem 0 0;
+    padding-left: 1.2rem;
+  }
+
+  .todo-title,
+  .why {
+    color: #555;
+  }
+
+  .done {
+    color: #1a6b2f;
   }
 
   .name {

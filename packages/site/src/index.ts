@@ -54,6 +54,14 @@ export * from "./schema/index.js";
 export { slugify, uniqueSlug } from "./slug.js";
 export { graphemeLength } from "./text.js";
 export {
+  type CopyResult,
+  copyPageInto,
+  type TranslationPage,
+  type TranslationStatus,
+  translationStatus,
+  translationSummary,
+} from "./translations.js";
+export {
   type Problem,
   type ProblemCategory,
   type ProblemCode,

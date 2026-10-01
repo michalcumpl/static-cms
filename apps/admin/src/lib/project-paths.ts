@@ -15,6 +15,10 @@ export interface ProjectPaths {
   languages: string;
   /** PATCH publishes or hides a language, DELETE removes it. */
   language(lang: string): string;
+  /** POST copies a page into a language. */
+  copyPage(lang: string): string;
+  /** GET every language's pages and what each still needs. */
+  translations: string;
   /** GET the library, POST an upload. */
   library: string;
   media(name: string): string;
@@ -48,6 +52,8 @@ export function projectPaths(projectId: string, lang?: string): ProjectPaths {
     exportInput: `/api/projects/${projectId}/export-input`,
     languages: `/api/projects/${projectId}/languages`,
     language: (lang) => `/api/projects/${projectId}/languages/${encodeURIComponent(lang)}`,
+    copyPage: (lang) => `/api/projects/${projectId}/languages/${encodeURIComponent(lang)}/pages`,
+    translations: `/api/projects/${projectId}/translations`,
     library: `/api/projects/${projectId}/media`,
     publishing: `${base}publishing/`,
     publish: `/api/projects/${projectId}/publish`,

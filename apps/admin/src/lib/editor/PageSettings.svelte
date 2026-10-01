@@ -3,6 +3,7 @@ import { slugify } from "@static-cms/site";
 import { goto } from "$app/navigation";
 import ImageSetting from "./ImageSetting.svelte";
 import { pageFieldElementId } from "./locate";
+import PageLanguages from "./PageLanguages.svelte";
 import {
   cannotDelete,
   countLinksTo,
@@ -112,6 +113,8 @@ function confirmDelete(event: SubmitEvent) {
         ? "The site's share image is used."
         : "No share image: links to this page are shared with their title and description only."}
     />
+
+    <PageLanguages {editor} pageId={node.id} />
 
     <label class="check">
       <input

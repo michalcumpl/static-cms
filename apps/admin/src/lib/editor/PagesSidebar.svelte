@@ -9,6 +9,7 @@ import {
   showInMenu,
 } from "./pages";
 import type { EditorPage, EditorState, MenuEntry } from "./state.svelte";
+import { isUntranslated } from "./translations";
 
 let { editor, projectName }: { editor: EditorState; projectName: string } = $props();
 
@@ -93,6 +94,18 @@ function dropOnUnlisted(event: DragEvent) {
 
 const menuName = (entry: MenuEntry) => (entry.kind === "page" ? entry.page.title : entry.label);
 const lastIndex = $derived(editor.menu.at(-1)?.index ?? 0);
+
+// Outside the primary language: pages whose title (or slug) is still the primary's.
+const primaryPages = $derived(
+  editor.lang === editor.primaryLang ? undefined : editor.translations.find((l) => l.primary),
+);
+function untranslated(page: EditorPage): boolean {
+  if (!primaryPages) return false;
+  const node = editor.session.get(page.id) as
+    | { id: string; title: string; slug: string; translation_key: string }
+    | undefined;
+  return node ? isUntranslated(primaryPages, node, page.isHome) : false;
+}
 </script>
 
 {#snippet pageLink(page: EditorPage)}
@@ -100,6 +113,7 @@ const lastIndex = $derived(editor.menu.at(-1)?.index ?? 0);
     {page.title}
   </a>
   {#if page.isHome}<span class="home">Home</span>{/if}
+  {#if untranslated(page)}<span class="untranslated">Not translated</span>{/if}
 {/snippet}
 
 <aside class="sidebar" aria-label="Pages" data-history-keys>
@@ -241,6 +255,15 @@ const lastIndex = $derived(editor.menu.at(-1)?.index ?? 0);
 
   .name a[aria-current="page"] {
     font-weight: 700;
+  }
+
+  .untranslated {
+    margin-left: 0.3rem;
+    padding: 0 0.3rem;
+    border-radius: 0.3rem;
+    background: #fff1d6;
+    color: #8a5a00;
+    font-size: 0.75rem;
   }
 
   .home {
