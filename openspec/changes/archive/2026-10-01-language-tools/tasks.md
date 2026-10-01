@@ -23,5 +23,5 @@
 ## 4. Docs and checks
 
 - [x] 4.1 Update the roadmap (Milestone 5 done: languages and language tools). Verify by reading it.
-- [ ] 4.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
-- [ ] 4.3 Manual check by the owner: on the project with English, copy a page across, link a page built in English, follow the checklist, publish, and check the switcher on the copied and linked pages. Record the outcome in design.md.
+- [x] 4.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
+- [x] 4.3 Manual check by the owner: on the project with English, copy a page across, link a page built in English, follow the checklist, publish, and check the switcher on the copied and linked pages. Record the outcome in design.md.

@@ -95,6 +95,10 @@ The editor calls it only when the session isn't dirty; otherwise it asks to save
   - unlink;
   - the project page lists untranslated and missing pages, and the sidebar mark goes away when the title and slug change.
 
+## Real publish (task 4.3, 2026-10-01)
+
+On the project with English, the owner copied a page across, linked a page built in English, followed the checklist, published, and checked the language switcher on the copied and linked pages. They reported that it works.
+
 ## Risks / Trade-offs
 
 - **[The "not translated" rule is a heuristic]** A page whose title is genuinely the same in both languages, such as "Galerie" in Czech and German, stays marked. → It's a hint only, never a blocker. A per-page "translated" switch can come later if owners ask.
