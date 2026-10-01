@@ -87,6 +87,11 @@ ORIGIN=https://admin.example.cz BODY_SIZE_LIMIT=25M SMTP_URL=… MAIL_FROM=… n
   It is pinned to 12.x because 13.0.3 crashes on Node 22.13.
 - `sharp` (image processing) ships prebuilt binaries for Linux x64/arm64 with glibc; on Alpine
   (musl) or other platforms see sharp's installation docs.
+- The site fonts are read at runtime from the `@fontsource-variable/*` packages in
+  `node_modules`: they are runtime dependencies of the app (a `--prod` install keeps them), not
+  bundled into `dist/`, so deploy `node_modules` with the build. The server serves them at
+  `/fonts/<name>`; published sites get their own copies under
+  `assets/fonts/`, with each font's licence (SIL Open Font Licence).
 - For email that arrives, set up SPF and DKIM for `MAIL_FROM`'s domain with your SMTP provider.
   If a sign-in email goes missing, `pnpm admin create-user` refuses existing accounts, but the
   person can request a new link at `/signin`.
@@ -104,6 +109,8 @@ ORIGIN=https://admin.example.cz BODY_SIZE_LIMIT=25M SMTP_URL=… MAIL_FROM=… n
 - Every upload is turned upright and stripped of all metadata (EXIF, GPS, XMP, IPTC). It is
   stored as a metadata-free original, which is never published, plus WebP variants 480, 960,
   1600 and 2400 px wide (never wider than the image). Pages use the variants through `srcset`.
+- The site's logo (Theme tab) is shown in the header at most 3rem tall, through the same WebP
+  variants; transparent PNG logos stay transparent.
 - Images appear in the hero, text with image, gallery, team and partner logos blocks. Each block
   gives its images a fixed shape (gallery 4:3, round portraits, logos at most 4rem tall) and a
   fixed `sizes`; the library's multi-select adds several photos, people or logos at once.
@@ -200,7 +207,7 @@ Maps search for its address); published sites load nothing from Google until a v
 A project's primary language is the one it was created in (Czech for every project from before
 languages). Others are added on the project page as a copy of the primary, hidden until
 published; the editor switches between them at the top of the left column (`?lang=en`). The
-theme, favicon, default share image, AI switches and business details are shared: edited in the
+theme, logo, favicon, default share image, AI switches and business details are shared: edited in the
 primary and applied to every other language whenever it is read, never stored in it. Removing a
 language deletes its document and versions; hiding keeps them.
 
@@ -218,6 +225,14 @@ each is the whole document as JSON, typically 20–200 KB.
 Pages gain a `translation_key` (their own ID for existing pages) in format 5, upgraded on read as
 before. The database migration adds `projects.primary_lang`, `site_documents.published` and the
 `publish_documents` table, and fills it in for earlier publishes so their redirects keep working.
+
+### Upgrading: site document format 6
+
+The theme stores fonts from a fixed list (`lora`, `system-sans`, …) instead of CSS font lists in
+format 6, and the site gains a logo and the switch "show the site name in the header". Documents
+are upgraded on read as before: a serif font list becomes `georgia` and anything else
+`system-sans`, which render the same fonts as before; there is no logo and the name is shown. The
+same backup and rollback notes apply.
 
 ## Scripts
 

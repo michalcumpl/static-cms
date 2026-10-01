@@ -59,6 +59,9 @@ export const load: LayoutLoad = async ({ fetch, params, url }) => {
     translations,
     lang: lang ?? primary,
     primaryLang: primary,
-    tab: tab === "site" || tab === "business" ? (tab as "site" | "business") : undefined,
+    tab:
+      tab === "site" || tab === "business" || tab === "theme"
+        ? (tab as "site" | "business" | "theme")
+        : undefined,
   };
 };

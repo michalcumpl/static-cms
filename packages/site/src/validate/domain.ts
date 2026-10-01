@@ -1,3 +1,4 @@
+import { isFontId } from "../fonts.js";
 import { isSafeHref } from "../links.js";
 import {
   isNodeType,
@@ -9,20 +10,19 @@ import {
   WEEKDAYS,
 } from "../schema/index.js";
 import { slugify } from "../slug.js";
+import { CONTRAST_PAIRS, contrastRatio, MIN_CONTRAST, type ThemeColor } from "../themes.js";
 import type { GenericCheck } from "./generic.js";
 import type { Problems } from "./problems.js";
 
 const LANGUAGE = /^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$/;
 const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
-const FONT_STACK = /^[A-Za-z0-9 ,'"-]+$/;
 const CSS_LENGTH = /^(0|\d+(\.\d+)?(px|rem|em|%|ch|vw))$/;
 const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
-const MIN_TEXT_CONTRAST = 4.5;
 /** Link previews show share images narrower than this blurred. */
 const MIN_SHARE_WIDTH = 600;
 /** The largest icon made from a favicon that phones show on their home screens. */
 const MIN_FAVICON_SIZE = 180;
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -96,11 +96,12 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
     if (theme) checkTheme(theme, problems);
   }
 
-  // A logo's image is described by the logo's name, and the favicon is never shown as an
-  // image on a page, so neither needs alt text of its own.
+  // A logo item's image is described by the logo's name, the site's logo by the site name, and
+  // the favicon is never shown as an image on a page, so none needs alt text of its own.
   const undescribed = new Set(all("logo_item").flatMap((logo) => logo.image.nodes));
   const favicon = site?.favicon.nodes ?? [];
   for (const id of favicon) undescribed.add(id);
+  for (const id of site?.logo.nodes ?? []) undescribed.add(id);
   // Share images are named by what they're for, not by where they are.
   const subjects = new Map<string, string>();
   for (const id of site?.share_image.nodes ?? []) subjects.set(id, "The site's share image");
@@ -303,6 +304,17 @@ function checkSiteNode(site: NodeOfType<"site">, problems: Problems): void {
       site.id,
       "The site can have only one share image.",
       "share_image",
+    );
+  }
+  if (site.logo.nodes.length > 1) {
+    problems.error("too-many-items", site.id, "The site can have only one logo.", "logo");
+  }
+  if (!site.header_show_name && site.logo.nodes.length === 0) {
+    problems.warning(
+      "name-without-logo",
+      site.id,
+      "The site name is set to be hidden next to the logo, but there is no logo, so the header shows the name until a logo is chosen.",
+      "header_show_name",
     );
   }
 }
@@ -794,24 +806,33 @@ function checkHref(nodeId: string, property: string, href: string, problems: Pro
   }
 }
 
+const COLOR_NAMES: Record<ThemeColor, string> = {
+  color_primary: "The primary colour",
+  color_secondary: "The secondary colour",
+  color_background: "The background colour",
+  color_text: "The text colour",
+};
+
+const FONT_ROLES = { font_heading: "heading font", font_body: "body font" } as const;
+const LENGTH_NAMES = { radius: "corner radius", content_width: "content width" } as const;
+
 function checkTheme(theme: NodeOfType<"theme">, problems: Problems): void {
-  const colors = ["color_primary", "color_secondary", "color_background", "color_text"] as const;
-  for (const prop of colors) {
+  for (const prop of Object.keys(COLOR_NAMES) as ThemeColor[]) {
     if (!HEX_COLOR.test(theme[prop])) {
       problems.error(
         "invalid-color",
         theme.id,
-        `${prop} must be a hex color like #1a2b3c (is "${theme[prop]}").`,
+        `${COLOR_NAMES[prop]} must be a hex colour like #1a2b3c (is "${theme[prop]}").`,
         prop,
       );
     }
   }
   for (const prop of ["font_heading", "font_body"] as const) {
-    if (!FONT_STACK.test(theme[prop])) {
+    if (!isFontId(theme[prop])) {
       problems.error(
         "invalid-theme-value",
         theme.id,
-        `${prop} must be a font-family list (letters, digits, spaces, commas, quotes).`,
+        `The ${FONT_ROLES[prop]} must be chosen from the list of fonts (is "${theme[prop]}").`,
         prop,
       );
     }
@@ -821,38 +842,24 @@ function checkTheme(theme: NodeOfType<"theme">, problems: Problems): void {
       problems.error(
         "invalid-theme-value",
         theme.id,
-        `${prop} must be a CSS length like 0.5rem or 64rem (is "${theme[prop]}").`,
+        `The ${LENGTH_NAMES[prop]} must be a length like 0.5rem or 64rem (is "${theme[prop]}").`,
         prop,
       );
     }
   }
-  if (HEX_COLOR.test(theme.color_text) && HEX_COLOR.test(theme.color_background)) {
-    const ratio = contrastRatio(theme.color_text, theme.color_background);
-    if (ratio < MIN_TEXT_CONTRAST) {
+  for (const pair of CONTRAST_PAIRS) {
+    const [fg, bg] = [theme[pair.fg], theme[pair.bg]];
+    if (!HEX_COLOR.test(fg) || !HEX_COLOR.test(bg)) continue;
+    const ratio = contrastRatio(fg, bg);
+    if (ratio < MIN_CONTRAST) {
       problems.error(
         "low-contrast",
         theme.id,
-        `Text on background has contrast ${ratio.toFixed(2)}:1; WCAG AA needs at least ${MIN_TEXT_CONTRAST}:1.`,
-        "color_text",
+        `${pair.name}: contrast ${ratio.toFixed(2)}:1 is too low to read; at least ${MIN_CONTRAST}:1 is needed (WCAG AA).`,
+        pair.fg,
       );
     }
   }
-}
-
-/** WCAG 2.x contrast ratio between two hex colors. */
-export function contrastRatio(a: string, b: string): number {
-  const [la, lb] = [luminance(a), luminance(b)];
-  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
-}
-
-function luminance(hex: string): number {
-  const h = hex.slice(1);
-  const full = h.length === 3 ? [...h].map((c) => c + c).join("") : h;
-  const [r = 0, g = 0, b = 0] = [0, 2, 4].map((i) => {
-    const c = Number.parseInt(full.slice(i, i + 2), 16) / 255;
-    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
 function isBlank(text: TextValue): boolean {

@@ -34,6 +34,10 @@ export interface SiteNode {
   favicon: NodeArrayValue;
   /** At most one image: the share image of pages without their own. */
   share_image: NodeArrayValue;
+  /** At most one image, shown in the header; described by the site name. */
+  logo: NodeArrayValue;
+  /** Whether the header shows the site name next to the logo. Without a logo it always does. */
+  header_show_name: boolean;
   /** Whether AI search and answer crawlers may read the site (robots.txt). */
   allow_ai_search: boolean;
   /** Whether AI training crawlers may read the site (robots.txt). */
@@ -54,7 +58,9 @@ export interface ThemeNode {
   color_secondary: string;
   color_background: string;
   color_text: string;
+  /** A font catalog ID, such as `lora` (see `FONTS`). */
   font_heading: string;
+  /** A font catalog ID, such as `system-sans`. */
   font_body: string;
   radius: string;
   content_width: string;

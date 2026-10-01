@@ -178,11 +178,36 @@ const BUSINESS_FIELDS: readonly string[] = [
   "hours_note",
 ];
 
+/** A field of the Theme tab. */
+export type ThemeField =
+  | "color_primary"
+  | "color_secondary"
+  | "color_background"
+  | "color_text"
+  | "font_heading"
+  | "font_body"
+  | "radius"
+  | "content_width"
+  | "logo"
+  | "header_show_name";
+
+const THEME_FIELDS: readonly string[] = [
+  "color_primary",
+  "color_secondary",
+  "color_background",
+  "color_text",
+  "font_heading",
+  "font_body",
+  "radius",
+  "content_width",
+];
+
 /** Where a problem is fixed in the settings column: a page's field, the site's or the business's. */
 export type SettingsTarget =
   | { tab: "page"; pageId: string | undefined; field: PageField }
   | { tab: "site"; field: SiteField }
-  | { tab: "business"; field: BusinessField };
+  | { tab: "business"; field: BusinessField }
+  | { tab: "theme"; field: ThemeField };
 
 const PAGE_FIELDS: readonly string[] = ["title", "slug", "seo_description", "share_image"];
 const SITE_FIELDS: readonly string[] = ["name", "description", "favicon", "share_image"];
@@ -191,10 +216,11 @@ const SITE_FIELDS: readonly string[] = ["name", "description", "favicon", "share
  * The settings field a problem is about:
  * - a page's title, slug, SEO description or share image, on that page;
  * - the site's home page, shown on the current page (so `pageId` is undefined);
- * - the site's name, description, favicon or share image.
+ * - the site's name, description, favicon or share image;
+ * - the theme's colours, fonts and lengths, the logo and the header switch (Theme tab).
  *
  * Problems of a share image itself lead to its description (alt text) when they're about the
- * description, and to the image otherwise; problems of the favicon's image lead to the favicon.
+ * description, and to the image otherwise; problems of the favicon's or logo's image lead to it.
  */
 export function settingsTarget(
   doc: Doc,
@@ -205,8 +231,17 @@ export function settingsTarget(
   if (node?.type === "page" && property !== undefined && PAGE_FIELDS.includes(property)) {
     return { tab: "page", pageId: nodeId, field: property as PageField };
   }
+  if (node?.type === "theme") {
+    // A contrast problem names the pair's first colour; anything else its own field.
+    const field =
+      property !== undefined && THEME_FIELDS.includes(property) ? property : "color_primary";
+    return { tab: "theme", field: field as ThemeField };
+  }
   if (node?.type === "site") {
     if (property === "home_page_id") return { tab: "page", pageId: undefined, field: "home" };
+    if (property === "logo" || property === "header_show_name") {
+      return { tab: "theme", field: property };
+    }
     if (property !== undefined && SITE_FIELDS.includes(property)) {
       return { tab: "site", field: property as SiteField };
     }
@@ -235,10 +270,12 @@ export function settingsTarget(
     | {
         favicon?: { nodes: string[] };
         share_image?: { nodes: string[] };
+        logo?: { nodes: string[] };
         pages?: { nodes: string[] };
       }
     | undefined;
   if (site?.favicon?.nodes.includes(nodeId)) return { tab: "site", field: "favicon" };
+  if (site?.logo?.nodes.includes(nodeId)) return { tab: "theme", field: "logo" };
   if (site?.share_image?.nodes.includes(nodeId)) {
     return { tab: "site", field: aboutAlt ? "share_image_alt" : "share_image" };
   }
@@ -254,6 +291,11 @@ export function settingsTarget(
 /** The element ID of a Business tab field, for focusing it from elsewhere. */
 export function businessFieldElementId(field: BusinessField): string {
   return `business-settings-${field}`;
+}
+
+/** The element ID of a Theme tab field, for focusing it from elsewhere. */
+export function themeFieldElementId(field: ThemeField): string {
+  return `theme-settings-${field}`;
 }
 
 /** The element ID of a site settings field, for focusing it from elsewhere. */

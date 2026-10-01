@@ -1,4 +1,4 @@
-import { shareFile } from "../images.js";
+import { imageFile, shareFile, srcVariant } from "../images.js";
 import type { NodeOfType } from "../schema/index.js";
 import type { RenderContext } from "./context.js";
 import { type Html, html, raw } from "./html.js";
@@ -126,7 +126,14 @@ function organizationData(ctx: RenderContext, url: string): Record<string, unkno
     name: filled(business.name) ? business.name : site.name,
     url,
   };
-  if (site.favicon.nodes.length > 0) organization.logo = ctx.absoluteUrl("icon-512.png");
+  const logoId = site.logo.nodes[0];
+  const logo = logoId === undefined ? undefined : ctx.node(logoId, "image");
+  const logoWidth = logo ? srcVariant(logo.width) : undefined;
+  if (logo && logoWidth !== undefined) {
+    organization.logo = ctx.absoluteUrl(`assets/images/${imageFile(logo.src, logoWidth)}`);
+  } else if (site.favicon.nodes.length > 0) {
+    organization.logo = ctx.absoluteUrl("icon-512.png");
+  }
   if (!isPlace) return organization;
 
   const address: Record<string, string> = { "@type": "PostalAddress" };

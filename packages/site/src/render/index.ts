@@ -7,7 +7,7 @@ import { siteCss } from "./css.js";
 import { renderNotFound, renderPage } from "./page.js";
 
 export { isValidBasePath, type SiteLanguage } from "./context.js";
-export { type SiteCssOptions, siteCss } from "./css.js";
+export { fontPreviewCss, type SiteCssOptions, siteCss } from "./css.js";
 
 export interface RenderOptions {
   /** Where the site is served from: `/` (default) or a subdirectory like `/preview/`. */

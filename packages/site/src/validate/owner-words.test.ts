@@ -116,6 +116,14 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
     actions: { nodes: [], marks: [], annotations: [] },
   };
   nodes.page_contact.blocks.nodes.push("testimonials_1", "cta_1");
+  Object.assign(nodes.theme_1, {
+    color_primary: "#7fb2e5",
+    color_secondary: "#3b3b3b",
+    color_text: "zelená",
+    font_heading: "Georgia, serif",
+    content_width: "wide",
+  });
+  nodes.site_1.header_show_name = false;
   return { doc, nodes };
 }
 
@@ -150,6 +158,10 @@ describe("owners' words", () => {
       "invalid-hours",
       "nothing-to-show",
       "empty-quote",
+      "invalid-color",
+      "invalid-theme-value",
+      "low-contrast",
+      "name-without-logo",
     ]) {
       expect(codes, code).toContain(code);
     }
@@ -159,7 +171,7 @@ describe("owners' words", () => {
     for (const id of ids) expect(message, `node ID ${id}`).not.toMatch(new RegExp(`\\b${id}\\b`));
     expect(message).not.toMatch(/\bslug\b/i);
     expect(message).not.toMatch(
-      /\b(seo_description|page_id|image_side|home_page_id|href|src|map_url|postal_code|hours_note|show_in_footer|business_type|opens|closes|time_range|opening_day)\b/,
+      /\b(seo_description|page_id|image_side|home_page_id|href|src|map_url|postal_code|hours_note|show_in_footer|business_type|opens|closes|time_range|opening_day|color_primary|color_secondary|color_background|color_text|font_heading|font_body|content_width|header_show_name|logo_item)\b/,
     );
   });
 });

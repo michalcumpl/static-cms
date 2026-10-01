@@ -8,6 +8,7 @@ import {
 } from "@static-cms/site";
 import { error } from "@sveltejs/kit";
 import { contentType } from "$lib/content-type";
+import { siteFonts } from "./fonts";
 import { mediaFiles } from "./media";
 
 export interface PreviewOptions {
@@ -22,8 +23,8 @@ export interface PreviewOptions {
 }
 
 /**
- * Exports the given languages with their images and answers with the file at `path`: the page,
- * the stylesheet or an image, the site's own not-found page for addresses it doesn't have, and
+ * Exports the given languages with their images and fonts and answers with the file at `path`:
+ * the page, the stylesheet, an image or a font, the site's own not-found page for addresses it doesn't have, and
  * the problems instead when the documents can't be exported.
  */
 export async function servePreview(
@@ -34,7 +35,8 @@ export async function servePreview(
   if (languages.length === 0) error(404, "Not found");
   const names = new Set(languages.flatMap((language) => usedMediaFiles(language.document)));
   const media = await mediaFiles(projectId, [...names]);
-  const result = exportSiteLanguages(languages, media, { basePath: options.basePath });
+  const fonts = await siteFonts(languages);
+  const result = exportSiteLanguages(languages, media, { basePath: options.basePath, fonts });
   if (!result.ok) return problemsPage(result.problems, options.editHref);
   const path = options.path.replace(/\/+$/, "");
   const file = path === "" ? "index.html" : result.files.has(path) ? path : `${path}/index.html`;

@@ -48,6 +48,22 @@ describe("usedMediaFiles", () => {
     ]);
   });
 
+  it("lists the site logo's variants", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.page_home.blocks.nodes = nodes.page_home.blocks.nodes.filter(
+      (id: string) => id !== "hero_1",
+    );
+    nodes.brand = {
+      ...nodes.image_hero,
+      id: "brand",
+      src: "pekarna-7c1e",
+      width: 600,
+      height: 200,
+    };
+    nodes.site_1.logo = { nodes: ["brand"], marks: [], annotations: [] };
+    expect(usedMediaFiles(doc)).toEqual(["pekarna-7c1e-480.webp", "pekarna-7c1e-600.webp"]);
+  });
+
   it("lists the favicon's icons and share files instead of their variants", () => {
     const { doc, nodes } = editableDemoSite();
     const image = (id: string, src: string) => ({

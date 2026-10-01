@@ -45,6 +45,23 @@ describe("applySharedFields", () => {
     expect(result.nodes.logo.src).toBe("logo-1a2b");
   });
 
+  it("takes the logo and header switch, keeping the site name", () => {
+    const { cs, en } = languages();
+    cs.nodes.site_1.name = "Pekárna Kolín";
+    cs.nodes.brand = image("brand", "pekarna-7c1e");
+    cs.nodes.site_1.logo = list(["brand"]);
+    cs.nodes.site_1.header_show_name = false;
+    en.nodes.site_1.name = "Kolín Bakery";
+    en.nodes.old_brand = image("old_brand", "old-1234");
+    en.nodes.site_1.logo = list(["old_brand"]);
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.site_1).toMatchObject({ name: "Kolín Bakery", header_show_name: false });
+    expect(result.nodes.site_1.logo.nodes).toEqual(["brand"]);
+    expect(result.nodes.brand.src).toBe("pekarna-7c1e");
+    expect(result.nodes.old_brand).toBeUndefined();
+    expect(validateSite(result).problems).toEqual([]);
+  });
+
   it("takes the business data and hours, keeping the name and hours note", () => {
     const { cs, en } = languages();
     Object.assign(cs.nodes.business_1, {

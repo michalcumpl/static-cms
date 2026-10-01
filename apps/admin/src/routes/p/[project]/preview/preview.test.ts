@@ -53,6 +53,19 @@ describe("/p/[project]/preview/[...path]", () => {
     },
   );
 
+  it("serves the theme's webfonts beside the stylesheet", async () => {
+    save((doc) => {
+      doc.nodes.theme_1.font_heading = "lora";
+    });
+    const css = await (await get("assets/style.css")).text();
+    expect(css).toContain(`src: url("fonts/lora-latin-normal.woff2")`);
+    const font = await get("assets/fonts/lora-latin-normal.woff2");
+    expect(font.status).toBe(200);
+    expect(font.headers.get("content-type")).toBe("font/woff2");
+    expect(new TextDecoder().decode((await font.arrayBuffer()).slice(0, 4))).toBe("wOF2");
+    expect((await get("assets/fonts/lora-OFL.txt")).status).toBe(200);
+  });
+
   it("serves the stylesheet and the project's images with their types", async () => {
     const css = await get("assets/style.css");
     expect(css.headers.get("content-type")).toBe("text/css; charset=utf-8");

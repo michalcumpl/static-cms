@@ -67,7 +67,7 @@ Built `/edit/` in the admin app, where the owner edits the site on the page itse
 ### 3. A real website
 
 Carried over from Milestone 2: page management, navigation targets, theme editing and image
-upload are all out of M2 on purpose. Storage, pages and media are done; the rest follows.
+upload are all out of M2 on purpose. All of them are done.
 
 - **Storage and accounts: done.**
   - Change: [`workspace-storage`](../openspec/changes/archive/2026-09-29-workspace-storage/).
@@ -164,6 +164,25 @@ upload are all out of M2 on purpose. Storage, pages and media are done; the rest
   name pages and never show internal IDs; problems about links inside text select the linked
   words ([`editor-polish`](../openspec/changes/archive/2026-09-30-editor-polish/)).
 
+- **Theme and branding: done** ([`theme-and-branding`](../openspec/changes/archive/2026-10-01-theme-and-branding/)).
+  - **A Theme tab** next to Page, Site and Business: five presets (applied in one undoable step,
+    keeping the content width), four colours with a picker and a hex field, the contrast of each
+    colour pair the site uses, heading and body fonts, corners and content width as named
+    choices, and the logo with "Show the site name next to the logo". The canvas restyles live.
+  - **Fonts from a catalog, self-hosted:** eight open-licence webfonts with Czech, Slovak and
+    Polish characters (Inter, Work Sans, Source Sans 3, Nunito, Lora, Source Serif 4,
+    Merriweather, Playfair Display) and two system fonts. Published sites ship the WOFF2 files and
+    licences under `assets/fonts/`; nothing loads from Google. The files come from pinned
+    `@fontsource-variable/*` packages; `@static-cms/site` only knows the catalog. Document format 6
+    stores catalog IDs instead of CSS font lists.
+  - **Logo in the header** (WebP variants, at most 3rem tall), with the name next to it or alone;
+    alone, the site name of each language describes it. It is the organisation's logo in the
+    structured data.
+  - **Contrast is enforced for four pairs:** text and links/buttons, each on the background and
+    on panels (the secondary colour), at 4.5:1.
+  - The theme, logo and header switch are shared by every language.
+  - Known limits: no SVG logos (the library refuses SVG), no custom font uploads, four colour
+    roles only.
 - **Version history: done** ([`version-history`](../openspec/changes/archive/2026-10-01-version-history/)).
   A History page per project and language lists every saved version (who, when; marked current,
   live, published, restored from); any version can be previewed read-only and restored, which

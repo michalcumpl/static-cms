@@ -6,7 +6,7 @@ import BlockInserter from "$lib/editor/BlockInserter.svelte";
 import BlockPanel from "$lib/editor/BlockPanel.svelte";
 import BusinessSettings from "$lib/editor/BusinessSettings.svelte";
 import ButtonPanel from "$lib/editor/ButtonPanel.svelte";
-import { canvasCss } from "$lib/editor/canvas-css";
+import { canvasCss, canvasTheme } from "$lib/editor/canvas-css";
 import ImagePanel from "$lib/editor/ImagePanel.svelte";
 import LanguageSwitcher from "$lib/editor/LanguageSwitcher.svelte";
 import LinkDialog from "$lib/editor/LinkDialog.svelte";
@@ -17,6 +17,7 @@ import ProblemsPanel from "$lib/editor/ProblemsPanel.svelte";
 import SiteSettings from "$lib/editor/SiteSettings.svelte";
 import { EditorState, setEditor } from "$lib/editor/state.svelte";
 import { insertItem, isFixedList, itemInsertionPoint } from "$lib/editor/structure";
+import ThemeSettings from "$lib/editor/ThemeSettings.svelte";
 import PublishButton from "$lib/PublishButton.svelte";
 import { projectPaths } from "$lib/project-paths";
 import type { LayoutProps } from "./$types";
@@ -84,15 +85,25 @@ keyMapper.push_scope(
   }),
 );
 
-// The theme can't change in M2, so the canvas stylesheet is built once.
+// The canvas follows the theme as it's edited (theme-and-branding design.md decision 8). The
+// theme node is only replaced when it changes, so typing in a page doesn't rebuild the CSS.
+const themeNode = $derived.by(() => {
+  const site = session.doc.nodes[session.doc.document_id] as { theme?: string } | undefined;
+  return site?.theme ? session.doc.nodes[site.theme] : undefined;
+});
+let shownTheme = canvasTheme(untrack(() => session.doc));
+const canvasStyle = document.createElement("style");
 $effect(() => {
-  const style = document.createElement("style");
-  style.textContent = canvasCss(
+  document.head.append(canvasStyle);
+  return () => canvasStyle.remove();
+});
+$effect(() => {
+  void themeNode;
+  shownTheme = canvasTheme(
     untrack(() => session.doc),
-    ".site-canvas",
+    shownTheme,
   );
-  document.head.append(style);
-  return () => style.remove();
+  canvasStyle.textContent = canvasCss(shownTheme, ".site-canvas");
 });
 
 // The current page can disappear: deleted, or its addition undone. Show home instead.
@@ -261,6 +272,16 @@ const statusText = $derived.by(() => {
       >
         Business
       </button>
+      <button
+        type="button"
+        role="tab"
+        id="settings-tab-theme"
+        aria-selected={editor.settingsTab === "theme"}
+        aria-controls="settings-panel"
+        onclick={() => (editor.settingsTab = "theme")}
+      >
+        Theme
+      </button>
     </div>
     <div
       id="settings-panel"
@@ -271,8 +292,10 @@ const statusText = $derived.by(() => {
         <PageSettings {editor} />
       {:else if editor.settingsTab === "site"}
         <SiteSettings {editor} />
-      {:else}
+      {:else if editor.settingsTab === "business"}
         <BusinessSettings {editor} />
+      {:else}
+        <ThemeSettings {editor} />
       {/if}
     </div>
     <ButtonPanel {editor} />
@@ -314,7 +337,7 @@ const statusText = $derived.by(() => {
 
   .tabs button {
     flex: 1;
-    padding: 0.5rem;
+    padding: 0.5rem 0.25rem;
     border: 0;
     border-bottom: 3px solid transparent;
     background: none;

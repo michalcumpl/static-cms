@@ -145,5 +145,24 @@ describe("the ZIP download's input", () => {
     ).json();
     expect(published.languages.map((l: { lang: string }) => l.lang)).toEqual(["cs", "en"]);
     expect(published.mediaFiles).toEqual(["hero.png-320.webp"]);
+    expect(published.fontFiles).toEqual([]);
+  });
+
+  it("names the primary's font files", async () => {
+    const { db, projectId, owner } = project();
+    const site = readSite(db, projectId);
+    if (!site) throw new Error("no site");
+    const doc = structuredClone(site.document) as Doc;
+    doc.nodes.theme_1.font_heading = "lora";
+    saveSite(db, projectId, owner.id, doc, site.version);
+    addEnglish(true);
+    const input = await (
+      await exportInput(project().event(path("export-input"), project().owner) as never)
+    ).json();
+    expect(input.fontFiles).toEqual([
+      "lora-OFL.txt",
+      "lora-latin-ext-normal.woff2",
+      "lora-latin-normal.woff2",
+    ]);
   });
 });

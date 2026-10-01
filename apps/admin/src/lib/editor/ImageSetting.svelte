@@ -1,8 +1,9 @@
 <script lang="ts">
 import { type ImageSlot, setSlotImage, setSlotImageAlt, slotImage } from "./site";
 import type { EditorState } from "./state.svelte";
+import type { ChosenImage } from "./transforms";
 
-// One image of the site or a page outside its blocks: the favicon or a share image
+// One image of the site or a page outside its blocks: the favicon, a share image or the logo
 // (seo-and-metadata design.md decision 8).
 let {
   editor,
@@ -14,6 +15,7 @@ let {
   square = false,
   emptyNote = "",
   locked = false,
+  set = (image) => setSlotImage(editor.session, ownerId, slot, image),
 }: {
   editor: EditorState;
   ownerId: string;
@@ -29,13 +31,15 @@ let {
   emptyNote?: string;
   /** The image itself can't be changed here (shared, edited in the primary language). */
   locked?: boolean;
+  /** Puts the chosen image into the slot, or empties it; `setSlotImage` unless given. */
+  set?: (image: ChosenImage | undefined) => void;
 } = $props();
 
 const image = $derived(slotImage(editor.session.doc, ownerId, slot));
 
 async function choose() {
   const chosen = await editor.openLibrary(image?.src);
-  if (chosen) setSlotImage(editor.session, ownerId, slot, chosen);
+  if (chosen) set(chosen);
 }
 </script>
 
@@ -65,7 +69,7 @@ async function choose() {
         type="button"
         aria-describedby="{fieldId}-label"
         disabled={locked}
-        onclick={() => setSlotImage(editor.session, ownerId, slot, undefined)}
+        onclick={() => set(undefined)}
       >
         Remove
       </button>

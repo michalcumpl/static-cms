@@ -60,8 +60,8 @@ type LooseNode = { type?: unknown; [key: string]: unknown };
 
 /**
  * The media files a document's exported site uses, each once, sorted: every variant of every
- * image reachable from the site root through its pages, the favicon's icons, and the share
- * file of the site's and each page's share image. Works on any document, valid or not, so
+ * image reachable from the site root through its pages and its logo, the favicon's icons, and
+ * the share file of the site's and each page's share image. Works on any document, valid or not, so
  * callers can use it to decide which files to supply.
  */
 export function usedMediaFiles(doc: unknown): string[] {

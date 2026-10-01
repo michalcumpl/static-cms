@@ -1,4 +1,5 @@
 import { zipSync } from "fflate";
+import { usedFontFiles } from "../fonts.js";
 import {
   ICON_SIZES,
   type IconSize,
@@ -31,6 +32,11 @@ export interface ExportOptions {
   assetBasePath?: string;
   /** The site's languages, for alternates and the language switcher (see `exportSiteLanguages`). */
   languages?: readonly SiteLanguage[];
+  /**
+   * Font files and licences keyed by name (see `usedFontFiles`). Needed when the theme uses a
+   * webfont; only the files it uses are included.
+   */
+  fonts?: ReadonlyMap<string, Uint8Array>;
 }
 
 /** A permanent redirect from one address path to another, both starting with `/`. */
@@ -132,6 +138,16 @@ export function exportSite(
   for (const id of shareImages) {
     const image = imageOf(doc, id);
     if (image) place(image, shareFile(image.src), `assets/images/${shareFile(image.src)}`);
+  }
+  for (const name of usedFontFiles(doc)) {
+    const bytes = options.fonts?.get(name);
+    if (bytes) {
+      files.push([`assets/fonts/${name}`, bytes]);
+    } else {
+      missing.push(
+        problem("error", "missing-media", site.theme, `No file was supplied for ${name}.`),
+      );
+    }
   }
   if (missing.length > 0) return { ok: false, problems: missing };
 

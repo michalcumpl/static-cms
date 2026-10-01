@@ -1,8 +1,19 @@
+import {
+  FONT_IDS,
+  FONTS,
+  type FontDef,
+  type FontFile,
+  fontFile,
+  fontStack,
+  isFontId,
+  themeFontFiles,
+  UNICODE_RANGES,
+} from "../fonts.js";
 import type { NodeOfType } from "../schema/index.js";
 
 /**
  * Theme tokens as CSS custom properties. Validation restricts every value to hex colors,
- * font-family lists and CSS lengths, so they cannot break out of the declaration.
+ * catalog fonts and CSS lengths, so they cannot break out of the declaration.
  */
 export function themeCss(theme: NodeOfType<"theme">): string {
   return `:root {
@@ -10,12 +21,50 @@ export function themeCss(theme: NodeOfType<"theme">): string {
   --color-secondary: ${theme.color_secondary};
   --color-background: ${theme.color_background};
   --color-text: ${theme.color_text};
-  --font-heading: ${theme.font_heading};
-  --font-body: ${theme.font_body};
+  --font-heading: ${themeFont(theme.font_heading)};
+  --font-body: ${themeFont(theme.font_body)};
   --radius: ${theme.radius};
   --content-width: ${theme.content_width};
 }
 `;
+}
+
+/** A catalog font's stack; anything else (only in unvalidated drafts) gets the system font. */
+const themeFont = (id: string) => fontStack(isFontId(id) ? id : "system-sans");
+
+/**
+ * One `@font-face` rule per font file the theme needs, each loading from `urlPrefix` (relative
+ * to the stylesheet: `fonts/` for a published site). Empty for system fonts.
+ */
+export function fontFaceCss(theme: NodeOfType<"theme">, urlPrefix = "fonts/"): string {
+  return fontFaces(themeFontFiles(theme), urlPrefix);
+}
+
+/**
+ * `@font-face` rules for the upright latin file of every webfont, so a font picker can show each
+ * font in its own face. Browsers only fetch a face when text uses it.
+ */
+export function fontPreviewCss(urlPrefix: string): string {
+  const files = FONT_IDS.filter((id) => (FONTS[id] as FontDef).package).map((id) =>
+    fontFile(id, "latin", "normal"),
+  );
+  return fontFaces(files, urlPrefix);
+}
+
+function fontFaces(files: readonly FontFile[], urlPrefix: string): string {
+  return files
+    .map(
+      (file) => `@font-face {
+  font-family: "${(FONTS[file.font] as FontDef).family}";
+  font-style: ${file.style};
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("${urlPrefix}${file.name}") format("woff2");
+  unicode-range: ${UNICODE_RANGES[file.subset]};
+}
+`,
+    )
+    .join("\n");
 }
 
 /** Layout and block styles. Every themeable value comes from a custom property. */
@@ -101,11 +150,24 @@ img {
 }
 
 .site-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 100%;
   color: var(--color-text);
   font-family: var(--font-heading);
   font-size: 1.4rem;
   font-weight: 700;
   text-decoration: none;
+}
+
+.site-logo {
+  display: block;
+  width: auto;
+  height: 2.5rem;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .site-nav ul {
@@ -440,6 +502,10 @@ img {
 }
 
 @container (min-width: 48rem) {
+  .site-logo {
+    height: 3rem;
+  }
+
   .hero-inner {
     grid-template-columns: 3fr 2fr;
   }
@@ -477,11 +543,19 @@ export interface SiteCssOptions {
    * rule only inside it. Without a scope the stylesheet is for a published page.
    */
   scope?: string;
+  /** Where the `@font-face` rules load font files from; `fonts/`, beside the stylesheet, by default. */
+  fontUrlPrefix?: string;
 }
 
+/**
+ * The site stylesheet: `@font-face` rules for the theme's webfonts, the theme's custom
+ * properties, then the base styles. Font rules are never scoped; they declare fonts, not styles.
+ */
 export function siteCss(theme: NodeOfType<"theme">, options: SiteCssOptions = {}): string {
+  const fonts = fontFaceCss(theme, options.fontUrlPrefix);
   const css = `${themeCss(theme)}\n${BASE_CSS}`;
-  return options.scope ? scopeCss(css, options.scope) : css;
+  const styles = options.scope ? scopeCss(css, options.scope) : css;
+  return fonts ? `${fonts}\n${styles}` : styles;
 }
 
 const DOCUMENT_SELECTORS = new Set([":root", "html", "body"]);

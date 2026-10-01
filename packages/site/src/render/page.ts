@@ -1,5 +1,5 @@
 import type { NodeOfType } from "../schema/index.js";
-import { renderBlock, renderLink } from "./blocks.js";
+import { renderBlock, renderImage, renderLink, siteLogoSizes } from "./blocks.js";
 import { contactDetails, openingHoursTable } from "./business.js";
 import type { RenderContext } from "./context.js";
 import { renderHead } from "./head.js";
@@ -51,6 +51,24 @@ export function renderNotFound(ctx: RenderContext): Html {
   return renderDocument(ctx, renderHead(ctx, { title, description: "" }), main);
 }
 
+/**
+ * What the header's link home shows: the name; the logo, described by nothing because the name
+ * follows; or the logo alone, described by the name. Without a logo it is always the name.
+ */
+function siteBrand(ctx: RenderContext): Html {
+  const { site } = ctx;
+  const logoId = site.logo.nodes[0];
+  const logo = logoId === undefined ? undefined : ctx.node(logoId, "image");
+  if (!logo) return html`${site.name}`;
+  const image = renderImage(logo, ctx, {
+    lazy: false,
+    sizes: siteLogoSizes(logo),
+    className: "site-logo",
+    alt: site.header_show_name ? "" : site.name,
+  });
+  return site.header_show_name ? html`${image}<span>${site.name}</span>` : image;
+}
+
 /** A whole HTML document: head, the site's header and menu, `main`, and the footer. */
 function renderDocument(
   ctx: RenderContext,
@@ -68,7 +86,7 @@ function renderDocument(
   <body>
     <header class="site-header">
       <div class="container">
-        <a class="site-name" href="${ctx.pageUrl(ctx.homeId)}">${site.name}</a>
+        <a class="site-name" href="${ctx.pageUrl(ctx.homeId)}">${siteBrand(ctx)}</a>
         <nav class="site-nav"${ctx.multilingual && html` aria-label="${ctx.strings.menuLabel}"`}>
           <ul>${ctx.children(nav.items).map(
             (item) => html`

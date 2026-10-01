@@ -71,6 +71,7 @@ describe("problem categories", () => {
       "invalid-color": true,
       "invalid-theme-value": true,
       "low-contrast": true,
+      "name-without-logo": true,
       "invalid-base-path": true,
       "invalid-site-url": true,
       "invalid-redirect": true,

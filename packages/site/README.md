@@ -19,7 +19,7 @@ naming the root `site` node, and a flat `nodes` map. `siteSchema` is the schema 
 format, so the editor can pass it to Svedit unchanged. The TypeScript types (`SiteDocument`,
 `SiteNode`, `PageNode`, …) describe the same shape.
 
-- `site`: name, language, optional base URL, theme, navigation, and pages (the first is the home page).
+- `site`: name, language, optional base URL, logo, theme, navigation, and pages (the first is the home page).
 - `page`: title, slug (empty for the home page), SEO description, and blocks.
 - Blocks: `hero` (first block only), `rich_text` (paragraphs, subheadings, bullet lists), `services`.
 - Links to pages use the page's node ID (`page_link`, `internal_link`), so they survive slug changes.
@@ -58,6 +58,12 @@ if (exported.ok) {
   from a subdirectory or a preview route. It must start and end with `/`.
 - **Media.** The caller supplies image bytes; the package never touches the filesystem.
   Export includes only images the site uses and fails with `missing-media` if one is missing.
+- **Fonts.** A theme's fonts are IDs from `FONTS` (eight open-licence webfonts and two system
+  fonts), not CSS lists. The package knows the catalog but holds no font files: `usedFontFiles(doc)`
+  names the WOFF2 files and licences a site needs, and the caller passes their bytes as
+  `exportSite(doc, media, { fonts })`. They come from the `@fontsource-variable/*` packages
+  (`fontPackagePath(name)`); export places them under `assets/fonts/` and fails with
+  `missing-media` if one is missing. System fonts need none.
 - **Output.** `index.html`, `<slug>/index.html`, `assets/style.css`, `assets/images/<src>`,
   and `sitemap.xml` when the site has a base URL. Rendering and ZIP output are byte-identical
   for the same input.

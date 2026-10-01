@@ -100,6 +100,33 @@ describe("uploadImage", () => {
     );
   });
 
+  it("keeps a transparent PNG logo transparent in its variants", async () => {
+    // A 600 × 200 logo: transparent, with an opaque dark mark on its left third.
+    const mark = await sharp({
+      create: { width: 200, height: 200, channels: 4, background: "#1f5a8aff" },
+    })
+      .png()
+      .toBuffer();
+    const logo = await sharp({
+      create: { width: 600, height: 200, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    })
+      .composite([{ input: mark, left: 0, top: 0 }])
+      .png()
+      .toBuffer();
+    const result = await upload("logo.png", new Uint8Array(logo));
+    if (!result.ok) throw new Error(result.message);
+    const bytes = await mediaFile(projectId, `${result.media.key}-480.webp`, root);
+    if (!bytes) throw new Error("no 480 variant");
+    expect(await sharp(bytes).metadata()).toMatchObject({ format: "webp", hasAlpha: true });
+    const { data, info } = await sharp(bytes)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const alphaAt = (x: number, y: number) => data[(y * info.width + x) * info.channels + 3];
+    expect(alphaAt(400, 80)).toBe(0);
+    expect(alphaAt(40, 80)).toBe(255);
+  });
+
   it("refuses an SVG disguised as a PNG, a PDF and garbage", async () => {
     const svg = new TextEncoder().encode(
       '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><script>alert(1)</script></svg>',

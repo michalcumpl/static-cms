@@ -159,6 +159,22 @@ describe("structured data", () => {
     });
   });
 
+  it("prefers the site's logo over the favicon as the organization's logo", () => {
+    const { doc, nodes } = metadataSite();
+    nodes.brand = {
+      ...nodes.image_logo,
+      id: "brand",
+      src: "pekarna-7c1e",
+      width: 600,
+      height: 200,
+    };
+    nodes.site_1.logo = list(["brand"]);
+    const data = structuredData(render(doc, { siteUrl: "https://pekarna.cz" }).home) as {
+      "@graph": Record<string, unknown>[];
+    };
+    expect(data["@graph"][1]?.logo).toBe("https://pekarna.cz/assets/images/pekarna-7c1e-600.webp");
+  });
+
   it("leaves out the description and logo when the site has none", () => {
     const { doc } = editableDemoSite();
     const data = structuredData(render(doc, { siteUrl: "https://anideti.cz" }).home) as {

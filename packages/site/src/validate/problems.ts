@@ -44,6 +44,7 @@ export type ProblemCode =
   | "invalid-color"
   | "invalid-theme-value"
   | "low-contrast"
+  | "name-without-logo"
   // Render and export options
   | "invalid-base-path"
   | "invalid-site-url"
@@ -107,6 +108,7 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "invalid-color": "site",
   "invalid-theme-value": "site",
   "low-contrast": "site",
+  "name-without-logo": "site",
   "invalid-base-path": "site",
   "invalid-site-url": "site",
   "invalid-redirect": "site",

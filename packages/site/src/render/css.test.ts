@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { editableDemoSite } from "../test/fixtures.js";
 import { RenderContext } from "./context.js";
-import { BASE_CSS, siteCss, themeCss } from "./css.js";
+import { BASE_CSS, fontFaceCss, fontPreviewCss, siteCss, themeCss } from "./css.js";
 import { renderSite } from "./index.js";
 
 function render(primary: string) {
@@ -35,6 +35,62 @@ describe("theme stylesheet", () => {
     expect(b.pages.map((p) => p.html)).toEqual(a.pages.map((p) => p.html));
     expect(b.css).not.toBe(a.css);
     expect(b.css.replace("#1f5a8a", "#8a4b1f")).toBe(a.css);
+  });
+
+  it("writes a webfont's family before its fallback", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.theme_1.font_heading = "lora";
+    const result = renderSite(doc);
+    if (!result.ok) throw new Error("render failed");
+    expect(result.site.css).toContain(`--font-heading: "Lora", Georgia, 'Times New Roman', serif;`);
+  });
+
+  it("loads webfonts with @font-face, leaving the HTML unchanged", () => {
+    const { doc, nodes } = editableDemoSite();
+    const system = renderSite(doc);
+    nodes.theme_1.font_body = "inter";
+    const inter = renderSite(doc);
+    if (!system.ok || !inter.ok) throw new Error("render failed");
+    expect(inter.site.pages.map((p) => p.html)).toEqual(system.site.pages.map((p) => p.html));
+    expect(system.site.css).not.toContain("@font-face");
+    const sources = [...inter.site.css.matchAll(/src: url\("([^"]+)"\)/g)].map((m) => m[1]);
+    expect(sources).toEqual([
+      "fonts/inter-latin-normal.woff2",
+      "fonts/inter-latin-italic.woff2",
+      "fonts/inter-latin-ext-normal.woff2",
+      "fonts/inter-latin-ext-italic.woff2",
+    ]);
+    expect(inter.site.css).toMatch(/^@font-face \{/);
+  });
+
+  it("writes one complete rule per font file", () => {
+    const { nodes } = editableDemoSite();
+    const theme = { ...nodes.theme_1, font_heading: "inter", font_body: "inter" };
+    expect(fontFaceCss(theme).split("\n\n")[0]).toBe(`@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("fonts/inter-latin-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}`);
+  });
+
+  it("loads fonts from another place, unscoped, for the editor canvas", () => {
+    const { nodes } = editableDemoSite();
+    const theme = { ...nodes.theme_1, font_heading: "lora" };
+    const css = siteCss(theme, { scope: ".site-canvas", fontUrlPrefix: "/fonts/" });
+    expect(css).toMatch(/^@font-face \{\n {2}font-family: "Lora";/);
+    expect(css).toContain(`src: url("/fonts/lora-latin-normal.woff2")`);
+    expect(css).not.toContain(".site-canvas @font-face");
+  });
+
+  it("previews every webfont with its upright latin file", () => {
+    const css = fontPreviewCss("/fonts/");
+    const sources = [...css.matchAll(/src: url\("([^"]+)"\)/g)].map((m) => m[1]);
+    expect(sources).toHaveLength(8);
+    for (const source of sources) expect(source).toMatch(/^\/fonts\/[a-z-]+-latin-normal\.woff2$/);
+    expect(css).toContain('font-family: "Playfair Display";');
   });
 
   it("takes every themeable value in the base styles from custom properties", () => {
@@ -102,6 +158,7 @@ describe("scoped stylesheet", () => {
 
   it("scopes rules inside the container query", () => {
     const css = siteCss(theme(), { scope: ".site-canvas" });
-    expect(css).toMatch(/@container \(min-width: 48rem\) \{\s*\.site-canvas \.hero-inner \{/);
+    expect(css).toMatch(/@container \(min-width: 48rem\) \{\s*\.site-canvas \.site-logo \{/);
+    expect(css).toMatch(/\n {2}\.site-canvas \.hero-inner \{/);
   });
 });

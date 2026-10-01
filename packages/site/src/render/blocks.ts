@@ -345,6 +345,18 @@ export const IMAGE_SIZES = {
   testimonial: "4rem",
 } as const;
 
+/** The height the stylesheet gives the site's logo in the header on wide screens. */
+const SITE_LOGO_HEIGHT = "3rem";
+
+/**
+ * The site logo's `sizes`: its width at the header's logo height. It depends on the image's
+ * shape only, so the theme still never changes the HTML.
+ */
+export function siteLogoSizes(image: { width: number; height: number }): string {
+  const ratio = image.height > 0 ? Number((image.width / image.height).toFixed(2)) : 1;
+  return `calc(${SITE_LOGO_HEIGHT} * ${ratio})`;
+}
+
 /**
  * An image as `<img>` over its WebP variants. `sizes` comes from the block, never the theme,
  * so theme changes leave the HTML alone.
@@ -352,9 +364,9 @@ export const IMAGE_SIZES = {
 export function renderImage(
   image: NodeOfType<"image">,
   ctx: RenderContext,
-  options: { lazy: boolean; sizes: string; className?: string },
+  options: { lazy: boolean; sizes: string; className?: string; alt?: string },
 ): Html {
-  const alt = image.decorative ? "" : image.alt;
+  const alt = options.alt ?? (image.decorative ? "" : image.alt);
   const file = (w: number) => ctx.url(`assets/images/${imageFile(image.src, w)}`);
   const srcset = imageVariants(image.width)
     .map((w) => `${file(w)} ${w}w`)

@@ -25,9 +25,9 @@ const idsOf = (value: unknown): string[] => {
 };
 
 /**
- * `other` with the primary's shared fields: the theme, favicon, default share image (keeping
- * its own description while it describes the same image), AI crawler switches, and the
- * business data with its opening hours. Everything else stays `other`'s. Nodes `other` no
+ * `other` with the primary's shared fields: the theme, favicon, logo and header switch, default
+ * share image (keeping its own description while it describes the same image), AI crawler
+ * switches, and the business data with its opening hours. Everything else stays `other`'s. Nodes `other` no
  * longer references are dropped. Neither input is modified.
  */
 export function applySharedFields<T>(primary: T, other: T): T {
@@ -47,10 +47,14 @@ export function applySharedFields<T>(primary: T, other: T): T {
   site.allow_ai_search = pSite.allow_ai_search;
   site.allow_ai_training = pSite.allow_ai_training;
 
-  // Favicon: the primary's image nodes.
-  for (const id of idsOf(oSite.favicon)) delete nodes[id];
-  for (const id of idsOf(pSite.favicon)) if (p.nodes[id]) nodes[id] = { ...p.nodes[id] };
-  site.favicon = list(idsOf(pSite.favicon));
+  // Favicon and logo: the primary's image nodes. The logo is described by the site name,
+  // which stays this language's.
+  for (const slot of ["favicon", "logo"] as const) {
+    for (const id of idsOf(oSite[slot])) delete nodes[id];
+    for (const id of idsOf(pSite[slot])) if (p.nodes[id]) nodes[id] = { ...p.nodes[id] };
+    site[slot] = list(idsOf(pSite[slot]));
+  }
+  site.header_show_name = pSite.header_show_name;
 
   // Default share image: the primary's image; the description stays per language while it
   // describes the same image, and is the primary's otherwise.

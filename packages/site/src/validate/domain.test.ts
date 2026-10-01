@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { editableDemoSite, type LooseNodes, loadFixture } from "../test/fixtures.js";
-import { contrastRatio } from "./domain.js";
+import { contrastRatio } from "../themes.js";
 import { validateSite } from "./index.js";
 
 function errors(input: unknown) {
@@ -48,11 +48,11 @@ describe("validateSite: site rules", () => {
     ]);
   });
 
-  it("rejects schema version 4, which must be upgraded first", () => {
+  it("rejects schema version 5, which must be upgraded first", () => {
     const { doc, nodes } = editableDemoSite();
-    nodes.site_1.schema_version = 4;
+    nodes.site_1.schema_version = 5;
     expect(errors(doc).map((p) => p.code)).toEqual(["unsupported-version"]);
-    expect(validateSite(loadFixture("demo-site-v4.json")).valid).toBe(false);
+    expect(validateSite(loadFixture("demo-site-v5.json")).valid).toBe(false);
   });
 
   it("reports two pages with the same translation key, naming both", () => {
@@ -310,13 +310,15 @@ describe("validateSite: site rules", () => {
     const { doc, nodes } = editableDemoSite();
     nodes.theme_1.color_text = "#999999";
     nodes.theme_1.color_background = "#ffffff";
-    const [problem, ...rest] = errors(doc);
+    const [problem, onPanels, ...rest] = errors(doc);
     expect(rest).toEqual([]);
     expect(problem).toMatchObject({ code: "low-contrast", nodeId: "theme_1" });
-    expect(problem?.message).toContain("2.85:1");
+    expect(problem?.message).toMatch(/^Text on background: contrast 2\.85:1/);
+    // Grey text is just as hard to read on the paler panels.
+    expect(onPanels?.message).toMatch(/^Text on panels: /);
   });
 
-  it("requires hex colors and safe CSS values in the theme", () => {
+  it("requires hex colors, catalog fonts and safe CSS lengths in the theme", () => {
     const { doc, nodes } = editableDemoSite();
     nodes.theme_1.color_primary = "red";
     nodes.theme_1.radius = "1rem; } body { display: none";
@@ -326,6 +328,111 @@ describe("validateSite: site rules", () => {
       ["invalid-theme-value", "font_body"],
       ["invalid-theme-value", "radius"],
     ]);
+  });
+
+  it("reports an unknown font", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.theme_1.font_heading = "comic-sans";
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({
+        code: "invalid-theme-value",
+        property: "font_heading",
+        message: expect.stringContaining("heading font must be chosen from the list of fonts"),
+      }),
+    ]);
+  });
+
+  it("reports a font list instead of a catalog font", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.theme_1.font_body = "Georgia, serif";
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({
+        code: "invalid-theme-value",
+        property: "font_body",
+        message: expect.stringContaining("body font must be chosen from the list of fonts"),
+      }),
+    ]);
+  });
+
+  it("accepts system fonts", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.theme_1.font_heading = "georgia";
+    nodes.theme_1.font_body = "system-sans";
+    expect(errors(doc)).toEqual([]);
+  });
+
+  it("reports pale links and buttons on the background", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.theme_1.color_primary = "#7fb2e5";
+    nodes.theme_1.color_background = "#ffffff";
+    nodes.theme_1.color_secondary = "#ffffff";
+    const found = errors(doc);
+    expect(found.map((p) => [p.code, p.property])).toEqual([
+      ["low-contrast", "color_primary"],
+      ["low-contrast", "color_primary"],
+    ]);
+    expect(found[0]?.message).toMatch(/^Links and buttons: contrast 2\.23:1/);
+    expect(found[1]?.message).toMatch(/^Links and buttons on panels: /);
+  });
+
+  it("reports text on a dark secondary colour", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.theme_1.color_text = "#1a1a1a";
+    nodes.theme_1.color_secondary = "#3b3b3b";
+    const found = errors(doc).filter((p) => p.message.startsWith("Text on panels"));
+    expect(found).toEqual([
+      expect.objectContaining({ code: "low-contrast", nodeId: "theme_1", property: "color_text" }),
+    ]);
+  });
+
+  it("finds no contrast problem when every pair passes", () => {
+    const { doc, nodes } = editableDemoSite();
+    Object.assign(nodes.theme_1, {
+      color_primary: "#1f5a8a",
+      color_secondary: "#e8eef4",
+      color_background: "#ffffff",
+      color_text: "#1a1a1a",
+    });
+    expect(validateSite(doc).problems.filter((p) => p.code === "low-contrast")).toEqual([]);
+  });
+
+  it("allows one logo, described by the site name", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.logo_img = { ...nodes.image_hero, id: "logo_img", alt: "", decorative: false };
+    nodes.site_1.logo.nodes = ["logo_img"];
+    expect(validateSite(doc).problems).toEqual([]);
+    nodes.logo_img_2 = { ...nodes.logo_img, id: "logo_img_2" };
+    nodes.site_1.logo.nodes.push("logo_img_2");
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({ code: "too-many-items", nodeId: "site_1", property: "logo" }),
+    ]);
+  });
+
+  it("warns when the name is hidden but there is no logo", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.site_1.header_show_name = false;
+    const result = validateSite(doc);
+    expect(result.valid).toBe(true);
+    expect(result.problems).toEqual([
+      expect.objectContaining({
+        code: "name-without-logo",
+        severity: "warning",
+        property: "header_show_name",
+      }),
+    ]);
+    nodes.logo_img = { ...nodes.image_hero, id: "logo_img" };
+    nodes.site_1.logo.nodes = ["logo_img"];
+    expect(validateSite(doc).problems).toEqual([]);
+  });
+
+  it("finds no theme problem in the fixtures", () => {
+    for (const name of ["demo-site.json", "starter-site.json", "image-blocks-site.json"]) {
+      const problems = validateSite(loadFixture(name)).problems;
+      expect(
+        problems.filter((p) => p.nodeId === "theme_1"),
+        name,
+      ).toEqual([]);
+    }
   });
 
   it("reports several problems in one result", () => {

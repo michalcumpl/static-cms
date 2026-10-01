@@ -1,5 +1,8 @@
 import { imageFile, imageVariants, srcVariant } from "@static-cms/site";
 
+/** A file of the site fonts, the same for every project (`GET /fonts/[name]`). */
+export const fontPath = (name: string) => `/fonts/${encodeURIComponent(name)}`;
+
 /** Every URL of a project, in one place (design.md decision 6). */
 export interface ProjectPaths {
   overview: string;

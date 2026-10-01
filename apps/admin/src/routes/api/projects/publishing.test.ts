@@ -91,6 +91,21 @@ describe("publishing", () => {
     expect((await visit("/sitemap.xml")).text).toContain(`<loc>${address}/kontakt/</loc>`);
   });
 
+  it("deploys the theme's webfonts and their licence", async () => {
+    await connect();
+    edit((doc) => {
+      doc.nodes.theme_1.font_heading = "lora";
+    });
+    await doPublish();
+    await publishesSettled();
+    const font = await fetch(
+      `${fake.url}/sites/${siteName()}/assets/fonts/lora-latin-normal.woff2`,
+    );
+    expect(font.status).toBe(200);
+    expect(new TextDecoder().decode((await font.arrayBuffer()).slice(0, 4))).toBe("wOF2");
+    expect((await visit("/assets/fonts/lora-OFL.txt")).text).toContain("Open Font License");
+  });
+
   it("refuses a site with errors, listing them, and deploys nothing", async () => {
     await connect();
     edit((doc) => {

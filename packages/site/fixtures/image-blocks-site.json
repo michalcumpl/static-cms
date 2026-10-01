@@ -8,8 +8,8 @@
       "color_secondary": "#f2e3d0",
       "color_background": "#fffaf3",
       "color_text": "#2b2118",
-      "font_heading": "Georgia, 'Times New Roman', serif",
-      "font_body": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+      "font_heading": "georgia",
+      "font_body": "system-sans",
       "radius": "0.5rem",
       "content_width": "64rem"
     },
@@ -722,7 +722,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 5,
+      "schema_version": 6,
       "name": "Pekárna U Lípy",
       "lang": "cs",
       "base_url": "https://pekarna-ulipy.example",
@@ -737,6 +737,12 @@
         "marks": [],
         "annotations": []
       },
+      "logo": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "header_show_name": true,
       "allow_ai_search": true,
       "allow_ai_training": true,
       "theme": "theme_1",

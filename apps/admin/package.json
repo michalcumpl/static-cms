@@ -16,6 +16,14 @@
     "admin": "tsx scripts/admin.ts"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "catalog:",
+    "@fontsource-variable/lora": "catalog:",
+    "@fontsource-variable/merriweather": "catalog:",
+    "@fontsource-variable/nunito": "catalog:",
+    "@fontsource-variable/playfair-display": "catalog:",
+    "@fontsource-variable/source-sans-3": "catalog:",
+    "@fontsource-variable/source-serif-4": "catalog:",
+    "@fontsource-variable/work-sans": "catalog:",
     "@static-cms/site": "workspace:*",
     "better-sqlite3": "catalog:",
     "drizzle-orm": "catalog:",

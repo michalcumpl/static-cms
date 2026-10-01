@@ -8,7 +8,8 @@ type RawDoc = { document_id: string; nodes: Record<string, RawNode> };
  * Version 2 names the home page and gives every page a slug; version 3 adds the site's
  * description, favicon, share image and AI crawler switches, and each page's share image;
  * version 4 adds the business details, empty, with every day closed; version 5 gives every page
- * a translation key, its own ID.
+ * a translation key, its own ID; version 6 turns the theme's font lists into catalog fonts and
+ * adds the site's logo (none) and header switch (name shown).
  * Anything that isn't a site of an older version is returned unchanged, for validation to
  * judge. The input is not modified.
  */
@@ -19,6 +20,7 @@ export function migrateSite(doc: unknown): unknown {
   if (siteOf(current)?.schema_version === 2) current = toVersion3(current);
   if (siteOf(current)?.schema_version === 3) current = toVersion4(current);
   if (siteOf(current)?.schema_version === 4) current = toVersion5(current);
+  if (siteOf(current)?.schema_version === 5) current = toVersion6(current);
   return current;
 }
 
@@ -129,6 +131,43 @@ function toVersion5<T extends RawDoc>(doc: T): T {
       upgraded[id as string] = { ...page, translation_key: id };
   }
   return { ...doc, nodes: upgraded };
+}
+
+/**
+ * Version 6 stores catalog fonts instead of CSS font lists (theme-and-branding design.md
+ * decision 9): a serif list becomes Georgia, anything else the system font.
+ */
+function toVersion6<T extends RawDoc>(doc: T): T {
+  const site = siteOf(doc) as RawNode;
+  const upgraded: Record<string, RawNode> = { ...doc.nodes };
+  upgraded[doc.document_id] = {
+    ...site,
+    schema_version: 6,
+    logo: emptyList(),
+    header_show_name: true,
+  };
+  const themeId = site.theme;
+  const theme = typeof themeId === "string" ? doc.nodes[themeId] : undefined;
+  if (isObject(theme) && theme.type === "theme") {
+    upgraded[themeId as string] = {
+      ...theme,
+      font_heading: catalogFont(theme.font_heading),
+      font_body: catalogFont(theme.font_body),
+    };
+  }
+  return { ...doc, nodes: upgraded };
+}
+
+/** The catalog font closest to a version-5 CSS font list. */
+export function catalogFont(list: unknown): "georgia" | "system-sans" {
+  if (typeof list !== "string") return "system-sans";
+  const families = list.split(",").map((f) =>
+    f
+      .trim()
+      .replace(/^['"]|['"]$/g, "")
+      .toLowerCase(),
+  );
+  return families[0] === "georgia" || families.at(-1) === "serif" ? "georgia" : "system-sans";
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {

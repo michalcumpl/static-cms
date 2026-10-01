@@ -53,13 +53,15 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 5 },
+      schema_version: { type: "integer", min: 1, default: 6 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
       description: { type: "string" },
       favicon: { type: "node_array", node_types: ["image"] },
       share_image: { type: "node_array", node_types: ["image"] },
+      logo: { type: "node_array", node_types: ["image"] },
+      header_show_name: { type: "boolean", default: true },
       allow_ai_search: { type: "boolean", default: true },
       allow_ai_training: { type: "boolean", default: true },
       theme: { type: "node", node_types: ["theme"] },

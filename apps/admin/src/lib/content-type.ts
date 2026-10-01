@@ -11,6 +11,7 @@ const TYPES: Record<string, string> = {
   gif: "image/gif",
   ico: "image/x-icon",
   txt: "text/plain; charset=utf-8",
+  woff2: "font/woff2",
 };
 
 /** Content type for the file types a site export can contain; undefined for anything else. */

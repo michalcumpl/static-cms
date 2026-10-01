@@ -10,6 +10,7 @@ import {
   selectionFor,
   settingsTarget,
   siteFieldElementId,
+  themeFieldElementId,
 } from "./locate";
 import type { EditorState } from "./state.svelte";
 
@@ -58,6 +59,12 @@ async function show(problem: Problem) {
     editor.settingsTab = "business";
     await tick();
     document.getElementById(businessFieldElementId(target.field))?.focus();
+    return;
+  }
+  if (target?.tab === "theme") {
+    editor.settingsTab = "theme";
+    await tick();
+    document.getElementById(themeFieldElementId(target.field))?.focus();
     return;
   }
   if (target?.tab === "site") {

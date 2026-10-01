@@ -93,6 +93,37 @@ describe("settingsTarget", () => {
     });
   });
 
+  it("leads theme problems to their field in the Theme tab", () => {
+    for (const field of [
+      "color_primary",
+      "color_secondary",
+      "color_background",
+      "color_text",
+      "font_heading",
+      "font_body",
+      "radius",
+      "content_width",
+    ]) {
+      expect(settingsTarget(doc(), "theme_1", field)).toEqual({ tab: "theme", field });
+    }
+    expect(settingsTarget(doc(), "theme_1", undefined)).toEqual({
+      tab: "theme",
+      field: "color_primary",
+    });
+  });
+
+  it("leads logo problems to the Theme tab", () => {
+    expect(settingsTarget(doc(), "site_1", "logo")).toEqual({ tab: "theme", field: "logo" });
+    expect(settingsTarget(doc(), "site_1", "header_show_name")).toEqual({
+      tab: "theme",
+      field: "header_show_name",
+    });
+    const withLogo = doc();
+    withLogo.nodes.brand = { id: "brand", type: "image", src: "pekarna-7c1e", alt: "" };
+    (withLogo.nodes.site_1 as unknown as { logo: { nodes: string[] } }).logo.nodes = ["brand"];
+    expect(settingsTarget(withLogo, "brand", "src")).toEqual({ tab: "theme", field: "logo" });
+  });
+
   it("leads site problems to the site settings", () => {
     expect(settingsTarget(doc(), "site_1", "name")).toEqual({ tab: "site", field: "name" });
     expect(settingsTarget(doc(), "site_1", "favicon")).toEqual({ tab: "site", field: "favicon" });

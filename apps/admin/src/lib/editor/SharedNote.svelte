@@ -3,7 +3,7 @@ import type { EditorState } from "./state.svelte";
 
 // Outside the primary language: says where the shared fields are edited, with a link there
 // (languages spec, "Shared fields").
-let { editor, tab }: { editor: EditorState; tab: "site" | "business" } = $props();
+let { editor, tab }: { editor: EditorState; tab: "site" | "business" | "theme" } = $props();
 
 const href = $derived.by(() => {
   const page = editor.session.get(editor.currentPageId) as { translation_key?: string } | undefined;

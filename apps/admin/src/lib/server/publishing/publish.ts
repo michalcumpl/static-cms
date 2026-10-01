@@ -2,6 +2,7 @@ import { exportSiteLanguages, type Problem, usedMediaFiles } from "@static-cms/s
 import { and, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "../db/index";
 import { projectHosting, projects, publishDocuments, publishes, users } from "../db/schema";
+import { siteFonts } from "../fonts";
 import { newId } from "../ids";
 import { mediaFiles } from "../media";
 import { type LanguageSite, languageErrors, readLanguages } from "../site-documents";
@@ -167,10 +168,11 @@ async function runPublish(
     );
     const names = new Set(sites.flatMap((site) => usedMediaFiles(site.document)));
     const media = await mediaFiles(projectId, [...names]);
+    const fonts = await siteFonts(sites);
     const exported = exportSiteLanguages(
       sites.map(({ lang, document, primary }) => ({ lang, document, primary })),
       media,
-      { siteUrl: url, redirects },
+      { siteUrl: url, redirects, fonts },
     );
     if (!exported.ok) {
       throw new PublishError("failed", exported.problems.map((p) => p.message).join(" "));

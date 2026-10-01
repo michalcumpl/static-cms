@@ -167,6 +167,30 @@ catalogs:
     '@biomejs/biome':
       specifier: 2.5.14
       version: 2.5.14
+    '@fontsource-variable/inter':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource-variable/lora':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource-variable/merriweather':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource-variable/nunito':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource-variable/playfair-display':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource-variable/source-sans-3':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource-variable/source-serif-4':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource-variable/work-sans':
+      specifier: 5.3.0
+      version: 5.3.0
     '@playwright/test':
       specifier: ^1.63.0
       version: 1.63.0
@@ -257,6 +281,30 @@ importers:
 
   apps/admin:
     dependencies:
+      '@fontsource-variable/inter':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource-variable/lora':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource-variable/merriweather':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource-variable/nunito':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource-variable/playfair-display':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource-variable/source-sans-3':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource-variable/source-serif-4':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource-variable/work-sans':
+        specifier: 'catalog:'
+        version: 5.3.0
       '@static-cms/site':
         specifier: workspace:*
         version: link:../../packages/site
@@ -865,6 +913,30 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource-variable/inter@5.3.0':
+    resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
+
+  '@fontsource-variable/lora@5.3.0':
+    resolution: {integrity: sha512-2ph8KiZ8Bn141hWuC3ErtpJ+Ui8p2MJQn8TJNRSRmLmnCIOCtHfiBM9R7WLRPeUG/q6hXyHOxWQ8DvRSX+ixvQ==}
+
+  '@fontsource-variable/merriweather@5.3.0':
+    resolution: {integrity: sha512-wK7S4NtPXWUWll/sZCdub93pqSCnFkpKFbnoOE8fh+9Ut6JFjgkc9UlBxHJ0RVMkDpoWwGwMwYYTMvd3G9aAXA==}
+
+  '@fontsource-variable/nunito@5.3.0':
+    resolution: {integrity: sha512-tw0ch7evIDSwoeUy+0XzocYHfbRWLeCRPJy22KgbrLjDLAbNw/fErBiil10Ssrs3Sjr55zaZrr36a975j8cBkQ==}
+
+  '@fontsource-variable/playfair-display@5.3.0':
+    resolution: {integrity: sha512-IHdzTvE8eGIXHteZql7KXoqdc3Gfm+Zs1u4XlSC3MeplkwviT3sx/P6gI0tLwg/xIYLF4ZJYveZ5V+bl9cnDwA==}
+
+  '@fontsource-variable/source-sans-3@5.3.0':
+    resolution: {integrity: sha512-dpi0GZk7EQe2tYpg6Q0Fx0OmUgnuGu+0rHPgtXqtKhglYmJuP7jZ12Mu1uN+NfRaJRY1Emn8AQJEWzmoZ4wa9g==}
+
+  '@fontsource-variable/source-serif-4@5.3.0':
+    resolution: {integrity: sha512-9vch9WqxjaaA+1o9Ur8pOgIGbCYLjRReOUel23A6lOpD1syptgjtkORevvNmldJ5kGXQL29onQUqI5Ltz0s3bQ==}
+
+  '@fontsource-variable/work-sans@5.3.0':
+    resolution: {integrity: sha512-le8h/OIIuhm5Z7TdvuMw0yKg2gaCZUiMec8zaumsVVjzeJRBPEF0bQI/MkaZDHCVzZDvZoP/O2LiGOSfDLSbaw==}
 
   '@html-validate/stylish@4.3.0':
     resolution: {integrity: sha512-eUfvKpRJg5TvzSfTf2EovrQoTKjkRnPUOUnXVJ2cQ4GbC/bQw98oxN+DdSf+HxOBK00YOhsP52xWdJPV1o4n5w==}
@@ -2747,6 +2819,22 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@fontsource-variable/inter@5.3.0': {}
+
+  '@fontsource-variable/lora@5.3.0': {}
+
+  '@fontsource-variable/merriweather@5.3.0': {}
+
+  '@fontsource-variable/nunito@5.3.0': {}
+
+  '@fontsource-variable/playfair-display@5.3.0': {}
+
+  '@fontsource-variable/source-sans-3@5.3.0': {}
+
+  '@fontsource-variable/source-serif-4@5.3.0': {}
+
+  '@fontsource-variable/work-sans@5.3.0': {}
 
   '@html-validate/stylish@4.3.0':
     dependencies:

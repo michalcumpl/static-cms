@@ -2,7 +2,7 @@
 import { exportSiteLanguages, type LanguageDocument, zipFiles } from "@static-cms/site";
 import LanguagesSection from "$lib/LanguagesSection.svelte";
 import PublishButton from "$lib/PublishButton.svelte";
-import { projectPaths } from "$lib/project-paths";
+import { fontPath, projectPaths } from "$lib/project-paths";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
@@ -14,8 +14,8 @@ let downloading = $state(false);
 let downloadError = $state("");
 
 /**
- * Builds the ZIP entirely in the browser, from the published languages' saved documents and the
- * project's images.
+ * Builds the ZIP entirely in the browser, from the published languages' saved documents, the
+ * project's images and the site fonts.
  */
 async function downloadZip() {
   downloading = true;
@@ -24,13 +24,19 @@ async function downloadZip() {
     const input = (await (await fetch(paths.exportInput)).json()) as {
       languages: LanguageDocument[];
       mediaFiles: string[];
+      fontFiles: string[];
     };
     const media = new Map<string, Uint8Array>();
     for (const name of input.mediaFiles) {
       const response = await fetch(paths.media(name));
       media.set(name, new Uint8Array(await response.arrayBuffer()));
     }
-    const result = exportSiteLanguages(input.languages, media);
+    const fonts = new Map<string, Uint8Array>();
+    for (const name of input.fontFiles) {
+      const response = await fetch(fontPath(name));
+      fonts.set(name, new Uint8Array(await response.arrayBuffer()));
+    }
+    const result = exportSiteLanguages(input.languages, media, { fonts });
     if (!result.ok) {
       downloadError = result.problems.map((p) => p.message).join(" ");
       return;

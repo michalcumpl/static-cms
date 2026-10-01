@@ -1,41 +1,61 @@
-import { siteCss, validateSite } from "@static-cms/site";
+import { isFontId, siteCss, THEME_PRESETS } from "@static-cms/site";
 
 type Theme = Parameters<typeof siteCss>[0];
+type ThemeField = Exclude<keyof Theme, "id" | "type">;
 
-/** Used while the document's theme fails validation, so broken values never reach the CSS. */
-const FALLBACK_THEME: Omit<Theme, "id"> = {
+const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+const CSS_LENGTH = /^(0|\d+(\.\d+)?(px|rem|em|%|ch|vw))$/;
+
+/**
+ * Whether a theme value is safe to put into the stylesheet: the same rules as validation, field
+ * by field. Contrast isn't checked here; owners must see the colours they chose.
+ */
+const VALID: Record<ThemeField, (value: unknown) => boolean> = {
+  color_primary: (v) => typeof v === "string" && HEX_COLOR.test(v),
+  color_secondary: (v) => typeof v === "string" && HEX_COLOR.test(v),
+  color_background: (v) => typeof v === "string" && HEX_COLOR.test(v),
+  color_text: (v) => typeof v === "string" && HEX_COLOR.test(v),
+  font_heading: isFontId,
+  font_body: isFontId,
+  radius: (v) => typeof v === "string" && CSS_LENGTH.test(v),
+  content_width: (v) => typeof v === "string" && CSS_LENGTH.test(v),
+};
+const FIELDS = Object.keys(VALID) as ThemeField[];
+
+/** What the canvas starts from before it has seen a valid value: the first preset's look. */
+export const STARTING_THEME: Theme = {
+  id: "theme",
   type: "theme",
-  color_primary: "#1f5a8a",
-  color_secondary: "#e8eef4",
-  color_background: "#ffffff",
-  color_text: "#1a1a1a",
-  font_heading: "Georgia, serif",
-  font_body: "system-ui, sans-serif",
-  radius: "0.5rem",
+  ...(THEME_PRESETS[0] as Omit<Theme, "id" | "type" | "content_width">),
   content_width: "64rem",
 };
 
-const THEME_CODES = new Set(["invalid-color", "invalid-theme-value"]);
-
 /**
- * The site stylesheet confined to `scope`. The theme's values are only used when they
- * pass validation (hex colors, font lists, lengths); drafts may be saved with broken ones.
+ * The theme the canvas shows (theme-and-branding design.md decision 8): the document's theme,
+ * except that a field whose value isn't valid (a half-typed colour) keeps `previous`'s value.
  */
-export function canvasCss(document: unknown, scope: string): string {
+export function canvasTheme(document: unknown, previous: Theme = STARTING_THEME): Theme {
   const doc = document as { document_id: string; nodes: Record<string, Record<string, unknown>> };
   const themeId = doc.nodes[doc.document_id]?.theme as string | undefined;
   const theme = themeId ? doc.nodes[themeId] : undefined;
-  const broken = validateSite(document).problems.some(
-    (p) => p.nodeId === themeId && THEME_CODES.has(p.code),
-  );
-  const safe =
-    theme?.type === "theme" && !broken
-      ? (theme as unknown as Theme)
-      : { id: "theme", ...FALLBACK_THEME };
+  const safe: Theme = { ...previous };
+  if (theme?.type !== "theme") return safe;
+  for (const field of FIELDS) {
+    if (VALID[field](theme[field])) safe[field] = theme[field] as string;
+  }
+  return safe;
+}
+
+/**
+ * The site stylesheet confined to `scope`, for `theme` (see `canvasTheme`), with the webfonts
+ * loaded from the app's `/fonts/`.
+ */
+export function canvasCss(theme: Theme, scope: string): string {
   // Browsers underline <a> by default; the site CSS relies on that, so `.link` needs it too.
   // It comes first so the site's own link rules (e.g. in the navigation) still win.
   const linkDefaults = `${scope} .link {\n  text-decoration: underline;\n}\n\n`;
-  return linkDefaults + withEditLinks(siteCss(safe, { scope })) + editLayout(scope);
+  const css = siteCss(theme, { scope, fontUrlPrefix: "/fonts/" });
+  return linkDefaults + withEditLinks(css) + editLayout(scope);
 }
 
 /**
