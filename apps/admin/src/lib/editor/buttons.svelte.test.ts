@@ -12,7 +12,14 @@ import {
   setButtonPage,
 } from "./buttons";
 import { EditorState } from "./state.svelte";
-import { insertBlock } from "./structure";
+import { insertBlockAt } from "./structure";
+import type { BlockType } from "./transforms";
+
+/** Adds a block at the end of a page, as the "+ Add block" after its last block does. */
+function appendBlock(s: Session, pageIndex: number, type: BlockType): boolean {
+  const path = ["site_1", "pages", pageIndex, "blocks"];
+  return insertBlockAt(s, path, (s.get(path) as { nodes: string[] }).nodes.length, type);
+}
 
 // biome-ignore lint/suspicious/noExplicitAny: tests read nodes freely.
 type AnyNode = Record<string, any>;
@@ -24,7 +31,7 @@ function withCallToAction() {
     { document: demoSite(), version: "v1", problems: [] },
     projectPaths("p_test"),
   );
-  insertBlock(s, "site_1", 1, "call_to_action");
+  appendBlock(s, 1, "call_to_action");
   const blocks = (s.get("page_contact") as AnyNode).blocks.nodes as string[];
   const ctaId = blocks.find((id) => (s.get(id) as AnyNode).type === "call_to_action") as string;
   return { s, ctaId };

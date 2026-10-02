@@ -164,6 +164,13 @@ upload are all out of M2 on purpose. All of them are done.
   name pages and never show internal IDs; problems about links inside text select the linked
   words ([`editor-polish`](../openspec/changes/archive/2026-09-30-editor-polish/)).
 
+- **Structure on the canvas: done** ([`canvas-structure`](../openspec/changes/archive/2026-10-02-canvas-structure/)).
+  Blocks and items get handles (move, duplicate, delete; add above or below for blocks), and
+  "+ Add block" appears between blocks. Its picker shows each block as a card with a wireframe
+  drawing (in the site's primary colour), the block's standard name and a description, and says
+  why a block can't go somewhere. Blocks are added only on the canvas: the left column's buttons
+  are gone. New blocks are scrolled into view with the cursor in them, and the toolbar names the
+  selection. Nothing can be added above a hero any more. Later: drag and drop.
 - **Theme and branding: done** ([`theme-and-branding`](../openspec/changes/archive/2026-10-01-theme-and-branding/)).
   - **A Theme tab** next to Page, Site and Business: five presets (applied in one undoable step,
     keeping the content width), four colours with a picker and a hex field, the contrast of each

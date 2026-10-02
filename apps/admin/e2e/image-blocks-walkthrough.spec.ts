@@ -1,6 +1,14 @@
 import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
-import { blockButton, canvas, expect, openEditor, paths, selectText, test } from "./fixtures";
+import {
+  addBlockAfterCaret,
+  canvas,
+  expect,
+  openEditor,
+  paths,
+  selectText,
+  test,
+} from "./fixtures";
 
 const toolbar = (page: Page) => page.getByRole("toolbar", { name: "Editing" });
 const library = (page: Page) => page.getByRole("dialog", { name: "Images" });
@@ -27,7 +35,7 @@ async function insertBlock(page: Page, label: string) {
     .first()
     .click();
   await page.keyboard.press("End");
-  await blockButton(page, label).click();
+  await addBlockAfterCaret(page, label);
 }
 
 async function pickFromLibrary(page: Page, button: string) {
@@ -45,7 +53,7 @@ test("all four image blocks on a page: fill, describe, save, preview and ZIP", a
   test.slow();
   await openEditor(page, paths().edit("page_contact"));
 
-  await insertBlock(page, "Text + image");
+  await insertBlock(page, "Text with image");
   await pickFromLibrary(page, "Add image…");
   await imagePanel(page)
     .getByLabel(/Description/)
@@ -65,7 +73,7 @@ test("all four image blocks on a page: fill, describe, save, preview and ZIP", a
   await page.keyboard.type("Kateřina");
   await expect(name).toHaveText("Kateřina");
 
-  await insertBlock(page, "Logos");
+  await insertBlock(page, "Partner logos");
   await pickFromLibrary(page, "Add logos…");
 
   const problems = page.getByRole("region", { name: "Problems" });

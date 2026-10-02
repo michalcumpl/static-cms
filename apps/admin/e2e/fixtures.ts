@@ -146,9 +146,19 @@ export async function caretAtEnd(page: Page, text: Locator): Promise<void> {
   await page.waitForTimeout(100);
 }
 
-/** A button of the left column's "Add block" section. */
-export const blockButton = (page: Page, name: string) =>
-  page.getByRole("group", { name: "Add block" }).getByRole("button", { name, exact: true });
+/**
+ * Adds a block right after the block holding the caret, as an owner does: "+ Add block" below
+ * that block, then the block's card in the picker, by its name ("Text with image").
+ */
+export async function addBlockAfterCaret(page: Page, name: string): Promise<void> {
+  await page.locator(".canvas-overlay .cs-add.cs-bottom").click();
+  const picker = page.getByRole("menu", { name: "Add a block" });
+  await picker
+    .getByRole("menuitem")
+    .filter({ has: page.locator(".label", { hasText: new RegExp(`^${name}$`) }) })
+    .click();
+  await expect(picker).toBeHidden();
+}
 
 export const toolbarButton = (page: Page, name: string) =>
   page.getByRole("toolbar", { name: "Editing" }).getByRole("button", { name, exact: true });

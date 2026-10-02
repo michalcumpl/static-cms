@@ -1,5 +1,5 @@
 import {
-  blockButton,
+  addBlockAfterCaret,
   blockOrder,
   canvas,
   caretAtEnd,
@@ -74,7 +74,7 @@ test("refuse an unsafe link address", async ({ page }) => {
 test("insert a services block and reorder blocks", async ({ page }) => {
   await openEditor(page);
   await canvas(page).locator(".hero-text").click();
-  await blockButton(page, "Services").click();
+  await addBlockAfterCaret(page, "Services");
   expect(await blockOrder(page)).toEqual(["hero", "services", "services", "rich_text"]);
   await expect(canvas(page).locator(".services h2").first()).toHaveText("Služby");
 
@@ -156,7 +156,7 @@ test("leaving with unsaved edits asks first", async ({ page }) => {
   await expect(page).toHaveURL(/\/edit\/$/);
 });
 
-test("the preview width icons switch the canvas, and Add block stays in view", async ({ page }) => {
+test("the preview width icons switch the canvas", async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 700 });
   await openEditor(page);
   await page.getByTitle("Mobile").click();
@@ -164,9 +164,4 @@ test("the preview width icons switch the canvas, and Add block stays in view", a
   await expect(canvas(page)).toHaveClass(/mobile/);
   await page.getByTitle("Desktop").click();
   await expect(canvas(page)).not.toHaveClass(/mobile/);
-
-  await page.mouse.move(700, 400);
-  await page.mouse.wheel(0, 3000);
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
-  await expect(blockButton(page, "Text")).toBeInViewport();
 });

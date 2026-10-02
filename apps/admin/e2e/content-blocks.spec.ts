@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { blockButton, canvas, expect, openEditor, paths, test } from "./fixtures";
+import { addBlockAfterCaret, canvas, expect, openEditor, paths, test } from "./fixtures";
 
 const toolbar = (page: Page) => page.getByRole("toolbar", { name: "Editing" });
 const buttonPanel = (page: Page) => page.getByRole("region", { name: /^Buttons?$/ });
@@ -21,7 +21,7 @@ test("a call to action: point its button at a page, add a call button, preview",
 }) => {
   await openEditor(page, paths().edit("page_contact"));
   await caretInLastBlock(page);
-  await blockButton(page, "Call to action").click();
+  await addBlockAfterCaret(page, "Call to action");
   const cta = canvas(page).locator("section.cta");
   await expect(cta.locator("h2")).toHaveText("Nadpis");
 
@@ -65,7 +65,7 @@ test("give the hero a button", async ({ page }) => {
 test("testimonials: two, one with a photo, in the preview", async ({ page }) => {
   await openEditor(page, paths().edit("page_contact"));
   await caretInLastBlock(page);
-  await blockButton(page, "Testimonials").click();
+  await addBlockAfterCaret(page, "Testimonials");
   const block = canvas(page).locator("section.testimonials");
 
   await block.locator("blockquote").first().click();

@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import sharp from "sharp";
 import {
-  blockButton,
+  addBlockAfterCaret,
   canvas,
   expect,
   openEditor,
@@ -25,12 +25,17 @@ async function jpeg(color: string): Promise<Buffer> {
  * Selects an item as a whole: click into it, then Escape turns the caret into a selection of
  * the item. Waits until the editor has taken the selection (the move button comes alive).
  */
-async function selectItem(page: Page, inside: ReturnType<Page["locator"]>, action: string) {
-  const button = toolbar(page).getByRole("button", { name: action, exact: true });
+/**
+ * Selects an item as a whole: the caret into `inside`, then Escape, until the toolbar names the
+ * item. An Escape that beats the click would select the previous selection's block instead.
+ */
+async function selectItem(page: Page, inside: ReturnType<Page["locator"]>, label: string) {
+  const status = toolbar(page).locator(".selection-label");
   await expect(async () => {
     await inside.click();
+    await expect(status).toHaveText("", { timeout: 1000 });
     await page.keyboard.press("Escape");
-    await expect(button).toBeEnabled({ timeout: 1000 });
+    await expect(status).toHaveText(`${label} selected`, { timeout: 1000 });
   }).toPass();
 }
 
@@ -42,15 +47,15 @@ async function caretInLastBlock(page: Page) {
 
 test.describe("inserting image blocks", () => {
   for (const [label, cls] of [
-    ["Text + image", ".text-with-image"],
+    ["Text with image", ".text-with-image"],
     ["Gallery", ".gallery"],
     ["Team", ".team"],
-    ["Logos", ".logos"],
+    ["Partner logos", ".logos"],
   ] as const) {
     test(`insert a ${label} block`, async ({ page }) => {
       await openEditor(page, paths().edit("page_contact"));
       await caretInLastBlock(page);
-      await blockButton(page, label).click();
+      await addBlockAfterCaret(page, label);
       const block = canvas(page).locator(cls);
       await expect(block).toHaveCount(1);
       await expect(block.locator("h2")).toHaveText("Nadpis");
@@ -184,18 +189,16 @@ test.describe("adding and arranging items", () => {
     await selectItem(
       page,
       canvas(page).locator(".gallery-item").nth(2).locator("figcaption"),
-      "Move up",
+      "Photo 3 of 3",
     );
     await toolbar(page).getByRole("button", { name: "Move up" }).click();
     await toolbar(page).getByRole("button", { name: "Move up" }).click();
     await expect(captions.first()).toHaveText("Keramická dílna");
 
-    // Delete is already enabled for the photo just moved; the last logo's Move up isn't until the
-    // logo is selected (the photo now at the top can't move up).
     await selectItem(
       page,
       canvas(page).locator(".logo-item").last().locator(".logo-name"),
-      "Move up",
+      "Logo 2 of 2",
     );
     await toolbar(page).getByRole("button", { name: "Delete", exact: true }).click();
     await expect(canvas(page).locator(".logo-item")).toHaveCount(1);

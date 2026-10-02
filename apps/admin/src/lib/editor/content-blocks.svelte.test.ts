@@ -5,8 +5,15 @@ import { projectPaths } from "$lib/project-paths";
 import { demoSite } from "$lib/server/demo";
 import { removeImageFrom, startsDecorative } from "./image-slots";
 import { EditorState } from "./state.svelte";
-import { insertBlock, insertItem, isFixedList } from "./structure";
+import { insertBlockAt, insertItem, isFixedList } from "./structure";
+import type { BlockType } from "./transforms";
 import { setImage } from "./transforms";
+
+/** Adds a block at the end of a page, as the "+ Add block" after its last block does. */
+function appendBlock(s: Session, pageIndex: number, type: BlockType): boolean {
+  const path = ["site_1", "pages", pageIndex, "blocks"];
+  return insertBlockAt(s, path, (s.get(path) as { nodes: string[] }).nodes.length, type);
+}
 
 // biome-ignore lint/suspicious/noExplicitAny: tests read nodes freely.
 type AnyNode = Record<string, any>;
@@ -25,7 +32,7 @@ const contactBlocks = (s: Session) =>
 describe("inserting the blocks", () => {
   it("creates a call to action with one button to the home page", () => {
     const { session: s } = editor();
-    expect(insertBlock(s, "site_1", 1, "call_to_action")).toBe(true);
+    expect(appendBlock(s, 1, "call_to_action")).toBe(true);
     const cta = contactBlocks(s).find((b) => b.type === "call_to_action") as AnyNode;
     expect(cta.heading.content).toBe("Nadpis");
     expect(cta.actions.nodes).toHaveLength(1);
@@ -38,7 +45,7 @@ describe("inserting the blocks", () => {
 
   it("creates testimonials with one empty testimonial, a warning-free start but for its texts", () => {
     const { session: s } = editor();
-    insertBlock(s, "site_1", 1, "testimonials");
+    appendBlock(s, 1, "testimonials");
     const block = contactBlocks(s).find((b) => b.type === "testimonials") as AnyNode;
     expect(block.items.nodes).toHaveLength(1);
     expect(node(s, block.items.nodes[0])).toMatchObject({
@@ -52,7 +59,7 @@ describe("inserting the blocks", () => {
 
   it("keeps the call to action's buttons a fixed list", () => {
     const { session: s } = editor();
-    insertBlock(s, "site_1", 1, "call_to_action");
+    appendBlock(s, 1, "call_to_action");
     const index = contactBlocks(s).findIndex((b) => b.type === "call_to_action");
     expect(isFixedList(s, ["site_1", "pages", 1, "blocks", index, "actions"])).toBe(true);
   });
@@ -61,7 +68,7 @@ describe("inserting the blocks", () => {
 describe("testimonial items", () => {
   it("adds a testimonial after the current one", () => {
     const { session: s } = editor();
-    insertBlock(s, "site_1", 1, "testimonials");
+    appendBlock(s, 1, "testimonials");
     const block = contactBlocks(s).find((b) => b.type === "testimonials") as AnyNode;
     const index = contactBlocks(s).indexOf(block);
     s.selection = {
@@ -80,7 +87,7 @@ describe("testimonial items", () => {
     expect(startsDecorative("hero")).toBe(false);
     const ed = editor();
     const s = ed.session;
-    insertBlock(s, "site_1", 1, "testimonials");
+    appendBlock(s, 1, "testimonials");
     const block = contactBlocks(s).find((b) => b.type === "testimonials") as AnyNode;
     const id = block.items.nodes[0] as string;
     const tr = s.tr;

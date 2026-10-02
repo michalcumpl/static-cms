@@ -263,6 +263,8 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
 export function insertableBlocks(blocks: { type: string }[], index: number): BlockType[] {
+  // The hero stays first: nothing goes above it.
+  if (index === 0 && blocks[0]?.type === "hero") return [];
   const heroAllowed = index === 0 && !blocks.some((b) => b.type === "hero");
   const others: BlockType[] = [
     "rich_text",

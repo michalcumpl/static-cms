@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 import {
-  blockButton,
+  addBlockAfterCaret,
   canvas,
   connectTestWorkspace,
   expect,
@@ -29,9 +29,9 @@ async function caretInLastBlock(page: Page) {
   await page.keyboard.press("End");
 }
 
-async function insert(page: Page, label: "Contact" | "Hours") {
+async function insert(page: Page, label: "Contact" | "Opening hours") {
   await caretInLastBlock(page);
-  await blockButton(page, label).click();
+  await addBlockAfterCaret(page, label);
 }
 
 async function save(page: Page) {
@@ -64,7 +64,7 @@ test("insert a contact block: it shows the phone, which the block panel can hide
 
 test("opening hours with a lunch break show on the canvas", async ({ page }) => {
   await openEditor(page, paths().edit("page_contact"));
-  await insert(page, "Hours");
+  await insert(page, "Opening hours");
   await openBusinessTab(page);
   await businessTab(page).getByRole("button", { name: "Open on Monday" }).click();
   await businessTab(page).getByLabel("Monday closes").fill("12:00");

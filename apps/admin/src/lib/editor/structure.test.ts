@@ -5,16 +5,15 @@ import { demoSite } from "$lib/server/demo";
 import { editorSchema } from "./schema";
 import { EditorState } from "./state.svelte";
 import {
-  availableBlocks,
-  blockInsertionPoint,
   deleteSelectedNode,
-  insertBlock,
+  insertBlockAt,
   insertItem,
   isFixedList,
   itemInsertionPoint,
   moveSelectedNode,
   selectedNode,
 } from "./structure";
+import { insertableBlocks } from "./transforms";
 
 function setup() {
   const editor = new EditorState(
@@ -64,73 +63,30 @@ describe("fixed lists", () => {
 });
 
 describe("block insertion", () => {
-  it("offers the hero only at the top of a page without one", () => {
-    const { session, gap } = setup();
-    gap(0);
-    expect(availableBlocks(session, "site_1", 0)).toEqual([
-      "rich_text",
-      "services",
-      "text_with_image",
-      "gallery",
-      "team",
-      "logos",
-      "contact",
-      "opening_hours",
-      "call_to_action",
-      "testimonials",
-    ]); // home has a hero
-    session.selection = null;
-    expect(availableBlocks(session, "site_1", 1)).toEqual([
-      "rich_text",
-      "services",
-      "text_with_image",
-      "gallery",
-      "team",
-      "logos",
-      "contact",
-      "opening_hours",
-      "call_to_action",
-      "testimonials",
-    ]); // end of Kontakt
-    session.selection = {
-      type: "node",
-      path: ["site_1", "pages", 1, "blocks"],
-      anchor_offset: 0,
-      focus_offset: 0,
-    };
-    expect(availableBlocks(session, "site_1", 1)).toEqual([
-      "hero",
-      "rich_text",
-      "services",
-      "text_with_image",
-      "gallery",
-      "team",
-      "logos",
-      "contact",
-      "opening_hours",
-      "call_to_action",
-      "testimonials",
-    ]);
-  });
+  const types = (...names: string[]) => names.map((type) => ({ type }));
+  const ALL_BUT_HERO = [
+    "rich_text",
+    "services",
+    "text_with_image",
+    "gallery",
+    "team",
+    "logos",
+    "contact",
+    "opening_hours",
+    "call_to_action",
+    "testimonials",
+  ];
 
-  it("inserts after the block that holds the text selection", () => {
-    const { session, types, valid } = setup();
-    session.selection = {
-      type: "text",
-      path: ["site_1", "pages", 0, "blocks", 0, "heading"],
-      anchor_offset: 0,
-      focus_offset: 0,
-    };
-    expect(blockInsertionPoint(session, "site_1", 0).index).toBe(1);
-    expect(insertBlock(session, "site_1", 0, "services")).toBe(true);
-    expect(types()).toEqual(["hero", "services", "services", "rich_text"]);
-    valid();
+  it("offers the hero only at the top of a page without one, and nothing above a hero", () => {
+    expect(insertableBlocks(types("hero", "services"), 0)).toEqual([]);
+    expect(insertableBlocks(types("rich_text"), 1)).toEqual(ALL_BUT_HERO);
+    expect(insertableBlocks(types("rich_text"), 0)).toEqual(["hero", ...ALL_BUT_HERO]);
+    expect(insertableBlocks([], 0)).toEqual(["hero", ...ALL_BUT_HERO]);
   });
 
   it("creates each block with placeholder content and puts the caret in it", () => {
-    const { session, blocks, gap, valid } = setup();
-    gap(3);
-    insertBlock(session, "site_1", 0, "rich_text");
+    const { session, blocks, valid } = setup();
+    insertBlockAt(session, ["site_1", "pages", 0, "blocks"], 3, "rich_text");
     const block = session.get(blocks()[3] as string) as { body: { nodes: string[] } };
     const heading = session.get(block.body.nodes[0] as string) as {
       type: string;
@@ -143,13 +99,6 @@ describe("block insertion", () => {
       path: ["site_1", "pages", 0, "blocks", 3, "body", 0, "content"],
     });
     valid();
-  });
-
-  it("refuses a hero where it isn't offered", () => {
-    const { session, types, gap } = setup();
-    gap(2);
-    expect(insertBlock(session, "site_1", 0, "hero")).toBe(false);
-    expect(types()).toEqual(["hero", "services", "rich_text"]);
   });
 });
 
@@ -231,5 +180,32 @@ describe("item insertion", () => {
     };
     expect(itemInsertionPoint(session)).toBeUndefined();
     expect(insertItem(session)).toBe(false);
+  });
+});
+
+describe("insertBlockAt", () => {
+  const blocksPath = ["site_1", "pages", 0, "blocks"];
+
+  it("inserts at the given place whatever the caret, with the caret in the new block", () => {
+    const { session, types, valid } = setup();
+    session.selection = {
+      type: "text",
+      path: [...blocksPath, 0, "heading"],
+      anchor_offset: 0,
+      focus_offset: 0,
+    };
+    expect(insertBlockAt(session, blocksPath, 2, "gallery")).toBe(true);
+    expect(types()).toEqual(["hero", "services", "gallery", "rich_text"]);
+    expect((session.selection as { path: unknown[] }).path.slice(0, 5)).toEqual([...blocksPath, 2]);
+    valid();
+    session.undo();
+    expect(types()).toEqual(["hero", "services", "rich_text"]);
+  });
+
+  it("refuses a block where it can't go: above the hero, or a second hero", () => {
+    const { session, types } = setup();
+    expect(insertBlockAt(session, blocksPath, 0, "rich_text")).toBe(false);
+    expect(insertBlockAt(session, blocksPath, 1, "hero")).toBe(false);
+    expect(types()).toEqual(["hero", "services", "rich_text"]);
   });
 });

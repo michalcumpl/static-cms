@@ -2,11 +2,12 @@
 import { Command, define_keymap, KeyMapper, Svedit } from "svedit";
 import { setContext, untrack } from "svelte";
 import { beforeNavigate, goto } from "$app/navigation";
-import BlockInserter from "$lib/editor/BlockInserter.svelte";
+import BlockHandles from "$lib/editor/BlockHandles.svelte";
 import BlockPanel from "$lib/editor/BlockPanel.svelte";
 import BusinessSettings from "$lib/editor/BusinessSettings.svelte";
 import ButtonPanel from "$lib/editor/ButtonPanel.svelte";
 import { canvasCss, canvasTheme } from "$lib/editor/canvas-css";
+import { selectionLabel } from "$lib/editor/handles";
 import ImagePanel from "$lib/editor/ImagePanel.svelte";
 import LanguageSwitcher from "$lib/editor/LanguageSwitcher.svelte";
 import LinkDialog from "$lib/editor/LinkDialog.svelte";
@@ -133,6 +134,8 @@ const commands = $derived(
   session.commands as Record<string, Command & { active?: boolean }> | undefined,
 );
 const canAddItem = $derived(itemInsertionPoint(session) !== undefined);
+// The block or item selected as a whole, in words (canvas-structure design.md decision 5).
+const selectedLabel = $derived(selectionLabel(session));
 
 // Svedit deletes a node selection itself on Backspace/Delete, before any command runs.
 // Keep the navigation and the hero's fixed slots from being deleted that way.
@@ -166,6 +169,7 @@ editor.openLibraryMany = async () => {
   return chosen;
 };
 let canvas: { focus_canvas: () => void } | undefined = $state();
+let canvasElement: HTMLElement | undefined = $state();
 const linkEnabled = $derived(
   Boolean(commands && (!commands.link?.disabled || !commands.internal_link?.disabled)),
 );
@@ -189,7 +193,6 @@ const statusText = $derived.by(() => {
   <div class="left-column">
     <LanguageSwitcher {editor} projectId={data.project.id} />
     <PagesSidebar {editor} projectName={data.project.name} />
-    <BlockInserter {editor} />
   </div>
 
   <div class="workspace">
@@ -202,10 +205,11 @@ const statusText = $derived.by(() => {
       <button type="button" onclick={() => linkDialog?.open()} disabled={!linkEnabled} title="Link the selected text">Link</button>
       <button type="button" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.unlink?.execute()} disabled={commands?.unlink?.disabled ?? true} title="Remove the link">Unlink</button>
       <span class="separator"></span>
+      <span class="selection-label" aria-live="polite">{#if selectedLabel}{selectedLabel} selected{/if}</span>
       <button type="button" title="Add a list item, service or person after the current one" onmousedown={(e) => e.preventDefault()} onclick={() => insertItem(session)} disabled={!canAddItem}>Add item</button>
       <button type="button" aria-label="Move up" title="Move up (Alt+↑)" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.move_up?.execute()} disabled={commands?.move_up?.disabled ?? true}>↑</button>
       <button type="button" aria-label="Move down" title="Move down (Alt+↓)" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.move_down?.execute()} disabled={commands?.move_down?.disabled ?? true}>↓</button>
-      <button type="button" title="Delete the selected block or item" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.delete_node?.execute()} disabled={commands?.delete_node?.disabled ?? true}>Delete</button>
+      <button type="button" title="Delete the selected block or item (Esc selects the paragraph, item or block around the cursor)" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.delete_node?.execute()} disabled={commands?.delete_node?.disabled ?? true}>Delete</button>
       <span class="separator"></span>
       <fieldset class="width">
         <legend class="visually-hidden">Preview width</legend>
@@ -234,8 +238,9 @@ const statusText = $derived.by(() => {
     </div>
 
     <div class="canvas-frame" onbeforeinputcapture={guardFixedLists}>
-      <div class="site-canvas" class:mobile={editor.width === "mobile"}>
+      <div class="site-canvas" class:mobile={editor.width === "mobile"} bind:this={canvasElement}>
         <Svedit bind:this={canvas} {session} path={[editor.siteId]} editable={true} />
+        <BlockHandles {editor} canvas={canvasElement} focusCanvas={() => canvas?.focus_canvas()} />
       </div>
     </div>
   </div>
@@ -356,11 +361,18 @@ const statusText = $derived.by(() => {
     min-width: 0;
   }
 
+  .selection-label {
+    font-size: 0.85rem;
+    color: #1f3a52;
+    white-space: nowrap;
+  }
+
   .toolbar {
     flex-wrap: wrap;
     position: sticky;
     top: 0;
-    z-index: 10;
+    /* Above the canvas's overlays (selection outline, handles, menus) as they scroll under it. */
+    z-index: 40;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -442,11 +454,19 @@ const statusText = $derived.by(() => {
   }
 
   .site-canvas {
+    position: relative;
     margin: 0 auto;
     background: #fff;
     box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
     transition: max-width 0.2s;
     max-width: 100%;
+  }
+
+  /* A block just added: outlined for a moment (canvas-structure design.md decision 9). */
+  .site-canvas :global([data-just-added]) {
+    outline: 3px solid #1f5a8a;
+    outline-offset: -3px;
+    transition: outline-color 0.6s;
   }
 
   .site-canvas.mobile {

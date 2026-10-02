@@ -38,6 +38,22 @@ workspace named "Default". The first user created with `create-user` becomes its
 Everything except sign-in and invitations needs a session. Project pages and APIs answer
 "not found" to people who aren't members of the project's workspace.
 
+## Editing
+
+- **Blocks and items have handles.** Pointing at a block, or putting the cursor in it, shows a
+  handle at its left edge; items (services, photos, people, logos, testimonials, list items)
+  get their own. A handle selects its block or item and opens Move up, Move down, Duplicate and
+  Delete; a block's also has Add block above and below. The toolbar names what is selected.
+- **Adding blocks happens on the canvas only.** "+ Add block" appears above and below the block
+  under the pointer or the cursor (an empty page always shows one) and opens a picker: a card per
+  block with a small drawing of it in the site's primary colour, its name and a description.
+  Blocks that can't go there are greyed out with the reason. A new block is scrolled into view,
+  briefly outlined, and gets the cursor. The left column has only the languages and pages.
+- **Keyboard.** Esc selects the paragraph, item or block around the cursor, step by step; Alt+↑/↓
+  moves it. Handles and their menus are buttons and menus (arrow keys, Enter, Esc).
+- The handles are placed with CSS anchor positioning, as Svedit's selection outline is; without
+  it they stay hidden and the keyboard and toolbar still work.
+
 ## Accounts
 
 - **Invite-only.** The admin command creates users with their own workspace; owners invite

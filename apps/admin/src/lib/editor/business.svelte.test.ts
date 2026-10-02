@@ -17,7 +17,14 @@ import {
   setShowInFooter,
 } from "./business";
 import { EditorState } from "./state.svelte";
-import { insertBlock } from "./structure";
+import { insertBlockAt } from "./structure";
+import type { BlockType } from "./transforms";
+
+/** Adds a block at the end of a page, as the "+ Add block" after its last block does. */
+function appendBlock(s: Session, pageIndex: number, type: BlockType): boolean {
+  const path = ["site_1", "pages", pageIndex, "blocks"];
+  return insertBlockAt(s, path, (s.get(path) as { nodes: string[] }).nodes.length, type);
+}
 
 function editor() {
   return new EditorState(
@@ -127,8 +134,8 @@ describe("opening hours", () => {
 describe("inserting business blocks", () => {
   it("creates contact and opening hours blocks headed in the site's language", () => {
     const { session: s } = editor();
-    expect(insertBlock(s, "site_1", 1, "contact")).toBe(true);
-    expect(insertBlock(s, "site_1", 1, "opening_hours")).toBe(true);
+    expect(appendBlock(s, 1, "contact")).toBe(true);
+    expect(appendBlock(s, 1, "opening_hours")).toBe(true);
     const blocks = (s.get("page_contact") as { blocks: { nodes: string[] } }).blocks.nodes.map(
       (id) => s.get(id) as Record<string, unknown>,
     );

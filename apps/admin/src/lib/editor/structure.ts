@@ -79,56 +79,62 @@ export function moveSelectedNode(session: Session, direction: -1 | 1): boolean {
   return true;
 }
 
+/**
+ * Inserts a copy of the selected block or item right after it, with everything it contains
+ * under fresh IDs, and selects the copy; one undo step. A hero is never copied: a page has at
+ * most one, and it comes first.
+ */
+export function duplicateSelectedNode(session: Session): boolean {
+  const selected = selectedNode(session);
+  if (!selected) return false;
+  const list = session.get(selected.path) as NodeList;
+  const id = list.nodes[selected.index];
+  if (id === undefined || !canDuplicate(session, id)) return false;
+  const tr = session.tr;
+  // Svedit's build copies the subtree (items, images, marks) under fresh IDs.
+  const copyId = tr.build(id, session.doc.nodes as never);
+  const nodes = [...list.nodes];
+  nodes.splice(selected.index + 1, 0, copyId);
+  tr.set(selected.path, { ...list, nodes });
+  tr.set_selection({
+    type: "node",
+    path: selected.path,
+    anchor_offset: selected.index + 1,
+    focus_offset: selected.index + 2,
+  });
+  session.apply(tr);
+  return true;
+}
+
+/** Whether a node may be duplicated: anything but a hero. */
+export function canDuplicate(session: Session, id: string): boolean {
+  return (session.get(id) as { type?: string } | undefined)?.type !== "hero";
+}
+
 export function deleteSelectedNode(session: Session): boolean {
   if (!selectedNode(session)) return false;
   session.apply(session.tr.delete_selection());
   return true;
 }
 
-/** Where a new block goes: the selected gap, after the block holding the selection, or the end. */
-export function blockInsertionPoint(
+/**
+ * Inserts a block of `type` at `index` of a page's blocks, whatever the selection, with the caret
+ * in its first text; one undo step. False when that block can't go there.
+ */
+export function insertBlockAt(
   session: Session,
-  siteId: string,
-  pageIndex: number,
-): { path: DocumentPath; index: number } {
-  const blocksPath: DocumentPath = [siteId, "pages", pageIndex, "blocks"];
-  const blocks = session.get(blocksPath) as NodeList;
-  const selection = session.selection as AnySelection | null;
-  const inBlocks = selection && blocksPath.every((segment, i) => selection.path[i] === segment);
-  if (selection && inBlocks) {
-    if (selection.path.length === blocksPath.length && selection.type === "node") {
-      return {
-        path: blocksPath,
-        index: Math.max(selection.anchor_offset ?? 0, selection.focus_offset ?? 0),
-      };
-    }
-    const blockIndex = selection.path[blocksPath.length];
-    if (typeof blockIndex === "number") return { path: blocksPath, index: blockIndex + 1 };
-  }
-  return { path: blocksPath, index: blocks.nodes.length };
-}
-
-/** Block types the inserter offers at the current insertion point. */
-export function availableBlocks(session: Session, siteId: string, pageIndex: number): BlockType[] {
-  const { path, index } = blockInsertionPoint(session, siteId, pageIndex);
-  const blocks = (session.get(path) as NodeList).nodes.map(
-    (id) => session.get(id) as { type: string },
-  );
-  return insertableBlocks(blocks, index);
-}
-
-export function insertBlock(
-  session: Session,
-  siteId: string,
-  pageIndex: number,
+  blocksPath: DocumentPath,
+  index: number,
   type: BlockType,
 ): boolean {
-  if (!availableBlocks(session, siteId, pageIndex).includes(type)) return false;
-  const { path, index } = blockInsertionPoint(session, siteId, pageIndex);
+  const blocks = (session.get(blocksPath) as NodeList).nodes.map(
+    (id) => session.get(id) as { type: string },
+  );
+  if (!insertableBlocks(blocks, index).includes(type)) return false;
   const tr = session.tr;
   tr.set_selection({
     type: "node",
-    path,
+    path: blocksPath,
     anchor_offset: index,
     focus_offset: index,
   } satisfies NodeSelection);
