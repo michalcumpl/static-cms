@@ -11,9 +11,6 @@ const JPEG_QUALITY = 0.92;
 const HEIC_TYPES = ["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"];
 const HEIF_BRANDS = ["heic", "heix", "hevc", "heim", "heis", "mif1", "msf1"];
 
-export const CONVERSION_FAILED =
-  "This photo couldn't be converted. Export it as JPEG and try again.";
-
 /** Whether a file is a HEIC/HEIF image, by its type, its name, or its first bytes. */
 export async function isHeic(file: Blob & { name?: string }): Promise<boolean> {
   if (HEIC_TYPES.includes(file.type.toLowerCase())) return true;
@@ -86,7 +83,8 @@ async function decodeWithLibheif(file: Blob): Promise<Decoded> {
   return { source: canvas, width, height };
 }
 
-export type ConversionResult = { ok: true; file: File } | { ok: false; message: string };
+/** A failed conversion; the library says so in the interface language. */
+export type ConversionResult = { ok: true; file: File } | { ok: false };
 
 /**
  * Converts a HEIC/HEIF photo to an upright JPEG of its primary image, at most 4096 px on its
@@ -113,7 +111,7 @@ export async function convertHeic(file: File): Promise<ConversionResult> {
     if (!blob) throw new Error("the canvas produced no image");
     return { ok: true, file: new File([blob], convertedName(file.name), { type: "image/jpeg" }) };
   } catch {
-    return { ok: false, message: CONVERSION_FAILED };
+    return { ok: false };
   } finally {
     decoded?.close?.();
   }

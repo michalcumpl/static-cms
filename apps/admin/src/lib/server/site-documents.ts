@@ -12,6 +12,7 @@ import {
   validateSite,
 } from "@static-cms/site";
 import { and, eq, sql } from "drizzle-orm";
+import { type Said, said } from "$lib/i18n";
 import type { Db } from "./db/index";
 import { projects, siteDocuments, versions } from "./db/schema";
 import { starterSite } from "./demo";
@@ -198,7 +199,7 @@ export function languageErrors(sites: readonly LanguageSite[]): Problem[] {
 
 export type CopyPageResult =
   | { ok: true; pageId: string; title: string }
-  | { ok: false; reason: "not-found" | "exists" | "conflict"; message: string };
+  | { ok: false; reason: "not-found" | "exists" | "conflict"; message: Said };
 
 /**
  * Copies a page, as last saved in `from`, into the language `to` (language-tools design.md
@@ -215,7 +216,7 @@ export function copyPageToLanguage(
   const source = readSite(db, projectId, from);
   const target = readSite(db, projectId, to);
   if (!source || !target || from === to) {
-    return { ok: false, reason: "not-found", message: "The project has no such language." };
+    return { ok: false, reason: "not-found", message: said("server.languages.noSuchLanguage") };
   }
   return copyPageOnto(db, projectId, source.document, pageId, to, target, userId);
 }
@@ -234,13 +235,21 @@ export function copyPageOnto(
   userId: string | null,
 ): CopyPageResult {
   const copied = copyPageInto(source, pageId, target.document, () => `n${randomUUID()}`);
-  if (!copied.ok) return copied;
+  if (!copied.ok) {
+    return copied.reason === "exists"
+      ? {
+          ok: false,
+          reason: "exists",
+          message: said("server.languages.pageExists", { title: copied.title }),
+        }
+      : { ok: false, reason: "not-found", message: said("server.languages.noSuchPage") };
+  }
   const saved = saveSite(db, projectId, userId, copied.document, target.version, to);
   if (!saved.ok) {
     return {
       ok: false,
       reason: "conflict",
-      message: `${languageName(to)} was changed meanwhile. Try again.`,
+      message: said("server.languages.changedMeanwhile", { language: languageName(to) }),
     };
   }
   const page = (copied.document as { nodes: Record<string, { title?: string }> }).nodes[
@@ -280,7 +289,7 @@ export function projectTranslations(db: Db, projectId: string): LanguageTranslat
 
 export type LanguageChange =
   | { ok: true }
-  | { ok: false; reason: "not-found" | "exists" | "not-offered" | "primary"; message: string };
+  | { ok: false; reason: "not-found" | "exists" | "not-offered" | "primary"; message: Said };
 
 /**
  * Adds a language as a copy of the primary's current document (same nodes and IDs, so pages
@@ -296,17 +305,18 @@ export function addLanguage(
     return {
       ok: false,
       reason: "not-offered",
-      message: `"${lang}" is not a language sites can have.`,
+      message: said("server.languages.notOffered", { lang }),
     };
   }
   const primary = primaryLanguage(db, projectId);
   const source = primary === undefined ? undefined : currentDocument(db, projectId, primary);
-  if (!source) return { ok: false, reason: "not-found", message: "There is no such project." };
+  if (!source)
+    return { ok: false, reason: "not-found", message: said("server.languages.noSuchProject") };
   if (projectLanguages(db, projectId).some((l) => l.lang === lang)) {
     return {
       ok: false,
       reason: "exists",
-      message: `The project already has ${languageName(lang)}.`,
+      message: said("server.languages.alreadyHas", { language: languageName(lang) }),
     };
   }
   const doc = source.document as { document_id: string; nodes: Record<string, object> };
@@ -350,7 +360,7 @@ export function setLanguagePublished(
   published: boolean,
 ): LanguageChange {
   if (primaryLanguage(db, projectId) === lang) {
-    return { ok: false, reason: "primary", message: "The primary language is always published." };
+    return { ok: false, reason: "primary", message: said("server.languages.primaryPublished") };
   }
   const result = db
     .update(siteDocuments)
@@ -359,13 +369,13 @@ export function setLanguagePublished(
     .run();
   return result.changes > 0
     ? { ok: true }
-    : { ok: false, reason: "not-found", message: "The project has no such language." };
+    : { ok: false, reason: "not-found", message: said("server.languages.noSuchLanguage") };
 }
 
 /** Removes a language other than the primary, with its versions. */
 export function removeLanguage(db: Db, projectId: string, lang: string): LanguageChange {
   if (primaryLanguage(db, projectId) === lang) {
-    return { ok: false, reason: "primary", message: "The primary language can't be removed." };
+    return { ok: false, reason: "primary", message: said("server.languages.primaryKept") };
   }
   const result = db
     .delete(siteDocuments)
@@ -373,7 +383,7 @@ export function removeLanguage(db: Db, projectId: string, lang: string): Languag
     .run();
   return result.changes > 0
     ? { ok: true }
-    : { ok: false, reason: "not-found", message: "The project has no such language." };
+    : { ok: false, reason: "not-found", message: said("server.languages.noSuchLanguage") };
 }
 
 /** Creates a project with its first document (the starter site, named after the project). */

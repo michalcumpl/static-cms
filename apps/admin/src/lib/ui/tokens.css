@@ -1,0 +1,78 @@
+/*
+ * The admin's look, "B · Glacier" (admin-foundation design.md decision 1). Tokens only, plus the
+ * body and focus ring: no rules for buttons, links or headings, so nothing here reaches the
+ * site canvas, which must look like the published site. Components take these through var().
+ */
+:root {
+  /* Colours */
+  --ui-ground: #f3f8f9;
+  --ui-surface: #ffffff;
+  --ui-ink: #18292d;
+  --ui-muted: #4f6266;
+  --ui-border: #d9e7ea;
+  --ui-border-strong: #b6cbd0;
+  --ui-button: #b5e4ec;
+  --ui-button-hover: #9fd8e2;
+  --ui-button-label: #0a3c47;
+  --ui-link: #0e6475;
+  --ui-soft: #e3f4f7;
+  --ui-success: #136c3a;
+  --ui-success-soft: #e7f6ec;
+  --ui-attention: #8a4b00;
+  --ui-attention-soft: #fff1dc;
+  --ui-problem: #b42318;
+  --ui-problem-soft: #fdecea;
+  --ui-problem-border: #e8b4ae;
+  --ui-focus: #0e6475;
+
+  /* Type */
+  --ui-font: "DM Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ui-text-xs: 0.75rem;
+  --ui-text-sm: 0.875rem;
+  --ui-text-md: 0.9375rem;
+  --ui-text-lg: 1.125rem;
+  --ui-text-xl: 1.5rem;
+  --ui-text-2xl: 2rem;
+  --ui-leading: 1.5;
+
+  /* Space, shape, depth */
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-5: 1.5rem;
+  --ui-space-6: 2rem;
+  --ui-space-7: 3rem;
+  --ui-radius-field: 12px;
+  --ui-radius-card: 18px;
+  --ui-radius-pill: 999px;
+  --ui-shadow: 0 2px 10px rgb(24 41 45 / 0.07);
+  --ui-shadow-pop: 0 8px 28px rgb(24 41 45 / 0.16);
+
+  /* Controls: 40px on pointer devices, 44px for fingers */
+  --ui-control: 2.5rem;
+  --ui-control-sm: 2rem;
+  --ui-bar-height: 3.75rem;
+  --ui-bar-height-compact: 2.75rem;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --ui-control: 2.75rem;
+    --ui-control-sm: 2.75rem;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--ui-ground);
+  color: var(--ui-ink);
+  font-family: var(--ui-font);
+  font-size: var(--ui-text-md);
+  line-height: var(--ui-leading);
+}
+
+:focus-visible {
+  outline: 3px solid var(--ui-focus);
+  outline-offset: 2px;
+}

@@ -18,7 +18,8 @@ import {
 type Doc = Record<string, any>;
 
 const toolbar = (page: Page) => page.getByRole("toolbar", { name: "Editing" });
-const versions = (page: Page) => page.getByRole("listitem");
+const versions = (page: Page) =>
+  page.getByRole("list", { name: "Saved versions" }).getByRole("listitem");
 
 async function save(page: Page) {
   await toolbar(page).getByRole("button", { name: "Save", exact: true }).click();
@@ -106,5 +107,5 @@ test("open the English history from the English editor", async ({ page }) => {
   await openEditor(page, projectPaths(projectId, "en").edit());
   await page.getByRole("link", { name: "History" }).click();
   await expect(page).toHaveURL(/\/history\?lang=en$/);
-  await expect(page.getByLabel("Language")).toHaveValue("en");
+  await expect(page.getByRole("combobox", { name: "Language", exact: true })).toHaveValue("en");
 });

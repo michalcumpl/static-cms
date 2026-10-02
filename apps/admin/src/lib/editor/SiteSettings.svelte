@@ -1,4 +1,5 @@
 <script lang="ts">
+import { getI18n } from "$lib/i18n";
 import ImageSetting from "./ImageSetting.svelte";
 import { siteFieldElementId } from "./locate";
 import SharedNote from "./SharedNote.svelte";
@@ -8,15 +9,16 @@ import type { EditorState } from "./state.svelte";
 // The site as a whole (seo-and-metadata design.md decision 8): everything here is part of the
 // document, so it's undoable, previewed and published like the pages.
 let { editor }: { editor: EditorState } = $props();
+const i18n = getI18n();
 
 const site = $derived(siteSettings(editor.session.doc));
 </script>
 
 <section class="panel" aria-labelledby="site-panel-title" data-history-keys>
-  <h2 id="site-panel-title">Site</h2>
+  <h2 id="site-panel-title">{i18n.t("editor.site.title")}</h2>
   {#if editor.sharedReadOnly}<SharedNote {editor} tab="site" />{/if}
 
-  <label for={siteFieldElementId("name")}>Name</label>
+  <label for={siteFieldElementId("name")}>{i18n.t("editor.site.name")}</label>
   <input
     id={siteFieldElementId("name")}
     type="text"
@@ -24,7 +26,7 @@ const site = $derived(siteSettings(editor.session.doc));
     oninput={(e) => setSiteName(editor.session, e.currentTarget.value)}
   />
 
-  <label for={siteFieldElementId("description")}>Description for search engines</label>
+  <label for={siteFieldElementId("description")}>{i18n.t("editor.site.description")}</label>
   <textarea
     id={siteFieldElementId("description")}
     rows="3"
@@ -32,32 +34,32 @@ const site = $derived(siteSettings(editor.session.doc));
     aria-describedby="site-description-hint"
     oninput={(e) => setSiteDescription(editor.session, e.currentTarget.value)}
   ></textarea>
-  <p class="hint" id="site-description-hint">Used by pages without a description of their own.</p>
+  <p class="hint" id="site-description-hint">{i18n.t("editor.site.descriptionHint")}</p>
 
   <ImageSetting
     {editor}
     ownerId={site.id}
     slot="favicon"
-    label="Favicon (the icon in browser tabs)"
+    label={i18n.t("editor.site.favicon")}
     fieldId={siteFieldElementId("favicon")}
     locked={editor.sharedReadOnly}
     square
-    emptyNote="No favicon: browsers show a blank page icon."
+    emptyNote={i18n.t("editor.site.faviconNone")}
   />
 
   <ImageSetting
     {editor}
     ownerId={site.id}
     slot="share_image"
-    label="Share image (shown when a link is shared)"
+    label={i18n.t("editor.site.shareImage")}
     fieldId={siteFieldElementId("share_image")}
     locked={editor.sharedReadOnly}
     altFieldId={siteFieldElementId("share_image_alt")}
-    emptyNote="No share image: links are shared with their title and description only."
+    emptyNote={i18n.t("editor.site.shareNone")}
   />
 
   <fieldset>
-    <legend>AI services</legend>
+    <legend>{i18n.t("editor.site.ai")}</legend>
     <label class="check">
       <input
         type="checkbox"
@@ -66,11 +68,10 @@ const site = $derived(siteSettings(editor.session.doc));
         aria-describedby="site-ai-search-hint"
         onchange={(e) => setAiSearch(editor.session, e.currentTarget.checked)}
       />
-      AI search and answers
+      {i18n.t("editor.site.aiSearch")}
     </label>
     <p class="hint" id="site-ai-search-hint">
-      AI assistants and AI search, such as ChatGPT, Claude and Perplexity, may read and quote the
-      site. Switching this off asks them not to; some still fetch a page when a user asks for it.
+      {i18n.t("editor.site.aiSearchHint")}
     </p>
     <label class="check">
       <input
@@ -80,11 +81,10 @@ const site = $derived(siteSettings(editor.session.doc));
         aria-describedby="site-ai-training-hint"
         onchange={(e) => setAiTraining(editor.session, e.currentTarget.checked)}
       />
-      AI training
+      {i18n.t("editor.site.aiTraining")}
     </label>
     <p class="hint" id="site-ai-training-hint">
-      AI companies may use the site's text to train their models. Switching this off asks them not
-      to. Google and Bing search are not affected either way.
+      {i18n.t("editor.site.aiTrainingHint")}
     </p>
   </fieldset>
 </section>
@@ -92,7 +92,7 @@ const site = $derived(siteSettings(editor.session.doc));
 <style>
   .panel {
     padding: 1rem;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--ui-border);
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -103,7 +103,7 @@ const site = $derived(siteSettings(editor.session.doc));
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   label {
@@ -120,7 +120,7 @@ const site = $derived(siteSettings(editor.session.doc));
   fieldset {
     margin: 0.75rem 0 0;
     padding: 0.5rem 0.75rem 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--ui-border);
     border-radius: 0.3rem;
   }
 
@@ -137,6 +137,6 @@ const site = $derived(siteSettings(editor.session.doc));
   .hint {
     margin: 0;
     font-size: 0.85rem;
-    color: #555;
+    color: var(--ui-muted);
   }
 </style>

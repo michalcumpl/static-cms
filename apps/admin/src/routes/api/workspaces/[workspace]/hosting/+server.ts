@@ -1,4 +1,5 @@
 import { error, json } from "@sveltejs/kit";
+import { i18n } from "$lib/i18n";
 import { requireWorkspaceMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import {
@@ -17,7 +18,7 @@ export const GET: RequestHandler = (event) => {
 /** Owners: connect with `{ token, account }`. 200 with the connection; 400/422/503 with a message. */
 export const PUT: RequestHandler = async (event) => {
   const { user, role } = requireWorkspaceMember(event, event.params.workspace, { api: true });
-  if (role !== "owner") error(403, "Only owners can connect Netlify.");
+  if (role !== "owner") error(403, i18n(event.locals.locale).t("server.ownersConnect"));
   const input = (await event.request.json().catch(() => ({}))) as Record<string, unknown>;
   if (typeof input.token !== "string" || typeof input.account !== "string" || !input.token.trim()) {
     error(400, "Expected { token, account }.");
@@ -28,13 +29,13 @@ export const PUT: RequestHandler = async (event) => {
   });
   if (result.ok) return json({ connection: result.info });
   const status = result.reason === "not-set-up" ? 503 : 422;
-  return json({ message: result.message }, { status });
+  return json({ message: i18n(event.locals.locale).say(result.message) }, { status });
 };
 
 /** Owners: disconnect. The projects' sites at Netlify stay as they are. */
 export const DELETE: RequestHandler = (event) => {
   const { role } = requireWorkspaceMember(event, event.params.workspace, { api: true });
-  if (role !== "owner") error(403, "Only owners can disconnect Netlify.");
+  if (role !== "owner") error(403, i18n(event.locals.locale).t("server.ownersDisconnect"));
   disconnectWorkspace(getDb(), event.params.workspace);
   return new Response(null, { status: 204 });
 };

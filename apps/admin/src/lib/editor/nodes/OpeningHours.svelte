@@ -2,6 +2,7 @@
 import { openingHoursTable } from "@static-cms/site";
 import { type DocumentPath, Node, type SveditContext, TextProperty } from "svedit";
 import { getContext } from "svelte";
+import { getI18n } from "$lib/i18n";
 import { businessView } from "./business-view";
 import EditBusinessButton from "./EditBusinessButton.svelte";
 
@@ -13,16 +14,17 @@ const table = $derived.by(() => {
   const { info, strings } = businessView(svedit.session.doc);
   return openingHoursTable(info, strings);
 });
+const i18n = getI18n();
 </script>
 
 <Node {path} tag="section" class="block opening-hours">
   <div class="container">
-    <TextProperty tag="h2" path={[...path, "heading"]} placeholder="Nadpis (nepovinný)" />
+    <TextProperty tag="h2" path={[...path, "heading"]} placeholder={i18n.t("editor.canvas.headingOptional")} />
     <div contenteditable="false">
       {#if table}
         {@html table.value}
       {:else}
-        <p class="empty-note">No opening hours yet.</p>
+        <p class="empty-note">{i18n.t("editor.canvas.noHours")}</p>
       {/if}
     </div>
     <EditBusinessButton />

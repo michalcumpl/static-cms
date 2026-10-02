@@ -18,13 +18,13 @@ describe("checkLinkAddress", () => {
   ])("refuses %j and lists the allowed addresses", (input) => {
     const result = checkLinkAddress(input);
     expect(result.ok).toBe(false);
-    expect(!result.ok && result.message).toMatch(/https:\/\/, http:\/\/, mailto: or tel:/);
+    expect(!result.ok && result.reason).toBe("notAllowed");
   });
 
   it("asks for an address when empty", () => {
     expect(checkLinkAddress("  ")).toMatchObject({
       ok: false,
-      message: expect.stringMatching(/^Enter /),
+      reason: "empty",
     });
   });
 });

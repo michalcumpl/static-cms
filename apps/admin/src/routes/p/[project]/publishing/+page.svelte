@@ -1,11 +1,19 @@
 <script lang="ts">
 import { onDestroy, onMount } from "svelte";
+import { getI18n } from "$lib/i18n";
 import PublishButton from "$lib/PublishButton.svelte";
 import { projectPaths } from "$lib/project-paths";
 import { Publishing } from "$lib/publishing.svelte";
+import Badge from "$lib/ui/Badge.svelte";
+import Button from "$lib/ui/Button.svelte";
+import Card from "$lib/ui/Card.svelte";
+import Notice from "$lib/ui/Notice.svelte";
+import Page from "$lib/ui/Page.svelte";
+import PageHeader from "$lib/ui/PageHeader.svelte";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
+const i18n = getI18n();
 const paths = $derived(projectPaths(data.project.id));
 // svelte-ignore state_referenced_locally
 const publishing = new Publishing(projectPaths(data.project.id));
@@ -14,12 +22,6 @@ const info = $derived(publishing.info);
 let domainInput = $state("");
 let domainError = $state("");
 let busy = $state(false);
-
-const STATE_TEXT = {
-  "waiting-for-dns": "Waiting for DNS: set the records below at your domain's registrar.",
-  "issuing-certificate": "DNS is set; Netlify is issuing the certificate (HTTPS).",
-  ready: "Ready: the site is served at this domain.",
-} as const;
 
 onMount(async () => {
   await publishing.refresh();
@@ -39,7 +41,7 @@ async function send(url: string, method: string, body?: unknown): Promise<string
     if (!response.ok) {
       return (
         ((await response.json().catch(() => ({}))) as { message?: string }).message ??
-        `Failed (${response.status}).`
+        i18n.t("publishing.requestFailed", { status: response.status })
       );
     }
     await publishing.refresh();
@@ -68,45 +70,59 @@ async function makeLive(id: string) {
   restoreError = (await send(paths.restore(id), "POST")) ?? "";
 }
 
-const when = (iso: string) => new Date(iso).toLocaleString();
+const when = (iso: string) => i18n.formatDate(iso);
 </script>
 
 <svelte:head>
-  <title>Publishing – {data.project.name} – Static CMS</title>
+  <title>{i18n.t("common.pageTitle", { page: i18n.t("publishing.pageTitle", { project: data.project.name }) })}</title>
 </svelte:head>
 
-<main>
-  <p class="crumbs"><a href={paths.overview}>← {data.project.name}</a></p>
-  <h1>Publishing</h1>
+<Page width="narrow">
+  <PageHeader
+    title={i18n.t("publishing.title")}
+    breadcrumb={[
+      { href: "/", label: i18n.t("projects.title") },
+      { href: paths.overview, label: data.project.name },
+    ]}
+    breadcrumbLabel={i18n.t("common.breadcrumb")}
+  >
+    {#if info?.connected}{i18n.t("publishing.team", { team: info.team ?? "" })}{/if}
+  </PageHeader>
 
   {#if info && !info.connected}
-    <p class="note" role="status">
-      This workspace isn't connected to Netlify yet. An owner can connect it in the
-      <a href="/w/{data.workspace.id}/hosting">workspace's Netlify settings</a>.
-    </p>
-  {:else if info}
-    <p class="team">Publishing to the Netlify team <strong>{info.team}</strong>.</p>
+    <Notice kind="attention">
+      <p role="status">{i18n.t("publishing.notConnected")}</p>
+      <p><a href="/w/{data.workspace.id}/hosting">{i18n.t("publishing.hostingLink")}</a></p>
+    </Notice>
   {/if}
 
-  <section aria-labelledby="address">
-    <h2 id="address">Address</h2>
+  <Card title={i18n.t("publishing.address")} id="address">
     {#if info?.address}
       <p><a href={info.address} target="_blank" rel="noopener">{info.address}</a></p>
     {:else}
-      <p class="muted">Not published yet.</p>
+      <p class="muted">{i18n.t("publishing.notPublished")}</p>
     {/if}
-    <PublishButton {paths} {publishing} />
-  </section>
+    <div><PublishButton {paths} {publishing} /></div>
+  </Card>
 
-  <section aria-labelledby="domain">
-    <h2 id="domain">Domain</h2>
+  <Card title={i18n.t("publishing.domain")} id="domain">
     {#if info?.domain}
       <p><strong>{info.domain}</strong></p>
-      {#if info.domainState}<p role="status">{STATE_TEXT[info.domainState]}</p>{/if}
+      {#if info.domainState}
+        <Notice kind={info.domainState === "ready" ? "success" : "attention"}>
+          <p role="status">{i18n.t(`publishing.state.${info.domainState}`)}</p>
+        </Notice>
+      {/if}
       {#if info.domainState !== "ready"}
         <table>
-          <caption>DNS records to set at your registrar</caption>
-          <thead><tr><th>Name</th><th>Type</th><th>Value</th></tr></thead>
+          <caption>{i18n.t("publishing.dnsRecords")}</caption>
+          <thead>
+            <tr>
+              <th>{i18n.t("publishing.name")}</th>
+              <th>{i18n.t("publishing.type")}</th>
+              <th>{i18n.t("publishing.value")}</th>
+            </tr>
+          </thead>
           <tbody>
             {#each info.dnsRecords as record (record.name)}
               <tr><td><code>{record.name}</code></td><td>{record.type}</td><td><code>{record.value}</code></td></tr>
@@ -114,101 +130,122 @@ const when = (iso: string) => new Date(iso).toLocaleString();
           </tbody>
         </table>
       {/if}
-      <p>
-        <button type="button" onclick={checkDomain} disabled={busy}>Check again</button>
-        <button type="button" onclick={disconnectDomain} disabled={busy}>Disconnect</button>
-      </p>
+      <div class="buttons">
+        <Button onclick={checkDomain} disabled={busy}>{i18n.t("publishing.checkAgain")}</Button>
+        <Button kind="danger" onclick={disconnectDomain} disabled={busy}>{i18n.t("publishing.disconnect")}</Button>
+      </div>
     {:else if info?.address}
-      <form onsubmit={connectDomain}>
-        <label for="domain-input">Your domain</label>
-        <input id="domain-input" type="text" bind:value={domainInput} placeholder="anideti.cz" />
-        <button type="submit" disabled={busy || domainInput.trim() === ""}>Connect</button>
+      <form onsubmit={connectDomain} class="domain-form">
+        <label for="domain-input">{i18n.t("publishing.yourDomain")}</label>
+        <div class="row">
+          <input id="domain-input" type="text" bind:value={domainInput} placeholder="anideti.cz" data-i18n-ignore />
+          <Button type="submit" kind="primary" disabled={busy || domainInput.trim() === ""}>{i18n.t("publishing.connect")}</Button>
+        </div>
       </form>
     {:else}
-      <p class="muted">Publish the site once, then connect your domain.</p>
+      <p class="muted">{i18n.t("publishing.publishFirst")}</p>
     {/if}
-    {#if domainError}<p class="error" role="alert">{domainError}</p>{/if}
-  </section>
+    {#if domainError}<Notice kind="problem"><p>{domainError}</p></Notice>{/if}
+  </Card>
 
-  <section aria-labelledby="history">
-    <h2 id="history">History</h2>
+  <Card title={i18n.t("publishing.history")} id="history">
     {#if !info || info.publishes.length === 0}
-      <p class="muted">Nothing published yet.</p>
+      <p class="muted">{i18n.t("publishing.nothing")}</p>
     {:else}
       <ul class="history">
         {#each info.publishes as publish (publish.id)}
           <li class={publish.state}>
             <span>{when(publish.startedAt)}</span>
-            <span>{publish.publishedBy ?? "–"}</span>
+            <span class="muted">{publish.publishedBy ?? "–"}</span>
             {#if publish.state === "running"}
-              <span>Publishing…</span>
+              <Badge status="attention">{i18n.t("publishing.running")}</Badge>
             {:else if publish.state === "failed"}
-              <span class="error">Failed: {publish.error}</span>
+              <span class="error">{i18n.t("publishing.failed", { error: publish.error ?? "" })}</span>
             {:else if publish.live}
-              <strong>Live</strong>
+              <Badge status="success">{i18n.t("publishing.live")}</Badge>
             {:else}
-              <button type="button" onclick={() => makeLive(publish.id)} disabled={busy}>Make live again</button>
+              <Button size="sm" onclick={() => makeLive(publish.id)} disabled={busy}>{i18n.t("publishing.makeLive")}</Button>
             {/if}
           </li>
         {/each}
       </ul>
     {/if}
-    {#if restoreError}<p class="error" role="alert">{restoreError}</p>{/if}
-  </section>
-</main>
+    {#if restoreError}<Notice kind="problem"><p>{restoreError}</p></Notice>{/if}
+  </Card>
+</Page>
 
 <style>
-  main {
-    max-width: 48rem;
-    margin: 0 auto;
-    padding: 1rem;
-    font-family: system-ui, sans-serif;
+  p {
+    margin: 0;
   }
 
-  .muted,
-  .team {
-    color: #555;
-  }
-
-  .note {
-    padding: 0.75rem;
-    border-radius: 0.4rem;
-    background: #fff5e0;
+  .muted {
+    color: var(--ui-muted);
   }
 
   .error {
-    color: #a3161a;
+    color: var(--ui-problem);
   }
 
   table {
+    width: 100%;
     border-collapse: collapse;
-    margin: 0.5rem 0;
+    font-size: var(--ui-text-sm);
   }
 
   caption {
     text-align: left;
     font-weight: 600;
-    margin-bottom: 0.25rem;
+    padding-bottom: var(--ui-space-2);
   }
 
   th,
   td {
-    border: 1px solid #ddd;
-    padding: 0.3rem 0.6rem;
+    padding: var(--ui-space-2);
+    border-bottom: 1px solid var(--ui-border);
     text-align: left;
   }
 
+  .buttons,
+  .row {
+    display: flex;
+    gap: var(--ui-space-2);
+    flex-wrap: wrap;
+  }
+
+  .domain-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-1);
+  }
+
+  .domain-form label {
+    font-size: var(--ui-text-sm);
+    font-weight: 600;
+  }
+
+  .row input {
+    flex-grow: 1;
+    min-height: var(--ui-control);
+    padding: 0 var(--ui-space-3);
+    border: 1px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-field);
+    font: var(--ui-text-md) var(--ui-font);
+  }
+
   .history {
-    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-2);
+    margin: 0;
     padding: 0;
+    list-style: none;
   }
 
   .history li {
     display: grid;
-    grid-template-columns: 12rem 12rem 1fr;
-    gap: 0.5rem;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid #eee;
+    grid-template-columns: 11rem 1fr auto;
     align-items: center;
+    gap: var(--ui-space-3);
   }
 </style>

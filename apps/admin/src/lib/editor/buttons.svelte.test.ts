@@ -76,7 +76,7 @@ describe("where a button points", () => {
     const before = s.doc;
     const result = setButtonAddress(s, button?.id, "javascript:alert(1)");
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.message).toContain("isn't allowed");
+    if (!result.ok) expect(result.reason).toBe("notAllowed");
     expect(s.doc).toBe(before);
   });
 });

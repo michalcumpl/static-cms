@@ -1,32 +1,29 @@
 <script lang="ts">
+import { getI18n } from "$lib/i18n";
 import { type ContactSwitch, selectedContactBlock, setContactSwitch } from "./business";
 import type { EditorState } from "./state.svelte";
 
 // Options of the selected contact block: which of the business details it shows.
 let { editor }: { editor: EditorState } = $props();
+const i18n = getI18n();
 
 const block = $derived(selectedContactBlock(editor.session));
-const SWITCHES: [ContactSwitch, string][] = [
-  ["show_address", "Address"],
-  ["show_phone", "Phone"],
-  ["show_email", "Email"],
-  ["show_map", "Map link"],
-];
+const SWITCHES: ContactSwitch[] = ["show_address", "show_phone", "show_email", "show_map"];
 </script>
 
 {#if block}
   <section class="panel" aria-labelledby="block-panel-title" data-history-keys>
-    <h2 id="block-panel-title">Contact block</h2>
+    <h2 id="block-panel-title">{i18n.t("editor.contactBlock.title")}</h2>
     <fieldset>
-      <legend>Show</legend>
-      {#each SWITCHES as [which, label] (which)}
+      <legend>{i18n.t("editor.contactBlock.show")}</legend>
+      {#each SWITCHES as which (which)}
         <label class="check">
           <input
             type="checkbox"
             checked={block[which]}
             onchange={(e) => setContactSwitch(editor.session, block.id, which, e.currentTarget.checked)}
           />
-          {label}
+          {i18n.t(`editor.contactBlock.${which}`)}
         </label>
       {/each}
     </fieldset>
@@ -36,7 +33,7 @@ const SWITCHES: [ContactSwitch, string][] = [
 <style>
   .panel {
     padding: 1rem;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--ui-border);
   }
 
   h2 {
@@ -44,7 +41,7 @@ const SWITCHES: [ContactSwitch, string][] = [
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   fieldset {

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { type MessageKey, said } from "$lib/i18n";
 import { type CreatedSite, PublishError, type PublishTarget } from "./target";
 
 // Netlify's API over fetch (netlify-publishing design.md, Context and Findings).
@@ -43,29 +44,36 @@ async function call(
             : (body as BodyInit),
     });
   } catch {
-    throw new PublishError("unreachable", "The hosting service (Netlify) couldn't be reached.");
+    throw new PublishError("unreachable", said("server.netlify.unreachable"));
   }
   if (response.status === 401 || response.status === 403) {
-    throw new PublishError(
-      "unauthorized",
-      "Netlify refused the workspace's token. An owner needs to reconnect Netlify.",
-    );
+    throw new PublishError("unauthorized", said("server.netlify.unauthorized"));
   }
   return response;
 }
 
-async function expectOk(response: Response, what: string): Promise<Response> {
+type NetlifyAction = keyof typeof import("../../i18n/en").en.server.netlify.actions;
+
+/** Netlify's answer if it succeeded; otherwise a failure naming what couldn't be done. */
+async function expectOk(
+  response: Response,
+  action: NetlifyAction,
+  params: Record<string, string> = {},
+): Promise<Response> {
   if (response.ok) return response;
   const text = await response.text().catch(() => "");
   throw new PublishError(
     "failed",
-    `Netlify couldn't ${what} (${response.status}${text ? `: ${text.slice(0, 200)}` : ""}).`,
+    said("server.netlify.failed", {
+      action: said(`server.netlify.actions.${action}` as MessageKey, params),
+      detail: `${response.status}${text ? `: ${text.slice(0, 200)}` : ""}`,
+    }),
   );
 }
 
 /** The teams a token can publish into. Throws "unauthorized" for a refused token. */
 export async function listTeams(options: NetlifyOptions): Promise<NetlifyTeam[]> {
-  const response = await expectOk(await call(options, "GET", "/accounts"), "list the teams");
+  const response = await expectOk(await call(options, "GET", "/accounts"), "listTeams");
   const accounts = (await response.json()) as { slug: string; name: string }[];
   return accounts.map(({ slug, name }) => ({ slug, name }));
 }
@@ -101,9 +109,9 @@ export function netlifyTarget(
         },
       );
       if (response.status === 422) {
-        throw new PublishError("name-taken", `The site name "${name}" is taken at Netlify.`);
+        throw new PublishError("name-taken", said("server.netlify.nameTaken", { name }));
       }
-      await expectOk(response, "create the site");
+      await expectOk(response, "createSite");
       const site = (await response.json()) as {
         id: string;
         name: string;
@@ -129,7 +137,7 @@ export function netlifyTarget(
         await call(options, "POST", `/sites/${encodeURIComponent(siteId)}/deploys`, {
           files: digest,
         }),
-        "start the deploy",
+        "startDeploy",
       );
       const deploy = (await created.json()) as { id: string; required?: string[] };
       for (const hash of deploy.required ?? []) {
@@ -143,7 +151,8 @@ export function netlifyTarget(
             file.bytes,
             "application/octet-stream",
           ),
-          `upload ${file.path}`,
+          "upload",
+          { path: file.path },
         );
       }
       for (const delay of [0, ...delays]) {
@@ -151,18 +160,20 @@ export function netlifyTarget(
         const state = (await (
           await expectOk(
             await call(options, "GET", `/deploys/${encodeURIComponent(deploy.id)}`),
-            "check the deploy",
+            "checkDeploy",
           )
         ).json()) as { state: string; error_message?: string };
         if (state.state === "ready") return { deployId: deploy.id };
         if (state.state === "error") {
           throw new PublishError(
             "failed",
-            `Netlify couldn't finish the deploy${state.error_message ? `: ${state.error_message}` : "."}`,
+            state.error_message
+              ? said("server.netlify.deployFailedBecause", { detail: state.error_message })
+              : said("server.netlify.deployFailed"),
           );
         }
       }
-      throw new PublishError("failed", "Netlify didn't finish the deploy within a minute.");
+      throw new PublishError("failed", said("server.netlify.deployTimeout"));
     },
 
     async restore(siteId, deployId) {
@@ -172,7 +183,7 @@ export function netlifyTarget(
           "POST",
           `/sites/${encodeURIComponent(siteId)}/deploys/${encodeURIComponent(deployId)}/restore`,
         ),
-        "make the earlier publish live",
+        "restore",
       );
     },
 
@@ -182,7 +193,7 @@ export function netlifyTarget(
           custom_domain: domain,
           domain_aliases: aliases,
         }),
-        "connect the domain",
+        "connectDomain",
       );
       // Asks Netlify for the certificate; it is issued once DNS points at Netlify.
       await call(options, "POST", `/sites/${encodeURIComponent(siteId)}/ssl`);
@@ -194,7 +205,7 @@ export function netlifyTarget(
           custom_domain: null,
           domain_aliases: [],
         }),
-        "disconnect the domain",
+        "disconnectDomain",
       );
     },
 
@@ -202,7 +213,7 @@ export function netlifyTarget(
       const site = (await (
         await expectOk(
           await call(options, "GET", `/sites/${encodeURIComponent(siteId)}`),
-          "read the site",
+          "readSite",
         )
       ).json()) as { ssl?: boolean; custom_domain?: string | null };
       return Boolean(site.ssl && site.custom_domain);

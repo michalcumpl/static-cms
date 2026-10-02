@@ -97,7 +97,7 @@ describe("/w/[workspace]/members", () => {
   it("explains refused invitations", async () => {
     expect(await post("invite", { email: "jana@example.cz", role: "editor" })).toMatchObject({
       status: 400,
-      data: { invite: { message: "jana@example.cz is already a member." } },
+      data: { invite: { reason: "already-member" } },
     });
     expect(await post("invite", { email: "x@example.cz", role: "admin" })).toMatchObject({
       status: 400,
@@ -109,7 +109,7 @@ describe("/w/[workspace]/members", () => {
     addMember(db, workspaceId, outsider.id, "editor");
     expect(await post("role", { userId: owner.id, role: "editor" })).toMatchObject({
       status: 400,
-      data: { change: { message: expect.stringMatching(/at least one owner/) } },
+      data: { change: { reason: "last-owner" } },
     });
     expect(await post("role", { userId: outsider.id, role: "owner" })).toEqual({ changed: true });
     expect(await post("remove", { userId: outsider.id })).toEqual({ removed: true });

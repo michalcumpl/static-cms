@@ -36,7 +36,11 @@ export type PublishStatus =
   | { kind: "idle" }
   | { kind: "publishing" }
   | { kind: "published"; url: string }
-  | { kind: "failed"; message: string; problems?: Problem[] };
+  /**
+   * `message` is the server's own explanation (already in the interface language); without one,
+   * `problems` means the site has errors, else `httpStatus` says what failed.
+   */
+  | { kind: "failed"; message?: string; problems?: Problem[]; httpStatus?: number };
 
 const POLL_MS = 2000;
 
@@ -65,7 +69,7 @@ export class Publishing {
       this.status =
         latest.state === "ready"
           ? { kind: "published", url: latest.url ?? "" }
-          : { kind: "failed", message: latest.error ?? "Publishing failed." };
+          : { kind: "failed", message: latest.error ?? undefined };
     }
   }
 
@@ -78,17 +82,10 @@ export class Publishing {
       return;
     }
     if (response.status === 422) {
-      this.status = {
-        kind: "failed",
-        message: "Fix the problems first; the site can't be published with errors.",
-        problems: body.problems,
-      };
+      this.status = { kind: "failed", problems: body.problems ?? [] };
       return;
     }
-    this.status = {
-      kind: "failed",
-      message: body.message ?? `Publishing failed (${response.status}).`,
-    };
+    this.status = { kind: "failed", message: body.message, httpStatus: response.status };
   }
 
   stop(): void {

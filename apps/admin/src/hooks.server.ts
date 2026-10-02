@@ -2,6 +2,7 @@ import type { Handle, ServerInit } from "@sveltejs/kit";
 import { getDb } from "$lib/server/app";
 import { getSessionUser } from "$lib/server/auth";
 import { importWorkingCopy } from "$lib/server/import-working-copy";
+import { LOCALE_COOKIE, resolveLocale } from "$lib/server/locale";
 import { bodySizeWarning, registerAllLegacyMedia } from "$lib/server/media";
 import { markInterruptedPublishes } from "$lib/server/publishing/history";
 import { SESSION_COOKIE } from "$lib/server/session-cookie";
@@ -41,5 +42,14 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
   const token = event.cookies.get(SESSION_COOKIE);
   event.locals.user = token ? getSessionUser(getDb(), token) : undefined;
-  return resolve(event);
+  event.locals.locale = resolveLocale({
+    user: event.locals.user,
+    cookie: event.cookies.get(LOCALE_COOKIE),
+    acceptLanguage: event.request.headers.get("accept-language"),
+  });
+  const lang = event.locals.locale;
+  // The page's language before any script runs (app.html has `lang="%lang%"`).
+  return resolve(event, {
+    transformPageChunk: ({ html }) => html.replace('lang="%lang%"', `lang="${lang}"`),
+  });
 };

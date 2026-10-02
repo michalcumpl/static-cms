@@ -1,6 +1,7 @@
 <script lang="ts">
 import { type DocumentPath, Node, type SveditContext, TextProperty } from "svedit";
 import { getContext } from "svelte";
+import { getI18n } from "$lib/i18n";
 import { getEditor } from "../state.svelte";
 
 let { path }: { path: DocumentPath } = $props();
@@ -13,6 +14,7 @@ const buttonClass = $derived(
   path.at(-2) === "actions" && path.at(-1) === 1 ? "button button-secondary" : "button",
 );
 const isCurrent = $derived(!isAction && link.page_id === editor.currentPageId);
+const i18n = getI18n();
 </script>
 
 <!-- A span, not <a>: links must not navigate while editing. -->
@@ -22,5 +24,5 @@ const isCurrent = $derived(!isAction && link.page_id === editor.currentPageId);
   class={isAction ? buttonClass : "link"}
   aria-current={isCurrent ? "page" : undefined}
 >
-  <TextProperty tag="span" path={[...path, "label"]} placeholder="Odkaz" />
+  <TextProperty tag="span" path={[...path, "label"]} placeholder={i18n.t("editor.canvas.link")} />
 </Node>

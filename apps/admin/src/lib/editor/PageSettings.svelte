@@ -1,6 +1,7 @@
 <script lang="ts">
 import { slugify } from "@static-cms/site";
 import { goto } from "$app/navigation";
+import { getI18n } from "$lib/i18n";
 import ImageSetting from "./ImageSetting.svelte";
 import { pageFieldElementId } from "./locate";
 import PageLanguages from "./PageLanguages.svelte";
@@ -19,6 +20,7 @@ import { slotImage } from "./site";
 import type { EditorState } from "./state.svelte";
 
 let { editor }: { editor: EditorState } = $props();
+const i18n = getI18n();
 
 type PageNode = { id: string; title: string; slug: string; seo_description: string };
 
@@ -63,12 +65,12 @@ function confirmDelete(event: SubmitEvent) {
 
 {#if page && node}
   <section class="panel" aria-labelledby="page-panel-title" data-history-keys>
-    <h2 id="page-panel-title">Page</h2>
+    <h2 id="page-panel-title">{i18n.t("editor.page.title")}</h2>
     {#if page.isHome}
-      <p class="note">This is the home page. It is served at the site root.</p>
+      <p class="note">{i18n.t("editor.page.homeNote")}</p>
     {/if}
 
-    <label for={pageFieldElementId("title")}>Title</label>
+    <label for={pageFieldElementId("title")}>{i18n.t("editor.page.titleLabel")}</label>
     <input
       id={pageFieldElementId("title")}
       type="text"
@@ -76,7 +78,7 @@ function confirmDelete(event: SubmitEvent) {
       oninput={(e) => setPageTitle(editor.session, node.id, e.currentTarget.value)}
     />
 
-    <label for={pageFieldElementId("slug")}>Address (slug)</label>
+    <label for={pageFieldElementId("slug")}>{i18n.t("editor.page.slug")}</label>
     <input
       id={pageFieldElementId("slug")}
       type="text"
@@ -86,15 +88,12 @@ function confirmDelete(event: SubmitEvent) {
       aria-describedby="page-slug-hint"
     />
     <p class="hint" id="page-slug-hint">
-      {#if page.isHome}
-        Served at the site root. The address /{slugPreview}/ is used only if another page becomes
-        home.
-      {:else}
-        Address: /{slugPreview}/
-      {/if}
+      {page.isHome
+        ? i18n.t("editor.page.slugHomeHint", { slug: slugPreview })
+        : i18n.t("editor.page.slugHint", { slug: slugPreview })}
     </p>
 
-    <label for={pageFieldElementId("seo_description")}>Description for search engines</label>
+    <label for={pageFieldElementId("seo_description")}>{i18n.t("editor.page.seo")}</label>
     <textarea
       id={pageFieldElementId("seo_description")}
       rows="3"
@@ -106,12 +105,10 @@ function confirmDelete(event: SubmitEvent) {
       {editor}
       ownerId={node.id}
       slot="share_image"
-      label="Share image (shown when a link is shared)"
+      label={i18n.t("editor.page.shareImage")}
       fieldId={pageFieldElementId("share_image")}
       altFieldId={pageFieldElementId("share_image_alt")}
-      emptyNote={siteShareImage
-        ? "The site's share image is used."
-        : "No share image: links to this page are shared with their title and description only."}
+      emptyNote={siteShareImage ? i18n.t("editor.page.shareFromSite") : i18n.t("editor.page.shareNone")}
     />
 
     <PageLanguages {editor} pageId={node.id} />
@@ -122,7 +119,7 @@ function confirmDelete(event: SubmitEvent) {
         checked={page.menuIndex !== undefined}
         onchange={(e) => showInMenu(editor.session, node.id, e.currentTarget.checked)}
       />
-      Show in menu
+      {i18n.t("editor.page.showInMenu")}
     </label>
 
     <div class="actions">
@@ -132,9 +129,9 @@ function confirmDelete(event: SubmitEvent) {
         onclick={() => setHome(editor.session, node.id)}
         disabled={page.isHome}
       >
-        {page.isHome ? "Home page" : "Set as home"}
+        {page.isHome ? i18n.t("editor.page.homePage") : i18n.t("editor.page.setHome")}
       </button>
-      <button type="button" onclick={duplicate}>Duplicate</button>
+      <button type="button" onclick={duplicate}>{i18n.t("editor.page.duplicate")}</button>
       <button
         type="button"
         class="danger"
@@ -142,31 +139,26 @@ function confirmDelete(event: SubmitEvent) {
         disabled={deleteReason !== undefined}
         aria-describedby={deleteReason ? "page-delete-hint" : undefined}
       >
-        Delete
+        {i18n.t("editor.page.delete")}
       </button>
     </div>
     {#if deleteReason}
-      <p class="hint" id="page-delete-hint">{deleteReason}</p>
+      <p class="hint" id="page-delete-hint">{i18n.t(`editor.page.cannotDelete.${deleteReason}`)}</p>
     {/if}
   </section>
 
   <dialog bind:this={deleteDialog} aria-labelledby="delete-page-title" class="delete-dialog">
     <form onsubmit={confirmDelete}>
-      <h2 id="delete-page-title">Delete “{node.title}”?</h2>
+      <h2 id="delete-page-title">{i18n.t("editor.page.deleteTitle", { title: node.title })}</h2>
       <p>
-        {#if linkCount === 0}
-          No links on other pages point to it.
-        {:else if linkCount === 1}
-          1 link elsewhere in the site points to it. It will be listed as a problem to fix.
-        {:else}
-          {linkCount} links elsewhere in the site point to it. They will be listed as problems to
-          fix.
-        {/if}
-        You can undo the deletion.
+        {linkCount === 0
+          ? i18n.t("editor.page.noLinks")
+          : i18n.t("editor.page.links", { count: linkCount })}
+        {i18n.t("editor.page.undoNote")}
       </p>
       <div class="buttons">
-        <button type="button" onclick={() => deleteDialog?.close()}>Cancel</button>
-        <button type="submit" class="danger">Delete page</button>
+        <button type="button" onclick={() => deleteDialog?.close()}>{i18n.t("common.cancel")}</button>
+        <button type="submit" class="danger">{i18n.t("editor.page.deletePage")}</button>
       </div>
     </form>
   </dialog>
@@ -175,7 +167,7 @@ function confirmDelete(event: SubmitEvent) {
 <style>
   .panel {
     padding: 1rem;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--ui-border);
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -186,7 +178,7 @@ function confirmDelete(event: SubmitEvent) {
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   label {
@@ -210,7 +202,7 @@ function confirmDelete(event: SubmitEvent) {
   .hint {
     margin: 0;
     font-size: 0.85rem;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   .actions {
@@ -221,12 +213,12 @@ function confirmDelete(event: SubmitEvent) {
   }
 
   .danger {
-    color: #a3161a;
+    color: var(--ui-problem);
   }
 
   .delete-dialog {
     max-width: 26rem;
-    font-family: system-ui, sans-serif;
+    font-family: var(--ui-font);
   }
 
   .delete-dialog h2 {

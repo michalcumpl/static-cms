@@ -1,16 +1,16 @@
 <script lang="ts">
 import { type DocumentPath, deserialize_path, serialize_path } from "svedit";
+import { getI18n } from "$lib/i18n";
+import PopoverMenu, { type MenuEntry } from "$lib/ui/PopoverMenu.svelte";
 import { BLOCK_ILLUSTRATIONS } from "./block-illustrations";
 import {
-  BLOCK_DESCRIPTIONS,
-  BLOCK_NAMES,
+  BLOCK_TYPES,
   type HandleTarget,
   handleTargets,
   selectionPath,
   targetName,
   unavailableReason,
 } from "./handles";
-import PopoverMenu, { type MenuEntry } from "./PopoverMenu.svelte";
 import { revealNode } from "./reveal";
 import type { EditorState } from "./state.svelte";
 import {
@@ -37,7 +37,9 @@ let {
 } = $props();
 
 const session = $derived(editor.session);
-const BLOCK_ORDER = Object.keys(BLOCK_NAMES) as BlockType[];
+const i18n = getI18n();
+const BLOCK_ORDER = BLOCK_TYPES;
+const nameOf = (target: HandleTarget) => targetName(target, i18n.t);
 /** How long the handles stay after the pointer leaves their node, so they can be reached. */
 const HOLD_MS = 300;
 
@@ -157,22 +159,22 @@ function menuEntries(kind: "block" | "item", target: HandleTarget): MenuEntry[] 
   };
   const entries: MenuEntry[] = [
     {
-      label: "Move up",
+      label: i18n.t("editor.handles.moveUp"),
       disabled: target.index === 0,
       run: after(() => moveSelectedNode(session, -1)),
     },
     {
-      label: "Move down",
+      label: i18n.t("editor.handles.moveDown"),
       disabled: target.index >= count - 1,
       run: after(() => moveSelectedNode(session, 1)),
     },
     {
-      label: "Duplicate",
+      label: i18n.t("editor.handles.duplicate"),
       disabled: !canDuplicate(session, target.id),
       run: after(() => duplicateSelectedNode(session)),
     },
     {
-      label: "Delete",
+      label: i18n.t("editor.handles.delete"),
       run: after(() => {
         deleteSelectedNode(session);
         session.selection = null as never;
@@ -182,8 +184,8 @@ function menuEntries(kind: "block" | "item", target: HandleTarget): MenuEntry[] 
   if (kind === "block") {
     const anchor = `--handle-${kind}`;
     for (const [label, index] of [
-      ["Add block above", target.index],
-      ["Add block below", target.index + 1],
+      [i18n.t("editor.handles.addAbove"), target.index],
+      [i18n.t("editor.handles.addBelow"), target.index + 1],
     ] as const) {
       const possible = BLOCK_ORDER.some((type) => !unavailableReason(type, blockTypes, index));
       entries.push({
@@ -209,14 +211,17 @@ function closePicker(chosen: boolean) {
   else focusCanvas();
 }
 
+const reasonText = (reason: ReturnType<typeof unavailableReason>) =>
+  reason ? i18n.t(`editor.unavailable.${reason}`) : undefined;
+
 const pickerEntries = $derived.by((): MenuEntry[] => {
   if (!picker) return [];
   const { blocksPath: path, index } = picker;
   return BLOCK_ORDER.map((type) => ({
-    label: BLOCK_NAMES[type],
-    detail: BLOCK_DESCRIPTIONS[type],
+    label: i18n.t(`editor.blocks.${type}.name`),
+    detail: i18n.t(`editor.blocks.${type}.description`),
     illustration: BLOCK_ILLUSTRATIONS[type],
-    disabledReason: unavailableReason(type, blockTypes, index),
+    disabledReason: reasonText(unavailableReason(type, blockTypes, index)),
     run: () => {
       if (insertBlockAt(session, path, index, type)) {
         focusCanvas();
@@ -233,10 +238,10 @@ const pickerEntries = $derived.by((): MenuEntry[] => {
       <button
         type="button"
         class="cs-handle cs-{kind}"
-        aria-label={targetName(target)}
+        aria-label={nameOf(target)}
         aria-haspopup="menu"
         aria-expanded={menu?.kind === kind}
-        title="{targetName(target)}: move, duplicate or delete"
+        title={i18n.t("editor.handles.hint", { name: nameOf(target) })}
         style="position-anchor: --{serialize_path(target.path)}; anchor-name: --handle-{kind};"
         onmousedown={(e) => e.preventDefault()}
         onclick={() => openMenu(kind, target)}
@@ -261,13 +266,13 @@ const pickerEntries = $derived.by((): MenuEntry[] => {
       onmousedown={(e) => e.preventDefault()}
       onclick={(e) => openPicker(blocksPath, point.index, name, e.currentTarget)}
     >
-      + Add block
+      {i18n.t("editor.handles.addBlock")}
     </button>
   {/each}
 
   {#if menu}
     <PopoverMenu
-      label="{targetName(menu.target)} actions"
+      label={i18n.t("editor.handles.actions", { name: nameOf(menu.target) })}
       anchor="--handle-{menu.kind}"
       entries={menuEntries(menu.kind, menu.target)}
       onclose={closeMenu}
@@ -275,7 +280,7 @@ const pickerEntries = $derived.by((): MenuEntry[] => {
   {/if}
   {#if picker}
     <PopoverMenu
-      label="Add a block"
+      label={i18n.t("editor.handles.picker")}
       anchor={picker.anchor}
       entries={pickerEntries}
       onclose={closePicker}
@@ -289,10 +294,10 @@ const pickerEntries = $derived.by((): MenuEntry[] => {
   .cs-add {
     position: absolute;
     z-index: 20;
-    font: 600 0.8rem/1 system-ui, sans-serif;
-    color: #1f3a52;
-    background: #fff;
-    border: 1px solid #b7c6d4;
+    font: 600 0.8rem/1 var(--ui-font);
+    color: var(--ui-button-label);
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-border-strong);
     box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
     cursor: pointer;
   }
@@ -338,13 +343,13 @@ const pickerEntries = $derived.by((): MenuEntry[] => {
   .cs-handle[aria-expanded="true"],
   .cs-add:hover,
   .cs-add[aria-expanded="true"] {
-    background: #e8eef4;
-    border-color: #1f5a8a;
+    background: var(--ui-soft);
+    border-color: var(--ui-focus);
   }
 
   .cs-handle:focus-visible,
   .cs-add:focus-visible {
-    outline: 3px solid #1f5a8a;
+    outline: 3px solid var(--ui-focus);
     outline-offset: 1px;
   }
 

@@ -66,6 +66,24 @@ Everything except sign-in and invitations needs a session. Project pages and API
 - **Sessions** last 30 days from last use, in an HTTP-only cookie. Only hashes of links and
   sessions are stored.
 
+## Interface language
+
+- **Czech and English.** The language is chosen in the account menu (top right), or with the
+  "Čeština · English" links under the sign-in and invitation forms, and applies at once. Signed
+  in, the choice is stored on the account and follows the person to other devices; signed out,
+  a cookie remembers it. Without a choice, the browser's preferred languages decide, else
+  English. Emails follow the same rule: sign-in links in the account's language (else the
+  page's), invitations in the inviting owner's.
+- **Only the admin's own text is translated.** The site's content stays in its language, and
+  the site's validation (problem) messages are English for now.
+- **Adding a message:** add the key to `src/lib/i18n/en.ts` and the same key to `cs.ts` (a
+  missing one fails `pnpm typecheck`), then use `i18n.t("area.key", { name })` in components
+  (`getI18n()`), `i18n(event.locals.locale).t(…)` on the server, or return `said("area.key")`
+  from library code and `say()` it where the request's language is known. Counted words are
+  `{ one, few, other }` objects chosen by `{count}`. `src/lib/i18n/guard.test.ts` fails on
+  interface text written outside the catalogues; mark text that is the same in every language
+  with `data-i18n-ignore`.
+
 ## Configuration
 
 | Variable         | Default          | Meaning                                                        |

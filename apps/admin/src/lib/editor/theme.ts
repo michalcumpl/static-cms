@@ -26,15 +26,15 @@ const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
 /** The named corner radii and content widths the tab offers; anything else shows as "Custom". */
 export const RADIUS_CHOICES = [
-  { label: "Square", value: "0" },
-  { label: "Soft", value: "0.5rem" },
-  { label: "Round", value: "1rem" },
+  { key: "square", value: "0" },
+  { key: "soft", value: "0.5rem" },
+  { key: "round", value: "1rem" },
 ] as const;
 
 export const WIDTH_CHOICES = [
-  { label: "Narrow", value: "56rem" },
-  { label: "Standard", value: "64rem" },
-  { label: "Wide", value: "76rem" },
+  { key: "narrow", value: "56rem" },
+  { key: "standard", value: "64rem" },
+  { key: "wide", value: "76rem" },
 ] as const;
 
 export const themeSettings = (doc: Document) =>

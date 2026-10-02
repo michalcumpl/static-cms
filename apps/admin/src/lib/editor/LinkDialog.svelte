@@ -1,9 +1,11 @@
 <script lang="ts">
 import type { Selection } from "svedit";
+import { getI18n } from "$lib/i18n";
 import { checkLinkAddress } from "./links";
 import type { EditorState } from "./state.svelte";
 
 let { editor, onclose }: { editor: EditorState; onclose?: () => void } = $props();
+const i18n = getI18n();
 
 let dialog: HTMLDialogElement | undefined = $state();
 let kind = $state<"page" | "address">("page");
@@ -32,7 +34,7 @@ function apply(event: SubmitEvent): void {
   } else {
     const check = checkLinkAddress(address);
     if (!check.ok) {
-      error = check.message;
+      error = i18n.t(`editor.links.${check.reason}`);
       return;
     }
     tr.toggle_mark("link", { href: check.href });
@@ -45,26 +47,27 @@ function apply(event: SubmitEvent): void {
 <!-- `close` fires however the dialog closes (apply, Cancel, Escape). -->
 <dialog bind:this={dialog} aria-labelledby="link-dialog-title" class="link-dialog" {onclose}>
   <form onsubmit={apply}>
-    <h2 id="link-dialog-title">Add link</h2>
+    <h2 id="link-dialog-title">{i18n.t("editor.linkDialog.title")}</h2>
     <fieldset>
-      <legend>Link to</legend>
-      <label><input type="radio" bind:group={kind} value="page" /> A page of this site</label>
-      <label><input type="radio" bind:group={kind} value="address" /> An address</label>
+      <legend>{i18n.t("editor.linkDialog.linkTo")}</legend>
+      <label><input type="radio" bind:group={kind} value="page" /> {i18n.t("editor.linkDialog.page")}</label>
+      <label><input type="radio" bind:group={kind} value="address" /> {i18n.t("editor.linkDialog.address")}</label>
     </fieldset>
     {#if kind === "page"}
-      <label for="link-page">Page</label>
+      <label for="link-page">{i18n.t("editor.linkDialog.pageLabel")}</label>
       <select id="link-page" bind:value={pageId}>
         {#each editor.pages as page (page.id)}
           <option value={page.id}>{page.title}</option>
         {/each}
       </select>
     {:else}
-      <label for="link-address">Address</label>
+      <label for="link-address">{i18n.t("editor.linkDialog.addressLabel")}</label>
       <input
           id="link-address"
           type="text"
           bind:value={address}
           placeholder="https://…"
+          data-i18n-ignore
           aria-invalid={error ? "true" : undefined}
           aria-describedby={error ? "link-error" : undefined}
         />
@@ -73,8 +76,8 @@ function apply(event: SubmitEvent): void {
       <p id="link-error" class="error" role="alert">{error}</p>
     {/if}
     <div class="actions">
-      <button type="button" onclick={() => dialog?.close()}>Cancel</button>
-      <button type="submit">Add link</button>
+      <button type="button" onclick={() => dialog?.close()}>{i18n.t("common.cancel")}</button>
+      <button type="submit">{i18n.t("editor.linkDialog.add")}</button>
     </div>
   </form>
 </dialog>
@@ -82,9 +85,9 @@ function apply(event: SubmitEvent): void {
 <style>
   .link-dialog {
     width: min(26rem, 90vw);
-    border: 1px solid #ccc;
+    border: 1px solid var(--ui-border);
     border-radius: 0.5rem;
-    font-family: system-ui, sans-serif;
+    font-family: var(--ui-font);
   }
 
   h2 {
@@ -112,7 +115,7 @@ function apply(event: SubmitEvent): void {
   }
 
   .error {
-    color: #a3161a;
+    color: var(--ui-problem);
   }
 
   .actions {

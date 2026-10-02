@@ -1,16 +1,14 @@
 import { isSafeHref } from "@static-cms/site";
 
-export type LinkAddressCheck = { ok: true; href: string } | { ok: false; message: string };
+/** Why an address was refused; components say it with `editor.links.<reason>`. */
+export type LinkProblem = "empty" | "notAllowed" | "noLabel";
 
-export const ALLOWED_ADDRESSES =
-  "an address starting with https://, http://, mailto: or tel:, or a path starting with /";
+export type LinkAddressCheck = { ok: true; href: string } | { ok: false; reason: LinkProblem };
 
 /** Checks an address typed into the link dialog, with the same rule the validator uses. */
 export function checkLinkAddress(input: string): LinkAddressCheck {
   const href = input.trim();
-  if (href === "") return { ok: false, message: `Enter ${ALLOWED_ADDRESSES}.` };
-  if (!isSafeHref(href)) {
-    return { ok: false, message: `This address isn't allowed. Use ${ALLOWED_ADDRESSES}.` };
-  }
+  if (href === "") return { ok: false, reason: "empty" };
+  if (!isSafeHref(href)) return { ok: false, reason: "notAllowed" };
   return { ok: true, href };
 }

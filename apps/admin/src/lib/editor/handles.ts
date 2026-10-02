@@ -1,62 +1,54 @@
 import type { DocumentPath, Session } from "svedit";
+import type { I18n } from "$lib/i18n";
 import { isFixedList, selectedNode } from "./structure";
 import type { BlockType } from "./transforms";
 
 // What the block and item handles act on, and how the editor names it (canvas-structure
 // design.md decisions 2 and 5).
 
-/** Block names as owners read them in a sentence ("Services block selected"). */
-export const BLOCK_NAMES: Record<BlockType, string> = {
-  hero: "Hero",
-  rich_text: "Text",
-  services: "Services",
-  text_with_image: "Text with image",
-  gallery: "Gallery",
-  team: "Team",
-  logos: "Partner logos",
-  contact: "Contact",
-  opening_hours: "Opening hours",
-  call_to_action: "Call to action",
-  testimonials: "Testimonials",
-};
+/** Every block type, in the order the picker shows them. */
+export const BLOCK_TYPES: readonly BlockType[] = [
+  "hero",
+  "rich_text",
+  "services",
+  "text_with_image",
+  "gallery",
+  "team",
+  "logos",
+  "contact",
+  "opening_hours",
+  "call_to_action",
+  "testimonials",
+];
 
-/** What each block shows, in a line, for the block picker. */
-export const BLOCK_DESCRIPTIONS: Record<BlockType, string> = {
-  hero: "The big opening: a heading, a short text, a photo and a button",
-  rich_text: "Paragraphs, subheadings and bullet lists",
-  services: "What you offer, with descriptions and prices",
-  text_with_image: "A text beside a photo",
-  gallery: "A grid of photos with captions",
-  team: "The people behind the business, with portraits",
-  logos: "Logos of partners or clients",
-  contact: "Address, phone, email and map link, from the Business tab",
-  opening_hours: "Your weekly hours, from the Business tab",
-  call_to_action: "A short invitation with one or two buttons",
-  testimonials: "What customers say about you",
-};
+/** Why a block can't go somewhere; the picker says it with `editor.unavailable.<reason>`. */
+export type Unavailable = "heroTop" | "oneHero" | "onlyTop";
 
 /** Why a block type can't go at `index` of these blocks, or undefined when it can. */
 export function unavailableReason(
   type: BlockType,
   blocks: { type: string }[],
   index: number,
-): string | undefined {
-  if (index === 0 && blocks[0]?.type === "hero") return "The hero stays at the top of the page";
+): Unavailable | undefined {
+  if (index === 0 && blocks[0]?.type === "hero") return "heroTop";
   if (type !== "hero") return undefined;
-  if (blocks.some((b) => b.type === "hero")) return "A page has only one hero";
-  if (index !== 0) return "Only at the top of a page without a hero";
+  if (blocks.some((b) => b.type === "hero")) return "oneHero";
+  if (index !== 0) return "onlyTop";
   return undefined;
 }
 
-/** Item names by node type, for the items that get a handle. */
-export const ITEM_NAMES: Record<string, string> = {
-  list_item: "List item",
-  service_item: "Service",
-  gallery_item: "Photo",
-  person: "Person",
-  logo_item: "Logo",
-  testimonial: "Testimonial",
-};
+/** The node types of items that get a handle, as `editor.items` names them. */
+const ITEM_TYPES = new Set([
+  "list_item",
+  "service_item",
+  "gallery_item",
+  "person",
+  "logo_item",
+  "testimonial",
+]);
+
+/** The translator the names are made with: the interface language's `t`. */
+type T = I18n["t"];
 
 /** The block or item types whose lists hold items with handles, by list property. */
 const ITEM_LISTS: Record<string, readonly string[]> = {
@@ -122,27 +114,41 @@ export function selectionPath(session: Session): DocumentPath | undefined {
   return selected ? [...selected.path, selected.index] : selection.path;
 }
 
+function itemName(type: string, t: T): string {
+  return ITEM_TYPES.has(type) ? t(`editor.items.${type as "list_item"}`) : t("editor.items.other");
+}
+
+const isBlock = (type: string): type is BlockType =>
+  (BLOCK_TYPES as readonly string[]).includes(type);
+
 /** What a handle is called: "Services block", "Photo 3". */
-export function targetName(target: HandleTarget): string {
-  const block = BLOCK_NAMES[target.type as BlockType];
-  if (block) return `${block} block`;
-  return `${ITEM_NAMES[target.type] ?? "Item"} ${target.index + 1}`;
+export function targetName(target: HandleTarget, t: T): string {
+  if (isBlock(target.type)) {
+    return t("editor.handles.block", { name: t(`editor.blocks.${target.type}.name`) });
+  }
+  return t("editor.handles.item", { name: itemName(target.type, t), number: target.index + 1 });
 }
 
 /**
  * The block or item selected as a whole, in words: "Services block", "Photo 3 of 6". Nothing
  * for the caret, a text selection, or a node that is neither a block nor an item.
  */
-export function selectionLabel(session: Session): string | undefined {
+export function selectionLabel(session: Session, t: T): string | undefined {
   const selected = selectedNode(session);
   if (!selected) return undefined;
   const { block, item } = handleTargets(session, [...selected.path, selected.index]);
-  const isSelected = (t: HandleTarget | undefined) =>
-    t !== undefined && t.listPath.length === selected.path.length && t.index === selected.index;
-  if (isSelected(item) && item) {
+  const isSelected = (target: HandleTarget | undefined) =>
+    target !== undefined &&
+    target.listPath.length === selected.path.length &&
+    target.index === selected.index;
+  if (item && isSelected(item)) {
     const count = (session.get(item.listPath) as NodeList).nodes.length;
-    return `${targetName(item)} of ${count}`;
+    return t("editor.handles.itemOf", {
+      name: itemName(item.type, t),
+      number: item.index + 1,
+      count,
+    });
   }
-  if (isSelected(block) && block) return targetName(block);
+  if (block && isSelected(block)) return targetName(block, t);
   return undefined;
 }

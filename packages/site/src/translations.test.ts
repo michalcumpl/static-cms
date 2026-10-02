@@ -204,6 +204,7 @@ describe("copyPageInto", () => {
       ok: false,
       reason: "exists",
       message: 'This language already has the page as "Contact".',
+      title: "Contact",
     });
   });
 

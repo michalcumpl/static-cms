@@ -1,6 +1,5 @@
-import { error } from "@sveltejs/kit";
 import { projectPaths } from "$lib/project-paths";
-import { requireMember } from "$lib/server/access";
+import { notFound, requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { servePreview } from "$lib/server/preview";
 import { readLanguages } from "$lib/server/site-documents";
@@ -18,7 +17,7 @@ export const GET: RequestHandler = async (event) => {
   requireMember(event, params.project);
   // Every language, hidden ones too, so they can be checked before they're published.
   const sites = readLanguages(getDb(), params.project, "all");
-  if (sites.length === 0) error(404, "Not found");
+  if (sites.length === 0) notFound(event);
   const paths = projectPaths(params.project);
   return servePreview(
     params.project,

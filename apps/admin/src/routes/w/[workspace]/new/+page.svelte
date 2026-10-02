@@ -1,66 +1,85 @@
 <script lang="ts">
+import { getI18n } from "$lib/i18n";
+import Button from "$lib/ui/Button.svelte";
+import Card from "$lib/ui/Card.svelte";
+import Page from "$lib/ui/Page.svelte";
+import PageHeader from "$lib/ui/PageHeader.svelte";
 import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
+const i18n = getI18n();
 </script>
 
 <svelte:head>
-  <title>New project – Static CMS</title>
+  <title>{i18n.t("common.pageTitle", { page: i18n.t("newProject.title") })}</title>
 </svelte:head>
 
-<main>
-  <p><a href="/">← Projects</a></p>
-  <h1>New project in {data.workspace.name}</h1>
-  <form method="POST">
-    <label for="name">Name</label>
-    <input
-      id="name"
-      name="name"
-      required
-      defaultValue={form?.name ?? ""}
-      aria-invalid={form?.missing ? "true" : undefined}
-      aria-describedby={form?.missing ? "name-error" : "name-hint"}
-    />
-    <p id="name-hint" class="hint">The website starts as a simple one-page site you can edit.</p>
-    {#if form?.missing}
-      <p id="name-error" class="error" role="alert">Enter a name.</p>
-    {/if}
-    <button type="submit">Create project</button>
-  </form>
-</main>
+<Page width="narrow">
+  <PageHeader
+    title={i18n.t("newProject.heading", { workspace: data.workspace.name })}
+    breadcrumb={[{ href: "/", label: i18n.t("projects.title") }]}
+    breadcrumbLabel={i18n.t("common.breadcrumb")}
+  />
+  <Card>
+    <form method="POST">
+      <div class="field">
+        <label for="name">{i18n.t("newProject.name")}</label>
+        <input
+          id="name"
+          name="name"
+          required
+          defaultValue={form?.name ?? ""}
+          aria-invalid={form?.missing ? "true" : undefined}
+          aria-describedby={form?.missing ? "name-error" : "name-hint"}
+        />
+        <p id="name-hint" class="hint">{i18n.t("newProject.nameHint")}</p>
+        {#if form?.missing}
+          <p id="name-error" class="error" role="alert">{i18n.t("newProject.missing")}</p>
+        {/if}
+      </div>
+      <div><Button type="submit" kind="primary" icon="plus">{i18n.t("newProject.create")}</Button></div>
+    </form>
+  </Card>
+</Page>
 
 <style>
-  main {
-    max-width: 32rem;
-    margin: 0 auto;
-    padding: 1rem;
-    font-family: system-ui, sans-serif;
-    line-height: 1.5;
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-4);
   }
 
-  label,
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-1);
+  }
+
+  label {
+    font-size: var(--ui-text-sm);
+    font-weight: 600;
+  }
+
   input {
-    display: block;
-    width: 100%;
+    min-height: var(--ui-control);
+    padding: 0 var(--ui-space-3);
+    border: 1px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-field);
+    font: var(--ui-text-md) var(--ui-font);
   }
 
-  input {
-    margin-top: 0.25rem;
-    padding: 0.5rem;
-    font: inherit;
+  [aria-invalid="true"] {
+    border-color: var(--ui-problem);
   }
 
-  .hint {
-    color: #555;
-    font-size: 0.9rem;
+  .hint,
+  .error {
+    margin: 0;
+    font-size: var(--ui-text-sm);
+    color: var(--ui-muted);
   }
 
   .error {
-    color: #a3161a;
-  }
-
-  button {
-    font: inherit;
-    padding: 0.5rem 1rem;
+    color: var(--ui-problem);
   }
 </style>

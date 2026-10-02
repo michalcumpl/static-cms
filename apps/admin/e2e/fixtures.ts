@@ -142,7 +142,22 @@ export async function selectText(page: Page, within: Locator, text: string): Pro
 /** Puts the caret at the end of an editable text, and waits for the editor to see it. */
 export async function caretAtEnd(page: Page, text: Locator): Promise<void> {
   await text.click();
-  await page.keyboard.press("End");
+  // Put the caret after the last character through the DOM, as `selectText` does: the End key
+  // goes to the end of the visual line, which depends on where the text wraps.
+  await text.evaluate((element) => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let last: Text | undefined;
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if ((node as Text).data.length > 0) last = node as Text;
+    }
+    if (!last) return;
+    const range = document.createRange();
+    range.setStart(last, last.data.length);
+    range.collapse(true);
+    const selection = getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  });
   await page.waitForTimeout(100);
 }
 
@@ -199,7 +214,7 @@ export async function connectTestWorkspace(token = "nfp_e2e_token"): Promise<voi
   const { connectWorkspace } = await import("../src/lib/server/publishing/connection");
   const { workspaceId, owner } = state();
   const result = await connectWorkspace(testDb(), workspaceId, owner.id, { token, account: "e2e" });
-  if (!result.ok) throw new Error(result.message);
+  if (!result.ok) throw new Error(result.message.key);
 }
 
 /** Removes the test workspace's Netlify connection and its projects' hosting. */

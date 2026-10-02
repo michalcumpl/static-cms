@@ -1,6 +1,6 @@
-import { error } from "@sveltejs/kit";
+import { i18n } from "$lib/i18n";
 import { projectPaths } from "$lib/project-paths";
-import { requireMember } from "$lib/server/access";
+import { notFound, requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { servePreview } from "$lib/server/preview";
 import { primaryLanguage } from "$lib/server/site-documents";
@@ -10,12 +10,6 @@ import type { RequestHandler } from "./$types";
 // Rendered links end in a slash; don't redirect them away.
 export const trailingSlash = "ignore";
 
-const savedAt = new Intl.DateTimeFormat("en-GB", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "Europe/Prague",
-});
-
 /**
  * A read-only preview of one saved version of a language (version-history design.md decision 2),
  * with a banner saying which version it is and a link back to the history.
@@ -24,10 +18,12 @@ export const GET: RequestHandler = async (event) => {
   const { params } = event;
   requireMember(event, params.project);
   const version = readVersion(getDb(), params.project, params.version);
-  if (!version) error(404, "Not found");
+  if (!version) notFound(event);
   const primary = primaryLanguage(getDb(), params.project);
   const paths = projectPaths(params.project, version.lang === primary ? undefined : version.lang);
-  const banner = `<p class="version-banner" style="margin:0;padding:0.5rem 1rem;background:#fff1d6;color:#3d2b00;font:0.9rem system-ui,sans-serif">Version of ${savedAt.format(version.savedAt)} · read-only · <a href="${paths.history}" style="color:inherit">Back to history</a></p>`;
+  const { t, formatDate } = i18n(event.locals.locale);
+  const date = formatDate(version.savedAt, "datetime", "Europe/Prague");
+  const banner = `<p class="version-banner" style="margin:0;padding:0.5rem 1rem;background:#fff1dc;color:#3d2b00;font:0.9rem system-ui,sans-serif">${escapeHtml(t("history.banner", { date }))} · <a href="${paths.history}" style="color:inherit">${escapeHtml(t("history.backToHistory"))}</a></p>`;
   return servePreview(
     params.project,
     [{ lang: version.lang, document: version.document, primary: true }],
@@ -39,3 +35,6 @@ export const GET: RequestHandler = async (event) => {
     },
   );
 };
+
+const ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
+const escapeHtml = (text: string) => text.replace(/[&<>"]/g, (c) => ESCAPES[c] ?? c);

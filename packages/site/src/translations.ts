@@ -71,7 +71,8 @@ export function translationStatus(primary: unknown, other: unknown): Translation
 
 export type CopyResult =
   | { ok: true; document: unknown; pageId: string }
-  | { ok: false; reason: "not-found" | "exists"; message: string };
+  | { ok: false; reason: "not-found"; message: string }
+  | { ok: false; reason: "exists"; message: string; title: string };
 
 /** Every node a page holds: its blocks and their contents, marks and annotations included. */
 function subtreeOf(d: LooseDoc, rootId: string): string[] {
@@ -124,6 +125,7 @@ export function copyPageInto(
       ok: false,
       reason: "exists",
       message: `This language already has the page as "${counterpart.title}".`,
+      title: counterpart.title,
     };
   }
 

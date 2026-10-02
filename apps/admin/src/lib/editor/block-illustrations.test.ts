@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { BLOCK_ILLUSTRATIONS, ILLUSTRATION_VIEWBOX } from "./block-illustrations";
-import { BLOCK_NAMES } from "./handles";
+import { BLOCK_TYPES } from "./handles";
 
 describe("block illustrations", () => {
   it("draws every block type, decoratively, on the shared canvas", () => {
-    for (const type of Object.keys(BLOCK_NAMES) as (keyof typeof BLOCK_NAMES)[]) {
+    for (const type of BLOCK_TYPES) {
       const markup = BLOCK_ILLUSTRATIONS[type];
       expect(markup, type).toMatch(/^<svg [^>]*viewBox="0 0 120 72"[^>]*aria-hidden="true"/);
       expect(markup, type).toMatch(/<\/svg>$/);

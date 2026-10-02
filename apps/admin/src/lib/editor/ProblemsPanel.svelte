@@ -2,6 +2,7 @@
 import { type Problem, validateSite } from "@static-cms/site";
 import { tick, untrack } from "svelte";
 import { goto } from "$app/navigation";
+import { getI18n } from "$lib/i18n";
 import {
   businessFieldElementId,
   locateMark,
@@ -15,6 +16,7 @@ import {
 import type { EditorState } from "./state.svelte";
 
 let { editor, focusCanvas }: { editor: EditorState; focusCanvas: () => void } = $props();
+const i18n = getI18n();
 
 type Doc = Parameters<typeof locateNode>[0];
 
@@ -107,14 +109,14 @@ async function show(problem: Problem) {
 
 <section class="panel" aria-labelledby="problems-title">
   <h2 id="problems-title">
-    Problems
+    {i18n.t("editor.problems.title")}
     {#if problems.length > 0}<span class="count">{problems.length}</span>{/if}
   </h2>
   {#if problems.length === 0}
-    <p class="none">No problems. The site can be published.</p>
+    <p class="none">{i18n.t("editor.problems.none")}</p>
   {:else}
     {#if errors > 0}
-      <p class="summary">Preview and download wait until the errors are fixed. You can still save.</p>
+      <p class="summary">{i18n.t("editor.problems.blocking")}</p>
     {/if}
     <ul>
       {#each problems as problem, index (index)}
@@ -144,7 +146,7 @@ async function show(problem: Problem) {
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   .count {
@@ -152,15 +154,15 @@ async function show(problem: Problem) {
     min-width: 1.4em;
     padding: 0 0.3em;
     border-radius: 1em;
-    background: #a3161a;
-    color: #fff;
+    background: var(--ui-problem);
+    color: var(--ui-surface);
     text-align: center;
   }
 
   .none,
   .summary {
     font-size: 0.9rem;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   ul {
@@ -171,7 +173,7 @@ async function show(problem: Problem) {
 
   li {
     padding: 0.4rem 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--ui-border);
     font-size: 0.9rem;
   }
 
@@ -187,7 +189,7 @@ async function show(problem: Problem) {
   }
 
   button:focus-visible {
-    outline: 2px solid #1f5a8a;
+    outline: 2px solid var(--ui-focus);
   }
 
   .severity {
@@ -195,10 +197,10 @@ async function show(problem: Problem) {
   }
 
   .error .severity {
-    color: #a3161a;
+    color: var(--ui-problem);
   }
 
   .warning .severity {
-    color: #8a5a00;
+    color: var(--ui-attention);
   }
 </style>

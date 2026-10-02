@@ -1,3 +1,5 @@
+import { type Said, sayIn } from "$lib/i18n";
+
 // Where published sites go (netlify-publishing design.md decision 1). One adapter so far:
 // Netlify; another provider only needs another implementation of `PublishTarget`.
 
@@ -22,12 +24,12 @@ export interface PublishTarget {
 
 export type PublishErrorKind = "unauthorized" | "unreachable" | "name-taken" | "failed";
 
-/** A provider failure, with a message an owner can read. */
+/** A provider failure, with a message an owner can read in their language (`said`). */
 export class PublishError extends Error {
   constructor(
     readonly kind: PublishErrorKind,
-    message: string,
+    readonly said: Said,
   ) {
-    super(message);
+    super(sayIn("en", said));
   }
 }

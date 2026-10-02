@@ -1,4 +1,5 @@
 import { and, eq, gt, isNull } from "drizzle-orm";
+import { i18n, isLocale, type Locale } from "$lib/i18n";
 import type { Db } from "./db/index";
 import { loginTokens, sessions, users } from "./db/schema";
 import { hashToken, newToken } from "./ids";
@@ -49,6 +50,8 @@ export interface SignInRequest {
   /** Origin for the link in the email, e.g. `https://admin.example.cz`. */
   origin: string;
   next?: string | null;
+  /** The language of the page the link was requested from. */
+  locale: Locale;
 }
 
 /**
@@ -67,7 +70,11 @@ export async function requestSignIn(
   const byClient = limiter.allow(`client:${request.clientAddress}`, now);
   if (!byEmail || !byClient) return "rate-limited";
 
-  const user = db.select({ id: users.id }).from(users).where(eq(users.email, email)).get();
+  const user = db
+    .select({ id: users.id, uiLanguage: users.uiLanguage })
+    .from(users)
+    .where(eq(users.email, email))
+    .get();
   if (!user) return "sent";
 
   const token = newToken();
@@ -76,10 +83,12 @@ export async function requestSignIn(
     .run();
   const next = safeNext(request.next);
   const link = `${request.origin}/signin/${token}${next === "/" ? "" : `?next=${encodeURIComponent(next)}`}`;
+  // In the account's language, else the language the person is looking at now.
+  const { t } = i18n(isLocale(user.uiLanguage) ? user.uiLanguage : request.locale);
   await mailer.send({
     to: email,
-    subject: "Přihlášení / Sign in",
-    text: `Pro přihlášení otevřete tento odkaz (platí 15 minut):\nTo sign in, open this link (valid for 15 minutes):\n\n${link}\n`,
+    subject: t("emails.signInSubject"),
+    text: t("emails.signInText", { link }),
   });
   return "sent";
 }
@@ -135,6 +144,8 @@ export function createSession(db: Db, userId: string, now = Date.now()): string 
 export interface SessionUser {
   id: string;
   email: string;
+  /** The interface language they chose, if any. */
+  uiLanguage: string | null;
 }
 
 /**
@@ -144,7 +155,12 @@ export interface SessionUser {
 export function getSessionUser(db: Db, token: string, now = Date.now()): SessionUser | undefined {
   const id = hashToken(token);
   const row = db
-    .select({ expiresAt: sessions.expiresAt, userId: users.id, email: users.email })
+    .select({
+      expiresAt: sessions.expiresAt,
+      userId: users.id,
+      email: users.email,
+      uiLanguage: users.uiLanguage,
+    })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
     .where(eq(sessions.id, id))
@@ -160,7 +176,7 @@ export function getSessionUser(db: Db, token: string, now = Date.now()): Session
       .where(eq(sessions.id, id))
       .run();
   }
-  return { id: row.userId, email: row.email };
+  return { id: row.userId, email: row.email, uiLanguage: row.uiLanguage };
 }
 
 export function deleteSession(db: Db, token: string): void {

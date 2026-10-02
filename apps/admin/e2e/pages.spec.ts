@@ -16,7 +16,7 @@ test.describe("editor addresses", () => {
     const response = await page.goto(paths().edit("does-not-exist"));
     // The editor is rendered in the browser, so the not-found page comes from the client.
     expect(response?.status()).toBeLessThan(500);
-    await expect(page.getByText("There is no such page.")).toBeVisible();
+    await expect(page.getByText("Page not found")).toBeVisible();
   });
 });
 

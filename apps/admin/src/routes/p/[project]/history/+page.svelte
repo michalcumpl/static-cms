@@ -1,11 +1,19 @@
 <script lang="ts">
 import { goto, invalidateAll } from "$app/navigation";
+import { getI18n } from "$lib/i18n";
 import { projectPaths } from "$lib/project-paths";
+import Badge from "$lib/ui/Badge.svelte";
+import Button from "$lib/ui/Button.svelte";
+import Card from "$lib/ui/Card.svelte";
+import Notice from "$lib/ui/Notice.svelte";
+import Page from "$lib/ui/Page.svelte";
+import PageHeader from "$lib/ui/PageHeader.svelte";
 import type { PageProps } from "./$types";
 
 // A language's saved versions (version-history design.md decision 2): preview any of them, and
 // restore one as a new version.
 let { data }: PageProps = $props();
+const i18n = getI18n();
 
 interface Entry {
   id: string;
@@ -33,8 +41,7 @@ $effect.pre(() => {
 });
 const entries = $derived([...(data.history.versions as Entry[]), ...older]);
 
-const format = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" });
-const when = (date: string | Date) => format.format(new Date(date));
+const when = (date: string | Date) => i18n.formatDate(date);
 
 async function showOlder() {
   const last = entries.at(-1);
@@ -75,31 +82,40 @@ async function confirmRestore(event: SubmitEvent) {
     message =
       body.message ??
       body.problems?.map((p) => p.message).join(" ") ??
-      `Restoring failed (${response.status}).`;
+      i18n.t("history.restoreFailed", { status: response.status });
     restored = false;
     return;
   }
-  message = `Restored the version of ${when(restoring.savedAt)}.`;
+  message = i18n.t("history.restored", { date: when(restoring.savedAt) });
   restored = true;
   await invalidateAll();
 }
 </script>
 
 <svelte:head>
-  <title>History – {data.project.name} – Static CMS</title>
+  <title>{i18n.t("common.pageTitle", { page: i18n.t("history.pageTitle", { project: data.project.name }) })}</title>
 </svelte:head>
 
-<main>
-  <p class="crumbs">
-    <a href={projectPaths(data.project.id).overview}>← {data.project.name}</a> ·
-    <a href={paths.edit()}>Open the editor</a>
-  </p>
-  <h1>History</h1>
+<Page width="narrow">
+  <PageHeader
+    title={i18n.t("history.title")}
+    breadcrumb={[
+      { href: "/", label: i18n.t("projects.title") },
+      { href: projectPaths(data.project.id).overview, label: data.project.name },
+    ]}
+    breadcrumbLabel={i18n.t("common.breadcrumb")}
+  >
+    {#snippet actions()}
+      <Button href={paths.edit()} kind="primary" icon="pencil">{i18n.t("project.openEditor")}</Button>
+    {/snippet}
+    {i18n.t("history.hint", { language: languageName })}
+  </PageHeader>
 
   {#if data.languages.length > 1}
-    <label class="language">
-      Language
+    <div class="language">
+      <label for="history-language">{i18n.t("history.language")}</label>
       <select
+        id="history-language"
         value={data.lang}
         onchange={(e) => {
           const lang = e.currentTarget.value;
@@ -110,96 +126,97 @@ async function confirmRestore(event: SubmitEvent) {
           <option value={language.lang}>{language.name}</option>
         {/each}
       </select>
-    </label>
+    </div>
   {/if}
-
-  <p class="hint">
-    Every save of {languageName} is kept. Restoring a version saves it again as the newest one, so you
-    can always go back.
-  </p>
 
   {#if message}
-    <p class:ok={restored} class:bad={!restored} role="status">
-      {message}
-      {#if restored}<a href={paths.edit()}>Open the editor</a>{/if}
-    </p>
+    <Notice kind={restored ? "success" : "problem"}>
+      <p role="status">
+        {message}
+        {#if restored}<a href={paths.edit()}>{i18n.t("project.openEditor")}</a>{/if}
+      </p>
+    </Notice>
   {/if}
 
-  <ol class="versions">
-    {#each entries as entry (entry.id)}
-      <li>
-        <span class="when">{when(entry.savedAt)}</span>
-        <span class="who">{entry.savedBy ?? "a former member"}</span>
-        <span class="marks">
-          {#if entry.current}<span class="mark current">Current</span>{/if}
-          {#if entry.live}<span class="mark live">Live</span>{/if}
-          {#if entry.published}<span class="mark">Published</span>{/if}
-          {#if entry.restoredFrom}
-            <span class="mark">Restored from {when(entry.restoredFrom.savedAt)}</span>
-          {/if}
-        </span>
-        <span class="actions">
-          <a href={paths.version(entry.id)} target="_blank" rel="noopener"
-            >Preview<span class="visually-hidden"> the version of {when(entry.savedAt)}</span></a
-          >
-          {#if !entry.current}
-            <button type="button" onclick={() => askRestore(entry)}>
-              Restore<span class="visually-hidden"> the version of {when(entry.savedAt)}</span>
-            </button>
-          {/if}
-        </span>
-      </li>
-    {/each}
-  </ol>
-  {#if more}
-    <button type="button" onclick={showOlder}>Show older</button>
-  {/if}
-</main>
+  <Card>
+    <ol class="versions" aria-label={i18n.t("history.versions")}>
+      {#each entries as entry (entry.id)}
+        <li>
+          <span class="when">{when(entry.savedAt)}</span>
+          <span class="who">{entry.savedBy ?? i18n.t("history.formerMember")}</span>
+          <span class="marks">
+            {#if entry.current}<Badge status="neutral">{i18n.t("history.current")}</Badge>{/if}
+            {#if entry.live}<Badge status="success">{i18n.t("history.live")}</Badge>{/if}
+            {#if entry.published}<Badge status="neutral">{i18n.t("history.published")}</Badge>{/if}
+            {#if entry.restoredFrom}
+              <Badge status="attention">{i18n.t("history.restoredFrom", { date: when(entry.restoredFrom.savedAt) })}</Badge>
+            {/if}
+          </span>
+          <span class="actions">
+            <Button
+              size="sm"
+              icon="eye"
+              href={paths.version(entry.id)}
+              target="_blank"
+              rel="noopener"
+              aria-label={i18n.t("history.previewVersion", { date: when(entry.savedAt) })}
+            >
+              {i18n.t("common.preview")}
+            </Button>
+            {#if !entry.current}
+              <Button
+                size="sm"
+                icon="history"
+                aria-label={i18n.t("history.restoreVersion", { date: when(entry.savedAt) })}
+                onclick={() => askRestore(entry)}
+              >
+                {i18n.t("history.restore")}
+              </Button>
+            {/if}
+          </span>
+        </li>
+      {/each}
+    </ol>
+    {#if more}
+      <div><Button onclick={showOlder}>{i18n.t("history.showOlder")}</Button></div>
+    {/if}
+  </Card>
+</Page>
 
 <dialog bind:this={dialog} aria-labelledby="restore-title">
   <form onsubmit={confirmRestore}>
-    <h2 id="restore-title">Restore the version of {restoring ? when(restoring.savedAt) : ""}?</h2>
-    <p>
-      {languageName} goes back to this version. It's saved as a new version, so you can undo this from
-      the history. The live site changes at the next publish.
-    </p>
+    <h2 id="restore-title">{i18n.t("history.restoreTitle", { date: restoring ? when(restoring.savedAt) : "" })}</h2>
+    <p>{i18n.t("history.restoreText", { language: languageName })}</p>
     {#if isPrimary && data.languages.length > 1}
-      <p>
-        Shared fields (the theme, favicon and business details) come from {languageName}, so they
-        change for every language.
-      </p>
+      <p>{i18n.t("history.sharedText", { language: languageName })}</p>
     {/if}
     <div class="buttons">
-      <button type="button" onclick={() => dialog?.close()}>Cancel</button>
-      <button type="submit">Restore</button>
+      <Button onclick={() => dialog?.close()}>{i18n.t("common.cancel")}</Button>
+      <Button type="submit" kind="primary">{i18n.t("history.restore")}</Button>
     </div>
   </form>
 </dialog>
 
 <style>
-  main {
-    max-width: 48rem;
-    margin: 0 auto;
-    padding: 1rem;
-    font-family: system-ui, sans-serif;
-    line-height: 1.5;
-  }
-
   .versions {
-    list-style: none;
-    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
   .versions li {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: var(--ui-space-3);
     align-items: center;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid #eee;
+    padding: var(--ui-space-3) 0;
+    border-bottom: 1px solid var(--ui-border);
+  }
+
+  .versions li:last-child {
+    border-bottom: 0;
   }
 
   .when {
@@ -208,65 +225,65 @@ async function confirmRestore(event: SubmitEvent) {
   }
 
   .who {
-    color: #555;
-    min-width: 10rem;
+    color: var(--ui-muted);
+    min-width: 9rem;
   }
 
   .marks {
     display: flex;
-    gap: 0.3rem;
+    flex-wrap: wrap;
+    gap: var(--ui-space-1);
     flex: 1;
-  }
-
-  .mark {
-    padding: 0 0.4rem;
-    border-radius: 0.3rem;
-    background: #eee;
-    font-size: 0.8rem;
-  }
-
-  .mark.current {
-    background: #dde7f0;
-  }
-
-  .mark.live {
-    background: #d8f0dd;
   }
 
   .actions {
     display: flex;
-    gap: 0.5rem;
-  }
-
-  .hint {
-    color: #555;
-  }
-
-  .ok {
-    color: #1a6b2f;
-  }
-
-  .bad {
-    color: #a3161a;
+    gap: var(--ui-space-2);
   }
 
   .language {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--ui-space-2);
     align-items: center;
+  }
+
+  .language label {
+    font-weight: 600;
+    font-size: var(--ui-text-sm);
+  }
+
+  select {
+    min-height: var(--ui-control-sm);
+    padding: 0 var(--ui-space-3);
+    border: 1px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-field);
+    background: var(--ui-surface);
+    font: var(--ui-text-sm) var(--ui-font);
+  }
+
+  dialog {
+    width: min(30rem, calc(100vw - 2rem));
+    padding: var(--ui-space-5);
+    border: 0;
+    border-radius: var(--ui-radius-card);
+    box-shadow: var(--ui-shadow-pop);
+    font-family: var(--ui-font);
+    color: var(--ui-ink);
+  }
+
+  dialog::backdrop {
+    background: rgb(24 41 45 / 0.4);
+  }
+
+  dialog h2 {
+    margin: 0 0 var(--ui-space-3);
+    font-size: var(--ui-text-lg);
   }
 
   .buttons {
     display: flex;
     justify-content: flex-end;
-    gap: 0.5rem;
-  }
-
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
+    gap: var(--ui-space-2);
+    margin-top: var(--ui-space-4);
   }
 </style>

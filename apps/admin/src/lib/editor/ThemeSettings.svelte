@@ -10,6 +10,7 @@ import {
   THEME_PRESETS,
   type ThemeColor,
 } from "@static-cms/site";
+import { getI18n, type Messages } from "$lib/i18n";
 import ImageSetting from "./ImageSetting.svelte";
 import { themeFieldElementId } from "./locate";
 import SharedNote from "./SharedNote.svelte";
@@ -34,28 +35,24 @@ import {
 // The site's look (theme-and-branding design.md decision 7): everything here is part of the
 // document, shared by every language, undoable, previewed and published like the pages.
 let { editor }: { editor: EditorState } = $props();
+const i18n = getI18n();
 
 const theme = $derived(themeSettings(editor.session.doc));
 const site = $derived(siteSettings(editor.session.doc));
 const hasLogo = $derived(slotImage(editor.session.doc, site.id, "logo") !== undefined);
 const shared = $derived(editor.sharedReadOnly);
 
-const COLORS: [ThemeColor, string][] = [
-  ["color_primary", "Primary (links and buttons)"],
-  ["color_secondary", "Secondary (panels and lines)"],
-  ["color_background", "Background"],
-  ["color_text", "Text"],
-];
+const COLORS: ThemeColor[] = ["color_primary", "color_secondary", "color_background", "color_text"];
+const colorLabel = (field: ThemeColor) => i18n.t(`editor.theme.colors.${field}`);
 
-const FONT_ROLES: [ThemeFont, string][] = [
-  ["font_heading", "Heading font"],
-  ["font_body", "Body font"],
-];
+const FONT_ROLES: ThemeFont[] = ["font_heading", "font_body"];
 
-const LENGTHS: [ThemeLength, string, readonly { label: string; value: string }[]][] = [
-  ["radius", "Corners", RADIUS_CHOICES],
-  ["content_width", "Content width", WIDTH_CHOICES],
-];
+const LENGTHS: [ThemeLength, "corners" | "width", readonly { key: ChoiceKey; value: string }[]][] =
+  [
+    ["radius", "corners", RADIUS_CHOICES],
+    ["content_width", "width", WIDTH_CHOICES],
+  ];
+type ChoiceKey = (typeof RADIUS_CHOICES | typeof WIDTH_CHOICES)[number]["key"];
 
 /** A colour picker only takes `#rrggbb`. */
 const sixDigits = (hex: string) =>
@@ -66,7 +63,9 @@ const contrast = $derived(
     const fg = theme[pair.fg];
     const bg = theme[pair.bg];
     const ratio = isHexColor(fg) && isHexColor(bg) ? contrastRatio(fg, bg) : undefined;
-    return { ...pair, fg, bg, ratio, passes: ratio !== undefined && ratio >= MIN_CONTRAST };
+    // The site package names the pairs in English; the catalogue says them per language.
+    const key = `${pair.fg}_${pair.bg}` as keyof Messages["editor"]["theme"]["pairs"];
+    return { ...pair, key, fg, bg, ratio, passes: ratio !== undefined && ratio >= MIN_CONTRAST };
   }),
 );
 
@@ -76,11 +75,11 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
 <svelte:head>{@html previewCss}</svelte:head>
 
 <section class="panel" aria-labelledby="theme-panel-title" data-history-keys>
-  <h2 id="theme-panel-title">Theme</h2>
+  <h2 id="theme-panel-title">{i18n.t("editor.theme.title")}</h2>
   {#if shared}<SharedNote {editor} tab="theme" />{/if}
 
   <fieldset disabled={shared}>
-    <legend>Start from a preset</legend>
+    <legend>{i18n.t("editor.theme.presets")}</legend>
     <div class="presets">
       {#each THEME_PRESETS as preset (preset.name)}
         <button
@@ -106,14 +105,14 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
   </fieldset>
 
   <fieldset disabled={shared}>
-    <legend>Colours</legend>
-    {#each COLORS as [field, label] (field)}
+    <legend>{i18n.t("editor.theme.colours")}</legend>
+    {#each COLORS as field (field)}
       <div class="color">
-        <label for={themeFieldElementId(field)}>{label}</label>
+        <label for={themeFieldElementId(field)}>{colorLabel(field)}</label>
         <div class="color-inputs">
           <input
             type="color"
-            aria-label="{label}: pick"
+            aria-label={i18n.t("editor.theme.pick", { label: colorLabel(field) })}
             value={sixDigits(theme[field])}
             oninput={(e) => setThemeColor(editor.session, field, e.currentTarget.value)}
           />
@@ -133,30 +132,30 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
   </fieldset>
 
   <div class="contrast" aria-labelledby="theme-contrast-title" role="group">
-    <h3 id="theme-contrast-title">Readability</h3>
+    <h3 id="theme-contrast-title">{i18n.t("editor.theme.readability")}</h3>
     <ul>
       {#each contrast as pair (pair.name)}
         <li class:fails={!pair.passes}>
           <span class="sample" style:color={pair.fg} style:background={pair.bg} aria-hidden="true">
             Aa
           </span>
-          <span class="pair-name">{pair.name}</span>
+          <span class="pair-name">{i18n.t(`editor.theme.pairs.${pair.key}`)}</span>
           <span class="ratio">
             {#if pair.ratio === undefined}
               –
             {:else}
-              {pair.ratio.toFixed(2)}:1 · {pair.passes ? "Readable" : "Too low"}
+              {pair.ratio.toFixed(2)}:1 · {pair.passes ? i18n.t("editor.theme.readable") : i18n.t("editor.theme.tooLow")}
             {/if}
           </span>
         </li>
       {/each}
     </ul>
-    <p class="hint">Text needs a contrast of at least {MIN_CONTRAST}:1 to be easy to read.</p>
+    <p class="hint">{i18n.t("editor.theme.contrastHint", { min: MIN_CONTRAST })}</p>
   </div>
 
-  {#each FONT_ROLES as [field, label] (field)}
+  {#each FONT_ROLES as field (field)}
     <fieldset id={themeFieldElementId(field)} tabindex="-1" disabled={shared}>
-      <legend>{label}</legend>
+      <legend>{i18n.t(`editor.theme.fonts.${field}`)}</legend>
       {#each FONT_IDS as id (id)}
         <label class="choice font-choice">
           <input
@@ -167,7 +166,7 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
             onchange={() => setThemeFont(editor.session, field, id)}
           />
           <span style:font-family={fontStack(id)}>{FONTS[id].name}</span>
-          <span class="kind">{FONTS[id].kind === "serif" ? "serif" : "sans-serif"}</span>
+          <span class="kind">{i18n.t(`editor.theme.kinds.${FONTS[id].kind}`)}</span>
         </label>
       {/each}
     </fieldset>
@@ -175,7 +174,7 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
 
   {#each LENGTHS as [field, label, choices] (field)}
     <fieldset id={themeFieldElementId(field)} tabindex="-1" disabled={shared}>
-      <legend>{label}</legend>
+      <legend>{i18n.t(`editor.theme.${label}`)}</legend>
       <div class="row">
         {#each choices as choice (choice.value)}
           <label class="choice">
@@ -186,13 +185,13 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
               checked={theme[field] === choice.value}
               onchange={() => setThemeLength(editor.session, field, choice.value)}
             />
-            {choice.label}
+            {i18n.t(`editor.theme.choices.${choice.key}`)}
           </label>
         {/each}
         {#if !choices.some((choice) => choice.value === theme[field])}
           <label class="choice">
             <input type="radio" name={field} checked disabled />
-            Custom ({theme[field]})
+            {i18n.t("editor.theme.custom", { value: theme[field] })}
           </label>
         {/if}
       </div>
@@ -203,10 +202,10 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
     {editor}
     ownerId={site.id}
     slot="logo"
-    label="Logo (shown in the header)"
+    label={i18n.t("editor.theme.logo")}
     fieldId={themeFieldElementId("logo")}
     locked={shared}
-    emptyNote="No logo: the header shows the site name."
+    emptyNote={i18n.t("editor.theme.logoNone")}
     set={(image) => setLogo(editor.session, image)}
   />
   <label class="check">
@@ -218,19 +217,19 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
       aria-describedby="theme-show-name-hint"
       onchange={(e) => setHeaderShowName(editor.session, e.currentTarget.checked)}
     />
-    Show the site name next to the logo
+    {i18n.t("editor.theme.showName")}
   </label>
   <p class="hint" id="theme-show-name-hint">
     {hasLogo
-      ? "When it's off, the logo stands alone and the site name describes it."
-      : "Without a logo the header always shows the site name."}
+      ? i18n.t("editor.theme.showNameHint")
+      : i18n.t("editor.theme.showNameNoLogo")}
   </p>
 </section>
 
 <style>
   .panel {
     padding: 1rem;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--ui-border);
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -241,7 +240,7 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   h3 {
@@ -252,7 +251,7 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
   fieldset {
     margin: 0.5rem 0 0;
     padding: 0.4rem 0.6rem 0.6rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--ui-border);
     border-radius: 0.3rem;
   }
 
@@ -276,13 +275,13 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
     align-items: flex-start;
     gap: 0.3rem;
     padding: 0.4rem 0.5rem;
-    border: 1px solid #bbb;
+    border: 1px solid var(--ui-border-strong);
     font: inherit;
     cursor: pointer;
   }
 
   .preset[aria-pressed="true"] {
-    outline: 2px solid #1f5a8a;
+    outline: 2px solid var(--ui-focus);
     outline-offset: 1px;
   }
 
@@ -318,7 +317,7 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
     width: 2.2rem;
     height: 1.8rem;
     padding: 0;
-    border: 1px solid #bbb;
+    border: 1px solid var(--ui-border-strong);
   }
 
   .hex {
@@ -350,17 +349,17 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
   .sample {
     grid-row: span 2;
     padding: 0.2rem 0;
-    border: 1px solid #ccc;
+    border: 1px solid var(--ui-border);
     text-align: center;
     font-weight: 700;
   }
 
   .ratio {
-    color: #2b6a2b;
+    color: var(--ui-success);
   }
 
   .fails .ratio {
-    color: #a32020;
+    color: var(--ui-problem);
     font-weight: 700;
   }
 
@@ -378,7 +377,7 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
   .kind {
     margin-left: auto;
     font-size: 0.75rem;
-    color: #666;
+    color: var(--ui-muted);
   }
 
   .row {
@@ -397,6 +396,6 @@ const previewCss = `<style>${fontPreviewCss("/fonts/")}</style>`;
   .hint {
     margin: 0;
     font-size: 0.85rem;
-    color: #555;
+    color: var(--ui-muted);
   }
 </style>

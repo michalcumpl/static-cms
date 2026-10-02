@@ -51,7 +51,7 @@ test.describe("someone else's project", () => {
     await signIn(context, state().outsider);
     // The editor renders in the browser only, so its 404 is a page, not an HTTP status.
     await page.goto(paths().edit());
-    await expect(page.getByText("404")).toBeVisible();
+    await expect(page.getByText("Page not found")).toBeVisible();
     await expect(page.locator(".site-canvas")).toHaveCount(0);
     // The overview is rendered on the server and answers with the status itself.
     const overview = await page.goto(paths().overview);
@@ -78,7 +78,7 @@ test("an owner invites an editor, who signs in and edits", async ({ page, browse
   const theirs = await invited.newPage();
   await theirs.goto(await latestLink(editor, since));
   await theirs.getByRole("button", { name: "Accept invitation" }).click();
-  await expect(theirs.getByText(editor)).toBeVisible();
+  await expect(theirs.getByRole("button", { name: `Account: ${editor}` })).toBeVisible();
   await expect(theirs.getByRole("link", { name: "New project" })).toHaveCount(0);
 
   await theirs.getByRole("link", { name: "Edit" }).click();

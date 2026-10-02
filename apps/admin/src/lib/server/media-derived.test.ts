@@ -39,7 +39,7 @@ async function uploaded(name: string, bytes: Uint8Array | Buffer): Promise<strin
     { name, bytes: new Uint8Array(bytes) },
     root,
   );
-  if (!result.ok) throw new Error(result.message);
+  if (!result.ok) throw new Error(JSON.stringify(result.message));
   return result.media.key;
 }
 

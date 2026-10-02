@@ -102,12 +102,10 @@ export function duplicatePage(session: Session, pageId: string): string | undefi
   return copyId;
 }
 
-/** Why a page can't be deleted, or undefined when it can. */
-export function cannotDelete(doc: Document, pageId: string): string | undefined {
-  if (siteOf(doc).home_page_id === pageId) {
-    return "The home page can't be deleted. Set another page as home first.";
-  }
-  if (siteOf(doc).pages.nodes.length <= 1) return "A site needs at least one page.";
+/** Why a page can't be deleted (`editor.page.cannotDelete.<reason>`), or undefined when it can. */
+export function cannotDelete(doc: Document, pageId: string): "home" | "last" | undefined {
+  if (siteOf(doc).home_page_id === pageId) return "home";
+  if (siteOf(doc).pages.nodes.length <= 1) return "last";
   return undefined;
 }
 
@@ -242,10 +240,10 @@ export function moveMenuItem(session: Session, from: number, to: number): void {
   session.apply(tr);
 }
 
-export type MenuLinkResult = LinkAddressCheck | { ok: false; message: string };
+export type MenuLinkResult = LinkAddressCheck;
 
 function checkMenuLink(label: string, address: string): MenuLinkResult {
-  if (label.trim() === "") return { ok: false, message: "Enter a label for the menu." };
+  if (label.trim() === "") return { ok: false, reason: "noLabel" };
   return checkLinkAddress(address);
 }
 

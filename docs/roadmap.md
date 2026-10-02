@@ -194,6 +194,19 @@ upload are all out of M2 on purpose. All of them are done.
   A History page per project and language lists every saved version (who, when; marked current,
   live, published, restored from); any version can be previewed read-only and restored, which
   saves it as a new version, so restores can be undone too. Every version is kept.
+- **Admin redesign, step 1 of 4 – foundation: done** ([`admin-foundation`](../openspec/changes/admin-foundation/)).
+  - **A design system** in the "Glacier" direction: DM Sans (self-hosted), pale blue-green
+    ground, pill buttons and tabs, 12/18px radii, status colours; `--ui-*` tokens and shared
+    components in `src/lib/ui/`, none of which reach into the site canvas.
+  - **An app shell:** a top bar with the product mark, the workspace switcher and the account
+    menu, which also holds the interface language; compact above the editor.
+  - **Czech and English** for the whole admin: pages, editor, server messages and emails, with
+    Czech plural forms and date formats. The language comes from the account, else the switch on
+    this device, else the browser; a test fails on text outside the catalogues.
+  - Next steps: project tabs (Site and Business move out of the editor into a project Settings
+    tab, the theme stays as a Design panel), a projects dashboard with live thumbnails, and a
+    public landing page with a request-access form. Also: translating the site's validation
+    (problem) messages, which stay in English for now.
 
 Still open: open sign-up (a switch, when billing exists) and Google sign-in.
 

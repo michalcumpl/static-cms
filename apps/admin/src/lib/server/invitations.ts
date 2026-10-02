@@ -1,6 +1,7 @@
 // Invitations (specs/accounts: "Invitations"). The only way, besides the admin command,
 // that accounts are created.
 import { and, eq, gt, isNull } from "drizzle-orm";
+import { i18n, type Locale } from "$lib/i18n";
 import { normalizeEmail } from "./auth";
 import type { Db } from "./db/index";
 import { invitations, type Role, users, workspaces } from "./db/schema";
@@ -17,6 +18,8 @@ export interface InviteRequest {
   role: Role;
   /** Origin for the link in the email. */
   origin: string;
+  /** The inviting owner's language; the invited person has no account to have one yet. */
+  locale: Locale;
 }
 
 export type InviteResult =
@@ -59,10 +62,12 @@ export async function invite(
     .where(eq(workspaces.id, request.workspaceId))
     .get();
   const link = `${request.origin}/invite/${token}`;
+  const { t } = i18n(request.locale);
+  const name = workspace?.name ?? "";
   await mailer.send({
     to: email,
-    subject: `Pozvánka: ${workspace?.name} / Invitation`,
-    text: `Byli jste pozváni do „${workspace?.name}“. Pozvánku přijmete tímto odkazem (platí 7 dní):\nYou were invited to "${workspace?.name}". Accept with this link (valid for 7 days):\n\n${link}\n`,
+    subject: t("emails.invitationSubject", { workspace: name }),
+    text: t("emails.invitationText", { workspace: name, link }),
   });
   return { ok: true, invitationId };
 }

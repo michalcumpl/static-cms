@@ -1,4 +1,5 @@
 <script lang="ts">
+import { getI18n } from "$lib/i18n";
 import { type ImageSlot, setSlotImage, setSlotImageAlt, slotImage } from "./site";
 import type { EditorState } from "./state.svelte";
 import type { ChosenImage } from "./transforms";
@@ -34,6 +35,7 @@ let {
   /** Puts the chosen image into the slot, or empties it; `setSlotImage` unless given. */
   set?: (image: ChosenImage | undefined) => void;
 } = $props();
+const i18n = getI18n();
 
 const image = $derived(slotImage(editor.session.doc, ownerId, slot));
 
@@ -62,7 +64,7 @@ async function choose() {
       disabled={locked}
       onclick={choose}
     >
-      {image ? "Change…" : "Choose…"}
+      {image ? i18n.t("editor.image.change") : i18n.t("editor.image.choose")}
     </button>
     {#if image}
       <button
@@ -71,12 +73,12 @@ async function choose() {
         disabled={locked}
         onclick={() => set(undefined)}
       >
-        Remove
+        {i18n.t("editor.image.remove")}
       </button>
     {/if}
   </div>
   {#if image && altFieldId}
-    <label for={altFieldId}>Description of the image</label>
+    <label for={altFieldId}>{i18n.t("editor.image.description")}</label>
     <input
       id={altFieldId}
       type="text"
@@ -104,14 +106,14 @@ async function choose() {
     aspect-ratio: 1200 / 630;
     object-fit: cover;
     border-radius: 0.3rem;
-    background: #eee;
+    background: var(--ui-border);
   }
 
   img.square {
     width: 4rem;
     aspect-ratio: 1;
     object-fit: contain;
-    background: repeating-conic-gradient(#e6e6e6 0 25%, #fff 0 50%) 0 0 / 0.5rem 0.5rem;
+    background: repeating-conic-gradient(var(--ui-border) 0 25%, var(--ui-surface) 0 50%) 0 0 / 0.5rem 0.5rem;
   }
 
   .buttons {
@@ -127,6 +129,6 @@ async function choose() {
   .hint {
     margin: 0;
     font-size: 0.85rem;
-    color: #555;
+    color: var(--ui-muted);
   }
 </style>

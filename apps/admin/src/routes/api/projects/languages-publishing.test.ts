@@ -36,7 +36,7 @@ async function connect() {
     token: TOKEN,
     account: "anideti",
   });
-  if (!result.ok) throw new Error(result.message);
+  if (!result.ok) throw new Error(JSON.stringify(result.message));
 }
 
 /** Adds English (published or not) with "Kontakt" translated as "Contact" at `contact`. */

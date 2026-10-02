@@ -1,4 +1,5 @@
 import { json } from "@sveltejs/kit";
+import { i18n } from "$lib/i18n";
 import { requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { restoreVersion } from "$lib/server/versions";
@@ -21,12 +22,11 @@ export const POST: RequestHandler = async (event) => {
     baseVersion,
   );
   if (result.ok) return json({ lang: result.lang });
-  if (result.reason === "not-found") return json({ message: "Not found" }, { status: 404 });
+  const { t } = i18n(event.locals.locale);
+  if (result.reason === "not-found")
+    return json({ message: t("server.notFound") }, { status: 404 });
   if (result.reason === "conflict") {
-    return json(
-      { message: "The site was changed meanwhile. Reload the history and try again." },
-      { status: 409 },
-    );
+    return json({ message: t("server.site.restoreConflict") }, { status: 409 });
   }
   return json({ problems: "problems" in result ? result.problems : [] }, { status: 422 });
 };

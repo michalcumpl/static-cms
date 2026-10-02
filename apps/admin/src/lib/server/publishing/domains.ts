@@ -1,5 +1,6 @@
 import { resolve4, resolveCname } from "node:dns/promises";
 import { and, eq, ne } from "drizzle-orm";
+import { type Said, said } from "$lib/i18n";
 import type { Db } from "../db/index";
 import { projectHosting, projects } from "../db/schema";
 import { type NetlifyEnv, publishTarget } from "./connection";
@@ -49,7 +50,7 @@ export type DomainResult =
   | {
       ok: false;
       reason: "invalid" | "not-published" | "taken" | "not-connected";
-      message: string;
+      message: Said;
     };
 
 function hostingOf(db: Db, projectId: string) {
@@ -74,7 +75,7 @@ export async function connectDomain(
     return {
       ok: false,
       reason: "invalid",
-      message: "Enter a domain name only, such as anideti.cz or web.anideti.cz.",
+      message: said("server.domains.invalid"),
     };
   }
   const hosting = hostingOf(db, projectId);
@@ -82,7 +83,7 @@ export async function connectDomain(
     return {
       ok: false,
       reason: "not-published",
-      message: "Publish the site once before connecting a domain.",
+      message: said("server.domains.publishFirst"),
     };
   }
   const taken = db
@@ -94,14 +95,14 @@ export async function connectDomain(
     return {
       ok: false,
       reason: "taken",
-      message: `${domain} is already connected to another site.`,
+      message: said("server.domains.taken", { domain }),
     };
   const connection = publishTarget(db, workspaceOf(db, projectId), options);
   if (!connection) {
     return {
       ok: false,
       reason: "not-connected",
-      message: "This workspace isn't connected to Netlify.",
+      message: said("server.domains.notConnected"),
     };
   }
   await connection.target.connectDomain(

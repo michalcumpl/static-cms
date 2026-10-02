@@ -1,4 +1,5 @@
 import { json } from "@sveltejs/kit";
+import { i18n } from "$lib/i18n";
 import { requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { checkDomain } from "$lib/server/publishing/domains";
@@ -11,7 +12,8 @@ export const POST: RequestHandler = async (event) => {
   try {
     return json({ state: (await checkDomain(getDb(), event.params.project)) ?? null });
   } catch (err) {
-    if (err instanceof PublishError) return json({ message: err.message }, { status: 502 });
+    if (err instanceof PublishError)
+      return json({ message: i18n(event.locals.locale).say(err.said) }, { status: 502 });
     throw err;
   }
 };

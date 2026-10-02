@@ -1,4 +1,5 @@
 import { error, json } from "@sveltejs/kit";
+import { i18n } from "$lib/i18n";
 import { requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { addLanguage, projectLanguages } from "$lib/server/site-documents";
@@ -27,7 +28,7 @@ export const POST: RequestHandler = async (event) => {
   const result = addLanguage(getDb(), event.params.project, lang, user.id);
   if (!result.ok) {
     const status = result.reason === "exists" ? 409 : result.reason === "not-found" ? 404 : 400;
-    return json({ message: result.message }, { status });
+    return json({ message: i18n(event.locals.locale).say(result.message) }, { status });
   }
   return json(projectLanguages(getDb(), event.params.project), { status: 201 });
 };

@@ -1,6 +1,6 @@
 import { usedMediaFiles } from "@static-cms/site";
-import { error, json } from "@sveltejs/kit";
-import { requireMember } from "$lib/server/access";
+import { json } from "@sveltejs/kit";
+import { notFound, requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { siteFontNames } from "$lib/server/fonts";
 import { readLanguages } from "$lib/server/site-documents";
@@ -13,7 +13,7 @@ import type { RequestHandler } from "./$types";
 export const GET: RequestHandler = (event) => {
   requireMember(event, event.params.project, { api: true });
   const sites = readLanguages(getDb(), event.params.project, "published");
-  if (sites.length === 0) error(404, "Not found");
+  if (sites.length === 0) notFound(event);
   const mediaFiles = [...new Set(sites.flatMap((site) => usedMediaFiles(site.document)))].sort();
   return json({
     languages: sites.map(({ lang, primary, document }) => ({ lang, primary, document })),

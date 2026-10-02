@@ -42,8 +42,20 @@ export type SaveStatus =
   | { kind: "idle" }
   | { kind: "saving" }
   | { kind: "saved" }
-  | { kind: "conflict"; message: string }
-  | { kind: "error"; message: string; problems?: Problem[] };
+  /** `message` is the server's own explanation, in the interface language; else a default. */
+  | { kind: "conflict"; message?: string }
+  /**
+   * `broken`: the document was refused with `problems`; else `message` from the server, the
+   * HTTP status, or the exception that stopped the request.
+   */
+  | {
+      kind: "error";
+      message?: string;
+      broken?: boolean;
+      problems?: Problem[];
+      httpStatus?: number;
+      exception?: string;
+    };
 
 type SiteNodes = Record<string, { type: string; [key: string]: unknown }>;
 type NodeList = { nodes: string[] };
@@ -209,24 +221,14 @@ export class EditorState {
         this.savedProblems = body.problems;
         this.status = { kind: "saved" };
       } else if (response.status === 409) {
-        this.status = {
-          kind: "conflict",
-          message: body.message ?? "The site was changed elsewhere.",
-        };
+        this.status = { kind: "conflict", message: body.message };
       } else if (response.status === 422) {
-        this.status = {
-          kind: "error",
-          message: "The document is broken and was not saved.",
-          problems: body.problems,
-        };
+        this.status = { kind: "error", broken: true, problems: body.problems };
       } else {
-        this.status = {
-          kind: "error",
-          message: body.message ?? `Saving failed (${response.status}).`,
-        };
+        this.status = { kind: "error", message: body.message, httpStatus: response.status };
       }
     } catch (error) {
-      this.status = { kind: "error", message: `Saving failed: ${String(error)}` };
+      this.status = { kind: "error", exception: String(error) };
     }
   }
 }

@@ -1,12 +1,15 @@
 <script lang="ts">
 import type { DocumentPath, SveditContext } from "svedit";
 import { getContext } from "svelte";
+import { getI18n } from "$lib/i18n";
 import { chooseImage } from "../image-slots";
 import { getEditor } from "../state.svelte";
 import Child from "./Child.svelte";
 
 /** `path` is the image's owner (a hero, text with image or person); its image goes here. */
-let { path, label = "Add image…" }: { path: DocumentPath; label?: string } = $props();
+const i18n = getI18n();
+let { path, label = i18n.t("editor.canvas.addImage") }: { path: DocumentPath; label?: string } =
+  $props();
 const svedit = getContext<SveditContext>("svedit");
 const editor = getEditor();
 const owner = $derived(svedit.session.get(path) as { id: string; image: { nodes: string[] } });

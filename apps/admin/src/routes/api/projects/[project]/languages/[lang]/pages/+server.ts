@@ -1,4 +1,5 @@
 import { error, json } from "@sveltejs/kit";
+import { i18n } from "$lib/i18n";
 import { requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { copyPageToLanguage } from "$lib/server/site-documents";
@@ -30,5 +31,8 @@ export const POST: RequestHandler = async (event) => {
     user.id,
   );
   if (result.ok) return json({ pageId: result.pageId, title: result.title }, { status: 201 });
-  return json({ message: result.message }, { status: result.reason === "not-found" ? 404 : 409 });
+  return json(
+    { message: i18n(event.locals.locale).say(result.message) },
+    { status: result.reason === "not-found" ? 404 : 409 },
+  );
 };

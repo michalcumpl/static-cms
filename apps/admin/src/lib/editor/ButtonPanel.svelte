@@ -1,4 +1,5 @@
 <script lang="ts">
+import { getI18n } from "$lib/i18n";
 import {
   addButton,
   canAddButton,
@@ -13,6 +14,7 @@ import type { EditorState } from "./state.svelte";
 // Where the selected button of a hero or call to action points, and adding or removing
 // buttons (cta-and-testimonials design.md decision 3).
 let { editor }: { editor: EditorState } = $props();
+const i18n = getI18n();
 
 type Doc = Parameters<typeof canRemoveButton>[0];
 const found = $derived(selectedButton(editor.session));
@@ -36,7 +38,7 @@ function choosePage(pageId: string) {
 function applyAddress() {
   if (!button) return;
   const result = setButtonAddress(editor.session, button.id, address);
-  error = result.ok ? "" : result.message;
+  error = result.ok ? "" : i18n.t(`editor.links.${result.reason}`);
 }
 
 const canRemove = $derived(
@@ -46,10 +48,10 @@ const canRemove = $derived(
 
 {#if block}
   <section class="panel" aria-labelledby="button-panel-title" data-history-keys>
-    <h2 id="button-panel-title">{button ? "Button" : "Buttons"}</h2>
+    <h2 id="button-panel-title">{button ? i18n.t("editor.buttons.button") : i18n.t("editor.buttons.buttons")}</h2>
     {#if button}
       <fieldset>
-        <legend>Links to</legend>
+        <legend>{i18n.t("editor.buttons.linksTo")}</legend>
         <label class="check">
           <input
             type="radio"
@@ -60,11 +62,11 @@ const canRemove = $derived(
               choosePage(button.page_id || editor.homeId);
             }}
           />
-          A page of the site
+          {i18n.t("editor.buttons.page")}
         </label>
         {#if kind === "page"}
           <select
-            aria-label="Page"
+            aria-label={i18n.t("editor.buttons.pageLabel")}
             value={button.page_id}
             onchange={(e) => choosePage(e.currentTarget.value)}
           >
@@ -80,13 +82,13 @@ const canRemove = $derived(
             checked={kind === "address"}
             onchange={() => (kind = "address")}
           />
-          An address
+          {i18n.t("editor.buttons.address")}
         </label>
         {#if kind === "address"}
           <input
             type="text"
-            aria-label="Address"
-            placeholder="https://… or tel:+420…"
+            aria-label={i18n.t("editor.buttons.addressLabel")}
+            placeholder={i18n.t("editor.buttons.addressExample")}
             bind:value={address}
             onchange={applyAddress}
             onkeydown={(e) => e.key === "Enter" && applyAddress()}
@@ -104,15 +106,15 @@ const canRemove = $derived(
         disabled={!canRemove}
         onclick={() => removeButton(editor.session, button.id)}
       >
-        Remove button
+        {i18n.t("editor.buttons.remove")}
       </button>
       {#if !canRemove}
-        <p class="hint">A call to action keeps at least one button.</p>
+        <p class="hint">{i18n.t("editor.buttons.keepOne")}</p>
       {/if}
     {/if}
     {#if canAddButton(block)}
       <button type="button" onclick={() => addButton(editor.session, block.id)}>
-        Add a button
+        {i18n.t("editor.buttons.add")}
       </button>
     {/if}
   </section>
@@ -121,7 +123,7 @@ const canRemove = $derived(
 <style>
   .panel {
     padding: 1rem;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--ui-border);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -133,7 +135,7 @@ const canRemove = $derived(
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   fieldset {
@@ -166,17 +168,17 @@ const canRemove = $derived(
 
   .error {
     margin: 0;
-    color: #a3161a;
+    color: var(--ui-problem);
     font-size: 0.85rem;
   }
 
   .hint {
     margin: 0;
     font-size: 0.85rem;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   .danger {
-    color: #a3161a;
+    color: var(--ui-problem);
   }
 </style>

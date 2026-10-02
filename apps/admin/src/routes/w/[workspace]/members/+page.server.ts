@@ -1,6 +1,6 @@
-import { error, fail } from "@sveltejs/kit";
+import { fail } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
-import { requireOwner, requireUser } from "$lib/server/access";
+import { notFound, requireOwner, requireUser } from "$lib/server/access";
 import { getDb, getMailer } from "$lib/server/app";
 import { type Role, roles, workspaces } from "$lib/server/db/schema";
 import { cancelInvitation, invite, pendingInvitations } from "$lib/server/invitations";
@@ -13,7 +13,7 @@ export const load: PageServerLoad = (event) => {
   const db = getDb();
   const workspaceId = event.params.workspace;
   const role = roleIn(db, user.id, workspaceId);
-  if (!role) error(404, "Not found");
+  if (!role) notFound(event);
   const workspace = db.select().from(workspaces).where(eq(workspaces.id, workspaceId)).get();
   return {
     user,
@@ -28,33 +28,25 @@ function asRole(value: FormDataEntryValue | null): Role | undefined {
   return roles.find((r) => r === value);
 }
 
-const changeMessages = {
-  forbidden: "Only owners can change members.",
-  "not-found": "That person isn't a member any more.",
-  "last-owner": "A workspace needs at least one owner. Make someone else an owner first.",
-};
-
 export const actions: Actions = {
   invite: async (event) => {
     const user = requireOwner(event, event.params.workspace);
     const form = await event.request.formData();
     const email = String(form.get("email") ?? "");
     const role = asRole(form.get("role"));
-    if (!role) return fail(400, { invite: { email, message: "Choose a role." } });
+    // Failures carry a reason; the page says it in the interface language.
+    if (!role) return fail(400, { invite: { email, reason: "choose-role" as const } });
     const result = await invite(getDb(), getMailer(), {
       actorId: user.id,
       workspaceId: event.params.workspace,
       email,
       role,
       origin: event.url.origin,
+      locale: event.locals.locale,
     });
     if (!result.ok) {
-      const message = {
-        forbidden: "Only owners can invite.",
-        "already-member": `${email} is already a member.`,
-        "invalid-email": "Enter an email address.",
-      }[result.reason];
-      return fail(400, { invite: { email, message } });
+      const reason = result.reason === "forbidden" ? ("forbidden-invite" as const) : result.reason;
+      return fail(400, { invite: { email, reason } });
     }
     return { invited: email.trim().toLowerCase() };
   },
@@ -63,7 +55,7 @@ export const actions: Actions = {
     const user = requireOwner(event, event.params.workspace);
     const form = await event.request.formData();
     const role = asRole(form.get("role"));
-    if (!role) return fail(400, { change: { message: "Choose a role." } });
+    if (!role) return fail(400, { change: { reason: "choose-role" as const } });
     const result = changeRole(
       getDb(),
       user.id,
@@ -71,7 +63,7 @@ export const actions: Actions = {
       String(form.get("userId")),
       role,
     );
-    if (!result.ok) return fail(400, { change: { message: changeMessages[result.reason] } });
+    if (!result.ok) return fail(400, { change: { reason: result.reason } });
     return { changed: true };
   },
 
@@ -84,7 +76,7 @@ export const actions: Actions = {
       event.params.workspace,
       String(form.get("userId")),
     );
-    if (!result.ok) return fail(400, { change: { message: changeMessages[result.reason] } });
+    if (!result.ok) return fail(400, { change: { reason: result.reason } });
     return { removed: true };
   },
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+import { getI18n } from "$lib/i18n";
 import {
   chooseImage,
   IMAGE_ALT_FIELD,
@@ -6,11 +7,11 @@ import {
   ownerOfSelectedImage,
   removeImageFrom,
 } from "./image-slots";
-import { ALLOWED_ADDRESSES } from "./links";
 import type { EditorState } from "./state.svelte";
 import { setImageAlt, setImageDecorative, setImageSide, setLogoLink } from "./transforms";
 
 let { editor }: { editor: EditorState } = $props();
+const i18n = getI18n();
 
 type ImageNode = { id: string; type: "image"; src: string; alt: string; decorative: boolean };
 const image = $derived.by(() => {
@@ -59,7 +60,7 @@ function applyLink(kind: "none" | "page" | "address") {
     kind === "none" ? null : kind === "page" ? { page: linkPage } : { address: linkAddress },
   );
   if (!result.ok) {
-    linkError = result.message;
+    linkError = i18n.t(`editor.links.${result.reason}`);
     return;
   }
   linkError = "";
@@ -88,68 +89,69 @@ function onDecorativeChange(event: Event & { currentTarget: HTMLInputElement }) 
 
 {#if image}
   <section class="panel" aria-labelledby="image-panel-title">
-    <h2 id="image-panel-title">Image</h2>
+    <h2 id="image-panel-title">{i18n.t("editor.imagePanel.title")}</h2>
     <p class="file">{image.src}</p>
     {#if owner}
       <div class="actions">
-        <button type="button" onclick={() => owner && chooseImage(editor, owner.id)}>Replace…</button>
+        <button type="button" onclick={() => owner && chooseImage(editor, owner.id)}>{i18n.t("editor.imagePanel.replace")}</button>
         {#if OPTIONAL_IMAGE_OWNERS.includes(owner.type)}
-          <button type="button" onclick={() => owner && removeImageFrom(editor, owner.id)}>Remove</button>
+          <button type="button" onclick={() => owner && removeImageFrom(editor, owner.id)}>{i18n.t("editor.imagePanel.remove")}</button>
         {/if}
       </div>
     {/if}
     {#if owner?.type === "text_with_image"}
       <fieldset class="side">
-        <legend>Image position</legend>
-        <label><input type="radio" name="image-side" checked={ownerNode?.image_side === "left"} onchange={() => setSide("left")} /> Left of the text</label>
-        <label><input type="radio" name="image-side" checked={ownerNode?.image_side !== "left"} onchange={() => setSide("right")} /> Right of the text</label>
+        <legend>{i18n.t("editor.imagePanel.position")}</legend>
+        <label><input type="radio" name="image-side" checked={ownerNode?.image_side === "left"} onchange={() => setSide("left")} /> {i18n.t("editor.imagePanel.left")}</label>
+        <label><input type="radio" name="image-side" checked={ownerNode?.image_side !== "left"} onchange={() => setSide("right")} /> {i18n.t("editor.imagePanel.right")}</label>
       </fieldset>
     {/if}
     {#if isLogo}
-      <p class="described">Described by its name: <strong>{ownerNode?.name?.content || "(no name yet)"}</strong></p>
+      <p class="described">{i18n.t("editor.imagePanel.describedBy")} <strong>{ownerNode?.name?.content || i18n.t("editor.imagePanel.noName")}</strong></p>
       <fieldset class="link">
-        <legend>Link</legend>
-        <label><input type="radio" name="logo-link" bind:group={linkKind} value="none" onchange={() => applyLink("none")} /> No link</label>
-        <label><input type="radio" name="logo-link" bind:group={linkKind} value="page" onchange={() => applyLink("page")} /> A page of this site</label>
+        <legend>{i18n.t("editor.imagePanel.link")}</legend>
+        <label><input type="radio" name="logo-link" bind:group={linkKind} value="none" onchange={() => applyLink("none")} /> {i18n.t("editor.imagePanel.noLink")}</label>
+        <label><input type="radio" name="logo-link" bind:group={linkKind} value="page" onchange={() => applyLink("page")} /> {i18n.t("editor.imagePanel.page")}</label>
         {#if linkKind === "page"}
-          <select aria-label="Page" bind:value={linkPage} onchange={() => applyLink("page")}>
+          <select aria-label={i18n.t("editor.imagePanel.pageLabel")} bind:value={linkPage} onchange={() => applyLink("page")}>
             {#each editor.pages as page (page.id)}
               <option value={page.id}>{page.title}</option>
             {/each}
           </select>
         {/if}
-        <label><input type="radio" name="logo-link" bind:group={linkKind} value="address" /> An address</label>
+        <label><input type="radio" name="logo-link" bind:group={linkKind} value="address" /> {i18n.t("editor.imagePanel.address")}</label>
         {#if linkKind === "address"}
           <input
             type="text"
-            aria-label="Address"
+            aria-label={i18n.t("editor.imagePanel.addressLabel")}
             placeholder="https://"
+            data-i18n-ignore
             bind:value={linkAddress}
             onchange={() => applyLink("address")}
             onkeydown={(e) => e.key === "Enter" && applyLink("address")}
           />
-          <p class="hint">Use {ALLOWED_ADDRESSES}.</p>
+          <p class="hint">{i18n.t("editor.links.hint")}</p>
         {/if}
         {#if linkError}<p class="error" role="alert">{linkError}</p>{/if}
       </fieldset>
     {:else}
     <label>
       <input type="checkbox" checked={image.decorative} onchange={onDecorativeChange} />
-      Decorative (adds nothing a reader needs)
+      {i18n.t("editor.imagePanel.decorative")}
     </label>
     <label class="alt">
-      Description (alt text)
+      {i18n.t("editor.imagePanel.alt")}
       <textarea
         id={IMAGE_ALT_FIELD}
         rows="3"
         value={image.alt}
         oninput={onAltInput}
         disabled={image.decorative}
-        placeholder="What the image shows, for people who can't see it"
+        placeholder={i18n.t("editor.imagePanel.altPlaceholder")}
       ></textarea>
     </label>
     {#if !image.decorative && image.alt.trim() === ""}
-      <p class="hint" role="status">Describe the image, or mark it as decorative.</p>
+      <p class="hint" role="status">{i18n.t("editor.imagePanel.altMissing")}</p>
     {/if}
     {/if}
   </section>
@@ -158,7 +160,7 @@ function onDecorativeChange(event: Event & { currentTarget: HTMLInputElement }) 
 <style>
   .panel {
     padding: 1rem;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--ui-border);
   }
 
   h2 {
@@ -166,14 +168,14 @@ function onDecorativeChange(event: Event & { currentTarget: HTMLInputElement }) 
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   .file {
     margin: 0 0 0.75rem;
     font-family: ui-monospace, monospace;
     font-size: 0.85rem;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   .actions {
@@ -214,12 +216,12 @@ function onDecorativeChange(event: Event & { currentTarget: HTMLInputElement }) 
   }
 
   .error {
-    color: #a3161a;
+    color: var(--ui-problem);
     font-size: 0.9rem;
   }
 
   .hint {
-    color: #8a5a00;
+    color: var(--ui-attention);
     font-size: 0.9rem;
   }
 </style>

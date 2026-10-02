@@ -1,14 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { en } from "$lib/i18n/en";
+import { translate } from "$lib/i18n/translate";
 import { projectPaths } from "$lib/project-paths";
 import { demoSite, imageBlocksSite } from "$lib/server/demo";
-import {
-  BLOCK_DESCRIPTIONS,
-  BLOCK_NAMES,
-  handleTargets,
-  selectionLabel,
-  unavailableReason,
-} from "./handles";
+import { BLOCK_TYPES, handleTargets, selectionLabel, unavailableReason } from "./handles";
 import { EditorState } from "./state.svelte";
+
+const t = (key: Parameters<typeof translate>[1], params?: Record<string, string | number>) =>
+  translate("en", key, params);
 
 function setup(document: unknown = demoSite()) {
   return new EditorState({ document, version: "v1", problems: [] }, projectPaths("p")).session;
@@ -65,16 +64,16 @@ describe("selectionLabel", () => {
   it("names a selected block", () => {
     const session = setup();
     select(session, home, 1);
-    expect(selectionLabel(session)).toBe("Services block");
+    expect(selectionLabel(session, t)).toBe("Services block");
   });
 
   it("names a selected item with its place in the list", () => {
     const session = setup(imageBlocksSite());
     select(session, [...gallery, 1, "items"], 2);
-    expect(selectionLabel(session)).toBe("Photo 3 of 3");
+    expect(selectionLabel(session, t)).toBe("Photo 3 of 3");
     const demo = setup();
     select(demo, [...home, 2, "body", 2, "items"], 2);
-    expect(selectionLabel(demo)).toBe("List item 3 of 3");
+    expect(selectionLabel(demo, t)).toBe("List item 3 of 3");
   });
 
   it("says nothing for the caret, a paragraph or the navigation", () => {
@@ -85,11 +84,11 @@ describe("selectionLabel", () => {
       anchor_offset: 0,
       focus_offset: 3,
     };
-    expect(selectionLabel(session)).toBeUndefined();
+    expect(selectionLabel(session, t)).toBeUndefined();
     select(session, [...home, 2, "body"], 1);
-    expect(selectionLabel(session)).toBeUndefined();
+    expect(selectionLabel(session, t)).toBeUndefined();
     select(session, ["site_1", "nav", "items"], 0);
-    expect(selectionLabel(session)).toBeUndefined();
+    expect(selectionLabel(session, t)).toBeUndefined();
   });
 });
 
@@ -97,21 +96,19 @@ describe("unavailableReason", () => {
   const withHero = [{ type: "hero" }, { type: "services" }];
 
   it("says why a hero can't go between blocks or onto a page with one", () => {
-    expect(unavailableReason("hero", withHero, 1)).toBe("A page has only one hero");
-    expect(unavailableReason("hero", [{ type: "services" }], 1)).toBe(
-      "Only at the top of a page without a hero",
-    );
+    expect(unavailableReason("hero", withHero, 1)).toBe("oneHero");
+    expect(unavailableReason("hero", [{ type: "services" }], 1)).toBe("onlyTop");
     expect(unavailableReason("hero", [{ type: "services" }], 0)).toBeUndefined();
   });
 
   it("says nothing goes above a hero", () => {
-    expect(unavailableReason("gallery", withHero, 0)).toBe("The hero stays at the top of the page");
+    expect(unavailableReason("gallery", withHero, 0)).toBe("heroTop");
     expect(unavailableReason("gallery", withHero, 1)).toBeUndefined();
   });
 
   it("describes every block", () => {
-    for (const type of Object.keys(BLOCK_NAMES) as (keyof typeof BLOCK_NAMES)[]) {
-      expect(BLOCK_DESCRIPTIONS[type], type).toMatch(/^[A-Z].+[^.]$/);
+    for (const type of BLOCK_TYPES) {
+      expect(en.editor.blocks[type].description, type).toMatch(/^[A-Z].+[^.]$/);
     }
   });
 });

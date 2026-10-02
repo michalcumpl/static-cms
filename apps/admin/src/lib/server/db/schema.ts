@@ -16,6 +16,8 @@ export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
   createdAt: createdAt(),
+  /** The interface language the person chose (`cs` or `en`); null until they choose one. */
+  uiLanguage: text("ui_language"),
 });
 
 export const sessions = sqliteTable(

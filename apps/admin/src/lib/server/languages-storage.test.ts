@@ -78,7 +78,7 @@ describe("project languages", () => {
     expect(addLanguage(db, projectId, "en", userId)).toMatchObject({
       ok: false,
       reason: "exists",
-      message: "The project already has English.",
+      message: { key: "server.languages.alreadyHas", params: { language: "English" } },
     });
     expect(addLanguage(db, projectId, "fr", userId)).toMatchObject({
       ok: false,

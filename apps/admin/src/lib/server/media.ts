@@ -1,6 +1,7 @@
 // A project's images (media design.md decisions 1–3): upload and processing with sharp,
 // the library, and reading the published variant files and the icon and share files made
 // from them.
+
 import { createHash, randomBytes } from "node:crypto";
 import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -15,6 +16,7 @@ import {
 } from "@static-cms/site";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import sharp, { type Metadata } from "sharp";
+import { type Said, said } from "$lib/i18n";
 import type { Db } from "./db/index";
 import { media, projects, siteDocuments, versions } from "./db/schema";
 import { mediaRoot } from "./import-working-copy";
@@ -30,8 +32,6 @@ type Format = (typeof FORMATS)[number];
 const EXTENSIONS: Record<Format, string> = { jpeg: "jpg", png: "png", webp: "webp" };
 const VARIANT_QUALITY = 80;
 const ORIGINAL_QUALITY = 95;
-
-export const ACCEPTED_MESSAGE = "Only JPEG, PNG and WebP images can be uploaded.";
 
 // The site validator's rule for image sources: a plain file name that can't leave the folder.
 const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
@@ -81,7 +81,7 @@ export interface MediaItem {
 
 export type UploadResult =
   | { ok: true; created: boolean; media: MediaItem }
-  | { ok: false; status: 413 | 415; message: string };
+  | { ok: false; status: 413 | 415; message: Said };
 
 export function projectFolder(projectId: string, root = mediaRoot()): string {
   return join(root, projectId);
@@ -121,21 +121,22 @@ interface Inspected {
 /** Reads an image's header: its format and upright size, or why it can't be used. */
 async function inspect(
   bytes: Uint8Array,
-): Promise<{ ok: true; image: Inspected } | { ok: false; status: 413 | 415; message: string }> {
+): Promise<{ ok: true; image: Inspected } | { ok: false; status: 413 | 415; message: Said }> {
   let metadata: Metadata;
   try {
     metadata = await sharp(bytes, { animated: true }).metadata();
   } catch {
-    return { ok: false, status: 415, message: ACCEPTED_MESSAGE };
+    return { ok: false, status: 415, message: said("server.media.accepted") };
   }
   const format = metadata.format as Format;
-  if (!FORMATS.includes(format)) return { ok: false, status: 415, message: ACCEPTED_MESSAGE };
+  if (!FORMATS.includes(format))
+    return { ok: false, status: 415, message: said("server.media.accepted") };
   if ((metadata.pages ?? 1) > 1) {
-    return { ok: false, status: 415, message: "Animated images can't be used." };
+    return { ok: false, status: 415, message: said("server.media.animated") };
   }
   const { width = 0, height = 0 } = metadata;
   if (width * height > MAX_PIXELS) {
-    return { ok: false, status: 413, message: "Images can be at most 40 megapixels." };
+    return { ok: false, status: 413, message: said("server.media.megapixels") };
   }
   // EXIF orientations 5–8 turn the picture by 90°: the upright image is the other way round.
   const turned = (metadata.orientation ?? 1) >= 5;
@@ -212,7 +213,7 @@ export function uploadImage(
     return Promise.resolve({
       ok: false,
       status: 413,
-      message: "Images can be at most 20 MB.",
+      message: said("server.media.tooLarge"),
     });
   }
   return serially(async (): Promise<UploadResult> => {

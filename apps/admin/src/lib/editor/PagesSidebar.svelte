@@ -1,5 +1,7 @@
 <script lang="ts">
 import { goto } from "$app/navigation";
+import { getI18n } from "$lib/i18n";
+import Button from "$lib/ui/Button.svelte";
 import {
   addExternalLink,
   addPage,
@@ -12,6 +14,7 @@ import type { EditorPage, EditorState, MenuEntry } from "./state.svelte";
 import { isUntranslated } from "./translations";
 
 let { editor, projectName }: { editor: EditorState; projectName: string } = $props();
+const i18n = getI18n();
 
 // Adding a page.
 let pageDialog: HTMLDialogElement | undefined = $state();
@@ -28,7 +31,7 @@ async function submitPage(event: SubmitEvent) {
   event.preventDefault();
   const id = addPage(editor.session, newTitle);
   if (!id) {
-    pageError = "Enter a title for the page.";
+    pageError = i18n.t("editor.left.pageTitleMissing");
     return;
   }
   pageDialog?.close();
@@ -56,7 +59,7 @@ function submitLink(event: SubmitEvent) {
     ? setExternalLink(editor.session, editingItem, linkLabel, linkAddress)
     : addExternalLink(editor.session, linkLabel, linkAddress);
   if (!result.ok) {
-    linkError = result.message;
+    linkError = i18n.t(`editor.links.${result.reason}`);
     return;
   }
   linkDialog?.close();
@@ -112,15 +115,15 @@ function untranslated(page: EditorPage): boolean {
   <a href={page.href} aria-current={page.id === editor.currentPageId ? "page" : undefined}>
     {page.title}
   </a>
-  {#if page.isHome}<span class="home">Home</span>{/if}
-  {#if untranslated(page)}<span class="untranslated">Not translated</span>{/if}
+  {#if page.isHome}<span class="home">{i18n.t("editor.left.home")}</span>{/if}
+  {#if untranslated(page)}<span class="untranslated">{i18n.t("editor.left.notTranslated")}</span>{/if}
 {/snippet}
 
-<aside class="sidebar" aria-label="Pages" data-history-keys>
+<aside class="sidebar" aria-label={i18n.t("editor.left.pages")} data-history-keys>
   <a class="back" href={editor.paths.overview}>← {projectName}</a>
 
   <section aria-labelledby="menu-heading">
-    <h2 id="menu-heading">Menu</h2>
+    <h2 id="menu-heading">{i18n.t("editor.left.menu")}</h2>
     <ol
       class="entries"
       ondragover={(e) => e.preventDefault()}
@@ -145,22 +148,22 @@ function untranslated(page: EditorPage): boolean {
           <span class="move">
             <button
               type="button"
-              aria-label="Move {menuName(entry)} up"
-              title="Move up"
+              aria-label={i18n.t("editor.left.moveUp", { name: menuName(entry) })}
+              title={i18n.t("editor.toolbar.moveUp")}
               disabled={entry.index === 0}
               onclick={() => moveMenuItem(editor.session, entry.index, entry.index - 1)}>↑</button
             >
             <button
               type="button"
-              aria-label="Move {menuName(entry)} down"
-              title="Move down"
+              aria-label={i18n.t("editor.left.moveDown", { name: menuName(entry) })}
+              title={i18n.t("editor.toolbar.moveDown")}
               disabled={entry.index >= lastIndex}
               onclick={() => moveMenuItem(editor.session, entry.index, entry.index + 1)}>↓</button
             >
           </span>
         </li>
       {:else}
-        <li class="empty">The menu is empty.</li>
+        <li class="empty">{i18n.t("editor.left.menuEmpty")}</li>
       {/each}
     </ol>
   </section>
@@ -170,51 +173,51 @@ function untranslated(page: EditorPage): boolean {
     ondragover={(e) => e.preventDefault()}
     ondrop={dropOnUnlisted}
   >
-    <h2 id="unlisted-heading">Not in menu</h2>
+    <h2 id="unlisted-heading">{i18n.t("editor.left.notInMenu")}</h2>
     <ul class="entries">
       {#each editor.unlisted as page (page.id)}
         <li draggable="true" ondragstart={() => (dragged = { kind: "unlisted", pageId: page.id })}>
           <span class="name">{@render pageLink(page)}</span>
         </li>
       {:else}
-        <li class="empty">Every page is in the menu.</li>
+        <li class="empty">{i18n.t("editor.left.allInMenu")}</li>
       {/each}
     </ul>
   </section>
 
   <div class="add">
-    <button type="button" onclick={openPageDialog}>+ Page</button>
-    <button type="button" onclick={() => openLinkDialog()}>+ Link</button>
+    <Button size="sm" onclick={openPageDialog}>{i18n.t("editor.left.addPage")}</Button>
+    <Button size="sm" onclick={() => openLinkDialog()}>{i18n.t("editor.left.addLink")}</Button>
   </div>
 </aside>
 
 <dialog bind:this={pageDialog} aria-labelledby="add-page-title" class="sidebar-dialog">
   <form onsubmit={submitPage}>
-    <h2 id="add-page-title">Add a page</h2>
-    <label for="add-page-name">Title</label>
+    <h2 id="add-page-title">{i18n.t("editor.left.addPageTitle")}</h2>
+    <label for="add-page-name">{i18n.t("editor.left.title")}</label>
     <input id="add-page-name" type="text" bind:value={newTitle} />
     {#if pageError}<p class="error" role="alert">{pageError}</p>{/if}
     <div class="buttons">
-      <button type="button" onclick={() => pageDialog?.close()}>Cancel</button>
-      <button type="submit">Add page</button>
+      <Button onclick={() => pageDialog?.close()}>{i18n.t("common.cancel")}</Button>
+      <Button type="submit" kind="primary">{i18n.t("editor.left.addPageButton")}</Button>
     </div>
   </form>
 </dialog>
 
 <dialog bind:this={linkDialog} aria-labelledby="menu-link-title" class="sidebar-dialog">
   <form onsubmit={submitLink}>
-    <h2 id="menu-link-title">{editingItem ? "Edit menu link" : "Add a link to the menu"}</h2>
-    <label for="menu-link-label">Label</label>
+    <h2 id="menu-link-title">{editingItem ? i18n.t("editor.left.editLink") : i18n.t("editor.left.addLinkTitle")}</h2>
+    <label for="menu-link-label">{i18n.t("editor.left.label")}</label>
     <input id="menu-link-label" type="text" bind:value={linkLabel} />
-    <label for="menu-link-address">Address</label>
-    <input id="menu-link-address" type="text" bind:value={linkAddress} placeholder="https://" />
+    <label for="menu-link-address">{i18n.t("editor.left.address")}</label>
+    <input id="menu-link-address" type="text" bind:value={linkAddress} placeholder="https://" data-i18n-ignore />
     {#if linkError}<p class="error" role="alert">{linkError}</p>{/if}
     <div class="buttons">
       {#if editingItem}
-        <button type="button" class="danger" onclick={removeLink}>Remove from menu</button>
+        <Button kind="danger" onclick={removeLink}>{i18n.t("editor.left.removeFromMenu")}</Button>
       {/if}
-      <button type="button" onclick={() => linkDialog?.close()}>Cancel</button>
-      <button type="submit">{editingItem ? "Save" : "Add link"}</button>
+      <Button onclick={() => linkDialog?.close()}>{i18n.t("common.cancel")}</Button>
+      <Button type="submit" kind="primary">{editingItem ? i18n.t("common.save") : i18n.t("editor.left.addLinkButton")}</Button>
     </div>
   </form>
 </dialog>
@@ -228,7 +231,7 @@ function untranslated(page: EditorPage): boolean {
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   .entries {
@@ -261,8 +264,8 @@ function untranslated(page: EditorPage): boolean {
     margin-left: 0.3rem;
     padding: 0 0.3rem;
     border-radius: 0.3rem;
-    background: #fff1d6;
-    color: #8a5a00;
+    background: var(--ui-attention-soft);
+    color: var(--ui-attention);
     font-size: 0.75rem;
   }
 
@@ -270,7 +273,7 @@ function untranslated(page: EditorPage): boolean {
     margin-left: 0.3rem;
     padding: 0 0.3rem;
     border-radius: 0.3rem;
-    background: #dde7f0;
+    background: var(--ui-soft);
     font-size: 0.75rem;
   }
 
@@ -281,15 +284,32 @@ function untranslated(page: EditorPage): boolean {
   }
 
   .external:focus-visible {
-    outline: 2px solid #1f5a8a;
+    outline: 2px solid var(--ui-focus);
   }
 
   .move button {
-    padding: 0 0.3rem;
+    min-width: 1.75rem;
+    min-height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ui-radius-pill);
+    background: transparent;
+    color: var(--ui-ink);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .move button:hover:not(:disabled) {
+    background: var(--ui-soft);
+  }
+
+  .move button:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 
   .empty {
-    color: #777;
+    color: var(--ui-muted);
     font-size: 0.85rem;
   }
 
@@ -300,7 +320,7 @@ function untranslated(page: EditorPage): boolean {
 
   .sidebar-dialog {
     min-width: 22rem;
-    font-family: system-ui, sans-serif;
+    font-family: var(--ui-font);
   }
 
   .sidebar-dialog form {
@@ -317,12 +337,8 @@ function untranslated(page: EditorPage): boolean {
   }
 
   .error {
-    color: #a3161a;
+    color: var(--ui-problem);
     margin: 0;
-  }
-
-  .danger {
-    color: #a3161a;
   }
 
   .buttons {

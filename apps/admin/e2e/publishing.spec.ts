@@ -89,7 +89,7 @@ test.describe("the Publishing page", () => {
   }) => {
     await page.goto(paths().publishing);
     await expect(page.getByRole("status").first()).toContainText("isn't connected to Netlify yet");
-    await expect(page.getByRole("link", { name: "workspace's Netlify settings" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Open the Netlify settings" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Publish", exact: true })).toBeDisabled();
   });
 
@@ -182,7 +182,7 @@ test.describe("the workspace's Netlify settings", () => {
     const email = "petr.editor@example.cz";
     let editor = testDb().select().from(users).where(eq(users.email, email)).get();
     if (!editor) {
-      editor = { id: newId("u"), email, createdAt: new Date() };
+      editor = { id: newId("u"), email, createdAt: new Date(), uiLanguage: null };
       testDb().insert(users).values(editor).run();
       addMember(testDb(), state().workspaceId, editor.id, "editor");
     }

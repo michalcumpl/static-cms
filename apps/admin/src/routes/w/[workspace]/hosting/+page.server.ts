@@ -1,6 +1,5 @@
-import { error } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
-import { requireUser } from "$lib/server/access";
+import { notFound, requireUser } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { workspaces } from "$lib/server/db/schema";
 import { roleIn } from "$lib/server/members";
@@ -14,7 +13,7 @@ export const load: PageServerLoad = (event) => {
   const db = getDb();
   const workspaceId = event.params.workspace;
   const role = roleIn(db, user.id, workspaceId);
-  if (!role) error(404, "Not found");
+  if (!role) notFound(event);
   const workspace = db.select().from(workspaces).where(eq(workspaces.id, workspaceId)).get();
   return {
     role,

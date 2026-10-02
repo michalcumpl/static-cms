@@ -1,5 +1,7 @@
 <script lang="ts">
 import { onDestroy, onMount, untrack } from "svelte";
+import { getI18n } from "$lib/i18n";
+import Button from "$lib/ui/Button.svelte";
 import type { ProjectPaths } from "./project-paths";
 import { Publishing } from "./publishing.svelte";
 
@@ -10,14 +12,17 @@ let {
   unsaved = false,
   beforePublish,
   publishing: shared,
+  size = "md",
 }: {
   paths: ProjectPaths;
   unsaved?: boolean;
   beforePublish?: () => Promise<boolean>;
   /** A page's own publishing state, so the page updates when this button publishes. */
   publishing?: Publishing;
+  size?: "md" | "sm";
 } = $props();
 
+const i18n = getI18n();
 // A project's paths don't change while the button is shown.
 const publishing = untrack(() => shared ?? new Publishing(paths));
 onMount(() => {
@@ -32,24 +37,38 @@ async function onclick() {
 
 const connected = $derived(publishing.info?.connected ?? true);
 const status = $derived(publishing.status);
+const failure = $derived.by(() => {
+  if (status.kind !== "failed") return "";
+  if (status.message) return status.message;
+  if (status.problems) return i18n.t("publish.fixProblems");
+  return status.httpStatus
+    ? i18n.t("publish.failed", { status: status.httpStatus })
+    : i18n.t("publish.failedPlain");
+});
 </script>
 
 <span class="publish">
-  <button
-    type="button"
+  <Button
+    kind="primary"
+    icon="upload"
+    {size}
     {onclick}
     disabled={status.kind === "publishing" || !connected}
-    title={connected ? undefined : "Connect Netlify in the workspace settings first"}
+    title={connected ? undefined : i18n.t("publish.connectFirst")}
   >
-    {status.kind === "publishing" ? "Publishing…" : unsaved ? "Save and publish" : "Publish"}
-  </button>
+    {status.kind === "publishing"
+      ? i18n.t("publish.publishing")
+      : unsaved
+        ? i18n.t("publish.saveAndPublish")
+        : i18n.t("publish.publish")}
+  </Button>
   <span class="publish-status" aria-live="polite">
     {#if !connected}
-      <a href={paths.publishing}>Not connected to Netlify</a>
+      <a href={paths.publishing}>{i18n.t("publish.notConnected")}</a>
     {:else if status.kind === "published"}
-      Published · <a href={status.url} target="_blank" rel="noopener">{status.url.replace(/^https:\/\//, "")}</a>
+      {i18n.t("publish.published")} · <a href={status.url} target="_blank" rel="noopener">{status.url.replace(/^https:\/\//, "")}</a>
     {:else if status.kind === "failed"}
-      <span class="problem">{status.message}</span>
+      <span class="problem">{failure}</span>
       {#if status.problems?.length}
         <ul class="problems">
           {#each status.problems as problem, i (i)}<li>{problem.message}</li>{/each}
@@ -63,21 +82,26 @@ const status = $derived(publishing.status);
   .publish {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    gap: var(--ui-space-2);
   }
 
   .publish-status {
-    font-size: 0.9rem;
-    color: #555;
+    font-size: var(--ui-text-sm);
+    color: var(--ui-muted);
+  }
+
+  .publish-status a {
+    color: var(--ui-link);
   }
 
   .problem {
-    color: #a3161a;
+    color: var(--ui-problem);
   }
 
   .problems {
-    margin: 0.25rem 0 0;
+    margin: var(--ui-space-1) 0 0;
     padding-left: 1.2rem;
-    color: #a3161a;
+    color: var(--ui-problem);
   }
 </style>

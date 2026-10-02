@@ -104,7 +104,10 @@ describe("access to projects", () => {
   }
 
   const event = (userId?: string, email = "x@example.cz") => ({
-    locals: userId ? { user: { id: userId, email } } : {},
+    locals: {
+      user: userId ? { id: userId, email, uiLanguage: null } : undefined,
+      locale: "en" as const,
+    },
     url: new URL("https://admin.example.cz/p/p_1/edit/?x=1"),
   });
 

@@ -1,76 +1,83 @@
 <script lang="ts">
+import { getI18n } from "$lib/i18n";
+import AuthPanel from "$lib/ui/AuthPanel.svelte";
+import Button from "$lib/ui/Button.svelte";
+import Notice from "$lib/ui/Notice.svelte";
 import type { PageProps } from "./$types";
 
 let { form }: PageProps = $props();
+const i18n = getI18n();
+// The address in bold inside the sentence: the message around its placeholder.
+const sent = $derived(i18n.t("signin.sent", { email: "\u0000" }).split("\u0000"));
 </script>
 
 <svelte:head>
-  <title>Sign in – Static CMS</title>
+  <title>{i18n.t("common.pageTitle", { page: i18n.t("signin.title") })}</title>
 </svelte:head>
 
-<main class="auth">
-  <h1>Sign in</h1>
+<AuthPanel title={i18n.t("signin.title")}>
   {#if form?.sent}
-    <p role="status">
-      Check your email. If <strong>{form.email}</strong> has an account, we sent a sign-in link. It
-      works once, for 15 minutes.
-    </p>
+    <Notice kind="success">
+      <p role="status">{sent[0]}<strong>{form.email}</strong>{sent[1]}</p>
+    </Notice>
   {:else}
     <form method="POST">
-      <label for="email">Email address</label>
-      <input
-        id="email"
-        name="email"
-        type="email"
-        autocomplete="email"
-        required
-        defaultValue={form?.email ?? ""}
-        aria-invalid={form?.invalid ? "true" : undefined}
-        aria-describedby={form?.invalid || form?.rateLimited ? "signin-error" : undefined}
-      />
-      {#if form?.invalid}
-        <p id="signin-error" class="error" role="alert">Enter an email address.</p>
-      {:else if form?.rateLimited}
-        <p id="signin-error" class="error" role="alert">Too many attempts. Try again in 15 minutes.</p>
-      {/if}
-      <button type="submit">Email me a sign-in link</button>
+      <div class="field">
+        <label for="email">{i18n.t("signin.email")}</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          defaultValue={form?.email ?? ""}
+          aria-invalid={form?.invalid ? "true" : undefined}
+          aria-describedby={form?.invalid || form?.rateLimited ? "signin-error" : undefined}
+        />
+        {#if form?.invalid}
+          <p id="signin-error" class="error" role="alert">{i18n.t("signin.invalid")}</p>
+        {:else if form?.rateLimited}
+          <p id="signin-error" class="error" role="alert">{i18n.t("signin.rateLimited")}</p>
+        {/if}
+      </div>
+      <Button type="submit" kind="primary" icon="mail">{i18n.t("signin.submit")}</Button>
     </form>
-    <p class="note">Accounts are by invitation. Ask the site's owner to invite you.</p>
+    <p class="note">{i18n.t("signin.inviteOnly")}</p>
   {/if}
-</main>
+</AuthPanel>
 
 <style>
-  .auth {
-    max-width: 24rem;
-    margin: 4rem auto;
-    padding: 0 1rem;
-    font-family: system-ui, sans-serif;
-    line-height: 1.5;
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-1);
   }
 
-  label,
-  input {
-    display: block;
-    width: 100%;
+  label {
+    font-size: var(--ui-text-sm);
+    font-weight: 600;
   }
 
   input {
-    margin: 0.25rem 0 1rem;
-    padding: 0.5rem;
-    font: inherit;
+    min-height: var(--ui-control);
+    padding: 0 var(--ui-space-3);
+    border: 1px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-field);
+    font: var(--ui-text-md) var(--ui-font);
+    color: var(--ui-ink);
   }
 
-  button {
-    font: inherit;
-    padding: 0.5rem 1rem;
+  [aria-invalid="true"] {
+    border-color: var(--ui-problem);
   }
 
   .error {
-    color: #a3161a;
+    color: var(--ui-problem);
+    font-size: var(--ui-text-sm);
   }
 
   .note {
-    color: #555;
-    font-size: 0.9rem;
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
   }
 </style>

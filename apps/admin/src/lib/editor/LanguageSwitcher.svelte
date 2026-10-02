@@ -1,15 +1,17 @@
 <script lang="ts">
 import { untrack } from "svelte";
+import { getI18n } from "$lib/i18n";
 import { projectPaths } from "$lib/project-paths";
 import type { EditorState } from "./state.svelte";
 
 // Opens another language's document (languages design.md decision 6). Each language is its own
 // editing session, so switching reloads the editor, on the page with the same translation key.
 let { editor, projectId }: { editor: EditorState; projectId: string } = $props();
+const i18n = getI18n();
 
 function switchTo(lang: string) {
   if (lang === editor.lang) return;
-  if (editor.dirty && !confirm("You have unsaved changes. Switch language anyway?")) {
+  if (editor.dirty && !confirm(i18n.t("editor.confirmLanguage"))) {
     // Put the select back on the language being edited.
     selected = editor.lang;
     return;
@@ -27,11 +29,11 @@ function switchTo(lang: string) {
 let selected = $state(untrack(() => editor.lang));
 </script>
 
-<p class="history-link"><a href={editor.paths.history}>History</a></p>
+<p class="history-link"><a href={editor.paths.history}>{i18n.t("editor.left.history")}</a></p>
 
 {#if editor.languages.length > 1}
   <div class="language-switcher">
-    <label for="editor-language">Language</label>
+    <label for="editor-language">{i18n.t("editor.left.language")}</label>
     <select
       id="editor-language"
       bind:value={selected}
@@ -39,7 +41,7 @@ let selected = $state(untrack(() => editor.lang));
     >
       {#each editor.languages as language (language.lang)}
         <option value={language.lang}>
-          {language.name}{language.published ? "" : " (hidden)"}
+          {language.published ? language.name : i18n.t("editor.left.hiddenLanguage", { language: language.name })}
         </option>
       {/each}
     </select>
@@ -64,7 +66,7 @@ let selected = $state(untrack(() => editor.lang));
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   select {

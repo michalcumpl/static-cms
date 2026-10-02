@@ -9,7 +9,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
 };
 
 export const actions: Actions = {
-  default: async ({ request, url, getClientAddress }) => {
+  default: async ({ request, url, getClientAddress, locals }) => {
     const email = String((await request.formData()).get("email") ?? "").trim();
     if (!email.includes("@")) return fail(400, { email, invalid: true });
     const result = await requestSignIn(getDb(), getMailer(), getSignInLimiter(), {
@@ -17,6 +17,7 @@ export const actions: Actions = {
       clientAddress: getClientAddress(),
       origin: url.origin,
       next: url.searchParams.get("next"),
+      locale: locals.locale,
     });
     if (result === "rate-limited") return fail(429, { email, rateLimited: true });
     return { email, sent: true };

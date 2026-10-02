@@ -76,7 +76,10 @@ export function useTestProject(
           request: new Request(url, init),
           url,
           params: { project: projectId, ...params() },
-          locals: signedIn ? { user: signedIn } : {},
+          locals: {
+            user: signedIn ? { uiLanguage: null, ...signedIn } : undefined,
+            locale: "en",
+          },
         };
       },
     };
@@ -89,6 +92,11 @@ export function useTestProject(
     if (!current) throw new Error("useTestProject: no project yet");
     return current;
   };
+}
+
+/** The same request from a person whose interface is in Czech. */
+export function inCzech<T extends { locals: App.Locals }>(event: T): T {
+  return { ...event, locals: { ...event.locals, locale: "cs" } };
 }
 
 /** What a SvelteKit `error()`/`redirect()` threw, or undefined. */

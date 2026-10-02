@@ -1,4 +1,5 @@
 <script lang="ts">
+import { getI18n } from "$lib/i18n";
 import { projectPaths } from "$lib/project-paths";
 import type { EditorState } from "./state.svelte";
 import { counterpartIn, linkChoices, linkPage, unlinkPage } from "./translations";
@@ -6,6 +7,7 @@ import { counterpartIn, linkChoices, linkPage, unlinkPage } from "./translations
 // "In other languages" (language-tools design.md decision 2): the page's counterparts, and
 // copying or linking where it has none. Only copying writes another language, on the server.
 let { editor, pageId }: { editor: EditorState; pageId: string } = $props();
+const i18n = getI18n();
 
 const page = $derived(
   editor.session.get(pageId) as { translation_key: string; title: string } | undefined,
@@ -26,7 +28,7 @@ function editUrl(lang: string, primary: boolean, targetPageId: string) {
 async function copyTo(lang: string, name: string) {
   message = "";
   if (editor.dirty) {
-    message = `Save first: ${name} gets the page as it was last saved.`;
+    message = i18n.t("editor.pageLanguages.saveFirst", { language: name });
     return;
   }
   const response = await fetch(editor.paths.copyPage(lang), {
@@ -36,17 +38,18 @@ async function copyTo(lang: string, name: string) {
   });
   const body = (await response.json().catch(() => ({}))) as { message?: string; title?: string };
   if (!response.ok) {
-    message = body.message ?? `Copying failed (${response.status}).`;
+    message =
+      body.message ?? i18n.t("editor.pageLanguages.copyFailed", { status: response.status });
     return;
   }
   await editor.reloadTranslations();
-  message = `Copied to ${name}.`;
+  message = i18n.t("editor.pageLanguages.copied", { language: name });
 }
 </script>
 
 {#if page && others.length > 0}
   <section class="page-languages" aria-labelledby="page-languages-title">
-    <h3 id="page-languages-title">In other languages</h3>
+    <h3 id="page-languages-title">{i18n.t("editor.pageLanguages.title")}</h3>
     <ul>
       {#each others as language (language.lang)}
         {@const counterpart = counterpartIn(language, page.translation_key)}
@@ -54,20 +57,20 @@ async function copyTo(lang: string, name: string) {
           <span class="name">{language.name}:</span>
           {#if counterpart}
             <a href={editUrl(language.lang, language.primary, counterpart.pageId)} data-sveltekit-reload
-              >{counterpart.title}<span class="visually-hidden"> (open in {language.name})</span></a
+              >{counterpart.title}<span class="visually-hidden"> {i18n.t("editor.pageLanguages.openIn", { language: language.name })}</span></a
             >
           {:else}
-            <span class="missing">Not translated</span>
+            <span class="missing">{i18n.t("editor.pageLanguages.notTranslated")}</span>
             <div class="actions">
               <button type="button" onclick={() => copyTo(language.lang, language.name)}>
-                Copy here<span class="visually-hidden"> ({language.name})</span>
+                {i18n.t("editor.pageLanguages.copyHere")}<span class="visually-hidden"> {i18n.t("editor.pageLanguages.inLanguage", { language: language.name })}</span>
               </button>
               {#if linkChoices(language, editor.session.doc).length > 0}
                 <label class="visually-hidden" for="link-{language.lang}"
-                  >Link to a page in {language.name}</label
+                  >{i18n.t("editor.pageLanguages.linkLabel", { language: language.name })}</label
                 >
                 <select id="link-{language.lang}" bind:value={linking[language.lang]}>
-                  <option value="">Link to an existing page…</option>
+                  <option value="">{i18n.t("editor.pageLanguages.linkChoose")}</option>
                   {#each linkChoices(language, editor.session.doc) as choice (choice.key)}
                     <option value={choice.key}>{choice.title}</option>
                   {/each}
@@ -80,7 +83,7 @@ async function copyTo(lang: string, name: string) {
                     linking[language.lang] = "";
                   }}
                 >
-                  Link<span class="visually-hidden"> to {language.name}</span>
+                  {i18n.t("editor.pageLanguages.link")}<span class="visually-hidden"> {i18n.t("editor.pageLanguages.linkTo", { language: language.name })}</span>
                 </button>
               {/if}
             </div>
@@ -90,7 +93,7 @@ async function copyTo(lang: string, name: string) {
     </ul>
     {#if hasCounterparts}
       <button type="button" onclick={() => unlinkPage(editor.session, pageId)}>
-        Unlink from other languages
+        {i18n.t("editor.pageLanguages.unlink")}
       </button>
     {/if}
     {#if message}<p class="message" role="status">{message}</p>{/if}
@@ -126,7 +129,7 @@ async function copyTo(lang: string, name: string) {
   }
 
   .missing {
-    color: #8a5a00;
+    color: var(--ui-attention);
   }
 
   .actions {

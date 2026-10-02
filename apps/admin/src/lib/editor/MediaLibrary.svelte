@@ -1,9 +1,11 @@
 <script lang="ts">
+import { getI18n } from "$lib/i18n";
 import { convertHeic, isHeic, UPLOAD_ACCEPT } from "./heic";
 import type { EditorState } from "./state.svelte";
 import type { ChosenImage } from "./transforms";
 
 let { editor }: { editor: EditorState } = $props();
+const i18n = getI18n();
 
 interface LibraryImage {
   key: string;
@@ -69,7 +71,7 @@ async function load() {
     if (!response.ok) throw new Error(`${response.status}`);
     images = await response.json();
   } catch (error) {
-    loadError = `The library couldn't be loaded (${String(error)}).`;
+    loadError = i18n.t("editor.media.loadFailed", { error: String(error) });
   }
 }
 
@@ -132,14 +134,14 @@ function send(file: File, upload: Upload): Promise<void> {
         const message =
           body.message ??
           (request.status === 413
-            ? "Images can be at most 20 MB."
-            : `Uploading failed (${request.status}).`);
+            ? i18n.t("editor.media.tooLarge")
+            : i18n.t("editor.media.uploadFailed", { status: request.status }));
         update({ state: "failed", message });
       }
       resolve();
     };
     request.onerror = () => {
-      update({ state: "failed", message: "Uploading failed: no connection to the server." });
+      update({ state: "failed", message: i18n.t("editor.media.noConnection") });
       resolve();
     };
     const body = new FormData();
@@ -170,7 +172,7 @@ async function uploadFiles(files: FileList | File[]) {
       update({ state: "converting" });
       const converted = await convertHeic(original);
       if (!converted.ok) {
-        update({ state: "failed", message: converted.message });
+        update({ state: "failed", message: i18n.t("editor.media.conversionFailed") });
         continue;
       }
       file = converted.file;
@@ -199,7 +201,7 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
     class="body"
     class:dragging
     role="region"
-    aria-label="Images"
+    aria-label={i18n.t("editor.media.title")}
     ondragover={(e) => {
       e.preventDefault();
       dragging = true;
@@ -207,12 +209,12 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
     ondragleave={() => (dragging = false)}
     ondrop={onDrop}
   >
-    <h2 id="media-library-title">Images</h2>
+    <h2 id="media-library-title">{i18n.t("editor.media.title")}</h2>
 
     <div class="drop">
-      <p>Drop photos here, or</p>
+      <p>{i18n.t("editor.media.drop")}</p>
       <label class="choose">
-        Choose files…
+        {i18n.t("editor.media.choose")}
         <input
           type="file"
           accept={UPLOAD_ACCEPT}
@@ -225,24 +227,23 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
         />
       </label>
       <p class="hint">
-        JPEG, PNG, WebP or HEIC (converted in your browser), up to 20 MB. Location and camera data
-        are removed.
+        {i18n.t("editor.media.formats")}
       </p>
     </div>
 
     {#if uploads.length > 0}
-      <ul class="uploads" aria-label="Uploads">
+      <ul class="uploads" aria-label={i18n.t("editor.media.uploads")}>
         {#each uploads as upload (upload.id)}
           <li class={upload.state}>
             <span class="name">{upload.name}</span>
             {#if upload.state === "converting"}
-              <span>Converting…</span>
+              <span>{i18n.t("editor.media.converting")}</span>
             {:else if upload.state === "uploading"}
               <progress max="1" value={upload.progress}>{Math.round(upload.progress * 100)} %</progress>
             {:else if upload.state === "processing"}
-              <span>Processing…</span>
+              <span>{i18n.t("editor.media.processing")}</span>
             {:else if upload.state === "done"}
-              <span>Uploaded</span>
+              <span>{i18n.t("editor.media.uploaded")}</span>
             {:else}
               <span role="alert">{upload.message}</span>
             {/if}
@@ -254,9 +255,9 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
     {#if loadError}
       <p role="alert">{loadError}</p>
     {:else if images.length === 0}
-      <p class="empty">No images yet.</p>
+      <p class="empty">{i18n.t("editor.media.empty")}</p>
     {:else}
-      <ul class="grid" role="listbox" aria-label="Library" aria-multiselectable={multiple}>
+      <ul class="grid" role="listbox" aria-label={i18n.t("editor.media.library")} aria-multiselectable={multiple}>
         {#each images as image (image.key)}
           <li
             role="option"
@@ -292,14 +293,14 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
         disabled={selection.length !== 1}
         onclick={() => selected && remove(selected)}
       >
-        Remove from library
+        {i18n.t("editor.media.removeFromLibrary")}
       </button>
       <span class="spacer"></span>
-      <button type="button" onclick={() => finish([])}>Cancel</button>
+      <button type="button" onclick={() => finish([])}>{i18n.t("common.cancel")}</button>
       <button type="button" disabled={selection.length === 0} onclick={choose}>
         {multiple
-          ? `Add ${selection.length} ${selection.length === 1 ? "image" : "images"}`
-          : "Use this image"}
+          ? i18n.t("editor.media.addImages", { count: selection.length })
+          : i18n.t("editor.media.useImage")}
       </button>
     </div>
   </div>
@@ -309,7 +310,7 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
   .media-library {
     width: min(48rem, 90vw);
     padding: 0;
-    font-family: system-ui, sans-serif;
+    font-family: var(--ui-font);
   }
 
   .body {
@@ -320,7 +321,7 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
   }
 
   .body.dragging {
-    outline: 3px dashed #1f5a8a;
+    outline: 3px dashed var(--ui-focus);
     outline-offset: -6px;
   }
 
@@ -330,7 +331,7 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
   }
 
   .drop {
-    border: 2px dashed #bbb;
+    border: 2px dashed var(--ui-border-strong);
     border-radius: 0.5rem;
     padding: 1rem;
     text-align: center;
@@ -350,18 +351,18 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
   .choose {
     display: inline-block;
     padding: 0.3rem 0.8rem;
-    border: 1px solid #888;
+    border: 1px solid var(--ui-muted);
     border-radius: 0.3rem;
     cursor: pointer;
   }
 
   .choose:focus-within {
-    outline: 2px solid #1f5a8a;
+    outline: 2px solid var(--ui-focus);
   }
 
   .hint,
   .empty {
-    color: #555;
+    color: var(--ui-muted);
     font-size: 0.85rem;
   }
 
@@ -379,7 +380,7 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
   }
 
   .uploads .failed {
-    color: #a3161a;
+    color: var(--ui-problem);
   }
 
   .grid {
@@ -404,12 +405,12 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
   }
 
   .grid li[aria-selected="true"] {
-    border-color: #1f5a8a;
-    background: #eef4f9;
+    border-color: var(--ui-focus);
+    background: var(--ui-soft);
   }
 
   .grid li:focus-visible {
-    outline: 2px solid #1f5a8a;
+    outline: 2px solid var(--ui-focus);
   }
 
   .grid img {
@@ -417,7 +418,7 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
     aspect-ratio: 4 / 3;
     object-fit: cover;
     border-radius: 0.3rem;
-    background: #eee;
+    background: var(--ui-border);
   }
 
   .name {
@@ -437,6 +438,6 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
   }
 
   .danger {
-    color: #a3161a;
+    color: var(--ui-problem);
   }
 </style>

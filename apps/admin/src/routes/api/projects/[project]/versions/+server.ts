@@ -1,5 +1,5 @@
-import { error, json } from "@sveltejs/kit";
-import { requireMember } from "$lib/server/access";
+import { json } from "@sveltejs/kit";
+import { notFound, requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { primaryLanguage } from "$lib/server/site-documents";
 import { listVersions } from "$lib/server/versions";
@@ -14,6 +14,6 @@ export const GET: RequestHandler = (event) => {
   const lang = event.url.searchParams.get("lang") ?? primaryLanguage(getDb(), event.params.project);
   const before = event.url.searchParams.get("before") ?? undefined;
   const result = lang ? listVersions(getDb(), event.params.project, lang, { before }) : undefined;
-  if (!result) error(404, "Not found");
+  if (!result) notFound(event);
   return json(result);
 };

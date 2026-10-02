@@ -1,93 +1,118 @@
 <script lang="ts">
+import { getI18n } from "$lib/i18n";
 import { projectPaths } from "$lib/project-paths";
+import Button from "$lib/ui/Button.svelte";
+import Card from "$lib/ui/Card.svelte";
+import EmptyState from "$lib/ui/EmptyState.svelte";
+import Notice from "$lib/ui/Notice.svelte";
+import Page from "$lib/ui/Page.svelte";
+import PageHeader from "$lib/ui/PageHeader.svelte";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
-// A lone owner's workspace isn't mentioned until there is more than one.
+const i18n = getI18n();
+// A lone owner's workspace isn't named until there is more than one.
 const showWorkspaces = $derived(data.workspaces.length > 1);
+const total = $derived(data.workspaces.reduce((sum, w) => sum + w.projects.length, 0));
 </script>
 
 <svelte:head>
-  <title>Projects – Static CMS</title>
+  <title>{i18n.t("common.pageTitle", { page: i18n.t("projects.title") })}</title>
 </svelte:head>
 
-<header class="top">
-  <strong>Static CMS</strong>
-  <span class="account">
-    {data.user.email}
-    <form method="POST" action="/signout"><button type="submit">Sign out</button></form>
-  </span>
-</header>
-
-<main>
-  <h1>Projects</h1>
+<Page>
+  <PageHeader title={i18n.t("projects.title")}>
+    {#if data.workspaces.length > 0}{i18n.t("projects.count", { count: total })}{/if}
+  </PageHeader>
   {#if data.workspaces.length === 0}
-    <p>You aren't a member of any workspace yet. Ask an owner to invite you.</p>
+    <Notice kind="info"><p>{i18n.t("projects.noWorkspace")}</p></Notice>
   {/if}
   {#each data.workspaces as workspace (workspace.id)}
-    <section aria-labelledby={`ws-${workspace.id}`}>
-      {#if showWorkspaces}
-        <h2 id={`ws-${workspace.id}`}>{workspace.name}</h2>
-      {:else}
-        <h2 id={`ws-${workspace.id}`} class="visually-hidden">{workspace.name}</h2>
-      {/if}
+    <section class="workspace" aria-labelledby={`ws-${workspace.id}`}>
+      <div class="workspace-head">
+        <h2 id={`ws-${workspace.id}`} class:visually-hidden={!showWorkspaces}>{workspace.name}</h2>
+        {#if workspace.role === "owner"}
+          <div class="actions">
+            <Button href={`/w/${workspace.id}/members`} icon="users" size="sm">{i18n.t("projects.members")}</Button>
+            <Button href={`/w/${workspace.id}/hosting`} icon="globe" size="sm">{i18n.t("projects.netlify")}</Button>
+            <Button href={`/w/${workspace.id}/new`} kind="primary" icon="plus" size="sm">{i18n.t("projects.newProject")}</Button>
+          </div>
+        {/if}
+      </div>
       {#if workspace.projects.length === 0}
-        <p>No projects yet.</p>
+        <EmptyState title={i18n.t("projects.empty")} icon="globe">
+          <p>{i18n.t("projects.emptyText")}</p>
+        </EmptyState>
       {:else}
         <ul class="projects">
           {#each workspace.projects as project (project.id)}
             <li>
-              <a href={projectPaths(project.id).overview}>{project.name}</a>
-              · <a href={projectPaths(project.id).edit()}>Edit</a>
+              <Card>
+                <div class="project">
+                  <a class="name" href={projectPaths(project.id).overview}>{project.name}</a>
+                  <Button href={projectPaths(project.id).edit()} kind="primary" icon="pencil" size="sm">{i18n.t("common.edit")}</Button>
+                </div>
+              </Card>
             </li>
           {/each}
         </ul>
       {/if}
-      {#if workspace.role === "owner"}
-        <p class="actions">
-          <a href={`/w/${workspace.id}/new`}>New project</a>
-          · <a href={`/w/${workspace.id}/members`}>Members</a>
-          · <a href={`/w/${workspace.id}/hosting`}>Netlify</a>
-        </p>
-      {/if}
     </section>
   {/each}
-</main>
+</Page>
 
 <style>
-  .top {
+  .workspace {
     display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-4);
+  }
+
+  .workspace-head {
+    display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #ddd;
-    font-family: system-ui, sans-serif;
+    gap: var(--ui-space-3);
+    flex-wrap: wrap;
   }
 
-  .account {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-  }
-
-  .account form {
+  h2 {
     margin: 0;
-  }
-
-  main {
-    max-width: 48rem;
-    margin: 0 auto;
-    padding: 1rem;
-    font-family: system-ui, sans-serif;
-    line-height: 1.5;
-  }
-
-  .projects {
-    padding-left: 1.25rem;
+    font-size: var(--ui-text-lg);
   }
 
   .actions {
-    font-size: 0.95rem;
+    display: flex;
+    gap: var(--ui-space-2);
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+
+  .projects {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    gap: var(--ui-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .project {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-3);
+  }
+
+  .name {
+    font-weight: 700;
+    font-size: var(--ui-text-lg);
+    color: var(--ui-ink) !important;
+    text-decoration: none;
+  }
+
+  .name:hover {
+    text-decoration: underline;
   }
 
   .visually-hidden {

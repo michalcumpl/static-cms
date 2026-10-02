@@ -1,8 +1,15 @@
 <script lang="ts">
 import { invalidateAll } from "$app/navigation";
+import { getI18n } from "$lib/i18n";
+import Button from "$lib/ui/Button.svelte";
+import Card from "$lib/ui/Card.svelte";
+import Notice from "$lib/ui/Notice.svelte";
+import Page from "$lib/ui/Page.svelte";
+import PageHeader from "$lib/ui/PageHeader.svelte";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
+const i18n = getI18n();
 const api = $derived(`/api/workspaces/${data.workspace.id}/hosting`);
 
 let token = $state("");
@@ -32,7 +39,7 @@ async function checkToken(event: SubmitEvent) {
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    message = body.message ?? `Checking the token failed (${response.status}).`;
+    message = body.message ?? i18n.t("hosting.checkFailed", { status: response.status });
     return;
   }
   teams = body.teams;
@@ -47,7 +54,7 @@ async function connect() {
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    message = body.message ?? `Connecting failed (${response.status}).`;
+    message = body.message ?? i18n.t("hosting.connectFailed", { status: response.status });
     return;
   }
   // The token is kept only on the server from now on.
@@ -63,88 +70,133 @@ async function disconnect() {
 </script>
 
 <svelte:head>
-  <title>Netlify – {data.workspace.name} – Static CMS</title>
+  <title>{i18n.t("common.pageTitle", { page: i18n.t("hosting.pageTitle", { workspace: data.workspace.name }) })}</title>
 </svelte:head>
 
-<main>
-  <p class="crumbs"><a href="/">← All projects</a></p>
-  <h1>Publishing to Netlify</h1>
-  <p class="muted">
-    {data.workspace.name}'s sites are published to its own Netlify team, on its own Netlify plan.
-  </p>
+<Page width="narrow">
+  <PageHeader
+    title={i18n.t("hosting.title")}
+    breadcrumb={[{ href: "/", label: i18n.t("projects.title") }]}
+    breadcrumbLabel={i18n.t("common.breadcrumb")}
+  >
+    {i18n.t("hosting.intro", { workspace: data.workspace.name })}
+  </PageHeader>
 
-  <section aria-labelledby="connection">
-    <h2 id="connection">Connection</h2>
+  <Card title={i18n.t("hosting.connection")} id="connection">
     {#if data.connection}
-      <p role="status">
-        Connected to the Netlify team <strong>{data.connection.accountName}</strong>
-        {#if data.connection.connectedBy}by {data.connection.connectedBy}{/if}
-        on {new Date(data.connection.connectedAt).toLocaleDateString()}.
-      </p>
+      <Notice kind="success">
+        <p role="status">
+          {data.connection.connectedBy
+            ? i18n.t("hosting.connectedBy", {
+                team: data.connection.accountName,
+                person: data.connection.connectedBy,
+                date: i18n.formatDate(data.connection.connectedAt, "date"),
+              })
+            : i18n.t("hosting.connectedOn", {
+                team: data.connection.accountName,
+                date: i18n.formatDate(data.connection.connectedAt, "date"),
+              })}
+        </p>
+      </Notice>
       {#if data.role === "owner"}
-        <button type="button" onclick={disconnect} disabled={busy}>Disconnect</button>
-        <p class="muted">Connect again below to use another token or team.</p>
+        <div><Button kind="danger" onclick={disconnect} disabled={busy}>{i18n.t("hosting.disconnect")}</Button></div>
+        <p class="muted">{i18n.t("hosting.reconnectHint")}</p>
       {/if}
     {:else}
-      <p role="status">Not connected. Projects of this workspace can't be published yet.</p>
+      <Notice kind="attention"><p role="status">{i18n.t("hosting.notConnected")}</p></Notice>
     {/if}
-  </section>
+  </Card>
 
   {#if data.role === "owner"}
-    <section aria-labelledby="connect">
-      <h2 id="connect">{data.connection ? "Reconnect" : "Connect"}</h2>
+    <Card title={data.connection ? i18n.t("hosting.reconnect") : i18n.t("hosting.connect")} id="connect">
       {#if !data.setUp}
-        <p class="error">Publishing isn't set up on this server (SECRET_KEY is missing).</p>
+        <Notice kind="problem"><p>{i18n.t("hosting.notSetUp")}</p></Notice>
       {:else}
         <ol class="steps">
-          <li>In Netlify, open <em>User settings → Applications → Personal access tokens</em> and create a token.</li>
-          <li>Paste it here. It is stored encrypted and never shown again.</li>
+          <li>{i18n.t("hosting.step1")}</li>
+          <li>{i18n.t("hosting.step2")}</li>
         </ol>
-        <form onsubmit={checkToken}>
-          <label for="netlify-token">Netlify personal access token</label>
-          <input id="netlify-token" type="password" autocomplete="off" bind:value={token} />
-          <button type="submit" disabled={busy || token.trim() === ""}>Check token</button>
+        <form onsubmit={checkToken} class="token">
+          <label for="netlify-token">{i18n.t("hosting.token")}</label>
+          <div class="row">
+            <input id="netlify-token" type="password" autocomplete="off" bind:value={token} />
+            <Button type="submit" disabled={busy || token.trim() === ""}>{i18n.t("hosting.checkToken")}</Button>
+          </div>
         </form>
         {#if teams.length > 0}
           <fieldset>
-            <legend>Publish into the team</legend>
+            <legend>{i18n.t("hosting.team")}</legend>
             {#each teams as option (option.slug)}
-              <label><input type="radio" name="team" value={option.slug} bind:group={team} /> {option.name}</label>
+              <label class="team"><input type="radio" name="team" value={option.slug} bind:group={team} /> {option.name}</label>
             {/each}
           </fieldset>
-          <button type="button" onclick={connect} disabled={busy || !team}>Connect</button>
+          <div><Button kind="primary" onclick={connect} disabled={busy || !team}>{i18n.t("hosting.connect")}</Button></div>
         {/if}
       {/if}
-      {#if message}<p class="error" role="alert">{message}</p>{/if}
-    </section>
+      {#if message}<Notice kind="problem"><p>{message}</p></Notice>{/if}
+    </Card>
   {:else}
-    <p class="muted">Only owners of this workspace can connect or disconnect Netlify.</p>
+    <p class="muted">{i18n.t("hosting.ownersOnly")}</p>
   {/if}
-</main>
+</Page>
 
 <style>
-  main {
-    max-width: 40rem;
-    margin: 0 auto;
-    padding: 1rem;
-    font-family: system-ui, sans-serif;
-  }
-
   .muted {
-    color: #555;
+    margin: 0;
+    color: var(--ui-muted);
   }
 
-  .error {
-    color: #a3161a;
+  .steps {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-1);
   }
 
-  form,
+  .token {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-1);
+  }
+
+  .token label {
+    font-size: var(--ui-text-sm);
+    font-weight: 600;
+  }
+
+  .row {
+    display: flex;
+    gap: var(--ui-space-2);
+  }
+
+  .row input {
+    flex-grow: 1;
+    min-height: var(--ui-control);
+    padding: 0 var(--ui-space-3);
+    border: 1px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-field);
+    font: var(--ui-text-md) var(--ui-font);
+  }
+
   fieldset {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    margin: 0.5rem 0;
-    border: 0;
-    padding: 0;
+    gap: var(--ui-space-2);
+    margin: 0;
+    padding: var(--ui-space-3) var(--ui-space-4);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-field);
+  }
+
+  legend {
+    font-size: var(--ui-text-sm);
+    font-weight: 600;
+  }
+
+  .team {
+    display: flex;
+    gap: var(--ui-space-2);
+    align-items: center;
   }
 </style>

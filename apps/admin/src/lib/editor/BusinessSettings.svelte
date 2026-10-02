@@ -1,6 +1,7 @@
 <script lang="ts">
-import { formatPhone } from "@static-cms/site";
+import { BUSINESS_TYPES, formatPhone } from "@static-cms/site";
 import type { FullAutoFill } from "svelte/elements";
+import { getI18n } from "$lib/i18n";
 import {
   type BusinessTextField,
   businessOf,
@@ -17,6 +18,7 @@ import type { EditorState } from "./state.svelte";
 // The business the site is for (business-info design.md decision 7): facts stored once, shown
 // by the contact and opening hours blocks, the footer and the structured data.
 let { editor }: { editor: EditorState } = $props();
+const i18n = getI18n();
 
 const business = $derived(businessOf(editor.session.doc));
 // Outside the primary language only the name and the hours note are this language's own.
@@ -25,23 +27,12 @@ const siteName = $derived(
   (editor.session.doc.nodes[editor.siteId] as unknown as { name: string }).name,
 );
 
-const TYPES: [string, string][] = [
-  ["LocalBusiness", "Other local business"],
-  ["Bakery", "Bakery"],
-  ["CafeOrCoffeeShop", "Café"],
-  ["Restaurant", "Restaurant"],
-  ["Store", "Shop"],
-  ["HairSalon", "Hairdresser"],
-  ["BeautySalon", "Beauty salon"],
-  ["ProfessionalService", "Professional services"],
-  ["MedicalBusiness", "Medical practice"],
-  ["SportsActivityLocation", "Sports and fitness"],
-];
+const TYPES = BUSINESS_TYPES;
 
-const TEXT_FIELDS: [BusinessTextField, string, FullAutoFill][] = [
-  ["street", "Street and number", "street-address"],
-  ["postal_code", "Postal code", "postal-code"],
-  ["city", "City", "address-level2"],
+const TEXT_FIELDS: [BusinessTextField, "street" | "postalCode" | "city", FullAutoFill][] = [
+  ["street", "street", "street-address"],
+  ["postal_code", "postalCode", "postal-code"],
+  ["city", "city", "address-level2"],
 ];
 
 // The phone is typed into a draft and normalised when the owner leaves the field.
@@ -57,10 +48,10 @@ $effect(() => editor.registerDraft(commitPhone));
 
 {#if business}
   <section class="panel" aria-labelledby="business-panel-title" data-history-keys>
-    <h2 id="business-panel-title">Business</h2>
+    <h2 id="business-panel-title">{i18n.t("editor.business.title")}</h2>
     {#if shared}<SharedNote {editor} tab="business" />{/if}
 
-    <label for={businessFieldElementId("name")}>Name</label>
+    <label for={businessFieldElementId("name")}>{i18n.t("editor.business.name")}</label>
     <input
       id={businessFieldElementId("name")}
       type="text"
@@ -69,20 +60,20 @@ $effect(() => editor.registerDraft(commitPhone));
       oninput={(e) => setBusinessField(editor.session, "name", e.currentTarget.value)}
     />
 
-    <label for={businessFieldElementId("business_type")}>Type of business</label>
+    <label for={businessFieldElementId("business_type")}>{i18n.t("editor.business.type")}</label>
     <select
       id={businessFieldElementId("business_type")}
       value={business.business_type}
       disabled={shared}
       onchange={(e) => setBusinessType(editor.session, e.currentTarget.value)}
     >
-      {#each TYPES as [value, label] (value)}
-        <option {value}>{label}</option>
+      {#each TYPES as value (value)}
+        <option {value}>{i18n.t(`editor.business.types.${value}`)}</option>
       {/each}
     </select>
 
     {#each TEXT_FIELDS as [field, label, autocomplete] (field)}
-      <label for={businessFieldElementId(field)}>{label}</label>
+      <label for={businessFieldElementId(field)}>{i18n.t(`editor.business.${label}`)}</label>
       <input
         id={businessFieldElementId(field)}
         type="text"
@@ -93,7 +84,7 @@ $effect(() => editor.registerDraft(commitPhone));
       />
     {/each}
 
-    <label for={businessFieldElementId("country")}>Country (two-letter code)</label>
+    <label for={businessFieldElementId("country")}>{i18n.t("editor.business.country")}</label>
     <input
       id={businessFieldElementId("country")}
       type="text"
@@ -105,7 +96,7 @@ $effect(() => editor.registerDraft(commitPhone));
         setBusinessField(editor.session, "country", e.currentTarget.value.toUpperCase())}
     />
 
-    <label for={businessFieldElementId("phone")}>Phone</label>
+    <label for={businessFieldElementId("phone")}>{i18n.t("editor.business.phone")}</label>
     <input
       id={businessFieldElementId("phone")}
       type="tel"
@@ -115,7 +106,7 @@ $effect(() => editor.registerDraft(commitPhone));
       onkeydown={(e) => e.key === "Enter" && commitPhone()}
     />
 
-    <label for={businessFieldElementId("email")}>Email</label>
+    <label for={businessFieldElementId("email")}>{i18n.t("editor.business.email")}</label>
     <input
       id={businessFieldElementId("email")}
       type="email"
@@ -124,7 +115,7 @@ $effect(() => editor.registerDraft(commitPhone));
       oninput={(e) => setBusinessField(editor.session, "email", e.currentTarget.value)}
     />
 
-    <label for={businessFieldElementId("map_url")}>Map address (optional)</label>
+    <label for={businessFieldElementId("map_url")}>{i18n.t("editor.business.map")}</label>
     <input
       id={businessFieldElementId("map_url")}
       type="url"
@@ -134,18 +125,17 @@ $effect(() => editor.registerDraft(commitPhone));
       oninput={(e) => setBusinessField(editor.session, "map_url", e.currentTarget.value)}
     />
     <p class="hint" id="business-map-hint">
-      Paste the link to your listing on Google Maps or Mapy.com. Without it, "Show on map"
-      searches for the address.
+      {i18n.t("editor.business.mapHint")}
     </p>
 
     <OpeningHoursEditor {editor} disabled={shared} />
 
-    <label for={businessFieldElementId("hours_note")}>Note on the opening hours</label>
+    <label for={businessFieldElementId("hours_note")}>{i18n.t("editor.business.hoursNote")}</label>
     <input
       id={businessFieldElementId("hours_note")}
       type="text"
       value={business.hours_note}
-      placeholder="Closed on public holidays"
+      placeholder={i18n.t("editor.business.hoursNoteExample")}
       oninput={(e) => setBusinessField(editor.session, "hours_note", e.currentTarget.value)}
     />
 
@@ -156,7 +146,7 @@ $effect(() => editor.registerDraft(commitPhone));
       disabled={shared}
         onchange={(e) => setShowInFooter(editor.session, e.currentTarget.checked)}
       />
-      Show contact details in the footer
+      {i18n.t("editor.business.showInFooter")}
     </label>
   </section>
 {/if}
@@ -164,7 +154,7 @@ $effect(() => editor.registerDraft(commitPhone));
 <style>
   .panel {
     padding: 1rem;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--ui-border);
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -175,7 +165,7 @@ $effect(() => editor.registerDraft(commitPhone));
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #555;
+    color: var(--ui-muted);
   }
 
   label {
@@ -202,6 +192,6 @@ $effect(() => editor.registerDraft(commitPhone));
   .hint {
     margin: 0;
     font-size: 0.85rem;
-    color: #555;
+    color: var(--ui-muted);
   }
 </style>

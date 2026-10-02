@@ -76,7 +76,7 @@ describe("uploadImage", () => {
 
   it("stores variants 480/960/1600/2400 of a large photo, and the original", async () => {
     const result = await upload("pult.jpg", await image(4032, 3024));
-    if (!result.ok) throw new Error(result.message);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
     const { key } = result.media;
     for (const [width, height] of [
       [480, 360],
@@ -93,7 +93,7 @@ describe("uploadImage", () => {
 
   it("stores variants 480/960/1000 of a 1000 px image", async () => {
     const result = await upload("maly.png", await image(1000, 500, "png"));
-    if (!result.ok) throw new Error(result.message);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
     const variants = readdirSync(join(root, projectId)).filter((n) => n.endsWith(".webp"));
     expect(variants.sort()).toEqual(
       [480, 960, 1000].map((w) => `${result.media.key}-${w}.webp`).sort(),
@@ -114,7 +114,7 @@ describe("uploadImage", () => {
       .png()
       .toBuffer();
     const result = await upload("logo.png", new Uint8Array(logo));
-    if (!result.ok) throw new Error(result.message);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
     const bytes = await mediaFile(projectId, `${result.media.key}-480.webp`, root);
     if (!bytes) throw new Error("no 480 variant");
     expect(await sharp(bytes).metadata()).toMatchObject({ format: "webp", hasAlpha: true });
@@ -140,7 +140,7 @@ describe("uploadImage", () => {
       expect(await upload(name, bytes)).toEqual({
         ok: false,
         status: 415,
-        message: "Only JPEG, PNG and WebP images can be uploaded.",
+        message: { key: "server.media.accepted" },
       });
     }
     expect(listLibrary(db, projectId)).toEqual([]);
@@ -150,7 +150,7 @@ describe("uploadImage", () => {
     expect(await upload("velky.jpg", new Uint8Array(25 * 1024 * 1024))).toEqual({
       ok: false,
       status: 413,
-      message: "Images can be at most 20 MB.",
+      message: { key: "server.media.tooLarge" },
     });
     const huge = await sharp({
       create: { width: 8000, height: 6000, channels: 3, background: "#000" },
@@ -160,7 +160,7 @@ describe("uploadImage", () => {
     expect(await upload("obri.png", new Uint8Array(huge))).toMatchObject({
       ok: false,
       status: 413,
-      message: "Images can be at most 40 megapixels.",
+      message: { key: "server.media.megapixels" },
     });
   });
 
@@ -205,7 +205,7 @@ describe("uploadImage", () => {
       .withMetadata({ orientation: 6 })
       .toBuffer();
     const result = await upload("bokem.jpg", new Uint8Array(sideways));
-    if (!result.ok) throw new Error(result.message);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
     expect(result.media).toMatchObject({ width: 600, height: 1200 });
     const variant = await mediaFile(projectId, `${result.media.key}-600.webp`, root);
     expect(await sharp(variant).metadata()).toMatchObject({ width: 600, height: 1200 });
@@ -243,7 +243,7 @@ describe("library", () => {
   it("hides a removed image but keeps its files, and a re-upload brings it back", async () => {
     const bytes = await image(500, 500);
     const result = await upload("pult.jpg", bytes);
-    if (!result.ok) throw new Error(result.message);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
     const { key } = result.media;
     expect(removeFromLibrary(db, projectId, key)).toBe(true);
     expect(listLibrary(db, projectId)).toEqual([]);
@@ -258,7 +258,7 @@ describe("library", () => {
 describe("mediaFile", () => {
   it("serves only variant files, never originals or other names", async () => {
     const result = await upload("pult.jpg", await image(500, 500));
-    if (!result.ok) throw new Error(result.message);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
     const { key } = result.media;
     expect(await mediaFile(projectId, `${key}-480.webp`, root)).toBeDefined();
     expect(await mediaFile(projectId, `${key}.jpg`, root)).toBeUndefined();

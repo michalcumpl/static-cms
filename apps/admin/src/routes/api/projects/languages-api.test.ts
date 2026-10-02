@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { thrownBy, useTestProject } from "$lib/server/test-project";
+import { inCzech, thrownBy, useTestProject } from "$lib/server/test-project";
 import { POST as add, GET as list } from "./[project]/languages/+server";
 import { PATCH as patch, DELETE as remove } from "./[project]/languages/[lang]/+server";
 import { GET as getSite, PUT as putSite } from "./[project]/site/+server";
@@ -72,6 +72,14 @@ describe("languages API", () => {
     expect((await published.json())[1]).toMatchObject({ lang: "en", published: true });
     expect((await setPublished("cs", false)).status).toBe(409);
     expect((await setPublished("de", true)).status).toBe(404);
+  });
+
+  it("refuses removing the primary in the person's language", async () => {
+    lang = "cs";
+    const event = project().event(`${base()}/languages/cs`, project().owner, { method: "DELETE" });
+    const response = await remove(inCzech(event) as unknown as LangEvent);
+    expect(response.status).toBe(409);
+    expect((await response.json()).message).toBe("Hlavní jazyk nejde odebrat.");
   });
 
   it("removes a language, and refuses the primary", async () => {

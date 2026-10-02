@@ -19,11 +19,14 @@ import SiteSettings from "$lib/editor/SiteSettings.svelte";
 import { EditorState, setEditor } from "$lib/editor/state.svelte";
 import { insertItem, isFixedList, itemInsertionPoint } from "$lib/editor/structure";
 import ThemeSettings from "$lib/editor/ThemeSettings.svelte";
+import { getI18n } from "$lib/i18n";
 import PublishButton from "$lib/PublishButton.svelte";
 import { projectPaths } from "$lib/project-paths";
+import Button from "$lib/ui/Button.svelte";
 import type { LayoutProps } from "./$types";
 
 let { data, children }: LayoutProps = $props();
+const i18n = getI18n();
 
 const editor = setEditor(
   new EditorState(
@@ -121,7 +124,7 @@ beforeNavigate(({ to, cancel }) => {
     (to.url.searchParams.get("lang") ?? editor.primaryLang) === editor.lang &&
     !to.url.searchParams.has("key");
   if (editor.leaving) return;
-  if (editor.dirty && !staysInEditor && !confirm("You have unsaved changes. Leave anyway?")) {
+  if (editor.dirty && !staysInEditor && !confirm(i18n.t("editor.confirmLeave"))) {
     cancel();
   }
 });
@@ -135,7 +138,7 @@ const commands = $derived(
 );
 const canAddItem = $derived(itemInsertionPoint(session) !== undefined);
 // The block or item selected as a whole, in words (canvas-structure design.md decision 5).
-const selectedLabel = $derived(selectionLabel(session));
+const selectedLabel = $derived(selectionLabel(session, i18n.t));
 
 // Svedit deletes a node selection itself on Backspace/Delete, before any command runs.
 // Keep the navigation and the hero's fixed slots from being deleted that way.
@@ -176,17 +179,23 @@ const linkEnabled = $derived(
 
 const statusText = $derived.by(() => {
   const status = editor.status;
-  if (status.kind === "saving") return "Saving…";
-  if (status.kind === "conflict" || status.kind === "error") return status.message;
-  if (editor.dirty) return "Unsaved changes";
-  return status.kind === "saved" ? "Saved" : "All changes saved";
+  if (status.kind === "saving") return i18n.t("editor.status.saving");
+  if (status.kind === "conflict") return status.message ?? i18n.t("editor.status.conflict");
+  if (status.kind === "error") {
+    if (status.message) return status.message;
+    if (status.broken) return i18n.t("editor.status.broken");
+    if (status.httpStatus) return i18n.t("editor.status.failed", { status: status.httpStatus });
+    return i18n.t("editor.status.failedError", { error: status.exception ?? "" });
+  }
+  if (editor.dirty) return i18n.t("editor.status.unsaved");
+  return status.kind === "saved" ? i18n.t("editor.status.saved") : i18n.t("editor.status.allSaved");
 });
 </script>
 
 <svelte:window onkeydown={(event) => keyMapper.handle_keydown(event)} {onbeforeunload} />
 
 <svelte:head>
-  <title>Editing {editor.currentPage?.title ?? ""} – Static CMS</title>
+  <title>{i18n.t("common.pageTitle", { page: i18n.t("editor.pageTitle", { page: editor.currentPage?.title ?? "" }) })}</title>
 </svelte:head>
 
 <div class="editor">
@@ -196,45 +205,45 @@ const statusText = $derived.by(() => {
   </div>
 
   <div class="workspace">
-    <div class="toolbar" role="toolbar" aria-label="Editing">
-      <button type="button" title="Undo (Ctrl/Cmd+Z)" onclick={() => editor.undo()} disabled={commands?.undo?.disabled ?? true}>Undo</button>
-      <button type="button" title="Redo (Ctrl/Cmd+Shift+Z)" onclick={() => editor.redo()} disabled={commands?.redo?.disabled ?? true}>Redo</button>
+    <div class="toolbar" role="toolbar" aria-label={i18n.t("editor.toolbar.label")}>
+      <Button size="sm" kind="quiet" icon="undo" title={i18n.t("editor.toolbar.undoTitle")} onclick={() => editor.undo()} disabled={commands?.undo?.disabled ?? true}>{i18n.t("editor.toolbar.undo")}</Button>
+      <Button size="sm" kind="quiet" icon="redo" title={i18n.t("editor.toolbar.redoTitle")} onclick={() => editor.redo()} disabled={commands?.redo?.disabled ?? true}>{i18n.t("editor.toolbar.redo")}</Button>
       <span class="separator"></span>
-      <button type="button" class="mark" aria-label="Bold" title="Bold (Ctrl/Cmd+B)" aria-pressed={commands?.bold?.active ?? false} onmousedown={(e) => e.preventDefault()} onclick={() => commands?.bold?.execute()} disabled={commands?.bold?.disabled ?? true}><strong>B</strong></button>
-      <button type="button" class="mark" aria-label="Italic" title="Italic (Ctrl/Cmd+I)" aria-pressed={commands?.italic?.active ?? false} onmousedown={(e) => e.preventDefault()} onclick={() => commands?.italic?.execute()} disabled={commands?.italic?.disabled ?? true}><em>I</em></button>
-      <button type="button" onclick={() => linkDialog?.open()} disabled={!linkEnabled} title="Link the selected text">Link</button>
-      <button type="button" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.unlink?.execute()} disabled={commands?.unlink?.disabled ?? true} title="Remove the link">Unlink</button>
+      <button type="button" class="mark" aria-label={i18n.t("editor.toolbar.bold")} title={i18n.t("editor.toolbar.boldTitle")} aria-pressed={commands?.bold?.active ?? false} onmousedown={(e) => e.preventDefault()} onclick={() => commands?.bold?.execute()} disabled={commands?.bold?.disabled ?? true}><strong>B</strong></button>
+      <button type="button" class="mark" aria-label={i18n.t("editor.toolbar.italic")} title={i18n.t("editor.toolbar.italicTitle")} aria-pressed={commands?.italic?.active ?? false} onmousedown={(e) => e.preventDefault()} onclick={() => commands?.italic?.execute()} disabled={commands?.italic?.disabled ?? true}><em>I</em></button>
+      <Button size="sm" kind="quiet" onclick={() => linkDialog?.open()} disabled={!linkEnabled} title={i18n.t("editor.toolbar.linkTitle")}>{i18n.t("editor.toolbar.link")}</Button>
+      <Button size="sm" kind="quiet" onmousedown={(e: MouseEvent) => e.preventDefault()} onclick={() => commands?.unlink?.execute()} disabled={commands?.unlink?.disabled ?? true} title={i18n.t("editor.toolbar.unlinkTitle")}>{i18n.t("editor.toolbar.unlink")}</Button>
       <span class="separator"></span>
-      <span class="selection-label" aria-live="polite">{#if selectedLabel}{selectedLabel} selected{/if}</span>
-      <button type="button" title="Add a list item, service or person after the current one" onmousedown={(e) => e.preventDefault()} onclick={() => insertItem(session)} disabled={!canAddItem}>Add item</button>
-      <button type="button" aria-label="Move up" title="Move up (Alt+↑)" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.move_up?.execute()} disabled={commands?.move_up?.disabled ?? true}>↑</button>
-      <button type="button" aria-label="Move down" title="Move down (Alt+↓)" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.move_down?.execute()} disabled={commands?.move_down?.disabled ?? true}>↓</button>
-      <button type="button" title="Delete the selected block or item (Esc selects the paragraph, item or block around the cursor)" onmousedown={(e) => e.preventDefault()} onclick={() => commands?.delete_node?.execute()} disabled={commands?.delete_node?.disabled ?? true}>Delete</button>
+      <span class="selection-label" aria-live="polite">{#if selectedLabel}{i18n.t("editor.toolbar.selected", { name: selectedLabel })}{/if}</span>
+      <Button size="sm" kind="quiet" icon="plus" title={i18n.t("editor.toolbar.addItemTitle")} onmousedown={(e: MouseEvent) => e.preventDefault()} onclick={() => insertItem(session)} disabled={!canAddItem}>{i18n.t("editor.toolbar.addItem")}</Button>
+      <button type="button" class="mark" aria-label={i18n.t("editor.toolbar.moveUp")} title={i18n.t("editor.toolbar.moveUpTitle")} onmousedown={(e) => e.preventDefault()} onclick={() => commands?.move_up?.execute()} disabled={commands?.move_up?.disabled ?? true}>↑</button>
+      <button type="button" class="mark" aria-label={i18n.t("editor.toolbar.moveDown")} title={i18n.t("editor.toolbar.moveDownTitle")} onmousedown={(e) => e.preventDefault()} onclick={() => commands?.move_down?.execute()} disabled={commands?.move_down?.disabled ?? true}>↓</button>
+      <Button size="sm" kind="quiet" icon="trash" title={i18n.t("editor.toolbar.deleteTitle")} onmousedown={(e: MouseEvent) => e.preventDefault()} onclick={() => commands?.delete_node?.execute()} disabled={commands?.delete_node?.disabled ?? true}>{i18n.t("editor.toolbar.delete")}</Button>
       <span class="separator"></span>
       <fieldset class="width">
-        <legend class="visually-hidden">Preview width</legend>
+        <legend class="visually-hidden">{i18n.t("editor.toolbar.width")}</legend>
         <!-- Icons, with the radios kept for keyboard and screen-reader use. -->
-        <label title="Desktop">
+        <label title={i18n.t("editor.toolbar.desktop")}>
           <input class="visually-hidden" type="radio" bind:group={editor.width} value="desktop" />
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <rect x="3" y="4" width="18" height="12" rx="1.5" />
             <path d="M8 20h8M12 16v4" />
           </svg>
-          <span class="visually-hidden">Desktop</span>
+          <span class="visually-hidden">{i18n.t("editor.toolbar.desktop")}</span>
         </label>
-        <label title="Mobile">
+        <label title={i18n.t("editor.toolbar.mobile")}>
           <input class="visually-hidden" type="radio" bind:group={editor.width} value="mobile" />
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <rect x="7" y="2.5" width="10" height="19" rx="2" />
             <path d="M11 18.5h2" />
           </svg>
-          <span class="visually-hidden">Mobile</span>
+          <span class="visually-hidden">{i18n.t("editor.toolbar.mobile")}</span>
         </label>
       </fieldset>
       <span class="spacer"></span>
       <span class="status" role="status" class:problem={editor.status.kind === "conflict" || editor.status.kind === "error"}>{statusText}</span>
-      <button type="button" class="save" onclick={() => editor.save()} disabled={editor.status.kind === "saving" || !editor.dirty}>Save</button>
-      <PublishButton paths={editor.paths} unsaved={editor.dirty} beforePublish={saveBeforePublish} />
+      <Button size="sm" onclick={() => editor.save()} disabled={editor.status.kind === "saving" || !editor.dirty}>{i18n.t("editor.toolbar.save")}</Button>
+      <PublishButton paths={editor.paths} unsaved={editor.dirty} beforePublish={saveBeforePublish} size="sm" />
     </div>
 
     <div class="canvas-frame" onbeforeinputcapture={guardFixedLists}>
@@ -245,8 +254,8 @@ const statusText = $derived.by(() => {
     </div>
   </div>
 
-  <aside class="panels" aria-label="Details">
-    <div class="tabs" role="tablist" aria-label="Settings">
+  <aside class="panels" aria-label={i18n.t("editor.details")}>
+    <div class="tabs" role="tablist" aria-label={i18n.t("editor.settings")}>
       <button
         type="button"
         role="tab"
@@ -255,7 +264,7 @@ const statusText = $derived.by(() => {
         aria-controls="settings-panel"
         onclick={() => (editor.settingsTab = "page")}
       >
-        Page
+        {i18n.t("editor.tabs.page")}
       </button>
       <button
         type="button"
@@ -265,7 +274,7 @@ const statusText = $derived.by(() => {
         aria-controls="settings-panel"
         onclick={() => (editor.settingsTab = "site")}
       >
-        Site
+        {i18n.t("editor.tabs.site")}
       </button>
       <button
         type="button"
@@ -275,7 +284,7 @@ const statusText = $derived.by(() => {
         aria-controls="settings-panel"
         onclick={() => (editor.settingsTab = "business")}
       >
-        Business
+        {i18n.t("editor.tabs.business")}
       </button>
       <button
         type="button"
@@ -285,7 +294,7 @@ const statusText = $derived.by(() => {
         aria-controls="settings-panel"
         onclick={() => (editor.settingsTab = "theme")}
       >
-        Theme
+        {i18n.t("editor.tabs.theme")}
       </button>
     </div>
     <div
@@ -320,24 +329,24 @@ const statusText = $derived.by(() => {
   .editor {
     display: grid;
     grid-template-columns: 13rem 1fr 18rem;
-    min-height: 100vh;
-    font-family: system-ui, sans-serif;
+    min-height: calc(100vh - var(--ui-bar-height-compact));
+    font-family: var(--ui-font);
   }
 
   .left-column {
-    border-right: 1px solid #ddd;
-    background: #f7f7f7;
+    border-right: 1px solid var(--ui-border);
+    background: var(--ui-ground);
   }
 
   .panels {
-    border-left: 1px solid #ddd;
-    background: #fafafa;
-    font-family: system-ui, sans-serif;
+    border-left: 1px solid var(--ui-border);
+    background: var(--ui-ground);
+    font-family: var(--ui-font);
   }
 
   .tabs {
     display: flex;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--ui-border);
   }
 
   .tabs button {
@@ -351,7 +360,7 @@ const statusText = $derived.by(() => {
   }
 
   .tabs button[aria-selected="true"] {
-    border-bottom-color: #1f5a8a;
+    border-bottom-color: var(--ui-focus);
     font-weight: 600;
   }
 
@@ -363,7 +372,7 @@ const statusText = $derived.by(() => {
 
   .selection-label {
     font-size: 0.85rem;
-    color: #1f3a52;
+    color: var(--ui-button-label);
     white-space: nowrap;
   }
 
@@ -377,14 +386,14 @@ const statusText = $derived.by(() => {
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    border-bottom: 1px solid #ddd;
-    background: #fff;
+    border-bottom: 1px solid var(--ui-border);
+    background: var(--ui-surface);
   }
 
   .separator {
     width: 1px;
     height: 1.5rem;
-    background: #ddd;
+    background: var(--ui-border);
   }
 
 
@@ -402,8 +411,8 @@ const statusText = $derived.by(() => {
   .width label {
     display: flex;
     padding: 0.2rem 0.35rem;
-    border: 1px solid #bbb;
-    color: #555;
+    border: 1px solid var(--ui-border-strong);
+    color: var(--ui-muted);
     cursor: pointer;
   }
 
@@ -417,12 +426,12 @@ const statusText = $derived.by(() => {
   }
 
   .width label:has(:checked) {
-    background: #dde7f0;
-    color: #1f5a8a;
+    background: var(--ui-soft);
+    color: var(--ui-focus);
   }
 
   .width label:has(:focus-visible) {
-    outline: 2px solid #1f5a8a;
+    outline: 2px solid var(--ui-focus);
     outline-offset: 1px;
   }
 
@@ -434,29 +443,54 @@ const statusText = $derived.by(() => {
   }
 
   .status {
-    color: #555;
+    color: var(--ui-muted);
     font-size: 0.9rem;
   }
 
   .status.problem {
-    color: #a3161a;
+    color: var(--ui-problem);
+  }
+
+  /* The toolbar's compact one-glyph buttons (bold, italic, move up and down). */
+  .mark {
+    display: inline-grid;
+    place-items: center;
+    min-width: var(--ui-control-sm);
+    min-height: var(--ui-control-sm);
+    padding: 0 var(--ui-space-2);
+    border: 0;
+    border-radius: var(--ui-radius-pill);
+    background: transparent;
+    color: var(--ui-ink);
+    font: 600 var(--ui-text-sm) / 1 var(--ui-font);
+    cursor: pointer;
+  }
+
+  .mark:hover:not(:disabled) {
+    background: var(--ui-soft);
+  }
+
+  .mark:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
 
   button[aria-pressed="true"] {
-    background: #dde7f0;
+    background: var(--ui-button);
+    color: var(--ui-button-label);
   }
 
   .canvas-frame {
     flex: 1;
     padding: 1.5rem;
-    background: #eceef0;
+    background: var(--ui-ground);
     overflow: auto;
   }
 
   .site-canvas {
     position: relative;
     margin: 0 auto;
-    background: #fff;
+    background: var(--ui-surface);
     box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
     transition: max-width 0.2s;
     max-width: 100%;
@@ -464,7 +498,7 @@ const statusText = $derived.by(() => {
 
   /* A block just added: outlined for a moment (canvas-structure design.md decision 9). */
   .site-canvas :global([data-just-added]) {
-    outline: 3px solid #1f5a8a;
+    outline: 3px solid var(--ui-focus);
     outline-offset: -3px;
     transition: outline-color 0.6s;
   }

@@ -11,6 +11,8 @@ allowBuilds:
 
 catalog:
   "@biomejs/biome": 2.5.14
+  # The admin's own interface font (admin-foundation design.md decision 3), SIL Open Font Licence.
+  "@fontsource-variable/dm-sans": 5.3.0
   # The site's webfonts (theme-and-branding design.md decision 2), all SIL Open Font Licence.
   # Pinned exactly: packages/site/src/fonts.ts copies their file names and unicode ranges, and
   # published sites ship their bytes, so upgrade them deliberately and together.

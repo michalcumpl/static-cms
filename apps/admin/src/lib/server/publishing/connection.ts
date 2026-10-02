@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { type Said, said } from "$lib/i18n";
 import type { Db } from "../db/index";
 import { hostingConnections, users } from "../db/schema";
 import { listTeams, type NetlifyTeam, netlifyTarget } from "./netlify";
@@ -24,7 +25,7 @@ export interface NetlifyEnv {
 const apiUrlOf = (options: NetlifyEnv) =>
   options.apiUrl ?? (options.env ?? process.env).NETLIFY_API_URL ?? undefined;
 
-export const NOT_SET_UP = "Publishing isn't set up on this server (SECRET_KEY is missing).";
+export const NOT_SET_UP = said("server.publishing.notSetUp");
 
 /** What anyone in the workspace may see of the connection; never the token. */
 export function connectionInfo(db: Db, workspaceId: string): ConnectionInfo | undefined {
@@ -55,7 +56,7 @@ export function teamsForToken(token: string, options: NetlifyEnv = {}): Promise<
 
 export type ConnectResult =
   | { ok: true; info: ConnectionInfo }
-  | { ok: false; reason: "not-set-up" | "refused" | "unknown-team"; message: string };
+  | { ok: false; reason: "not-set-up" | "refused" | "unknown-team"; message: Said };
 
 /**
  * Checks the token with Netlify, and stores it encrypted for the workspace with the chosen team.
@@ -78,7 +79,7 @@ export async function connectWorkspace(
       return {
         ok: false,
         reason: "refused",
-        message: "Netlify refused this token. Check it and try again.",
+        message: said("server.publishing.tokenRefused"),
       };
     }
     throw error;
@@ -88,7 +89,7 @@ export async function connectWorkspace(
     return {
       ok: false,
       reason: "unknown-team",
-      message: "This token can't publish into that Netlify team.",
+      message: said("server.publishing.wrongTeam"),
     };
   }
   const row = {

@@ -1,14 +1,14 @@
 import { renderSite, usedMediaFiles } from "@static-cms/site";
-import { error } from "@sveltejs/kit";
 import { projectPaths } from "$lib/project-paths";
+import { notFound } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { projectLanguages, projectTranslations, readSite } from "$lib/server/site-documents";
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ params, parent }) => {
+export const load: PageServerLoad = async ({ params, parent, locals }) => {
   await parent(); // the layout's membership check runs first
   const site = readSite(getDb(), params.project);
-  if (!site) error(404, "Not found");
+  if (!site) notFound({ locals });
   const valid = !site.problems.some((p) => p.severity === "error");
   const rendered = renderSite(site.document, { basePath: projectPaths(params.project).preview });
   const pages = rendered.ok

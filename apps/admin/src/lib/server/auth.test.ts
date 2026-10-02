@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import {
   consumeLoginToken,
@@ -35,9 +36,28 @@ const request = (email: string, next?: string) => ({
   clientAddress: "203.0.113.5",
   origin: "https://admin.example.cz",
   next,
+  locale: "en" as const,
 });
 
 describe("magic-link sign-in", () => {
+  it("writes the email in the account's language, whatever the page's", async () => {
+    const { db, userId, sent, mailer } = setup();
+    db.update(users).set({ uiLanguage: "cs" }).where(eq(users.id, userId)).run();
+    await requestSignIn(db, mailer, signInLimiter(), request("jana@example.cz"));
+    expect(sent[0]?.subject).toBe("Přihlášení do Static CMS");
+    expect(sent[0]?.text).toMatch(/^Pro přihlášení otevřete tento odkaz \(platí 15 minut\):/);
+    expect(sent[0]?.text).not.toContain("To sign in");
+  });
+
+  it("writes the email in the page's language for an account without one", async () => {
+    const { db, sent, mailer } = setup();
+    await requestSignIn(db, mailer, signInLimiter(), {
+      ...request("jana@example.cz"),
+      locale: "cs",
+    });
+    expect(sent[0]?.subject).toBe("Přihlášení do Static CMS");
+  });
+
   it("emails a link to an existing account that signs in once", async () => {
     const { db, userId, sent, mailer } = setup();
     expect(await requestSignIn(db, mailer, signInLimiter(), request(" Jana@Example.cz "))).toBe(
@@ -147,7 +167,11 @@ describe("sessions", () => {
   it("resolve to their user until signed out, even if the old cookie is sent again", () => {
     const { db, userId } = setup();
     const token = createSession(db, userId);
-    expect(getSessionUser(db, token)).toEqual({ id: userId, email: "jana@example.cz" });
+    expect(getSessionUser(db, token)).toEqual({
+      id: userId,
+      email: "jana@example.cz",
+      uiLanguage: null,
+    });
     deleteSession(db, token);
     expect(getSessionUser(db, token)).toBeUndefined();
   });

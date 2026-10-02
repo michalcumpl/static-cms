@@ -100,7 +100,7 @@ describe("deletePage", () => {
 
   it("refuses the home page and the last page", () => {
     const { session: s } = editor();
-    expect(cannotDelete(s.doc, "page_home")).toMatch(/Set another page as home first/);
+    expect(cannotDelete(s.doc, "page_home")).toBe("home");
     expect(deletePage(s, "page_home")).toBe(false);
     expect(pageIds(s)).toEqual(["page_home", "page_contact"]);
     expect(cannotDelete(s.doc, "page_contact")).toBeUndefined();
@@ -293,7 +293,7 @@ describe("menu", () => {
     const before = s.doc;
     const unsafe = addExternalLink(s, "Mapa", "javascript:alert(1)");
     expect(unsafe.ok).toBe(false);
-    expect(!unsafe.ok && unsafe.message).toMatch(/isn't allowed/);
+    expect(!unsafe.ok && unsafe.reason).toBe("notAllowed");
     expect(addExternalLink(s, " ", "https://example.com").ok).toBe(false);
     expect(s.doc).toBe(before);
   });

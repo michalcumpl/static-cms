@@ -1,5 +1,6 @@
 import { exportSiteLanguages, type Problem, usedMediaFiles } from "@static-cms/site";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { type Locale, type Said, said, sayIn } from "$lib/i18n";
 import type { Db } from "../db/index";
 import { projectHosting, projects, publishDocuments, publishes, users } from "../db/schema";
 import { siteFonts } from "../fonts";
@@ -14,13 +15,12 @@ import { PublishError, type PublishTarget } from "./target";
 // The publish job (netlify-publishing design.md decision 4): export the saved site, deploy it
 // to the workspace's Netlify team, record the outcome. One publish runs at a time per server.
 
-export const NOT_CONNECTED =
-  "This workspace isn't connected to Netlify yet. An owner can connect it in the workspace settings.";
-export const ALREADY_RUNNING = "A publish of this site is already running.";
+export const NOT_CONNECTED = said("server.publishing.notConnected");
+export const ALREADY_RUNNING = said("server.publishing.running");
 
 export type StartResult =
   | { ok: true; publishId: string }
-  | { ok: false; reason: "not-found" | "not-connected" | "running"; message: string }
+  | { ok: false; reason: "not-found" | "not-connected" | "running"; message: Said }
   | { ok: false; reason: "invalid"; problems: Problem[] };
 
 let queue: Promise<unknown> = Promise.resolve();
@@ -65,12 +65,14 @@ export function startPublish(
   db: Db,
   projectId: string,
   userId: string,
-  options: NetlifyEnv & { pollDelays?: number[] } = {},
+  /** `locale`: the language of the person publishing, for a failure recorded later. */
+  options: NetlifyEnv & { pollDelays?: number[]; locale?: Locale } = {},
 ): StartResult {
   const workspaceId = workspaceOf(db, projectId);
   const sites = readLanguages(db, projectId, "published");
   const primary = sites.find((site) => site.primary);
-  if (!workspaceId || !primary) return { ok: false, reason: "not-found", message: "Not found" };
+  if (!workspaceId || !primary)
+    return { ok: false, reason: "not-found", message: said("server.notFound") };
   const connection = publishTarget(db, workspaceId, options);
   if (!connection) return { ok: false, reason: "not-connected", message: NOT_CONNECTED };
   const running = db
@@ -100,7 +102,8 @@ export function startPublish(
         .run();
     }
   });
-  const run = () => runPublish(db, projectId, publishId, sites, connection);
+  const locale = options.locale ?? "en";
+  const run = () => runPublish(db, projectId, publishId, sites, connection, locale);
   queue = queue.then(run, run);
   return { ok: true, publishId };
 }
@@ -144,7 +147,7 @@ async function ensureSite(
       throw error;
     }
   }
-  throw new PublishError("failed", "Couldn't find a free site name at Netlify.");
+  throw new PublishError("failed", said("server.publishing.noFreeName"));
 }
 
 async function runPublish(
@@ -153,6 +156,7 @@ async function runPublish(
   publishId: string,
   sites: readonly LanguageSite[],
   connection: { target: PublishTarget; accountSlug: string },
+  locale: Locale,
 ): Promise<void> {
   try {
     const hosting = await ensureSite(db, projectId, connection.target, connection.accountSlug);
@@ -175,7 +179,12 @@ async function runPublish(
       { siteUrl: url, redirects, fonts },
     );
     if (!exported.ok) {
-      throw new PublishError("failed", exported.problems.map((p) => p.message).join(" "));
+      throw new PublishError(
+        "failed",
+        said("server.publishing.problems", {
+          problems: exported.problems.map((p) => p.message).join(" "),
+        }),
+      );
     }
     const { deployId } = await connection.target.deploy(hosting.siteId, exported.files);
     db.update(publishes)
@@ -193,8 +202,12 @@ async function runPublish(
       .where(eq(projectHosting.projectId, projectId))
       .run();
   } catch (error) {
-    const message =
-      error instanceof PublishError ? error.message : `Publishing failed: ${String(error)}`;
+    const message = sayIn(
+      locale,
+      error instanceof PublishError
+        ? error.said
+        : said("server.publishing.failed", { error: String(error) }),
+    );
     db.update(publishes)
       .set({ state: "failed", error: message, finishedAt: new Date() })
       .where(eq(publishes.id, publishId))
@@ -266,7 +279,7 @@ export function publishingState(db: Db, projectId: string) {
 
 export type RestoreResult =
   | { ok: true }
-  | { ok: false; reason: "not-found" | "not-connected"; message: string };
+  | { ok: false; reason: "not-found" | "not-connected"; message: Said };
 
 /** Makes an earlier successful publish live again (Netlify's restore; nothing is uploaded). */
 export async function restorePublish(
@@ -286,7 +299,7 @@ export async function restorePublish(
     .where(eq(projectHosting.projectId, projectId))
     .get();
   if (publish?.state !== "ready" || !publish.deployId || !hosting) {
-    return { ok: false, reason: "not-found", message: "That publish can't be made live again." };
+    return { ok: false, reason: "not-found", message: said("server.publishing.cantRestore") };
   }
   const workspaceId = workspaceOf(db, projectId) ?? "";
   const connection = publishTarget(db, workspaceId, options);

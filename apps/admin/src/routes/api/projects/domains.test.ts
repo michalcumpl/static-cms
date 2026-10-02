@@ -4,7 +4,7 @@ import { dns, normalizeDomain } from "$lib/server/publishing/domains";
 import { type FakeNetlify, startFakeNetlify } from "$lib/server/publishing/fake-netlify";
 import { publishesSettled, siteNameFor, startPublish } from "$lib/server/publishing/publish";
 import { createProject, readSite } from "$lib/server/site-documents";
-import { useTestProject } from "$lib/server/test-project";
+import { inCzech, useTestProject } from "$lib/server/test-project";
 import { PUT as connect, DELETE as disconnect } from "./[project]/domain/+server";
 import { POST as check } from "./[project]/domain/check/+server";
 import { GET as history } from "./[project]/publishes/+server";
@@ -124,6 +124,18 @@ describe("custom domains", () => {
     const response = await put("https://anideti.cz/kontakt");
     expect(response.status).toBe(400);
     expect((await response.json()).message).toMatch(/domain name only, such as anideti.cz/);
+  });
+
+  it("refuses something that isn't a domain name in the person's language", async () => {
+    await published();
+    const event = project().event(path("domain"), project().owner, {
+      method: "PUT",
+      body: JSON.stringify({ domain: "https://anideti.cz/kontakt" }),
+    });
+    const response = await connect(inCzech(event) as never);
+    expect((await response.json()).message).toBe(
+      "Zadejte jen název domény, například anideti.cz nebo web.anideti.cz.",
+    );
   });
 
   it("refuses a domain connected to another project", async () => {

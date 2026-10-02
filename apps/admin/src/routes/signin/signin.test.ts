@@ -47,6 +47,7 @@ function signinEvent(email: string, next = "") {
     request: new Request(url, { method: "POST", body }),
     url,
     getClientAddress: () => "203.0.113.5",
+    locals: { locale: "en" },
   } as unknown as Parameters<typeof signin>[0];
 }
 
@@ -105,6 +106,7 @@ describe("/signin/[token]", () => {
     expect(getSessionUser(db, cookie?.value ?? "")).toEqual({
       id: userId,
       email: "jana@example.cz",
+      uiLanguage: null,
     });
   });
 

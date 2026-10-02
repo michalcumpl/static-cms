@@ -1,5 +1,6 @@
-import { error, json } from "@sveltejs/kit";
-import { requireMember } from "$lib/server/access";
+import { json } from "@sveltejs/kit";
+import { i18n } from "$lib/i18n";
+import { notFound, requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { startPublish } from "$lib/server/publishing/publish";
 import type { RequestHandler } from "./$types";
@@ -10,9 +11,10 @@ import type { RequestHandler } from "./$types";
  */
 export const POST: RequestHandler = (event) => {
   const { user } = requireMember(event, event.params.project, { api: true });
-  const result = startPublish(getDb(), event.params.project, user.id);
+  const { locale, say } = i18n(event.locals.locale);
+  const result = startPublish(getDb(), event.params.project, user.id, { locale });
   if (result.ok) return json({ id: result.publishId }, { status: 202 });
-  if (result.reason === "not-found") error(404, "Not found");
+  if (result.reason === "not-found") notFound(event);
   if (result.reason === "invalid") return json({ problems: result.problems }, { status: 422 });
-  return json({ message: result.message, reason: result.reason }, { status: 409 });
+  return json({ message: say(result.message), reason: result.reason }, { status: 409 });
 };

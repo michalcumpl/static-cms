@@ -16,6 +16,7 @@
     "admin": "tsx scripts/admin.ts"
   },
   "dependencies": {
+    "@fontsource-variable/dm-sans": "catalog:",
     "@fontsource-variable/inter": "catalog:",
     "@fontsource-variable/lora": "catalog:",
     "@fontsource-variable/merriweather": "catalog:",

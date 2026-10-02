@@ -1,11 +1,19 @@
 <script lang="ts">
 import { exportSiteLanguages, type LanguageDocument, zipFiles } from "@static-cms/site";
+import { getI18n } from "$lib/i18n";
 import LanguagesSection from "$lib/LanguagesSection.svelte";
 import PublishButton from "$lib/PublishButton.svelte";
 import { fontPath, projectPaths } from "$lib/project-paths";
+import Badge from "$lib/ui/Badge.svelte";
+import Button from "$lib/ui/Button.svelte";
+import Card from "$lib/ui/Card.svelte";
+import Notice from "$lib/ui/Notice.svelte";
+import Page from "$lib/ui/Page.svelte";
+import PageHeader from "$lib/ui/PageHeader.svelte";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
+const i18n = getI18n();
 const paths = $derived(projectPaths(data.project.id));
 const errors = $derived(data.problems.filter((p) => p.severity === "error"));
 const warnings = $derived(data.problems.filter((p) => p.severity === "warning"));
@@ -57,22 +65,26 @@ async function downloadZip() {
 </script>
 
 <svelte:head>
-  <title>{data.project.name} – Static CMS</title>
+  <title>{i18n.t("common.pageTitle", { page: data.project.name })}</title>
 </svelte:head>
 
-<main>
-  <p class="crumbs"><a href="/">← All projects</a></p>
-  <h1>{data.project.name}</h1>
-  <p>
-    <a href={paths.edit()}>Open the editor</a> · <a href={paths.preview}>Preview</a> ·
-    <a href={paths.history}>History</a>
-  </p>
+<Page>
+  <PageHeader
+    title={data.project.name}
+    breadcrumb={[{ href: "/", label: i18n.t("projects.title") }]}
+    breadcrumbLabel={i18n.t("common.breadcrumb")}
+  >
+    {#snippet actions()}
+      <Button href={paths.history} icon="history">{i18n.t("project.history")}</Button>
+      <Button href={paths.preview} icon="eye">{i18n.t("project.preview")}</Button>
+      <Button href={paths.edit()} kind="primary" icon="pencil">{i18n.t("project.openEditor")}</Button>
+    {/snippet}
+  </PageHeader>
 
-  <section aria-labelledby="publishing">
-    <h2 id="publishing">Publishing</h2>
-    <PublishButton {paths} />
-    <p><a href={paths.publishing}>Address, domain and history</a></p>
-  </section>
+  <Card title={i18n.t("project.publishing")} id="publishing">
+    <div><PublishButton {paths} /></div>
+    <p><a href={paths.publishing}>{i18n.t("project.publishingLink")}</a></p>
+  </Card>
 
   <LanguagesSection
     projectId={data.project.id}
@@ -81,66 +93,80 @@ async function downloadZip() {
     translations={data.translations}
   />
 
-  <section aria-labelledby="validation">
-    <h2 id="validation">Validation</h2>
+  <Card title={i18n.t("project.validation")} id="validation">
     {#if data.valid}
-      <p class="ok">Valid{#if warnings.length > 0}, with {warnings.length} warning(s){/if}.</p>
+      <Notice kind="success">
+        <p class="ok">
+          {warnings.length > 0
+            ? i18n.t("project.validWithWarnings", { count: warnings.length })
+            : i18n.t("project.valid")}
+        </p>
+      </Notice>
     {:else}
-      <p class="bad">{errors.length} error(s) — the site can't be rendered.</p>
+      <Notice kind="problem"><p class="bad">{i18n.t("project.invalid", { count: errors.length })}</p></Notice>
     {/if}
     {#if data.problems.length > 0}
-      <ul>
+      <ul class="problems">
         {#each data.problems as problem, i (i)}
           <li>
-            <strong>{problem.severity}</strong>
-            <code>{problem.code}</code>
-            {problem.message}
+            <Badge status={problem.severity === "error" ? "problem" : "attention"}>
+              {i18n.t(`project.severity.${problem.severity}`)}
+            </Badge>
+            <span>{problem.message} <code>{problem.code}</code></span>
           </li>
         {/each}
       </ul>
     {/if}
-  </section>
+  </Card>
 
-  <section aria-labelledby="pages">
-    <h2 id="pages">Pages</h2>
-    <ul>
+  <Card title={i18n.t("project.pages")} id="pages">
+    <ul class="pages">
       {#each data.pages as page (page.id)}
         <li><a href={page.url} data-sveltekit-reload>{page.path}</a></li>
       {/each}
     </ul>
-  </section>
+  </Card>
 
-  <section aria-labelledby="export">
-    <h2 id="export">Export</h2>
-    <p>The ZIP is built in your browser with the same code the server uses.</p>
-    <button type="button" onclick={downloadZip} disabled={downloading || !data.valid}>
-      {downloading ? "Building…" : "Download ZIP"}
-    </button>
+  <Card title={i18n.t("project.export")} id="export">
+    <p class="muted">{i18n.t("project.exportText")}</p>
+    <div>
+      <Button icon="download" onclick={downloadZip} disabled={downloading || !data.valid}>
+        {downloading ? i18n.t("project.building") : i18n.t("project.downloadZip")}
+      </Button>
+    </div>
     {#if downloadError}
-      <p class="bad" role="alert">{downloadError}</p>
+      <Notice kind="problem"><p class="bad">{downloadError}</p></Notice>
     {/if}
-  </section>
-</main>
+  </Card>
+</Page>
 
 <style>
-  main {
-    max-width: 48rem;
-    margin: 0 auto;
-    padding: 1rem;
-    font-family: system-ui, sans-serif;
-    line-height: 1.5;
+  p {
+    margin: 0;
   }
 
-  .ok {
-    color: #1a6b2f;
+  .muted {
+    color: var(--ui-muted);
   }
 
-  .bad {
-    color: #a3161a;
+  .problems,
+  .pages {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
-  button {
-    font: inherit;
-    padding: 0.5rem 1rem;
+  .problems li {
+    display: flex;
+    gap: var(--ui-space-3);
+    align-items: baseline;
+  }
+
+  code {
+    font-size: var(--ui-text-xs);
+    color: var(--ui-muted);
   }
 </style>

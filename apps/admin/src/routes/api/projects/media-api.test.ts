@@ -1,6 +1,6 @@
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { thrownBy, useTestProject } from "$lib/server/test-project";
+import { inCzech, thrownBy, useTestProject } from "$lib/server/test-project";
 import { GET as getLibrary, POST as postMedia } from "./[project]/media/+server";
 import { DELETE as deleteMedia, GET as getFile } from "./[project]/media/[name]/+server";
 
@@ -45,6 +45,24 @@ function remove(key: string, user: User | null = project().owner) {
 }
 
 describe("POST /api/projects/[project]/media", () => {
+  it("refuses a file that isn't an image in the person's language", async () => {
+    const body = new FormData();
+    body.set("file", new Blob(["hello"], { type: "text/plain" }), "notes.txt");
+    const event = project().event(base(), project().owner, { method: "POST", body });
+    const response = await postMedia(inCzech(event) as unknown as LibraryEvent);
+    expect(response.status).toBe(415);
+    expect((await response.json()).message).toBe("Nahrát jde jen obrázky JPEG, PNG a WebP.");
+  });
+
+  it("asks a signed-out person to sign in, in their language", async () => {
+    const event = project().event(base(), undefined);
+    const thrown = (await thrownBy(() => getLibrary(inCzech(event) as unknown as LibraryEvent))) as
+      | { status: number; body?: { message: string } }
+      | undefined;
+    expect(thrown?.status).toBe(401);
+    expect(thrown?.body?.message).toBe("Nejdřív se přihlaste.");
+  });
+
   it("answers 201 with the new image, and 200 for the same file again", async () => {
     const photo = await jpeg(1200, 900);
     const first = await upload(photo, "Chléb.jpg");

@@ -2,6 +2,7 @@
 import { contactDetails } from "@static-cms/site";
 import { type DocumentPath, Node, type SveditContext, TextProperty } from "svedit";
 import { getContext } from "svelte";
+import { getI18n } from "$lib/i18n";
 import { businessView } from "./business-view";
 import EditBusinessButton from "./EditBusinessButton.svelte";
 
@@ -26,16 +27,17 @@ const details = $derived.by(() => {
     map: block.show_map,
   });
 });
+const i18n = getI18n();
 </script>
 
 <Node {path} tag="section" class="block contact">
   <div class="container">
-    <TextProperty tag="h2" path={[...path, "heading"]} placeholder="Nadpis (nepovinný)" />
+    <TextProperty tag="h2" path={[...path, "heading"]} placeholder={i18n.t("editor.canvas.headingOptional")} />
     <div contenteditable="false">
       {#if details}
         {@html details.value}
       {:else}
-        <p class="empty-note">No contact details yet.</p>
+        <p class="empty-note">{i18n.t("editor.canvas.noContact")}</p>
       {/if}
     </div>
     <EditBusinessButton />

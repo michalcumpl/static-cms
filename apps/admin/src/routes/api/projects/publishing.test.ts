@@ -3,7 +3,7 @@ import { connectWorkspace } from "$lib/server/publishing/connection";
 import { type FakeNetlify, startFakeNetlify } from "$lib/server/publishing/fake-netlify";
 import { publishesSettled, siteNameFor } from "$lib/server/publishing/publish";
 import { readSite, saveSite } from "$lib/server/site-documents";
-import { thrownBy, useTestProject } from "$lib/server/test-project";
+import { inCzech, thrownBy, useTestProject } from "$lib/server/test-project";
 import { isForeignApiWrite } from "../../../hooks.server";
 import { POST as publish } from "./[project]/publish/+server";
 import { GET as history } from "./[project]/publishes/+server";
@@ -37,7 +37,7 @@ async function connect() {
     token: TOKEN,
     account: "anideti",
   });
-  if (!result.ok) throw new Error(result.message);
+  if (!result.ok) throw new Error(JSON.stringify(result.message));
 }
 const path = (suffix: string) => `/api/projects/${project().projectId}/${suffix}`;
 async function doPublish(user: User | null = project().owner) {
@@ -165,6 +165,26 @@ describe("publishing", () => {
     });
     expect(previous).toMatchObject({ state: "ready", live: true });
     expect((await visit("/")).text).not.toContain("Nedosažitelné");
+  });
+
+  it("records a failure in the language of the person who published", async () => {
+    await connect();
+    fake.setDown(true);
+    const event = project().event(path("publish"), project().owner, { method: "POST" });
+    await publish(inCzech(event) as never);
+    await publishesSettled();
+    fake.setDown(false);
+    expect((await state()).publishes[0]).toMatchObject({
+      state: "failed",
+      error: "Hostingová služba (Netlify) není dostupná.",
+    });
+  });
+
+  it("refuses an unconnected workspace in the person's language", async () => {
+    const event = project().event(path("publish"), project().owner, { method: "POST" });
+    const response = await publish(inCzech(event) as never);
+    expect(response.status).toBe(409);
+    expect((await response.json()).message).toMatch(/^Tento pracovní prostor ještě není připojený/);
   });
 
   it("asks an owner to reconnect when the token was revoked", async () => {
