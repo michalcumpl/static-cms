@@ -76,6 +76,8 @@ test("add English on the project page, edit it, publish, hide and remove it", as
   expect(documentOf().nodes.hero_1.heading.content).toBe("Čerstvý chléb každé ráno");
 
   await page.goto(paths().overview);
+  // As above: the buttons only work once the section's script has taken over.
+  await page.waitForLoadState("networkidle");
   await row.getByRole("button", { name: "Publish English" }).click();
   await expect(row).toContainText("Published");
   await row.getByRole("button", { name: "Hide English" }).click();
