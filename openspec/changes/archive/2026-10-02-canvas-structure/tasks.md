@@ -23,5 +23,5 @@
 ## 4. End to end and docs
 
 - [x] 4.1 Update the roadmap (Milestone 3 editor polish: block handles and adding blocks on the canvas with an illustrated picker done; the left column no longer adds blocks; drag and drop later) and the admin README's editing notes. Verify by reading both.
-- [ ] 4.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
+- [x] 4.2 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
 - [ ] 4.3 Manual check by the owner: on a laptop and on a phone or tablet, delete a block, remove one photo, duplicate a service, reorder blocks and add a block between two others, using only the handles and the "+ Add block" buttons. Record the outcome in design.md.
