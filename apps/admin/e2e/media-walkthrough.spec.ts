@@ -62,7 +62,7 @@ test("a phone photo with GPS goes into the hero and is published without metadat
   expect(home).toMatch(/srcset="[^"]*img-0042-[0-9a-f]{8}-2400\.webp 2400w"/);
   expect(home).toContain('width="4032" height="3024"');
 
-  await page.goto(paths().overview);
+  await page.goto(paths().publishing);
   // The ZIP is built in the browser: click only once the page's script has taken over.
   await page.waitForLoadState("networkidle");
   const downloading = page.waitForEvent("download");

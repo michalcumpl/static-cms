@@ -31,6 +31,7 @@ let {
   onclose,
   layout = "list",
   align = "start",
+  fixed = false,
 }: {
   /** The menu's accessible name. */
   label: string;
@@ -43,9 +44,18 @@ let {
   layout?: "list" | "grid";
   /** Which edge of the button the menu lines up with; "end" for buttons at the window's edge. */
   align?: "start" | "end";
+  /** Positioned against the window and moved to the page root, so no parent can cut it off. */
+  fixed?: boolean;
 } = $props();
 
 let menu: HTMLElement | undefined = $state();
+
+/** Moves the menu to the page root, out of the stacking context and clipping of its parents. */
+function portal(node: HTMLElement, enabled: boolean) {
+  if (!enabled) return {};
+  document.body.append(node);
+  return { destroy: () => node.remove() };
+}
 const items = () => [
   ...(menu?.querySelectorAll<HTMLElement>('[role="menuitem"], [role="menuitemradio"]') ?? []),
 ];
@@ -121,11 +131,13 @@ function onpointerdown(event: PointerEvent) {
   class="menu"
   class:grid={layout === "grid"}
   class:end={align === "end"}
+  class:fixed
   role="menu"
   aria-label={label}
   tabindex="-1"
   style="position-anchor: {anchor};"
   bind:this={menu}
+  use:portal={fixed}
   {onkeydown}
 >
   {#each sections as section, i (i)}
@@ -195,6 +207,11 @@ function onpointerdown(event: PointerEvent) {
     /* A menu, not text: labels and gaps keep the arrow, entries show the hand. */
     cursor: default;
     user-select: none;
+  }
+
+  .menu.fixed {
+    position: fixed;
+    z-index: 60;
   }
 
   .menu.end {

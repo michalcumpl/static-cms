@@ -13,6 +13,7 @@ let {
   beforePublish,
   publishing: shared,
   size = "md",
+  blockedReason,
 }: {
   paths: ProjectPaths;
   unsaved?: boolean;
@@ -20,6 +21,8 @@ let {
   /** A page's own publishing state, so the page updates when this button publishes. */
   publishing?: Publishing;
   size?: "md" | "sm";
+  /** Why publishing isn't possible right now (the saved site has errors): disables the button. */
+  blockedReason?: string;
 } = $props();
 
 const i18n = getI18n();
@@ -53,8 +56,8 @@ const failure = $derived.by(() => {
     icon="upload"
     {size}
     {onclick}
-    disabled={status.kind === "publishing" || !connected}
-    title={connected ? undefined : i18n.t("publish.connectFirst")}
+    disabled={status.kind === "publishing" || !connected || Boolean(blockedReason)}
+    title={blockedReason ?? (connected ? undefined : i18n.t("publish.connectFirst"))}
   >
     {status.kind === "publishing"
       ? i18n.t("publish.publishing")

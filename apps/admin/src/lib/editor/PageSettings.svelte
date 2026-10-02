@@ -1,21 +1,10 @@
 <script lang="ts">
 import { slugify } from "@static-cms/site";
-import { goto } from "$app/navigation";
 import { getI18n } from "$lib/i18n";
 import ImageSetting from "./ImageSetting.svelte";
 import { pageFieldElementId } from "./locate";
 import PageLanguages from "./PageLanguages.svelte";
-import {
-  cannotDelete,
-  countLinksTo,
-  deletePage,
-  duplicatePage,
-  setHome,
-  setPageSlug,
-  setPageTitle,
-  setSeoDescription,
-  showInMenu,
-} from "./pages";
+import { setPageSlug, setPageTitle, setSeoDescription, showInMenu } from "./pages";
 import { slotImage } from "./site";
 import type { EditorState } from "./state.svelte";
 
@@ -26,7 +15,6 @@ type PageNode = { id: string; title: string; slug: string; seo_description: stri
 
 const page = $derived(editor.currentPage);
 const node = $derived(page ? (editor.session.get(page.id) as PageNode | undefined) : undefined);
-const deleteReason = $derived(page ? cannotDelete(editor.session.doc, page.id) : undefined);
 const siteShareImage = $derived(slotImage(editor.session.doc, editor.siteId, "share_image"));
 
 // The slug is typed into a draft and applied on change (design.md decision 8): applying every
@@ -45,22 +33,6 @@ function commitSlug() {
 }
 
 $effect(() => editor.registerDraft(commitSlug));
-
-let deleteDialog: HTMLDialogElement | undefined = $state();
-const linkCount = $derived(page ? countLinksTo(editor.session.doc, page.id) : 0);
-
-async function duplicate() {
-  if (!page) return;
-  const id = duplicatePage(editor.session, page.id);
-  if (id) await goto(editor.paths.edit(id));
-}
-
-function confirmDelete(event: SubmitEvent) {
-  event.preventDefault();
-  if (page) deletePage(editor.session, page.id);
-  deleteDialog?.close();
-  // The layout switches to the home page once the current page is gone.
-}
 </script>
 
 {#if page && node}
@@ -121,47 +93,7 @@ function confirmDelete(event: SubmitEvent) {
       />
       {i18n.t("editor.page.showInMenu")}
     </label>
-
-    <div class="actions">
-      <button
-        type="button"
-        id={pageFieldElementId("home")}
-        onclick={() => setHome(editor.session, node.id)}
-        disabled={page.isHome}
-      >
-        {page.isHome ? i18n.t("editor.page.homePage") : i18n.t("editor.page.setHome")}
-      </button>
-      <button type="button" onclick={duplicate}>{i18n.t("editor.page.duplicate")}</button>
-      <button
-        type="button"
-        class="danger"
-        onclick={() => deleteDialog?.showModal()}
-        disabled={deleteReason !== undefined}
-        aria-describedby={deleteReason ? "page-delete-hint" : undefined}
-      >
-        {i18n.t("editor.page.delete")}
-      </button>
-    </div>
-    {#if deleteReason}
-      <p class="hint" id="page-delete-hint">{i18n.t(`editor.page.cannotDelete.${deleteReason}`)}</p>
-    {/if}
   </section>
-
-  <dialog bind:this={deleteDialog} aria-labelledby="delete-page-title" class="delete-dialog">
-    <form onsubmit={confirmDelete}>
-      <h2 id="delete-page-title">{i18n.t("editor.page.deleteTitle", { title: node.title })}</h2>
-      <p>
-        {linkCount === 0
-          ? i18n.t("editor.page.noLinks")
-          : i18n.t("editor.page.links", { count: linkCount })}
-        {i18n.t("editor.page.undoNote")}
-      </p>
-      <div class="buttons">
-        <button type="button" onclick={() => deleteDialog?.close()}>{i18n.t("common.cancel")}</button>
-        <button type="submit" class="danger">{i18n.t("editor.page.deletePage")}</button>
-      </div>
-    </form>
-  </dialog>
 {/if}
 
 <style>
@@ -203,34 +135,5 @@ function confirmDelete(event: SubmitEvent) {
     margin: 0;
     font-size: 0.85rem;
     color: var(--ui-muted);
-  }
-
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-  }
-
-  .danger {
-    color: var(--ui-problem);
-  }
-
-  .delete-dialog {
-    max-width: 26rem;
-    font-family: var(--ui-font);
-  }
-
-  .delete-dialog h2 {
-    font-size: 1.1rem;
-    text-transform: none;
-    letter-spacing: 0;
-    color: inherit;
-  }
-
-  .buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
   }
 </style>

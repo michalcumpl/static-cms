@@ -183,7 +183,7 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
       problems.warning(
         "nothing-to-show",
         block.id,
-        `The ${what} ${where(block.id)} has nothing to show yet; fill in the ${fill} on the Business tab.`,
+        `The ${what} ${where(block.id)} has nothing to show yet; fill in the ${fill} in the business settings.`,
       );
     }
   }

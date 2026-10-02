@@ -287,6 +287,35 @@ export function projectTranslations(db: Db, projectId: string): LanguageTranslat
   });
 }
 
+/** A page of one language, as the project's Pages tab lists it. */
+export interface PageEntry extends TranslationPage {
+  inMenu: boolean;
+}
+
+/** A language's saved pages in site order, with whether each is in the menu. */
+export function languagePages(db: Db, projectId: string, lang: string): PageEntry[] | undefined {
+  const site = readLanguages(db, projectId, "all").find((s) => s.lang === lang);
+  if (!site) return undefined;
+  const doc = site.document as {
+    document_id: string;
+    nodes: Record<
+      string,
+      { type?: string; nav?: string; page_id?: string; items?: { nodes: string[] } }
+    >;
+  };
+  const nav = doc.nodes[doc.nodes[doc.document_id]?.nav ?? ""];
+  const inMenu = new Set(
+    (nav?.items?.nodes ?? []).flatMap((id) => {
+      const item = doc.nodes[id];
+      return item?.type === "page_link" && item.page_id ? [item.page_id] : [];
+    }),
+  );
+  return translationSummary(site.document).map((page) => ({
+    ...page,
+    inMenu: inMenu.has(page.pageId),
+  }));
+}
+
 export type LanguageChange =
   | { ok: true }
   | { ok: false; reason: "not-found" | "exists" | "not-offered" | "primary"; message: Said };

@@ -93,7 +93,7 @@ describe("images of other blocks", () => {
 describe("node components", () => {
   it("has a canvas component for every node type of the schema shown on the canvas", () => {
     // The theme is never on the canvas; it is the stylesheet. The business details are edited
-    // in the Business tab; the canvas shows them through the contact and hours blocks.
+    // in the business settings; the canvas shows them through the contact and hours blocks.
     const offCanvas = ["theme", "business", "opening_day", "time_range"];
     const missing = Object.keys(siteSchema).filter(
       (type) => !offCanvas.includes(type) && !(type in nodeComponents),

@@ -1,13 +1,19 @@
 <script lang="ts">
+import { tick } from "svelte";
 import { goto } from "$app/navigation";
 import { getI18n } from "$lib/i18n";
 import Button from "$lib/ui/Button.svelte";
+import PopoverMenu, { type MenuEntry as MenuItem } from "$lib/ui/PopoverMenu.svelte";
+import DeletePageDialog from "./DeletePageDialog.svelte";
+import { pageFieldElementId } from "./locate";
+import { linkMenuEntries, type PageMenuActions, pageMenuEntries } from "./page-menu";
 import {
   addExternalLink,
   addPage,
   moveMenuItem,
   removeMenuItem,
   setExternalLink,
+  setPageTitle,
   showInMenu,
 } from "./pages";
 import type { EditorPage, EditorState, MenuEntry } from "./state.svelte";
@@ -71,6 +77,51 @@ function removeLink() {
   linkDialog?.close();
 }
 
+// The "⋯" menu of an entry (one open at a time), and the dialogs its actions open.
+let openMenu = $state<{ key: string; label: string; entries: MenuItem[] } | undefined>();
+let renameDialog: HTMLDialogElement | undefined = $state();
+let renaming = $state<EditorPage | undefined>();
+let renameTitle = $state("");
+let renameError = $state("");
+let deleteDialog: DeletePageDialog | undefined = $state();
+
+const menuActions: PageMenuActions = {
+  rename(page) {
+    renaming = page;
+    renameTitle = page.title;
+    renameError = "";
+    renameDialog?.showModal();
+  },
+  confirmDelete: (page) => deleteDialog?.open(page),
+  duplicated: (id) => void goto(editor.paths.edit(id)),
+  editLink: (entry) => openLinkDialog(entry),
+};
+
+function toggleMenu(key: string, name: string, entries: () => MenuItem[]) {
+  openMenu = openMenu?.key === key ? undefined : { key, label: name, entries: entries() };
+}
+
+async function closeMenu(chosen: boolean) {
+  const key = openMenu?.key;
+  openMenu = undefined;
+  // Escape and clicks outside give focus back to the button that opened the menu.
+  if (!chosen && key) {
+    await tick();
+    document.querySelector<HTMLElement>(`[data-menu-key="${key}"]`)?.focus();
+  }
+}
+
+function submitRename(event: SubmitEvent) {
+  event.preventDefault();
+  if (!renaming) return;
+  if (!renameTitle.trim()) {
+    renameError = i18n.t("editor.left.pageTitleMissing");
+    return;
+  }
+  setPageTitle(editor.session, renaming.id, renameTitle);
+  renameDialog?.close();
+}
+
 // Dragging: menu entries reorder within the menu, and pages move between the two sections.
 type Dragged = { kind: "menu"; index: number } | { kind: "unlisted"; pageId: string };
 let dragged: Dragged | undefined;
@@ -96,7 +147,6 @@ function dropOnUnlisted(event: DragEvent) {
 }
 
 const menuName = (entry: MenuEntry) => (entry.kind === "page" ? entry.page.title : entry.label);
-const lastIndex = $derived(editor.menu.at(-1)?.index ?? 0);
 
 // Outside the primary language: pages whose title (or slug) is still the primary's.
 const primaryPages = $derived(
@@ -110,6 +160,22 @@ function untranslated(page: EditorPage): boolean {
   return node ? isUntranslated(primaryPages, node, page.isHome) : false;
 }
 </script>
+
+{#snippet moreButton(key: string, name: string, entries: () => MenuItem[], home = false)}
+  <button
+    type="button"
+    class="more"
+    data-menu-key={key}
+    id={home ? pageFieldElementId("home") : undefined}
+    aria-haspopup="menu"
+    aria-expanded={openMenu?.key === key}
+    aria-label={i18n.t("editor.pageMenu.actions", { name })}
+    style:anchor-name={openMenu?.key === key ? "--page-actions" : undefined}
+    onclick={() => toggleMenu(key, i18n.t("editor.pageMenu.actions", { name }), entries)}
+  >
+    <span aria-hidden="true">⋯</span>
+  </button>
+{/snippet}
 
 {#snippet pageLink(page: EditorPage)}
   <a href={page.href} aria-current={page.id === editor.currentPageId ? "page" : undefined}>
@@ -145,22 +211,18 @@ function untranslated(page: EditorPage): boolean {
               </button>
             {/if}
           </span>
-          <span class="move">
-            <button
-              type="button"
-              aria-label={i18n.t("editor.left.moveUp", { name: menuName(entry) })}
-              title={i18n.t("editor.toolbar.moveUp")}
-              disabled={entry.index === 0}
-              onclick={() => moveMenuItem(editor.session, entry.index, entry.index - 1)}>↑</button
-            >
-            <button
-              type="button"
-              aria-label={i18n.t("editor.left.moveDown", { name: menuName(entry) })}
-              title={i18n.t("editor.toolbar.moveDown")}
-              disabled={entry.index >= lastIndex}
-              onclick={() => moveMenuItem(editor.session, entry.index, entry.index + 1)}>↓</button
-            >
-          </span>
+          {#if entry.kind === "page"}
+            {@render moreButton(
+              entry.itemId,
+              menuName(entry),
+              () => pageMenuEntries(editor, entry.page, i18n.t, menuActions),
+              entry.page.id === editor.currentPageId,
+            )}
+          {:else}
+            {@render moreButton(entry.itemId, menuName(entry), () =>
+              linkMenuEntries(editor, entry, i18n.t, menuActions),
+            )}
+          {/if}
         </li>
       {:else}
         <li class="empty">{i18n.t("editor.left.menuEmpty")}</li>
@@ -178,6 +240,12 @@ function untranslated(page: EditorPage): boolean {
       {#each editor.unlisted as page (page.id)}
         <li draggable="true" ondragstart={() => (dragged = { kind: "unlisted", pageId: page.id })}>
           <span class="name">{@render pageLink(page)}</span>
+          {@render moreButton(
+            page.id,
+            page.title,
+            () => pageMenuEntries(editor, page, i18n.t, menuActions),
+            page.id === editor.currentPageId,
+          )}
         </li>
       {:else}
         <li class="empty">{i18n.t("editor.left.allInMenu")}</li>
@@ -190,6 +258,31 @@ function untranslated(page: EditorPage): boolean {
     <Button size="sm" onclick={() => openLinkDialog()}>{i18n.t("editor.left.addLink")}</Button>
   </div>
 </aside>
+
+{#if openMenu}
+  <PopoverMenu
+    label={openMenu.label}
+    anchor="--page-actions"
+    entries={openMenu.entries}
+    onclose={closeMenu}
+    fixed
+  />
+{/if}
+
+<DeletePageDialog {editor} bind:this={deleteDialog} />
+
+<dialog bind:this={renameDialog} aria-labelledby="rename-page-title" class="sidebar-dialog">
+  <form onsubmit={submitRename}>
+    <h2 id="rename-page-title">{i18n.t("editor.pageMenu.renameTitle", { title: renaming?.title ?? "" })}</h2>
+    <label for="rename-page-name">{i18n.t("editor.left.title")}</label>
+    <input id="rename-page-name" type="text" bind:value={renameTitle} />
+    {#if renameError}<p class="error" role="alert">{renameError}</p>{/if}
+    <div class="buttons">
+      <Button onclick={() => renameDialog?.close()}>{i18n.t("common.cancel")}</Button>
+      <Button type="submit" kind="primary">{i18n.t("editor.pageMenu.renameButton")}</Button>
+    </div>
+  </form>
+</dialog>
 
 <dialog bind:this={pageDialog} aria-labelledby="add-page-title" class="sidebar-dialog">
   <form onsubmit={submitPage}>
@@ -287,7 +380,7 @@ function untranslated(page: EditorPage): boolean {
     outline: 2px solid var(--ui-focus);
   }
 
-  .move button {
+  .more {
     min-width: 1.75rem;
     min-height: 1.75rem;
     padding: 0;
@@ -295,17 +388,13 @@ function untranslated(page: EditorPage): boolean {
     border-radius: var(--ui-radius-pill);
     background: transparent;
     color: var(--ui-ink);
-    font: inherit;
+    font: 700 1.1rem / 1 var(--ui-font);
     cursor: pointer;
   }
 
-  .move button:hover:not(:disabled) {
+  .more:hover,
+  .more[aria-expanded="true"] {
     background: var(--ui-soft);
-  }
-
-  .move button:disabled {
-    opacity: 0.35;
-    cursor: default;
   }
 
   .empty {

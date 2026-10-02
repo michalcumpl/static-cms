@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { canvas, expect, openEditor, paths, test } from "./fixtures";
+import { canvas, expect, openEditor, openPageMenu, pageAction, paths, test } from "./fixtures";
 
 test.describe("editor addresses", () => {
   test("/edit/ opens the home page", async ({ page }) => {
@@ -73,9 +73,9 @@ test.describe("sidebar", () => {
     await expect(dialog.getByRole("alert")).toHaveText("Enter a title for the page.");
   });
 
-  test("reorder the menu with the move buttons", async ({ page }) => {
+  test("reorder the menu from a page's menu", async ({ page }) => {
     await openEditor(page);
-    await menuSection(page).getByRole("button", { name: "Move Kontakt up" }).click();
+    await pageAction(page, "Kontakt", "Move up");
     expect(await canvasMenu(page)).toEqual(["Kontakt", "Úvod"]);
     await expect(status(page)).toHaveText("Unsaved changes");
   });
@@ -129,7 +129,7 @@ test.describe("page settings", () => {
 
   test("set as home: the home marker moves and slugs stay", async ({ page }) => {
     await openEditor(page, paths().edit("page_contact"));
-    await settings(page).getByRole("button", { name: "Set as home" }).click();
+    await pageAction(page, "Kontakt", "Set as home");
     await expect(settings(page).getByText("This is the home page.")).toBeVisible();
     await expect(settings(page).getByLabel("Address (slug)")).toHaveValue("kontakt");
     const contactRow = menuSection(page).getByRole("listitem").filter({ hasText: "Kontakt" });
@@ -140,22 +140,23 @@ test.describe("page settings", () => {
 
   test("the home page can't be deleted", async ({ page }) => {
     await openEditor(page);
-    const button = settings(page).getByRole("button", { name: "Delete" });
-    await expect(button).toBeDisabled();
-    await expect(settings(page).getByText("Set another page as home first.")).toBeVisible();
+    const menu = await openPageMenu(page, "Úvod");
+    const remove = menu.getByRole("menuitem", { name: "Delete" });
+    await expect(remove).toHaveAttribute("aria-disabled", "true");
+    await expect(remove).toContainText("Set another page as home first.");
   });
 
   test("delete a page with links to it: home is shown and the links are problems", async ({
     page,
   }) => {
     await openEditor(page, paths().edit("page_contact"));
-    await settings(page).getByRole("button", { name: "Delete" }).click();
+    await pageAction(page, "Kontakt", "Delete");
     const dialog = page.getByRole("dialog", { name: "Delete “Kontakt”?" });
     await expect(dialog).toContainText("2 links elsewhere in the site point to it.");
     await dialog.getByRole("button", { name: "Cancel" }).click();
     await expect(canvas(page).locator("h1")).toHaveText("Kontakt");
 
-    await settings(page).getByRole("button", { name: "Delete" }).click();
+    await pageAction(page, "Kontakt", "Delete");
     await dialog.getByRole("button", { name: "Delete page" }).click();
     await expect(canvas(page).locator(".hero h1")).toHaveText("Čerstvý chléb každé ráno");
     await expect(page).toHaveURL(/\/edit\/$/);
@@ -169,7 +170,7 @@ test.describe("page settings", () => {
 
   test("duplicate a page", async ({ page }) => {
     await openEditor(page, paths().edit("page_contact"));
-    await settings(page).getByRole("button", { name: "Duplicate" }).click();
+    await pageAction(page, "Kontakt", "Duplicate");
     await expect(canvas(page).locator("h1")).toHaveText("Kontakt (copy)");
     await expect(settings(page).getByLabel("Address (slug)")).toHaveValue("kontakt-copy");
     expect(await canvasMenu(page)).toEqual(["Úvod", "Kontakt", "Kontakt (copy)"]);

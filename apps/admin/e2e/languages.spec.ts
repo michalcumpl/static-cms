@@ -13,8 +13,10 @@ import {
   expect,
   fakeNetlify,
   openEditor,
+  openSettings,
   paths,
   resetPublishing,
+  saveSettings,
   state,
   test,
   testDb,
@@ -25,7 +27,7 @@ type Doc = Record<string, any>;
 
 const toolbar = (page: Page) => page.getByRole("toolbar", { name: "Editing" });
 const languagesSection = (page: Page) => page.getByRole("region", { name: "Languages" });
-const details = (page: Page) => page.getByRole("complementary", { name: "Details" });
+const _details = (page: Page) => page.getByRole("complementary", { name: "Details" });
 const english = () => projectPaths(state().projectId, "en");
 
 async function save(page: Page) {
@@ -56,8 +58,8 @@ function documentOf(lang?: string): Doc {
 
 test.beforeEach(() => resetPublishing());
 
-test("add English on the project page, edit it, publish, hide and remove it", async ({ page }) => {
-  await page.goto(paths().overview);
+test("add English on the Languages tab, edit it, publish, hide and remove it", async ({ page }) => {
+  await page.goto(paths().languagesTab);
   // The section's script must have taken over before choosing.
   await page.waitForLoadState("networkidle");
   await languagesSection(page).getByLabel("Add a language").selectOption({ label: "English" });
@@ -75,7 +77,7 @@ test("add English on the project page, edit it, publish, hide and remove it", as
   expect(saved.nodes.hero_1.heading.content).toBe("Čerstvý chléb každé ráno (EN)");
   expect(documentOf().nodes.hero_1.heading.content).toBe("Čerstvý chléb každé ráno");
 
-  await page.goto(paths().overview);
+  await page.goto(paths().languagesTab);
   // As above: the buttons only work once the section's script has taken over.
   await page.waitForLoadState("networkidle");
   await row.getByRole("button", { name: "Publish English" }).click();
@@ -103,20 +105,18 @@ test("switch to Čeština on the same page", async ({ page }) => {
 
 test("shared fields are edited in Čeština and read-only in English", async ({ page }) => {
   addEnglish();
-  await openEditor(page);
-  await details(page).getByRole("tab", { name: "Business" }).click();
+  await openSettings(page);
   const phone = page.getByLabel("Phone");
   await phone.fill("321 123 456");
   await phone.press("Tab");
-  await save(page);
+  await saveSettings(page);
 
-  await openEditor(page, english().edit());
-  await details(page).getByRole("tab", { name: "Business" }).click();
+  await openSettings(page, "en");
   await expect(page.getByLabel("Phone")).toHaveValue("+420 321 123 456");
   await expect(page.getByLabel("Phone")).toBeDisabled();
-  await expect(page.getByText("Edited in Čeština")).toBeVisible();
+  await expect(page.getByText("Edited in Čeština").first()).toBeVisible();
   await expect(page.getByLabel("Note on the opening hours")).toBeEnabled();
-  await expect(page.getByLabel("Name", { exact: true })).toBeEnabled();
+  await expect(page.getByLabel("Name", { exact: true }).first()).toBeEnabled();
 });
 
 test("the preview shows hidden English under en/", async ({ page }) => {

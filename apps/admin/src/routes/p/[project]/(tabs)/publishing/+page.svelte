@@ -1,5 +1,6 @@
 <script lang="ts">
 import { onDestroy, onMount } from "svelte";
+import DownloadZip from "$lib/DownloadZip.svelte";
 import { getI18n } from "$lib/i18n";
 import PublishButton from "$lib/PublishButton.svelte";
 import { projectPaths } from "$lib/project-paths";
@@ -8,8 +9,7 @@ import Badge from "$lib/ui/Badge.svelte";
 import Button from "$lib/ui/Button.svelte";
 import Card from "$lib/ui/Card.svelte";
 import Notice from "$lib/ui/Notice.svelte";
-import Page from "$lib/ui/Page.svelte";
-import PageHeader from "$lib/ui/PageHeader.svelte";
+import TabPanel from "$lib/ui/TabPanel.svelte";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
@@ -77,17 +77,10 @@ const when = (iso: string) => i18n.formatDate(iso);
   <title>{i18n.t("common.pageTitle", { page: i18n.t("publishing.pageTitle", { project: data.project.name }) })}</title>
 </svelte:head>
 
-<Page width="narrow">
-  <PageHeader
-    title={i18n.t("publishing.title")}
-    breadcrumb={[
-      { href: "/", label: i18n.t("projects.title") },
-      { href: paths.overview, label: data.project.name },
-    ]}
-    breadcrumbLabel={i18n.t("common.breadcrumb")}
-  >
-    {#if info?.connected}{i18n.t("publishing.team", { team: info.team ?? "" })}{/if}
-  </PageHeader>
+<TabPanel width="narrow">
+  {#if info?.connected}
+    <p class="team">{i18n.t("publishing.team", { team: info.team ?? "" })}</p>
+  {/if}
 
   {#if info && !info.connected}
     <Notice kind="attention">
@@ -172,11 +165,17 @@ const when = (iso: string) => i18n.formatDate(iso);
     {/if}
     {#if restoreError}<Notice kind="problem"><p>{restoreError}</p></Notice>{/if}
   </Card>
-</Page>
+
+  <DownloadZip {paths} blockedReason={data.valid ? undefined : i18n.t("publish.fixProblems")} />
+</TabPanel>
 
 <style>
   p {
     margin: 0;
+  }
+
+  .team {
+    color: var(--ui-muted);
   }
 
   .muted {

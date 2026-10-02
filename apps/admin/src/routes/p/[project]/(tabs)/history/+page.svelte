@@ -6,8 +6,7 @@ import Badge from "$lib/ui/Badge.svelte";
 import Button from "$lib/ui/Button.svelte";
 import Card from "$lib/ui/Card.svelte";
 import Notice from "$lib/ui/Notice.svelte";
-import Page from "$lib/ui/Page.svelte";
-import PageHeader from "$lib/ui/PageHeader.svelte";
+import TabPanel from "$lib/ui/TabPanel.svelte";
 import type { PageProps } from "./$types";
 
 // A language's saved versions (version-history design.md decision 2): preview any of them, and
@@ -96,38 +95,8 @@ async function confirmRestore(event: SubmitEvent) {
   <title>{i18n.t("common.pageTitle", { page: i18n.t("history.pageTitle", { project: data.project.name }) })}</title>
 </svelte:head>
 
-<Page width="narrow">
-  <PageHeader
-    title={i18n.t("history.title")}
-    breadcrumb={[
-      { href: "/", label: i18n.t("projects.title") },
-      { href: projectPaths(data.project.id).overview, label: data.project.name },
-    ]}
-    breadcrumbLabel={i18n.t("common.breadcrumb")}
-  >
-    {#snippet actions()}
-      <Button href={paths.edit()} kind="primary" icon="pencil">{i18n.t("project.openEditor")}</Button>
-    {/snippet}
-    {i18n.t("history.hint", { language: languageName })}
-  </PageHeader>
-
-  {#if data.languages.length > 1}
-    <div class="language">
-      <label for="history-language">{i18n.t("history.language")}</label>
-      <select
-        id="history-language"
-        value={data.lang}
-        onchange={(e) => {
-          const lang = e.currentTarget.value;
-          goto(projectPaths(data.project.id, lang === data.primaryLang ? undefined : lang).history);
-        }}
-      >
-        {#each data.languages as language (language.lang)}
-          <option value={language.lang}>{language.name}</option>
-        {/each}
-      </select>
-    </div>
-  {/if}
+<TabPanel width="narrow">
+  <p class="hint">{i18n.t("history.hint", { language: languageName })}</p>
 
   {#if message}
     <Notice kind={restored ? "success" : "problem"}>
@@ -181,7 +150,7 @@ async function confirmRestore(event: SubmitEvent) {
       <div><Button onclick={showOlder}>{i18n.t("history.showOlder")}</Button></div>
     {/if}
   </Card>
-</Page>
+</TabPanel>
 
 <dialog bind:this={dialog} aria-labelledby="restore-title">
   <form onsubmit={confirmRestore}>
@@ -241,24 +210,9 @@ async function confirmRestore(event: SubmitEvent) {
     gap: var(--ui-space-2);
   }
 
-  .language {
-    display: flex;
-    gap: var(--ui-space-2);
-    align-items: center;
-  }
-
-  .language label {
-    font-weight: 600;
-    font-size: var(--ui-text-sm);
-  }
-
-  select {
-    min-height: var(--ui-control-sm);
-    padding: 0 var(--ui-space-3);
-    border: 1px solid var(--ui-border-strong);
-    border-radius: var(--ui-radius-field);
-    background: var(--ui-surface);
-    font: var(--ui-text-sm) var(--ui-font);
+  .hint {
+    margin: 0;
+    color: var(--ui-muted);
   }
 
   dialog {

@@ -1,4 +1,4 @@
-import { canvas, expect, openEditor, paths, storeVersion1Site, test } from "./fixtures";
+import { canvas, expect, openEditor, pageAction, paths, storeVersion1Site, test } from "./fixtures";
 
 /** File names in a ZIP archive, read from its central directory. */
 function zipNames(bytes: Buffer): string[] {
@@ -31,9 +31,9 @@ test("a version-1 project: add, duplicate, set as home, delete, save, preview an
   await dialog.getByRole("button", { name: "Add page" }).click();
   await expect(canvas(page).locator("h1")).toHaveText("Ceník");
 
-  await settings.getByRole("button", { name: "Duplicate" }).click();
+  await pageAction(page, "Ceník", "Duplicate");
   await expect(canvas(page).locator("h1")).toHaveText("Ceník (copy)");
-  await settings.getByRole("button", { name: "Delete" }).click();
+  await pageAction(page, "Ceník (copy)", "Delete");
   await page
     .getByRole("dialog", { name: "Delete “Ceník (copy)”?" })
     .getByRole("button", {
@@ -43,7 +43,7 @@ test("a version-1 project: add, duplicate, set as home, delete, save, preview an
   await expect(canvas(page).locator(".hero h1")).toBeVisible();
 
   await sidebar.getByRole("link", { name: "Ceník" }).click();
-  await settings.getByRole("button", { name: "Set as home" }).click();
+  await pageAction(page, "Ceník", "Set as home");
   await toolbar.getByRole("button", { name: "Save", exact: true }).click();
   await expect(toolbar.getByRole("status")).toHaveText("Saved");
 
@@ -54,7 +54,7 @@ test("a version-1 project: add, duplicate, set as home, delete, save, preview an
   const intro = await page.request.get(`${paths().preview}uvod/`);
   expect(await intro.text()).toContain("<title>Úvod – Pekárna U Lípy</title>");
 
-  await page.goto(paths().overview);
+  await page.goto(paths().publishing);
   // The ZIP is built in the browser: click only once the page's script has taken over.
   await page.waitForLoadState("networkidle");
   const downloading = page.waitForEvent("download");

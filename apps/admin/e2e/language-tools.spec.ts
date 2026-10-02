@@ -115,12 +115,12 @@ test("link a page built in English to its Czech counterpart, and unlink it", asy
   expect(after).not.toContain('rel="alternate" hreflang="en"');
 });
 
-test("the project page lists what English still needs", async ({ page }) => {
+test("the Languages tab lists what English still needs", async ({ page }) => {
   englishWithoutCenik();
   edit("en", (doc) => {
     doc.nodes.page_home.title = "Home";
   });
-  await page.goto(paths().overview);
+  await page.goto(paths().languagesTab);
   const row = page
     .getByRole("region", { name: "Languages" })
     .getByRole("listitem")

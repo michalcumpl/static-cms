@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { demoSite } from "$lib/server/demo";
-import { locateMark, locateNode, selectionFor, settingsTarget } from "./locate";
+import { locateMark, locateNode, selectionFor, settingsFieldId, settingsTarget } from "./locate";
 
 type Doc = Parameters<typeof locateNode>[0];
 const doc = () => demoSite() as Doc;
@@ -177,7 +177,7 @@ describe("settingsTarget", () => {
     });
   });
 
-  it("leads business problems to the Business tab's fields", () => {
+  it("leads business problems to the business settings' fields", () => {
     expect(settingsTarget(doc(), "business_1", "phone")).toEqual({
       tab: "business",
       field: "phone",
@@ -191,6 +191,19 @@ describe("settingsTarget", () => {
       tab: "business",
       field: "hours_wed",
     });
+  });
+
+  it("names the Settings tab's element for site and business problems only", () => {
+    expect(settingsFieldId(settingsTarget(doc(), "business_1", "phone"))).toBe(
+      "business-settings-phone",
+    );
+    expect(settingsFieldId(settingsTarget(doc(), "day_wed", undefined))).toBe(
+      "business-settings-hours_wed",
+    );
+    expect(settingsFieldId({ tab: "site", field: "name" })).toBe("site-settings-name");
+    expect(settingsFieldId({ tab: "page", pageId: "page_home", field: "title" })).toBeUndefined();
+    expect(settingsFieldId({ tab: "theme", field: "radius" })).toBeUndefined();
+    expect(settingsFieldId(undefined)).toBeUndefined();
   });
 
   it("leads a time range's problem to its day", () => {

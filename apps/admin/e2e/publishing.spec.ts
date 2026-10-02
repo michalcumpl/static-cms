@@ -74,11 +74,11 @@ test("without a Netlify connection, Publish is disabled and says why", async ({ 
   await expect(toolbar(page).getByRole("link", { name: "Not connected to Netlify" })).toBeVisible();
 });
 
-test("the project page publishes too", async ({ page }) => {
+test("the Overview publishes too", async ({ page }) => {
   await connectTestWorkspace();
   await page.goto(paths().overview);
   await page.waitForLoadState("networkidle");
-  const section = page.getByRole("region", { name: "Publishing" });
+  const section = page.getByRole("region", { name: "Your website" });
   await section.getByRole("button", { name: "Publish", exact: true }).click();
   await expect(section.getByText(/^Published · /)).toBeVisible({ timeout: 15_000 });
 });

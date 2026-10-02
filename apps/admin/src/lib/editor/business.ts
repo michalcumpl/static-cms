@@ -35,7 +35,7 @@ export interface RangeFields {
   closes: string;
 }
 
-/** The text fields of the Business tab that apply as the owner types. */
+/** The text fields of the business settings that apply as the owner types. */
 export type BusinessTextField =
   | "name"
   | "street"

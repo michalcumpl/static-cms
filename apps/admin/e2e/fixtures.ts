@@ -228,3 +228,32 @@ export async function resetPublishing(): Promise<void> {
   testDb().delete(projectHosting).where(eq(projectHosting.projectId, projectId)).run();
   testDb().delete(hostingConnections).where(eq(hostingConnections.workspaceId, workspaceId)).run();
 }
+
+/** Opens the project's Settings tab (of a language, the primary without one) and waits for it. */
+export async function openSettings(page: Page, lang?: string): Promise<void> {
+  await page.goto(projectPaths(state().projectId, lang).settings);
+  await expect(page.getByRole("region", { name: "Site", exact: true })).toBeVisible();
+  // The tab's fields work once its script has taken over.
+  await page.waitForLoadState("networkidle");
+}
+
+/** Saves on the Settings tab and waits for "Saved". */
+export async function saveSettings(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: /^Saved$/ })).toBeVisible();
+}
+
+/** The "⋯" menu of an entry in the editor's pages list, opened. */
+export async function openPageMenu(page: Page, name: string): Promise<Locator> {
+  await page
+    .getByRole("complementary", { name: "Pages" })
+    .getByRole("button", { name: `Actions for “${name}”` })
+    .click();
+  return page.getByRole("menu", { name: `Actions for “${name}”` });
+}
+
+/** Chooses an action in the "⋯" menu of an entry in the pages list. */
+export async function pageAction(page: Page, name: string, action: string): Promise<void> {
+  const menu = await openPageMenu(page, name);
+  await menu.getByRole("menuitem", { name: action }).click();
+}

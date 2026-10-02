@@ -156,12 +156,12 @@ describe("business blocks", () => {
       [
         "nothing-to-show",
         "contact_1",
-        'The contact block on "Kontakt" has nothing to show yet; fill in the business details on the Business tab.',
+        'The contact block on "Kontakt" has nothing to show yet; fill in the business details in the business settings.',
       ],
       [
         "nothing-to-show",
         "hours_1",
-        'The opening hours block on "Kontakt" has nothing to show yet; fill in the opening hours on the Business tab.',
+        'The opening hours block on "Kontakt" has nothing to show yet; fill in the opening hours in the business settings.',
       ],
     ]);
   });

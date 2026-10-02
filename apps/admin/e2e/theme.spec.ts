@@ -21,12 +21,12 @@ import {
 
 const toolbar = (page: Page) => page.getByRole("toolbar", { name: "Editing" });
 const details = (page: Page) => page.getByRole("complementary", { name: "Details" });
-const themeTab = (page: Page) => page.getByRole("region", { name: "Theme", exact: true });
+const themeTab = (page: Page) => page.getByRole("region", { name: "Design", exact: true });
 const library = (page: Page) => page.getByRole("dialog", { name: "Images" });
 const problems = (page: Page) => page.getByRole("region", { name: /^Problems/ });
 
 async function openThemeTab(page: Page) {
-  await details(page).getByRole("tab", { name: "Theme" }).click();
+  await details(page).getByRole("tab", { name: "Design" }).click();
   await expect(themeTab(page)).toBeVisible();
 }
 
@@ -122,7 +122,7 @@ test("a colour with too little contrast is shown, measured and reported", async 
   ).toBeVisible();
 });
 
-test("a contrast problem opens the Theme tab at its colour", async ({ page }) => {
+test("a contrast problem opens the Design tab at its colour", async ({ page }) => {
   await openEditor(page);
   await openThemeTab(page);
   await themeTab(page).getByLabel("Secondary (panels and lines)", { exact: true }).fill("#3b3b3b");
@@ -157,7 +157,7 @@ test("choose a logo, hide the name, and both reach the preview", async ({ page }
   );
 });
 
-test("every control of the Theme tab has a name", async ({ page }) => {
+test("every control of the Design tab has a name", async ({ page }) => {
   await openEditor(page);
   await openThemeTab(page);
   const controls = themeTab(page).locator("input, button, select, textarea");
@@ -179,7 +179,7 @@ test("every control of the Theme tab has a name", async ({ page }) => {
   }
 });
 
-test("the Theme tab is read-only in English", async ({ page }) => {
+test("the Design tab is read-only in English", async ({ page }) => {
   const { projectId, owner } = state();
   addLanguage(testDb(), projectId, "en", owner.id);
   await openEditor(page, projectPaths(projectId, "en").edit());
@@ -193,7 +193,7 @@ test("the Theme tab is read-only in English", async ({ page }) => {
   await expect(themeTab(page).getByRole("radio", { name: "Wide" })).toBeDisabled();
   await expect(page.locator("#theme-settings-logo")).toBeDisabled();
   const link = themeTab(page).getByRole("link", { name: "Edit in Čeština" });
-  await expect(link).toHaveAttribute("href", /edit\/\?tab=theme/);
+  await expect(link).toHaveAttribute("href", /edit\/\?tab=design/);
 });
 
 test("publish a branded site in two languages: preset, Lora headings, logo alone", async ({

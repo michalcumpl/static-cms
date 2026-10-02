@@ -7,6 +7,7 @@ import {
   connectTestWorkspace,
   expect,
   openEditor,
+  openSettings,
   paths,
   resetPublishing,
   state,
@@ -78,11 +79,7 @@ test("restoring Czech brings its phone number back in English", async ({ page })
   await expect(page.getByRole("dialog")).toContainText("change for every language");
   await confirmRestore(page);
 
-  await openEditor(page, projectPaths(projectId, "en").edit());
-  await page
-    .getByRole("complementary", { name: "Details" })
-    .getByRole("tab", { name: "Business" })
-    .click();
+  await openSettings(page, "en");
   await expect(page.getByLabel("Phone")).toHaveValue("");
 });
 

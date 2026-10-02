@@ -151,7 +151,7 @@ export type SiteField = "name" | "description" | "favicon" | "share_image" | "sh
 
 type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
-/** A field of the Business tab; a day's hours lead to that day's first time field. */
+/** A field of the business settings; a day's hours lead to that day's first time field. */
 export type BusinessField =
   | "name"
   | "business_type"
@@ -288,7 +288,7 @@ export function settingsTarget(
   return undefined;
 }
 
-/** The element ID of a Business tab field, for focusing it from elsewhere. */
+/** The element ID of a business settings field, for focusing it from elsewhere. */
 export function businessFieldElementId(field: BusinessField): string {
   return `business-settings-${field}`;
 }
@@ -296,6 +296,16 @@ export function businessFieldElementId(field: BusinessField): string {
 /** The element ID of a Theme tab field, for focusing it from elsewhere. */
 export function themeFieldElementId(field: ThemeField): string {
   return `theme-settings-${field}`;
+}
+
+/**
+ * The element ID of the Settings tab field a problem leads to, or undefined when the problem
+ * belongs elsewhere (a page's settings, the theme).
+ */
+export function settingsFieldId(target: SettingsTarget | undefined): string | undefined {
+  if (target?.tab === "site") return siteFieldElementId(target.field);
+  if (target?.tab === "business") return businessFieldElementId(target.field);
+  return undefined;
 }
 
 /** The element ID of a site settings field, for focusing it from elsewhere. */

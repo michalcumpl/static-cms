@@ -140,7 +140,7 @@ upload are all out of M2 on purpose. All of them are done.
   - Later: `llms.txt`, noindex per page, a focal point for share images.
 - **Business details, contact and opening hours blocks: done.**
   - Change: [`business-info`](../openspec/changes/archive/2026-10-01-business-info/).
-  - **Facts once, as data:** a Business tab edits the name, address, phone (stored in
+  - **Facts once, as data:** a Business tab (now the Settings tab) edits the name, address, phone (stored in
     international form), email, map address, type of business and weekly opening hours (any
     number of ranges per day, and a note). Document format 4.
   - The **contact** and **opening hours** blocks only show those facts (rendered by the same code
@@ -203,13 +203,24 @@ upload are all out of M2 on purpose. All of them are done.
   - **Czech and English** for the whole admin: pages, editor, server messages and emails, with
     Czech plural forms and date formats. The language comes from the account, else the switch on
     this device, else the browser; a test fails on text outside the catalogues.
-  - Next steps: project tabs (Site and Business move out of the editor into a project Settings
-    tab, the theme stays as a Design panel), a projects dashboard with live thumbnails, and a
+  - Next steps: a projects dashboard with live thumbnails, and a
     presentation website for new users: what they get and for how much (one price per site,
     free to build, paid when published; domains at cost), built and published with Static CMS
     itself on its own domain, with new pricing-table and FAQ blocks and a request-access form
     sent to a small form endpoint in the admin. Open sign-up and online payment come later. Also: translating the site's validation
     (problem) messages, which stay in English for now.
+- **Admin redesign, step 2 of 4 – project tabs: done** ([`project-tabs`](../openspec/changes/project-tabs/)).
+  - **The project page is tabs,** each with its own address: Overview (address, last publish,
+    Publish, validity, languages), Pages, Languages, Publishing (with the ZIP download), History
+    and Settings. Pages, History and Settings show one language, chosen in the tab bar.
+  - **Site and business settings left the editor** for the Settings tab, which edits the same
+    document through the editor's own operations and saves like it (Save, Undo, conflict
+    refusal, unsaved-changes question). The editor keeps Page and Design (the former Theme
+    tab); problems about those settings and "Edit business details" lead to the Settings tab.
+  - **A "⋯" menu on every page and menu link** in the editor's list: rename, duplicate, move,
+    show in or remove from the menu, set as home, delete, with reasons for what isn't possible.
+  - **The problems panel moved** under the pages list in the left column.
+  - Later idea: page actions (add, delete) on the Pages tab, outside the editor.
 
 Still open: open sign-up (a switch, when billing exists) and Google sign-in.
 

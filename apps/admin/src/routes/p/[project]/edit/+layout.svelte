@@ -1,10 +1,9 @@
 <script lang="ts">
 import { Command, define_keymap, KeyMapper, Svedit } from "svedit";
 import { setContext, untrack } from "svelte";
-import { beforeNavigate, goto } from "$app/navigation";
+import { goto } from "$app/navigation";
 import BlockHandles from "$lib/editor/BlockHandles.svelte";
 import BlockPanel from "$lib/editor/BlockPanel.svelte";
-import BusinessSettings from "$lib/editor/BusinessSettings.svelte";
 import ButtonPanel from "$lib/editor/ButtonPanel.svelte";
 import { canvasCss, canvasTheme } from "$lib/editor/canvas-css";
 import { selectionLabel } from "$lib/editor/handles";
@@ -15,7 +14,7 @@ import MediaLibrary from "$lib/editor/MediaLibrary.svelte";
 import PageSettings from "$lib/editor/PageSettings.svelte";
 import PagesSidebar from "$lib/editor/PagesSidebar.svelte";
 import ProblemsPanel from "$lib/editor/ProblemsPanel.svelte";
-import SiteSettings from "$lib/editor/SiteSettings.svelte";
+import { saveStatusText, useMediaLibrary, useUnsavedGuard } from "$lib/editor/screen.svelte";
 import { EditorState, setEditor } from "$lib/editor/state.svelte";
 import { insertItem, isFixedList, itemInsertionPoint } from "$lib/editor/structure";
 import ThemeSettings from "$lib/editor/ThemeSettings.svelte";
@@ -117,21 +116,14 @@ $effect(() => {
   goto(editor.paths.edit(), { replaceState: true });
 });
 
-beforeNavigate(({ to, cancel }) => {
-  // Pages of the same language stay in the editor; switching languages reloads it.
-  const staysInEditor =
-    to?.url.pathname.startsWith(projectPaths(data.project.id).edit()) &&
-    (to.url.searchParams.get("lang") ?? editor.primaryLang) === editor.lang &&
-    !to.url.searchParams.has("key");
-  if (editor.leaving) return;
-  if (editor.dirty && !staysInEditor && !confirm(i18n.t("editor.confirmLeave"))) {
-    cancel();
-  }
-});
-
-function onbeforeunload(event: BeforeUnloadEvent) {
-  if (editor.dirty && !editor.leaving) event.preventDefault();
-}
+// Pages of the same language stay in the editor; switching languages reloads it.
+useUnsavedGuard(
+  editor,
+  (to) =>
+    to.pathname.startsWith(projectPaths(data.project.id).edit()) &&
+    (to.searchParams.get("lang") ?? editor.primaryLang) === editor.lang &&
+    !to.searchParams.has("key"),
+);
 
 const commands = $derived(
   session.commands as Record<string, Command & { active?: boolean }> | undefined,
@@ -159,40 +151,18 @@ async function saveBeforePublish(): Promise<boolean> {
 }
 
 let linkDialog: LinkDialog | undefined = $state();
-let mediaLibrary: MediaLibrary | undefined = $state();
-editor.openLibrary = async (current) => {
-  const chosen = await mediaLibrary?.open(current);
-  // Focus left the canvas for the dialog; give it back before the image gets selected.
-  canvas?.focus_canvas();
-  return chosen;
-};
-editor.openLibraryMany = async () => {
-  const chosen = (await mediaLibrary?.openMany()) ?? [];
-  canvas?.focus_canvas();
-  return chosen;
-};
+// Focus left the canvas for the dialog; give it back before the image gets selected.
+const media = useMediaLibrary(editor, () => canvas?.focus_canvas());
 let canvas: { focus_canvas: () => void } | undefined = $state();
 let canvasElement: HTMLElement | undefined = $state();
 const linkEnabled = $derived(
   Boolean(commands && (!commands.link?.disabled || !commands.internal_link?.disabled)),
 );
 
-const statusText = $derived.by(() => {
-  const status = editor.status;
-  if (status.kind === "saving") return i18n.t("editor.status.saving");
-  if (status.kind === "conflict") return status.message ?? i18n.t("editor.status.conflict");
-  if (status.kind === "error") {
-    if (status.message) return status.message;
-    if (status.broken) return i18n.t("editor.status.broken");
-    if (status.httpStatus) return i18n.t("editor.status.failed", { status: status.httpStatus });
-    return i18n.t("editor.status.failedError", { error: status.exception ?? "" });
-  }
-  if (editor.dirty) return i18n.t("editor.status.unsaved");
-  return status.kind === "saved" ? i18n.t("editor.status.saved") : i18n.t("editor.status.allSaved");
-});
+const statusText = $derived(saveStatusText(editor, i18n.t));
 </script>
 
-<svelte:window onkeydown={(event) => keyMapper.handle_keydown(event)} {onbeforeunload} />
+<svelte:window onkeydown={(event) => keyMapper.handle_keydown(event)} />
 
 <svelte:head>
   <title>{i18n.t("common.pageTitle", { page: i18n.t("editor.pageTitle", { page: editor.currentPage?.title ?? "" }) })}</title>
@@ -200,8 +170,13 @@ const statusText = $derived.by(() => {
 
 <div class="editor">
   <div class="left-column">
-    <LanguageSwitcher {editor} projectId={data.project.id} />
-    <PagesSidebar {editor} projectName={data.project.name} />
+    <div class="left-pages">
+      <LanguageSwitcher {editor} projectId={data.project.id} />
+      <PagesSidebar {editor} projectName={data.project.name} />
+    </div>
+    <div class="left-problems">
+      <ProblemsPanel {editor} focusCanvas={() => canvas?.focus_canvas()} />
+    </div>
   </div>
 
   <div class="workspace">
@@ -269,32 +244,12 @@ const statusText = $derived.by(() => {
       <button
         type="button"
         role="tab"
-        id="settings-tab-site"
-        aria-selected={editor.settingsTab === "site"}
+        id="settings-tab-design"
+        aria-selected={editor.settingsTab === "design"}
         aria-controls="settings-panel"
-        onclick={() => (editor.settingsTab = "site")}
+        onclick={() => (editor.settingsTab = "design")}
       >
-        {i18n.t("editor.tabs.site")}
-      </button>
-      <button
-        type="button"
-        role="tab"
-        id="settings-tab-business"
-        aria-selected={editor.settingsTab === "business"}
-        aria-controls="settings-panel"
-        onclick={() => (editor.settingsTab = "business")}
-      >
-        {i18n.t("editor.tabs.business")}
-      </button>
-      <button
-        type="button"
-        role="tab"
-        id="settings-tab-theme"
-        aria-selected={editor.settingsTab === "theme"}
-        aria-controls="settings-panel"
-        onclick={() => (editor.settingsTab = "theme")}
-      >
-        {i18n.t("editor.tabs.theme")}
+        {i18n.t("editor.tabs.design")}
       </button>
     </div>
     <div
@@ -304,10 +259,6 @@ const statusText = $derived.by(() => {
     >
       {#if editor.settingsTab === "page"}
         <PageSettings {editor} />
-      {:else if editor.settingsTab === "site"}
-        <SiteSettings {editor} />
-      {:else if editor.settingsTab === "business"}
-        <BusinessSettings {editor} />
       {:else}
         <ThemeSettings {editor} />
       {/if}
@@ -315,27 +266,47 @@ const statusText = $derived.by(() => {
     <ButtonPanel {editor} />
     <BlockPanel {editor} />
     <ImagePanel {editor} />
-    <ProblemsPanel {editor} focusCanvas={() => canvas?.focus_canvas()} />
   </aside>
 </div>
 
 <!-- Focus left the canvas for the dialog; give it back, or Svedit restores a stale selection. -->
 <LinkDialog {editor} bind:this={linkDialog} onclose={() => canvas?.focus_canvas()} />
-<MediaLibrary {editor} bind:this={mediaLibrary} />
+<MediaLibrary {editor} bind:this={media.ref} />
 
 {@render children()}
 
 <style>
   .editor {
     display: grid;
-    grid-template-columns: 13rem 1fr 18rem;
+    grid-template-columns: 16rem 1fr 18rem;
     min-height: calc(100vh - var(--ui-bar-height-compact));
     font-family: var(--ui-font);
   }
 
+  /* Pages above, problems below: the column keeps the window's height, the problems scroll. */
   .left-column {
+    position: sticky;
+    top: var(--ui-bar-height-compact);
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--ui-bar-height-compact));
+    overflow: hidden;
     border-right: 1px solid var(--ui-border);
     background: var(--ui-ground);
+  }
+
+  .left-pages {
+    flex: 0 1 auto;
+    max-height: 65%;
+    overflow-y: auto;
+  }
+
+  .left-problems {
+    flex: 1 1 0;
+    min-height: 7rem;
+    overflow-y: auto;
+    border-top: 1px solid var(--ui-border);
   }
 
   .panels {

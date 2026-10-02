@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { thrownBy, useTestProject } from "$lib/server/test-project";
 import { load as layoutLoad } from "./+layout.server";
-import { load } from "./+page.server";
 
 type LayoutEvent = Parameters<typeof layoutLoad>[0];
-type PageEvent = Parameters<typeof load>[0];
 
 const project = useTestProject();
 
@@ -33,18 +31,5 @@ describe("/p/[project] layout", () => {
       workspace: { name: "Pekárna U Lípy" },
       role: "owner",
     });
-  });
-});
-
-describe("/p/[project] overview", () => {
-  it("validates the saved site and lists its preview pages", async () => {
-    const { projectId, owner } = project();
-    const event = { ...project().event(`/p/${projectId}/`, owner), parent: async () => ({}) };
-    const data = await load(event as unknown as PageEvent);
-    expect(data).toMatchObject({ valid: true, problems: [], mediaFiles: ["hero.png-320.webp"] });
-    expect(data?.pages).toEqual([
-      { id: "page_home", path: "index.html", url: `/p/${projectId}/preview/` },
-      { id: "page_contact", path: "kontakt/index.html", url: `/p/${projectId}/preview/kontakt/` },
-    ]);
   });
 });

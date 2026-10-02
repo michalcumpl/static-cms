@@ -2,6 +2,7 @@
 import { untrack } from "svelte";
 import { getI18n } from "$lib/i18n";
 import { projectPaths } from "$lib/project-paths";
+import { openSettings } from "./screen.svelte";
 import type { EditorState } from "./state.svelte";
 
 // Opens another language's document (languages design.md decision 6). Each language is its own
@@ -29,7 +30,17 @@ function switchTo(lang: string) {
 let selected = $state(untrack(() => editor.lang));
 </script>
 
-<p class="history-link"><a href={editor.paths.history}>{i18n.t("editor.left.history")}</a></p>
+<p class="history-link">
+  <a href={editor.paths.history}>{i18n.t("editor.left.history")}</a>
+  ·
+  <a
+    href={editor.paths.settings}
+    onclick={(event) => {
+      event.preventDefault();
+      openSettings(editor, i18n.t);
+    }}>{i18n.t("editor.left.settings")}</a
+  >
+</p>
 
 {#if editor.languages.length > 1}
   <div class="language-switcher">

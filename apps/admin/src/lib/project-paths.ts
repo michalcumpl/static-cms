@@ -6,6 +6,10 @@ export const fontPath = (name: string) => `/fonts/${encodeURIComponent(name)}`;
 /** Every URL of a project, in one place (design.md decision 6). */
 export interface ProjectPaths {
   overview: string;
+  /** The project's Pages, Languages and Settings tabs (`?lang=` for other languages than the primary). */
+  pagesTab: string;
+  languagesTab: string;
+  settings: string;
   /** The editor: `…/edit/` opens the home page, `…/edit/<page-id>/` a given page. */
   edit(pageId?: string): string;
   /** Base path the preview renders with. */
@@ -22,7 +26,7 @@ export interface ProjectPaths {
   copyPage(lang: string): string;
   /** GET every language's pages and what each still needs. */
   translations: string;
-  /** The History page of the language (`?lang=` for other languages than the primary). */
+  /** The History tab of the language (`?lang=` for other languages than the primary). */
   history: string;
   /** Base path of a version's read-only preview. */
   version(versionId: string): string;
@@ -34,7 +38,7 @@ export interface ProjectPaths {
   media(name: string): string;
   /** An image's variant for showing it: `display` (up to 1600 px) or `thumbnail` (smallest). */
   image(key: string, width: number, use?: "display" | "thumbnail"): string;
-  /** The project's Publishing page. */
+  /** The project's Publishing tab. */
   publishing: string;
   /** POST starts a publish. */
   publish: string;
@@ -56,6 +60,9 @@ export function projectPaths(projectId: string, lang?: string): ProjectPaths {
   const media = (name: string) => `/api/projects/${projectId}/media/${encodeURIComponent(name)}`;
   return {
     overview: base,
+    pagesTab: `${base}pages${query}`,
+    languagesTab: `${base}languages`,
+    settings: `${base}settings${query}`,
     edit: (pageId = "") => (pageId ? `${base}edit/${pageId}/${query}` : `${base}edit/${query}`),
     preview: `${base}preview/`,
     api: `/api/projects/${projectId}/site${query}`,
@@ -69,7 +76,7 @@ export function projectPaths(projectId: string, lang?: string): ProjectPaths {
     versions: `/api/projects/${projectId}/versions${query}`,
     restoreVersion: (versionId) => `/api/projects/${projectId}/versions/${versionId}/restore`,
     library: `/api/projects/${projectId}/media`,
-    publishing: `${base}publishing/`,
+    publishing: `${base}publishing`,
     publish: `/api/projects/${projectId}/publish`,
     publishes: `/api/projects/${projectId}/publishes`,
     restore: (publishId) => `/api/projects/${projectId}/publishes/${publishId}/restore`,

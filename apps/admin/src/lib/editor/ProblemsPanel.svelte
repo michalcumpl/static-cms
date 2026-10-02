@@ -4,15 +4,15 @@ import { tick, untrack } from "svelte";
 import { goto } from "$app/navigation";
 import { getI18n } from "$lib/i18n";
 import {
-  businessFieldElementId,
   locateMark,
   locateNode,
   pageFieldElementId,
   selectionFor,
+  settingsFieldId,
   settingsTarget,
-  siteFieldElementId,
   themeFieldElementId,
 } from "./locate";
+import { openSettings } from "./screen.svelte";
 import type { EditorState } from "./state.svelte";
 
 let { editor, focusCanvas }: { editor: EditorState; focusCanvas: () => void } = $props();
@@ -57,25 +57,18 @@ async function showPage(pageId: string | undefined) {
 async function show(problem: Problem) {
   const doc = editor.session.doc as unknown as Doc;
   const target = settingsTarget(doc, problem.nodeId, problem.property);
-  if (target?.tab === "business") {
-    editor.settingsTab = "business";
-    await tick();
-    document.getElementById(businessFieldElementId(target.field))?.focus();
+  const settingsField = settingsFieldId(target);
+  if (settingsField) {
+    await openSettings(editor, i18n.t, settingsField);
     return;
   }
   if (target?.tab === "theme") {
-    editor.settingsTab = "theme";
+    editor.settingsTab = "design";
     await tick();
     document.getElementById(themeFieldElementId(target.field))?.focus();
     return;
   }
-  if (target?.tab === "site") {
-    editor.settingsTab = "site";
-    await tick();
-    document.getElementById(siteFieldElementId(target.field))?.focus();
-    return;
-  }
-  if (target) {
+  if (target?.tab === "page") {
     editor.settingsTab = "page";
     await showPage(target.pageId);
     await tick();
@@ -123,11 +116,11 @@ async function show(problem: Problem) {
         <li class={problem.severity}>
           {#if canShow(problem)}
             <button type="button" onclick={() => show(problem)}>
-              <span class="severity">{problem.severity === "error" ? "Error" : "Warning"}</span>
+              <span class="severity">{i18n.t(`project.severity.${problem.severity}`)}</span>
               {problem.message}
             </button>
           {:else}
-            <span class="severity">{problem.severity === "error" ? "Error" : "Warning"}</span>
+            <span class="severity">{i18n.t(`project.severity.${problem.severity}`)}</span>
             {problem.message}
           {/if}
         </li>

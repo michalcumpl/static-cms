@@ -29,7 +29,11 @@ workspace named "Default". The first user created with `create-user` becomes its
 | `/invite/<token>`                      | Accept an invitation (creates the account if needed).              |
 | `/w/<workspace>/members`               | Members, roles and invitations (owners change them).               |
 | `/w/<workspace>/new`                   | Owners: create a project from the starter site.                    |
-| `/p/<project>/`                        | Validation, pages, **Download ZIP**.                               |
+| `/p/<project>`                         | The project's tabs. **Overview**: address, last publish, Publish, validity, languages. |
+| `/p/<project>/pages`                   | **Pages** of a language (`?lang=`): home, menu, translation marks, Edit and Preview. |
+| `/p/<project>/languages`               | **Languages**: add, publish, hide, remove; what is not translated yet. |
+| `/p/<project>/publishing`              | **Publishing**: address, domain, publish history, **Download ZIP**. |
+| `/p/<project>/history`                 | **History** of a language (`?lang=`): preview and restore versions. |
 | `/p/<project>/edit/`, `…/edit/<page-id>/` | The editor (Svedit); `/edit/` opens the home page. Cmd/Ctrl+S saves the whole site. |
 | `/p/<project>/preview/…`               | The saved site as it would be published, or its problems.          |
 | `GET/PUT /api/projects/<project>/site` | The document: 200, 409 (outdated version), 422 (broken document).  |
@@ -49,6 +53,15 @@ Everything except sign-in and invitations needs a session. Project pages and API
   block with a small drawing of it in the site's primary colour, its name and a description.
   Blocks that can't go there are greyed out with the reason. A new block is scrolled into view,
   briefly outlined, and gets the cursor. The left column has only the languages and pages.
+- **Pages have a "⋯" menu** in the left column (and so do the menu's external links): Rename,
+  Duplicate, Move up and down, Show in or Remove from menu, Set as home and Delete, with the
+  reason shown when an action isn't possible. Dragging entries still works.
+- **Site and business settings are on the project's Settings tab,** not in the editor: the site
+  name and description, favicon, share image, AI switches, and the business's address, phone,
+  hours and so on. They are saved there, as in the editor (Save, Undo, a refusal if the site
+  changed elsewhere). Problems about them, and "Edit business details" on a block, lead there.
+  The editor's right column has **Page** and **Design** (the theme); the problems panel is under
+  the pages in the left column.
 - **Keyboard.** Esc selects the paragraph, item or block around the cursor, step by step; Alt+↑/↓
   moves it. Handles and their menus are buttons and menus (arrow keys, Enter, Esc).
 - The handles are placed with CSS anchor positioning, as Svedit's selection outline is; without
@@ -230,7 +243,7 @@ older build needs the pre-upgrade backup for projects saved since.
 
 Business details (address, phone, opening hours) store site documents in format 4. Older
 documents are upgraded the same way, with empty details, every day closed and the footer switch
-on, so sites look the same until an owner fills in the Business tab. The same backup and rollback
+on, so sites look the same until an owner fills in the business settings. The same backup and rollback
 notes apply.
 
 The contact block's "Show on map" is a plain link (the business's own map listing, or a Google

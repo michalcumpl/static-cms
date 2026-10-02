@@ -23,6 +23,9 @@ export interface EditorLanguage {
 export const load: LayoutLoad = async ({ fetch, params, url }) => {
   const lang = url.searchParams.get("lang") ?? undefined;
   const paths = projectPaths(params.project, lang);
+  // The site and business settings moved to the project's Settings tab; old addresses follow.
+  const asked = url.searchParams.get("tab");
+  if (asked === "site" || asked === "business") redirect(302, paths.settings);
   const [siteResponse, languagesResponse, translationsResponse] = await Promise.all([
     fetch(paths.api),
     fetch(paths.languages),
@@ -59,9 +62,7 @@ export const load: LayoutLoad = async ({ fetch, params, url }) => {
     translations,
     lang: lang ?? primary,
     primaryLang: primary,
-    tab:
-      tab === "site" || tab === "business" || tab === "theme"
-        ? (tab as "site" | "business" | "theme")
-        : undefined,
+    // `theme` is the Design tab's former name.
+    tab: tab === "design" || tab === "theme" ? ("design" as const) : undefined,
   };
 };

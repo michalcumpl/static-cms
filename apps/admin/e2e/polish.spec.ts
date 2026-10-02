@@ -3,6 +3,7 @@ import {
   caretAtEnd,
   expect,
   openEditor,
+  pageAction,
   paths,
   storeImageBlocksSite,
   test,
@@ -34,8 +35,8 @@ test("Escape still selects the paragraph as a whole", async ({ page }) => {
 test("a problem about a link inside text selects the linked words", async ({ page }) => {
   storeImageBlocksSite();
   await openEditor(page, paths().edit("page_contact"));
-  const settings = page.getByRole("region", { name: "Page", exact: true });
-  await settings.getByRole("button", { name: "Delete" }).click();
+  const _settings = page.getByRole("region", { name: "Page", exact: true });
+  await pageAction(page, "Kontakt", "Delete");
   await page
     .getByRole("dialog", { name: "Delete “Kontakt”?" })
     .getByRole("button", { name: "Delete page" })

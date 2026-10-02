@@ -2,26 +2,21 @@ import type { Page } from "@playwright/test";
 import {
   addBlockAfterCaret,
   canvas,
-  connectTestWorkspace,
   expect,
-  fakeNetlify,
   openEditor,
+  openSettings,
   paths,
   resetPublishing,
-  state,
+  saveSettings,
   test,
-  testDb,
 } from "./fixtures";
 
-const toolbar = (page: Page) => page.getByRole("toolbar", { name: "Editing" });
-const details = (page: Page) => page.getByRole("complementary", { name: "Details" });
-const businessTab = (page: Page) => page.getByRole("region", { name: "Business", exact: true });
-const problems = (page: Page) => page.getByRole("region", { name: /^Problems/ });
+// The business blocks in the editor. The details themselves are edited on the Settings tab
+// (see settings.spec.ts); here they are set there, and the editor shows them.
 
-async function openBusinessTab(page: Page) {
-  await details(page).getByRole("tab", { name: "Business" }).click();
-  await expect(businessTab(page)).toBeVisible();
-}
+const toolbar = (page: Page) => page.getByRole("toolbar", { name: "Editing" });
+const business = (page: Page) => page.getByRole("region", { name: "Business", exact: true });
+const problems = (page: Page) => page.getByRole("region", { name: /^Problems/ });
 
 /** Puts the caret at the end of the last block, so inserted blocks go after it. */
 async function caretInLastBlock(page: Page) {
@@ -41,16 +36,14 @@ async function save(page: Page) {
 
 test.beforeEach(() => resetPublishing());
 
-test("insert a contact block: it shows the phone, which the block panel can hide", async ({
-  page,
-}) => {
-  await openEditor(page, paths().edit("page_contact"));
-  await openBusinessTab(page);
-  const phone = businessTab(page).getByLabel("Phone");
+test("a contact block shows the phone, which the block panel can hide", async ({ page }) => {
+  await openSettings(page);
+  const phone = business(page).getByLabel("Phone");
   await phone.fill("321 123 456");
   await phone.press("Tab");
-  await expect(phone).toHaveValue("+420 321 123 456");
+  await saveSettings(page);
 
+  await openEditor(page, paths().edit("page_contact"));
   await insert(page, "Contact");
   const block = canvas(page).locator("section.contact");
   await expect(block.locator("h2")).toHaveText("Kontakt");
@@ -63,95 +56,69 @@ test("insert a contact block: it shows the phone, which the block panel can hide
 });
 
 test("opening hours with a lunch break show on the canvas", async ({ page }) => {
-  await openEditor(page, paths().edit("page_contact"));
-  await insert(page, "Opening hours");
-  await openBusinessTab(page);
-  await businessTab(page).getByRole("button", { name: "Open on Monday" }).click();
-  await businessTab(page).getByLabel("Monday closes").fill("12:00");
-  await businessTab(page)
+  await openSettings(page);
+  await business(page).getByRole("button", { name: "Open on Monday" }).click();
+  await business(page).getByLabel("Monday closes").fill("12:00");
+  await business(page)
     .getByRole("group", { name: "Monday" })
     .getByRole("button", { name: "Add range" })
     .click();
-  await expect(businessTab(page).getByLabel("Monday opens (2)")).toHaveValue("13:00");
-  await expect(businessTab(page).getByLabel("Monday closes (2)")).toHaveValue("17:00");
+  await saveSettings(page);
+
+  await openEditor(page, paths().edit("page_contact"));
+  await insert(page, "Opening hours");
   await expect(canvas(page).locator("section.opening-hours table")).toContainText(
     "8:00–12:00, 13:00–17:00",
   );
 });
 
-test("details follow the Business tab, and the block leads to it", async ({ page }) => {
+test("details follow the settings, and the block leads to them", async ({ page }) => {
+  await openSettings(page);
+  await business(page).getByLabel("Street and number").fill("Lipová 12");
+  await business(page).getByLabel("City").fill("Kolín 2");
+  await saveSettings(page);
+
   await openEditor(page, paths().edit("page_contact"));
-  await openBusinessTab(page);
-  await businessTab(page).getByLabel("Street and number").fill("Lipová 12");
-  await businessTab(page).getByLabel("City").fill("Kolín 2");
   await insert(page, "Contact");
   await expect(canvas(page).locator("section.contact address")).toContainText("Kolín 2");
   await expect(canvas(page).locator("footer address")).toContainText("Kolín 2");
+  await save(page);
+  const preview = await (await page.request.get(`${paths().preview}kontakt/`)).text();
+  expect(preview).toContain('<section class="block contact">');
 
-  await details(page).getByRole("tab", { name: "Page" }).click();
   await canvas(page)
     .locator("section.contact")
     .getByRole("button", { name: "Edit business details" })
     .click();
-  await expect(details(page).getByRole("tab", { name: "Business" })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(page).toHaveURL(new RegExp(`${paths().settings}\\?focus=`));
+  await expect(business(page).getByLabel("Name", { exact: true })).toBeFocused();
 });
 
-test("an overlap problem opens the Business tab at the day", async ({ page }) => {
-  await openEditor(page);
-  await openBusinessTab(page);
-  const wednesday = businessTab(page).getByRole("group", { name: "Wednesday" });
+test("unsaved changes are saved first when the block leads to the settings", async ({ page }) => {
+  await openEditor(page, paths().edit("page_contact"));
+  await insert(page, "Contact");
+  await expect(toolbar(page).getByRole("status").first()).toHaveText("Unsaved changes");
+  page.once("dialog", (dialog) => void dialog.accept());
+  await canvas(page)
+    .locator("section.contact")
+    .getByRole("button", { name: "Edit business details" })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`${paths().settings}\\?focus=`));
+  const preview = await (await page.request.get(`${paths().preview}kontakt/`)).text();
+  expect(preview).toContain('<section class="block contact">');
+});
+
+test("an overlap problem in the editor opens the Settings tab at the day", async ({ page }) => {
+  await openSettings(page);
+  const wednesday = business(page).getByRole("group", { name: "Wednesday" });
   await wednesday.getByRole("button", { name: "Open on Wednesday" }).click();
   await wednesday.getByRole("button", { name: "Add range" }).click();
-  await businessTab(page).getByLabel("Wednesday opens (2)").fill("12:00");
-  await details(page).getByRole("tab", { name: "Page" }).click();
+  await business(page).getByLabel("Wednesday opens (2)").fill("12:00");
+  await saveSettings(page);
 
+  await openEditor(page);
   await problems(page)
     .getByRole("button", { name: /Wednesday's hours overlap/ })
     .click();
-  await expect(businessTab(page).getByLabel("Wednesday opens (1)")).toBeFocused();
-});
-
-/** A file of the project's live site on the fake Netlify. */
-async function liveFile(path: string): Promise<string> {
-  const { projectHosting } = await import("../src/lib/server/db/schema");
-  const { eq } = await import("drizzle-orm");
-  const hosting = testDb()
-    .select()
-    .from(projectHosting)
-    .where(eq(projectHosting.projectId, state().projectId))
-    .get();
-  if (!hosting) return "";
-  return (await fetch(`${fakeNetlify()}/sites/${hosting.siteName}${path}`)).text();
-}
-
-test("publish a bakery: structured data, footer and contact block", async ({ page }) => {
-  await connectTestWorkspace();
-  await openEditor(page, paths().edit("page_contact"));
-  await openBusinessTab(page);
-  await businessTab(page).getByLabel("Type of business").selectOption({ label: "Bakery" });
-  await businessTab(page).getByLabel("Street and number").fill("Lipová 12");
-  await businessTab(page).getByLabel("Postal code").fill("280 02");
-  await businessTab(page).getByLabel("City").fill("Kolín");
-  const phone = businessTab(page).getByLabel("Phone");
-  await phone.fill("321 123 456");
-  await phone.press("Tab");
-  await businessTab(page).getByRole("button", { name: "Open on Monday" }).click();
-  await businessTab(page).getByRole("button", { name: "Copy to Tue–Fri" }).click();
-  await insert(page, "Contact");
-  await save(page);
-
-  const preview = await (await page.request.get(`${paths().preview}kontakt/`)).text();
-  expect(preview).toContain('<section class="block contact">');
-
-  await toolbar(page).getByRole("button", { name: "Publish", exact: true }).click();
-  await expect(toolbar(page).getByText(/^Published · sc-/)).toBeVisible({ timeout: 15_000 });
-  const home = await liveFile("/");
-  expect(home).toContain('"@type":"Bakery"');
-  expect(home).toContain('"telephone":"+420321123456"');
-  expect(home).toContain('"dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday"]');
-  const footer = home.slice(home.indexOf('<footer class="site-footer">'));
-  expect(footer).toContain('<tr><th scope="row">Po–Pá</th><td>8:00–17:00</td></tr>');
+  await expect(business(page).getByLabel("Wednesday opens (1)")).toBeFocused();
 });

@@ -130,7 +130,7 @@ test("add a block between two blocks with the picker, and undo", async ({ page }
   await page.getByRole("button", { name: "+ Add block" }).last().click();
   await expect(picker(page)).toBeVisible();
   const hours = picker(page).getByRole("menuitem", { name: /^Opening hours/ });
-  await expect(hours).toContainText("Your weekly hours, from the Business tab");
+  await expect(hours).toContainText("Your weekly hours, from the business settings");
   const hero = picker(page).getByRole("menuitem", { name: /^Hero/ });
   await expect(hero).toHaveAttribute("aria-disabled", "true");
   await expect(hero).toContainText("A page has only one hero");
@@ -192,7 +192,7 @@ test("the picker shows each block as a card with a drawing, name and description
     await expect(card.locator(".illustration svg")).toBeVisible();
   }
   const hours = picker(page).getByRole("menuitem", { name: /^Opening hours/ });
-  await expect(hours).toContainText("Your weekly hours, from the Business tab");
+  await expect(hours).toContainText("Your weekly hours, from the business settings");
   // Drawings are decoration: the card's name is its name and description only.
   await expect(hours.locator(".illustration")).toHaveAttribute("aria-hidden", "true");
 });
