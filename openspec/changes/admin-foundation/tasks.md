@@ -35,5 +35,5 @@ Each task moves the area's text into the catalogues (en and cs), uses the compon
 
 - [x] 5.1 Add `e2e/interface-language.spec.ts` (Chromium with `locale: "cs-CZ"`): "Czech browser, first visit", switching to English and back, "The choice follows the person" (a second browser context), a Czech date in History, and Czech plurals on the projects page.
 - [x] 5.2 Update the README (interface language, how a person switches it, how to add a message in both catalogues) and the roadmap (admin redesign step 1 done; problem messages' translation as a follow-up). Verify by reading both.
-- [ ] 5.3 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
+- [x] 5.3 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the e2e suite locally, then push and check CI. Verify that all pass.
 - [ ] 5.4 Manual check by the owner: use the admin in Czech and English on a laptop and a phone, read the Czech texts for tone and mistakes, and record the outcome and any wording changes in design.md.

@@ -205,7 +205,10 @@ upload are all out of M2 on purpose. All of them are done.
     this device, else the browser; a test fails on text outside the catalogues.
   - Next steps: project tabs (Site and Business move out of the editor into a project Settings
     tab, the theme stays as a Design panel), a projects dashboard with live thumbnails, and a
-    public landing page with a request-access form. Also: translating the site's validation
+    presentation website for new users: what they get and for how much (one price per site,
+    free to build, paid when published; domains at cost), built and published with Static CMS
+    itself on its own domain, with new pricing-table and FAQ blocks and a request-access form
+    sent to a small form endpoint in the admin. Open sign-up and online payment come later. Also: translating the site's validation
     (problem) messages, which stay in English for now.
 
 Still open: open sign-up (a switch, when billing exists) and Google sign-in.
@@ -248,9 +251,46 @@ Still open: open sign-up (a switch, when billing exists) and Google sign-in.
   - The project page lists, per language, pages **not translated yet** (title, or slug except for
     the home page, still the primary's) and the primary's pages **missing** there; the editor's
     page list marks untranslated pages. Hints only: nothing blocks publishing.
-- Later: changing the primary language, a domain per language, machine translation (Milestone 6).
+- Later: changing the primary language, a domain per language, machine translation (Milestone 9).
 
-### 6. AI
+### 6. Own hosting
+
+Netlify has limits and ties each client to an account of their own. Sites move to our own
+hosting on AWS, built to grow with the number of sites and their traffic at almost no cost.
+
+- **S3 + CloudFront as our own Netlify:** one bucket and one multi-tenant CloudFront
+  distribution for all sites; each site is a tenant with its own domains and an automatically
+  issued certificate.
+- **Atomic deploys and instant rollback:** each publish in its own folder, uploading only changed
+  files; a CloudFront Function with a key-value store points each domain at its live publish, so
+  publishing and *Make live again* switch a pointer.
+- **Another `PublishTarget`** next to Netlify; existing sites move over, and the Netlify adapter
+  stays until they have.
+- **Sites are hosted by us,** not on each workspace's account: hosting costs are ours, which
+  will need limits and, later, billing.
+
+### 7. Domains
+
+- **Connecting an existing domain, seamlessly:** the owner points the domain's nameservers to a
+  Route 53 hosted zone we create; its existing records are imported (so email keeps working),
+  and the records for the bare domain and `www` and the certificate are created automatically.
+  This also solves bare domains, which a CNAME can't point at CloudFront.
+- **Registering a new domain** from the admin: generic endings (`.com`, `.eu`, …) through Route
+  53 Domains, `.cz` through a Czech registrar's API. Owner contact details, renewals and payment.
+- DNS records a client needs besides the site (email, verification) editable in the admin.
+
+### 8. Admin on AWS
+
+The admin serves only editors, so one server is enough for a long time; visitors never reach
+it.
+
+- **One small server** (EC2 or Lightsail) in an EU region, with a deploy pipeline, monitoring and
+  alerts.
+- **Media in S3** instead of the server's disk, shared with publishing.
+- **SQLite kept,** continuously backed up to S3 with Litestream; Postgres (RDS) only when more
+  than one admin server is needed.
+
+### 9. AI
 
 - Generate an initial site.
 - Rewrite text, create sections.
