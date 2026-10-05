@@ -287,23 +287,22 @@ beta.
 | # | Milestone | OpenSpec change | What | Status |
 | --- | --- | --- | --- | --- |
 | 1 | A | [`business-collections`](../openspec/changes/archive/2026-10-05-business-collections/) | services, team, testimonials and FAQs held once per site; blocks show all or chosen items; social profiles; format 7 | done |
-| 2 | A | `package-split` | `@static-cms/site` split into model, render, templates and export | next |
-| 3 | A | `rename-webmio` | `@webmio/*` packages, product name in the admin and docs | |
-| 4 | A | `business-locations` | several locations, each with address, hours and contact | |
-| 5 | B | `control-panel` | the website home: Business, What you offer, About you, Website, Publish; forms per item | |
-| 6 | B | `image-cropping` | crop, focal point and rotation in the media library | |
-| 7 | B | `guided-setup` | the "Tell us about your business" wizard | |
-| 8 | C | `template-system` | the template contract, homepage sections on or off, template versions | |
-| 9 | C | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | |
-| 10 | C | `template-local-services`, `template-professional` | the first two templates, before the beta | |
-| 11 | C | `template-switching` | choose, preview with your own content, publish | |
-| 12 | D | `own-hosting` | S3 + CloudFront, `<site>.webmio.site`, atomic deploys, rollback | |
-| 13 | D | `safe-publishing` | the publish pipeline: link check, deploy verification, previous version kept on failure | |
-| 14 | E | `domain-guides` | DNS guides per registrar with a live record check | |
-| 15 | E | `contact-form` | form endpoint, email to the owner, spam protection | |
-| 16 | E | `website-health` | daily checks, *Website healthy*, alerts | |
-| 17 | F | `admin-on-aws`, `presentation-site`, `operator-console`, legal documents | the private beta | |
-| 18 | C | `template-hospitality`, `template-personal-professional` | the other two templates, during the beta | |
+| 2 | A | [`package-split`](../openspec/changes/package-split/) | `@static-cms/site` split into `@webmio/model`, `@webmio/render` and `@webmio/export`, and everything renamed to Webmio (packages, product name in the admin, docs) | planned |
+| 3 | A | `business-locations` | several locations, each with address, hours and contact | |
+| 4 | B | `control-panel` | the website home: Business, What you offer, About you, Website, Publish; forms per item | |
+| 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
+| 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
+| 7 | C | `template-system` | the template contract, homepage sections on or off, template versions | |
+| 8 | C | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | |
+| 9 | C | `template-local-services`, `template-professional` | the first two templates, before the beta | |
+| 10 | C | `template-switching` | choose, preview with your own content, publish | |
+| 11 | D | `own-hosting` | S3 + CloudFront, `<site>.webmio.site`, atomic deploys, rollback | |
+| 12 | D | `safe-publishing` | the publish pipeline: link check, deploy verification, previous version kept on failure | |
+| 13 | E | `domain-guides` | DNS guides per registrar with a live record check | |
+| 14 | E | `contact-form` | form endpoint, email to the owner, spam protection | |
+| 15 | E | `website-health` | daily checks, *Website healthy*, alerts | |
+| 16 | F | `admin-on-aws`, `presentation-site`, `operator-console`, legal documents | the private beta | |
+| 17 | C | `template-hospitality`, `template-personal-professional` | the other two templates, during the beta | |
 
 ### A. Business data as the source of truth
 
@@ -321,9 +320,10 @@ beta.
     keyboard Backspace on a selected item deletes it like the handle menu does.
 - **Blocks become views:** a services, team, testimonials or FAQ block shows the whole
   collection, or chosen items in its own order (home page highlights).
-- **Package split** (`package-split`, see [`tasks.md`](tasks.md)): model (schema, validation,
-  migrations), renderer, templates, export.
-- **Rename to Webmio in code** (`rename-webmio`): `@webmio/*` packages, product name in the admin.
+- **Package split and rename** (`package-split`): `@webmio/model` (schema, validation,
+  migrations), `@webmio/render` and `@webmio/export`; templates get their package with
+  `template-system`. Everything is renamed to Webmio in the same change: packages, the admin's
+  product name, docs.
 - **Several locations** (`business-locations`), each with its address, hours and contact.
 
 ### B. Business control panel
