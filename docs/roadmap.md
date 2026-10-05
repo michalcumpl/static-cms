@@ -280,19 +280,44 @@ Still open: open sign-up (a switch, when billing exists) and Google sign-in.
 Milestones in order. A private beta for friends (F) starts as soon as A–E work with at least two
 templates; the other two templates can land during the beta.
 
+**Planned changes**, in order. A → B → C build on each other's data model and must go in
+sequence. D doesn't depend on them and can run in parallel; it's the longest pole before the
+beta.
+
+| # | Milestone | OpenSpec change | What | Status |
+| --- | --- | --- | --- | --- |
+| 1 | A | [`business-collections`](../openspec/changes/business-collections/) | services, team, testimonials and FAQs held once per site; blocks show all or chosen items; social profiles; format 7 | planned |
+| 2 | A | `package-split` | `@static-cms/site` split into model, render, templates and export | |
+| 3 | A | `rename-webmio` | `@webmio/*` packages, product name in the admin and docs | |
+| 4 | A | `business-locations` | several locations, each with address, hours and contact | |
+| 5 | B | `control-panel` | the website home: Business, What you offer, About you, Website, Publish; forms per item | |
+| 6 | B | `image-cropping` | crop, focal point and rotation in the media library | |
+| 7 | B | `guided-setup` | the "Tell us about your business" wizard | |
+| 8 | C | `template-system` | the template contract, homepage sections on or off, template versions | |
+| 9 | C | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | |
+| 10 | C | `template-local-services`, `template-professional` | the first two templates, before the beta | |
+| 11 | C | `template-switching` | choose, preview with your own content, publish | |
+| 12 | D | `own-hosting` | S3 + CloudFront, `<site>.webmio.site`, atomic deploys, rollback | |
+| 13 | D | `safe-publishing` | the publish pipeline: link check, deploy verification, previous version kept on failure | |
+| 14 | E | `domain-guides` | DNS guides per registrar with a live record check | |
+| 15 | E | `contact-form` | form endpoint, email to the owner, spam protection | |
+| 16 | E | `website-health` | daily checks, *Website healthy*, alerts | |
+| 17 | F | `admin-on-aws`, `presentation-site`, `operator-console`, legal documents | the private beta | |
+| 18 | C | `template-hospitality`, `template-personal-professional` | the other two templates, during the beta | |
+
 ### A. Business data as the source of truth
 
-- **Collections** next to the business details that already exist: `services`, `team`,
-  `testimonials`, `faqs`, with fields a template can rely on (a service has a name, summary,
-  description, optional price and image; FAQs have a question and an answer). `locations` and
-  `social` join the business. Shared across languages where they're facts (prices, photos,
-  links), translated where they're text. This is a new document format, with an upgrade that lifts
-  the items of existing services, team and testimonial blocks into the collections.
-- **Blocks become views:** a services section shows the collection (all, or chosen highlights)
-  instead of holding its own items.
-- **Package split** happens here (see [`tasks.md`](tasks.md)): model (schema, validation,
+- **Collections** (`business-collections`): `services`, `team`, `testimonials` and `faqs` on the
+  site, with today's item fields (price stays a text). Which items exist, their order and their
+  images are shared across languages; texts are translated. Document format 7, with an upgrade
+  that lifts the items of existing blocks into the collections and publishes identical HTML.
+  Social profiles join the business.
+- **Blocks become views:** a services, team, testimonials or FAQ block shows the whole
+  collection, or chosen items in its own order (home page highlights).
+- **Package split** (`package-split`, see [`tasks.md`](tasks.md)): model (schema, validation,
   migrations), renderer, templates, export.
-- Rename to Webmio in code: `@webmio/*` packages, product name in the admin.
+- **Rename to Webmio in code** (`rename-webmio`): `@webmio/*` packages, product name in the admin.
+- **Several locations** (`business-locations`), each with its address, hours and contact.
 
 ### B. Business control panel
 
