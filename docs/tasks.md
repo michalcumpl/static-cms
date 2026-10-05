@@ -37,6 +37,9 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
   CSS, metadata, structured data), `@webmio/templates` (one folder per template, maybe one
   package each later), `@webmio/export` (file tree, ZIP, robots, icons). The pure-TypeScript,
   no-filesystem rule stays for all of them.
+- [x] **Business data as collections** (`business-collections`): services, team, testimonials
+  and FAQs held once per site, social profiles, document format 7.
+- [ ] **Several locations** (`business-locations`), each with address, hours and contact.
 - [ ] Rename `static-cms` → `webmio` in packages, the admin and docs.
 
 ## B. Business control panel

@@ -192,6 +192,13 @@ check. New snapshots cover the FAQ block, social links and the extended JSON-LD.
    previous release returns to version 6. A release can't be rolled back on its own after the
    upgrade, because the old code refuses version 7.
 
+**Rehearsal (task 9.1, 2026-10-05).** On a copy of the local database (3 projects: one Czech
+site at format 1, one at 6, and a Czech and English site at 6 and 5), the project upgrade
+upgraded all three. Every page was rendered with `main`'s code before and this branch's code
+after, with the sites' addresses, and the outputs were diffed: of 15 pages, only the two home
+pages of the bilingual site differ, by the new `hasOfferCatalog` in the JSON-LD. Nothing else
+changed.
+
 ## Open Questions
 
 - The exact wording of "Remove from this block" and of the item pickers in Czech: settle with

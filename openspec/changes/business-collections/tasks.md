@@ -118,9 +118,9 @@ check and the untranslated-text test enforce this.
 
 ## 9. Integration
 
-- [ ] 9.1 On a copy of a real database (or the seeded demo with a second language and an
+- [x] 9.1 On a copy of a real database (or the seeded demo with a second language and an
   English-only service), run the admin, then export every project's ZIP before and after the
   upgrade and diff them. Verify that the pages are identical apart from the home page's new
   `hasOfferCatalog` in the JSON-LD (and footer social links where profiles exist, none yet). Record the result in the change.
-- [ ] 9.2 Update `docs/roadmap.md` (milestone A: collections done, locations next) and
+- [x] 9.2 Update `docs/roadmap.md` (milestone A: collections done, locations next) and
   `docs/tasks.md`. Verify by reading.
