@@ -13,6 +13,7 @@ import {
 import { businessFieldElementId } from "./locate";
 import OpeningHoursEditor from "./OpeningHoursEditor.svelte";
 import SharedNote from "./SharedNote.svelte";
+import SocialProfilesEditor from "./SocialProfilesEditor.svelte";
 import type { EditorState } from "./state.svelte";
 
 // The business the site is for (business-info design.md decision 7): facts stored once, shown
@@ -138,6 +139,8 @@ $effect(() => editor.registerDraft(commitPhone));
       placeholder={i18n.t("editor.business.hoursNoteExample")}
       oninput={(e) => setBusinessField(editor.session, "hours_note", e.currentTarget.value)}
     />
+
+    <SocialProfilesEditor {editor} disabled={shared} />
 
     <label class="check">
       <input

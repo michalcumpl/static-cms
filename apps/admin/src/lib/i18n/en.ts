@@ -405,6 +405,13 @@ export const en = {
         "Paste the link to your listing on Google Maps or Mapy.com. Without it, “Show on map” searches for the address.",
       hoursNote: "Note on the opening hours",
       hoursNoteExample: "Closed on public holidays",
+      social: "Social profiles",
+      profile: "Profile {number}",
+      profileExample: "https://www.instagram.com/…",
+      addProfile: "Add a profile",
+      removeProfile: "Remove profile {number}",
+      moveProfileUp: "Move profile {number} up",
+      moveProfileDown: "Move profile {number} down",
       showInFooter: "Show contact details in the footer",
     },
     hours: {

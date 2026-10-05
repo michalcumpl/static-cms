@@ -209,3 +209,62 @@ export function setContactSwitch(
   if (!block || block[which] === on) return;
   session.apply(session.tr.set([blockId, which], on));
 }
+
+/** The business's social profiles, in order (business-collections, "Social profiles"). */
+export function socialProfiles(doc: Document): { id: string; url: string }[] {
+  const business = businessOf(doc) as
+    | (BusinessFields & { social?: { nodes: string[] } })
+    | undefined;
+  return (business?.social?.nodes ?? []).flatMap((id) => {
+    const node = doc.nodes[id] as unknown as { url?: string } | undefined;
+    return node ? [{ id, url: node.url ?? "" }] : [];
+  });
+}
+
+function setSocialList(session: Session, ids: string[], tr = session.tr): void {
+  const business = businessOf(session.doc);
+  if (!business) return;
+  tr.set([business.id, "social"], list(ids));
+  session.apply(tr);
+}
+
+/** Adds an empty profile at the end. Returns its ID. */
+export function addSocialProfile(session: Session): string {
+  const tr = session.tr;
+  const id = tr.generate_id();
+  tr.create({ id, type: "social_link", url: "" });
+  setSocialList(session, [...socialProfiles(session.doc).map((p) => p.id), id], tr);
+  return id;
+}
+
+export function removeSocialProfile(session: Session, id: string): void {
+  setSocialList(
+    session,
+    socialProfiles(session.doc)
+      .map((p) => p.id)
+      .filter((other) => other !== id),
+  );
+}
+
+/** Moves a profile one place up or down. */
+export function moveSocialProfile(session: Session, id: string, direction: -1 | 1): void {
+  const ids = socialProfiles(session.doc).map((p) => p.id);
+  const from = ids.indexOf(id);
+  const to = from + direction;
+  if (from < 0 || to < 0 || to >= ids.length) return;
+  [ids[from], ids[to]] = [ids[to] as string, ids[from] as string];
+  setSocialList(session, ids);
+}
+
+export function setSocialUrl(session: Session, id: string, url: string): void {
+  const tr = session.tr;
+  tr.set([id, "url"], url);
+  session.apply(tr);
+}
+
+/** An address as owners type it, with `https://` added when it has no scheme. */
+export function normalizeSocialUrl(input: string): string {
+  const url = input.trim();
+  if (url === "" || /^[a-z][a-z0-9+.-]*:/i.test(url)) return url;
+  return `https://${url.replace(/^\/+/, "")}`;
+}

@@ -5,16 +5,22 @@ import { projectPaths } from "$lib/project-paths";
 import { demoSite } from "$lib/server/demo";
 import {
   addRange,
+  addSocialProfile,
   businessOf,
   copyMondayToWeekdays,
+  moveSocialProfile,
   normalizePhone,
+  normalizeSocialUrl,
   rangesOf,
   removeRange,
+  removeSocialProfile,
   setBusinessField,
   setBusinessType,
   setPhone,
   setRangeTime,
   setShowInFooter,
+  setSocialUrl,
+  socialProfiles,
 } from "./business";
 import { EditorState } from "./state.svelte";
 import { insertBlockAt } from "./structure";
@@ -149,5 +155,33 @@ describe("inserting business blocks", () => {
     expect(blocks.find((b) => b.type === "opening_hours")).toMatchObject({
       heading: { content: "Otevírací doba" },
     });
+  });
+});
+
+describe("social profiles", () => {
+  it("adds, edits, orders and removes profiles, each one undo step", () => {
+    const { session: s } = editor();
+    const ig = addSocialProfile(s);
+    setSocialUrl(s, ig, normalizeSocialUrl("instagram.com/pekarnaulipy"));
+    const fb = addSocialProfile(s);
+    setSocialUrl(s, fb, "https://facebook.com/pekarna");
+    expect(socialProfiles(s.doc).map((p) => p.url)).toEqual([
+      "https://instagram.com/pekarnaulipy",
+      "https://facebook.com/pekarna",
+    ]);
+    expect(validateSite(s.doc).problems).toEqual([]);
+    moveSocialProfile(s, fb, -1);
+    expect(socialProfiles(s.doc).map((p) => p.id)).toEqual([fb, ig]);
+    removeSocialProfile(s, fb);
+    expect(socialProfiles(s.doc).map((p) => p.id)).toEqual([ig]);
+    s.undo();
+    expect(socialProfiles(s.doc).map((p) => p.id)).toEqual([fb, ig]);
+  });
+
+  it("adds https:// to an address typed without one", () => {
+    expect(normalizeSocialUrl(" instagram.com/pekarna ")).toBe("https://instagram.com/pekarna");
+    expect(normalizeSocialUrl("https://x.com/p")).toBe("https://x.com/p");
+    expect(normalizeSocialUrl("http://x.com/p")).toBe("http://x.com/p");
+    expect(normalizeSocialUrl("")).toBe("");
   });
 });

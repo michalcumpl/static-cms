@@ -81,12 +81,12 @@ check and the untranslated-text test enforce this.
 
 ## 7. Editor: collection blocks (`apps/admin`)
 
-- [ ] 7.1 Update the editor's Svedit schema and node components: `Services`, `Team` and
+- [x] 7.1 Update the editor's Svedit schema and node components: `Services`, `Team` and
   `Testimonials` render the shown items through their collection paths, and the new `Faq` and
   `FaqItem` components follow the same pattern. Add FAQ to the block picker, with a wireframe
   drawing and a description. Verify with `svedit-schema.test.ts`, `block-illustrations.test.ts`
   and an e2e test that adds an FAQ block ("New FAQ block").
-- [ ] 7.2 Add collection-aware transforms and handle menus (decision 4):
+- [x] 7.2 Add collection-aware transforms and handle menus (decision 4):
   - in `all` mode: insert, move, duplicate and delete on the collection; Delete says "Also
     shown on N other pages";
   - in `chosen` mode: move, "Remove from this block", and the add picker (existing items and
@@ -99,19 +99,19 @@ check and the untranslated-text test enforce this.
   Verify with `structure.test.ts`/`handles.svelte.test.ts` units and e2e tests "Edit a
   highlighted service", "Remove a highlight", "Add an existing service to the highlights",
   "Delete a shown service", "Same service twice on one page" and "Add a question".
-- [ ] 7.3 Add the "All … / Chosen …" switch to the block panel. Verify with the e2e test "Switch
+- [x] 7.3 Add the "All … / Chosen …" switch to the block panel. Verify with the e2e test "Switch
   to chosen" and a unit test that the switch is one undo step and doesn't change the rendered
   items.
-- [ ] 7.4 Outside the primary language, make the collections' structure fixed and items' images
+- [x] 7.4 Outside the primary language, make the collections' structure fixed and items' images
   read-only, with the reasons in the handle menu. Verify with the e2e tests "Translate a service
   in English" and "No new services in English".
-- [ ] 7.5 Update the existing e2e specs that add service items, people or testimonials
+- [x] 7.5 Update the existing e2e specs that add service items, people or testimonials
   (`image-blocks`, `content-blocks`, `walkthrough`, …) to the new behaviour. Verify that the
   full Playwright suite passes.
 
 ## 8. Settings: social profiles (`apps/admin`)
 
-- [ ] 8.1 Add the social profiles list to `BusinessSettings` (add, remove, move, the kind label,
+- [x] 8.1 Add the social profiles list to `BusinessSettings` (add, remove, move, the kind label,
   `https://` added on leaving the field), read-only outside the primary language. Verify with
   the e2e test "Add an Instagram profile" in `settings.spec.ts`, and "Phone in English" still
   passing with the profiles read-only.

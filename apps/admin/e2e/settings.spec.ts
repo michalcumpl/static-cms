@@ -127,6 +127,25 @@ test.describe("the business", () => {
     expect(savedBusiness().phone).toBe("+420321123456");
   });
 
+  test("Add an Instagram profile", async ({ page }) => {
+    await openSettings(page);
+    await business(page).getByRole("button", { name: "Add a profile" }).click();
+    const field = business(page).getByLabel(/^Profile 1/);
+    await expect(field).toBeFocused();
+    await field.fill("instagram.com/pekarnaulipy");
+    await field.press("Tab");
+    await expect(field).toHaveValue("https://instagram.com/pekarnaulipy");
+    await expect(business(page).getByText("Profile 1: Instagram")).toBeVisible();
+    await saveSettings(page);
+    const doc = savedDocument();
+    const [profileId] = doc.nodes[savedBusiness().id].social.nodes;
+    expect(doc.nodes[profileId].url).toBe("https://instagram.com/pekarnaulipy");
+    await page.goto(paths().preview);
+    await expect(
+      page.locator("footer nav.footer-social").getByRole("link", { name: "Instagram" }),
+    ).toHaveAttribute("href", "https://instagram.com/pekarnaulipy");
+  });
+
   test("a lunch break gives a day two ranges", async ({ page }) => {
     await openSettings(page);
     await business(page).getByRole("button", { name: "Open on Monday" }).click();
@@ -295,6 +314,8 @@ test.describe("another language", () => {
       `${paths().settings}`,
     );
     await expect(business(page).getByLabel("Note on the opening hours")).toBeEnabled();
+    // Social profiles are shared too.
+    await expect(business(page).getByRole("button", { name: "Add a profile" })).toHaveCount(0);
     await site(page).getByLabel("Name").fill("Bakery");
     await saveSettings(page);
     const english = savedDocument("en");

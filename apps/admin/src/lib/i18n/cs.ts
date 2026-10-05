@@ -410,6 +410,13 @@ export const cs: Messages = {
         "Vložte odkaz na váš záznam v Google Maps nebo na Mapy.com. Bez něj „Zobrazit na mapě“ vyhledá adresu.",
       hoursNote: "Poznámka k otevírací době",
       hoursNoteExample: "Ve svátky zavřeno",
+      social: "Sociální sítě",
+      profile: "Profil {number}",
+      profileExample: "https://www.instagram.com/…",
+      addProfile: "Přidat profil",
+      removeProfile: "Odebrat profil {number}",
+      moveProfileUp: "Posunout profil {number} nahoru",
+      moveProfileDown: "Posunout profil {number} dolů",
       showInFooter: "Zobrazit kontaktní údaje v patičce",
     },
     hours: {
