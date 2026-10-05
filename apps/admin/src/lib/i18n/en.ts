@@ -2,7 +2,7 @@
 // the same keys. `{name}` is a parameter; an object with `one`/`other` depends on `count`.
 export const en = {
   common: {
-    productName: "Static CMS",
+    productName: "Webmio",
     save: "Save",
     cancel: "Cancel",
     close: "Close",
@@ -13,12 +13,12 @@ export const en = {
     publish: "Publish",
     back: "Back",
     loading: "Loading…",
-    pageTitle: "{page} – Static CMS",
+    pageTitle: "{page} – Webmio",
     breadcrumb: "Breadcrumb",
     language: { cs: "Čeština", en: "English" },
   },
   shell: {
-    home: "Static CMS, your projects",
+    home: "Webmio, your projects",
     workspace: "Workspace",
     switchWorkspace: "Switch workspace",
     interfaceLanguage: "Interface language",
@@ -37,7 +37,7 @@ export const en = {
     invalid: "Enter an email address.",
     rateLimited: "Too many attempts. Try again in 15 minutes.",
     inviteOnly: "Accounts are by invitation. Ask the site's owner to invite you.",
-    continueText: "Continue to sign in to Static CMS.",
+    continueText: "Continue to sign in to Webmio.",
     continue: "Continue",
     newLink: "Request a new link",
     reason: {
@@ -48,7 +48,7 @@ export const en = {
   },
   invite: {
     title: "Invitation",
-    text: "You were invited to edit a website with Static CMS.",
+    text: "You were invited to edit a website with Webmio.",
     accept: "Accept invitation",
     signIn: "Sign in",
     reason: {
@@ -745,12 +745,12 @@ export const en = {
     ownersOnly: "Only owners of this workspace can connect or disconnect Netlify.",
   },
   emails: {
-    signInSubject: "Sign in to Static CMS",
+    signInSubject: "Sign in to Webmio",
     signInText:
       "To sign in, open this link (valid for 15 minutes):\n\n{link}\n\nIf you didn't ask to sign in, you can ignore this email.\n",
     invitationSubject: "Invitation to {workspace}",
     invitationText:
-      'You were invited to "{workspace}" in Static CMS. Accept with this link (valid for 7 days):\n\n{link}\n',
+      'You were invited to "{workspace}" in Webmio. Accept with this link (valid for 7 days):\n\n{link}\n',
   },
   server: {
     notFound: "Not found",

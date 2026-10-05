@@ -1,4 +1,4 @@
-import { type BusinessInfo, businessInfo, type SiteStrings, siteStrings } from "@static-cms/site";
+import { type BusinessInfo, businessInfo, type SiteStrings, siteStrings } from "@webmio/site";
 import type { Document } from "svedit";
 
 /** The site's business details and strings, as the canvas shows them (from the session's doc). */

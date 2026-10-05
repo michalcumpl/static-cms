@@ -1,4 +1,4 @@
-# @static-cms/site
+# @webmio/site
 
 The site model and the build from that model to a static website. It is pure TypeScript with no
 Svelte, Svedit, or filesystem dependencies, so the same code runs in Node (server, scripts, tests)
@@ -35,12 +35,12 @@ format, so the editor can pass it to Svedit unchanged. The TypeScript types (`Si
 - Text values are `{ content, marks, annotations }`. Mark offsets count grapheme clusters, as in Svedit.
 
 `fixtures/demo-site.json` is a complete two-page example, and `fixtures/media/` holds its image.
-Both are exported as `@static-cms/site/fixtures/*`.
+Both are exported as `@webmio/site/fixtures/*`.
 
 ## API
 
 ```ts
-import { exportSite, renderSite, validateSite, zipFiles } from "@static-cms/site";
+import { exportSite, renderSite, validateSite, zipFiles } from "@webmio/site";
 
 // 1. Validate: every problem at once, each with a code, message and node ID.
 const validation = validateSite(doc);

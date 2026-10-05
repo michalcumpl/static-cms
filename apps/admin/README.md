@@ -1,16 +1,16 @@
-# @static-cms/admin
+# @webmio/admin
 
-The Static CMS app: SvelteKit (Svelte 5) with `adapter-node`, so the UI and the server routes
+The Webmio admin app: SvelteKit (Svelte 5) with `adapter-node`, so the UI and the server routes
 ship as one Node app. People sign in with an emailed link and edit the websites (projects) of the
 workspaces they belong to. Sites are stored in SQLite, previewed, and exported with
-`@static-cms/site`.
+`@webmio/site`.
 
 ## First run (development)
 
 ```sh
 pnpm install
-pnpm --filter @static-cms/admin admin create-user you@example.com "My studio"
-pnpm dev             # from the repo root: builds @static-cms/site, then starts vite dev
+pnpm --filter @webmio/admin admin create-user you@example.com "My studio"
+pnpm dev             # from the repo root: builds @webmio/site, then starts vite dev
 ```
 
 `create-user` prints a sign-in link. Open it (the default link targets http://localhost:5173) and
@@ -109,7 +109,7 @@ Everything except sign-in and invitations needs a session. Project pages and API
 | `NETLIFY_API_URL`| `https://api.netlify.com` | Only for tests: points publishing at the fake Netlify (`e2e/fake-netlify-server.ts`). |
 | `BODY_SIZE_LIMIT`| `512K`           | adapter-node's request size limit. **Set it to `25M` in production**, or image uploads over 512 KB are refused before they reach the app (the server warns at startup). |
 | `SMTP_URL`       | –                | e.g. `smtps://user:password@smtp.example.cz:465`. Without it, email goes to the outbox. |
-| `MAIL_FROM`      | –                | Sender, e.g. `Static CMS <web@example.cz>`. Required with `SMTP_URL`. |
+| `MAIL_FROM`      | –                | Sender, e.g. `Webmio <web@example.cz>`. Required with `SMTP_URL`. |
 | `OUTBOX_DIR`     | `data/outbox`    | Where emails go without SMTP.                                  |
 | `SITE_DATA_DIR`  | `data`           | Where a Milestone 2 `site.json` is looked for (imported once). |
 | `MIGRATIONS_DIR` | `drizzle`        | Database migrations, applied at startup.                       |
@@ -121,7 +121,7 @@ from `apps/admin`.
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm turbo run build --filter @static-cms/admin...
+pnpm turbo run build --filter @webmio/admin...
 cd apps/admin
 ORIGIN=https://admin.example.cz BODY_SIZE_LIMIT=25M SMTP_URL=… MAIL_FROM=… node dist
 ```
@@ -284,14 +284,14 @@ same backup and rollback notes apply.
 ## Scripts
 
 ```sh
-pnpm --filter @static-cms/admin admin create-user <email> "<workspace>"   # prints a sign-in link
-pnpm --filter @static-cms/admin admin media-cleanup [--dry-run]   # delete files of removed, unused images
-pnpm --filter @static-cms/admin db:generate  # new migration after a schema change
-pnpm --filter @static-cms/admin typecheck    # svelte-check, e2e and scripts
-pnpm --filter @static-cms/admin test         # vitest (in-memory databases)
-pnpm --filter @static-cms/admin test:e2e     # Playwright, on a temporary database
-pnpm --filter @static-cms/admin build        # production build in dist/
-pnpm --filter @static-cms/admin start        # run the build: node dist
+pnpm --filter @webmio/admin admin create-user <email> "<workspace>"   # prints a sign-in link
+pnpm --filter @webmio/admin admin media-cleanup [--dry-run]   # delete files of removed, unused images
+pnpm --filter @webmio/admin db:generate  # new migration after a schema change
+pnpm --filter @webmio/admin typecheck    # svelte-check, e2e and scripts
+pnpm --filter @webmio/admin test         # vitest (in-memory databases)
+pnpm --filter @webmio/admin test:e2e     # Playwright, on a temporary database
+pnpm --filter @webmio/admin build        # production build in dist/
+pnpm --filter @webmio/admin start        # run the build: node dist
 ```
 
 The app uses TypeScript 6 (the `typescript6` catalog in `pnpm-workspace.yaml`), because

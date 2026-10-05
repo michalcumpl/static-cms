@@ -3,7 +3,7 @@ import type { Messages } from "./types";
 // Czech interface messages: the same keys as en.ts, addressing owners with "vy".
 export const cs: Messages = {
   common: {
-    productName: "Static CMS",
+    productName: "Webmio",
     save: "Uložit",
     cancel: "Zrušit",
     close: "Zavřít",
@@ -14,12 +14,12 @@ export const cs: Messages = {
     publish: "Zveřejnit",
     back: "Zpět",
     loading: "Načítám…",
-    pageTitle: "{page} – Static CMS",
+    pageTitle: "{page} – Webmio",
     breadcrumb: "Drobečková navigace",
     language: { cs: "Čeština", en: "English" },
   },
   shell: {
-    home: "Static CMS, vaše projekty",
+    home: "Webmio, vaše projekty",
     workspace: "Pracovní prostor",
     switchWorkspace: "Přepnout pracovní prostor",
     interfaceLanguage: "Jazyk rozhraní",
@@ -38,7 +38,7 @@ export const cs: Messages = {
     invalid: "Zadejte e-mailovou adresu.",
     rateLimited: "Příliš mnoho pokusů. Zkuste to znovu za 15 minut.",
     inviteOnly: "Účty jsou jen na pozvání. Požádejte majitele webu, aby vás pozval.",
-    continueText: "Pokračujte k přihlášení do Static CMS.",
+    continueText: "Pokračujte k přihlášení do Webmia.",
     continue: "Pokračovat",
     newLink: "Vyžádat nový odkaz",
     reason: {
@@ -49,7 +49,7 @@ export const cs: Messages = {
   },
   invite: {
     title: "Pozvánka",
-    text: "Dostali jste pozvánku k úpravám webu ve Static CMS.",
+    text: "Dostali jste pozvánku k úpravám webu ve Webmiu.",
     accept: "Přijmout pozvánku",
     signIn: "Přihlásit se",
     reason: {
@@ -759,12 +759,12 @@ export const cs: Messages = {
     ownersOnly: "Netlify mohou připojit nebo odpojit jen majitelé tohoto prostoru.",
   },
   emails: {
-    signInSubject: "Přihlášení do Static CMS",
+    signInSubject: "Přihlášení do Webmia",
     signInText:
       "Pro přihlášení otevřete tento odkaz (platí 15 minut):\n\n{link}\n\nPokud jste o přihlášení nežádali, tento e-mail ignorujte.\n",
     invitationSubject: "Pozvánka do {workspace}",
     invitationText:
-      "Byli jste pozváni do „{workspace}“ ve Static CMS. Pozvánku přijmete tímto odkazem (platí 7 dní):\n\n{link}\n",
+      "Byli jste pozváni do „{workspace}“ ve Webmiu. Pozvánku přijmete tímto odkazem (platí 7 dní):\n\n{link}\n",
   },
   server: {
     notFound: "Nenalezeno",

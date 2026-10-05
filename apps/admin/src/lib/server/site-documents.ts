@@ -10,7 +10,7 @@ import {
   translationStatus,
   translationSummary,
   validateSite,
-} from "@static-cms/site";
+} from "@webmio/site";
 import { and, eq, sql } from "drizzle-orm";
 import { type Said, said } from "$lib/i18n";
 import type { Db } from "./db/index";

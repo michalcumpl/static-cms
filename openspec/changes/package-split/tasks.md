@@ -5,11 +5,11 @@ then the split. Code moves without behaviour change; the only visible change is 
 
 ## 1. Preparation
 
-- [ ] 1.1 Read the installed turbo package's `docs/README.md` and its page on package
+- [x] 1.1 Read the installed turbo package's `docs/README.md` and its page on package
   dependencies and tasks (AGENTS.md), and confirm that `dependsOn: ["^build"]` orders new and
   renamed workspace packages without changes to `turbo.json`. Verify by noting the doc page in
   design decision 6.
-- [ ] 1.2 Record the baseline:
+- [x] 1.2 Record the baseline:
   - run `pnpm test`, `pnpm typecheck` and `pnpm build-demo`;
   - save the demo output's file list and checksums, and the export names of
     `packages/site/src/index.ts`, to the scratchpad.
@@ -18,7 +18,7 @@ then the split. Code moves without behaviour change; the only visible change is 
 
 ## 2. Step 1: the rename
 
-- [ ] 2.1 Rename the workspace packages (decision 7):
+- [x] 2.1 Rename the workspace packages (decision 7):
   - `@static-cms/site` → `@webmio/site`;
   - `@static-cms/tsconfig` → `@webmio/tsconfig`, with every `extends` following;
   - `@static-cms/admin` → `@webmio/admin`;
@@ -30,11 +30,11 @@ then the split. Code moves without behaviour change; the only visible change is 
 
   Verify that `grep -r "static-cms"` outside `node_modules`, `.git`, archived changes and the
   repository's own path finds nothing.
-- [ ] 2.2 Change "Static CMS" to "Webmio" in both catalogues, with the Czech declensions of
+- [x] 2.2 Change "Static CMS" to "Webmio" in both catalogues, with the Czech declensions of
   decision 7, in the guard's allowed words, and in the tests checking email subjects and texts.
   List every changed Czech string in the change for the owner to read. Verify with the
   untranslated-text test, the email tests, and the e2e test of the app shell's name.
-- [ ] 2.3 Update the admin README (package names, the `MAIL_FROM` example). Then run
+- [x] 2.3 Update the admin README (package names, the `MAIL_FROM` example). Then run
   `pnpm clean`, `pnpm install`, `pnpm build`, `pnpm typecheck`, `pnpm test`, `pnpm lint` and the
   full Playwright suite, and compare `pnpm build-demo`'s output with the baseline. Verify that
   everything passes and the demo output is byte-identical; then commit step 1.

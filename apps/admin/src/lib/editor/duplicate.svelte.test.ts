@@ -1,4 +1,4 @@
-import { validateSite } from "@static-cms/site";
+import { validateSite } from "@webmio/site";
 import { describe, expect, it } from "vitest";
 import { projectPaths } from "$lib/project-paths";
 import { demoSite, imageBlocksSite } from "$lib/server/demo";

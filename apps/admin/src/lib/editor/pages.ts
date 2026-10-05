@@ -1,4 +1,4 @@
-import { slugify, uniqueSlug } from "@static-cms/site";
+import { slugify, uniqueSlug } from "@webmio/site";
 import type { Document, Session, Transaction } from "svedit";
 import { checkLinkAddress, type LinkAddressCheck } from "./links";
 import { editorSchema } from "./schema";

@@ -144,4 +144,5 @@ Name: **Webmio**. Registered: `webmio.cz`, `webmio.eu`, `webmio.net`, `webmio.si
 | `webmio.net` | infrastructure: the hostname customers point their DNS at (`www CNAME sites.webmio.net`), status page, mail-sending subdomain |
 | `webmio.me` | held; redirects to `webmio.eu`. Possibly personal addresses for the Personal Professional template later |
 
-The code still says `static-cms` (`@static-cms/site`, the repository); renaming it is a task.
+The code is renamed to Webmio (`@webmio/*` packages, the admin's product name); only the
+repository's folder keeps its old name.

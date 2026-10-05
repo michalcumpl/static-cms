@@ -1,6 +1,6 @@
 // Builds the demo site into out/website.zip. Runs on the built package: `pnpm build-demo`.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { exportSite, zipFiles } from "@static-cms/site";
+import { exportSite, zipFiles } from "@webmio/site";
 
 const fixtures = new URL("../fixtures/", import.meta.url);
 const mediaDir = new URL("media/", fixtures);

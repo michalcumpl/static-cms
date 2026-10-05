@@ -49,7 +49,7 @@ function resetSite(): void {
  */
 export function storeVersion1Site(): void {
   const require = createRequire(import.meta.url);
-  const file = require.resolve("@static-cms/site/fixtures/demo-site-v1.json");
+  const file = require.resolve("@webmio/site/fixtures/demo-site-v1.json");
   const document = JSON.parse(readFileSync(file, "utf8"));
   const current = testDb()
     .select({ versionId: siteDocuments.currentVersionId })

@@ -40,7 +40,7 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
 - [x] **Business data as collections** (`business-collections`): services, team, testimonials
   and FAQs held once per site, social profiles, document format 7.
 - [ ] **Several locations** (`business-locations`), each with address, hours and contact.
-- [ ] Rename `static-cms` → `webmio` in packages, the admin and docs.
+- [x] Rename `static-cms` → `webmio` in packages, the admin and docs (`package-split`, step 1).
 
 ## B. Business control panel
 

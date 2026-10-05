@@ -49,7 +49,7 @@ describe("invitations", () => {
     expect(sent[0]?.to).toBe("jana@example.cz");
     expect(sent[0]?.text).toContain("https://admin.example.cz/invite/");
     expect(sent[0]?.subject).toBe("Invitation to Pekárna U Lípy");
-    expect(sent[0]?.text).toMatch(/^You were invited to "Pekárna U Lípy" in Static CMS\./);
+    expect(sent[0]?.text).toMatch(/^You were invited to "Pekárna U Lípy" in Webmio\./);
     expect(sent[0]?.text).not.toContain("Byli jste");
 
     const accepted = acceptInvitation(db, tokenFrom(sent[0]));

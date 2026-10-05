@@ -1,5 +1,5 @@
 <script lang="ts">
-import { slugify } from "@static-cms/site";
+import { slugify } from "@webmio/site";
 import { getI18n } from "$lib/i18n";
 import ImageSetting from "./ImageSetting.svelte";
 import { pageFieldElementId } from "./locate";

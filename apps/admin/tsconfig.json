@@ -1,5 +1,5 @@
 {
-  "extends": ["@static-cms/tsconfig/app.json", "./.svelte-kit/tsconfig.json"],
+  "extends": ["@webmio/tsconfig/app.json", "./.svelte-kit/tsconfig.json"],
   "compilerOptions": {
     "types": ["node"]
   }

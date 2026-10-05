@@ -107,9 +107,16 @@ Each package mirrors `packages/site`'s set-up: `type: module`, `exports` with `t
 `export`, and `html-validate` to the dev dependencies of `render` and `export`. The root
 `build-demo` script filters `@webmio/export`.
 
-Per the repository's `AGENTS.md`, before relying on Turborepo behaviour, check the installed
-turbo docs to confirm that `^build` covers new and renamed workspace packages without
-configuration.
+Checked in the installed turbo 2.11.5 docs (task 1.1):
+- **`crafting-your-repository/configuring-tasks.mdx`, "Depending on tasks in dependencies with
+  `^`":** `^build` runs `build` in a package's direct dependencies first.
+- **`core-concepts/package-and-task-graph.mdx`:** those dependencies come from the package
+  manager's workspace graph, the `workspace:*` entries.
+
+New and renamed packages are therefore ordered by declaring them as dependencies, with no
+change to `turbo.json`. The docs also offer `turbo boundaries`, which can enforce import rules
+between packages with tags, but it is marked experimental. Decision 5's small test is kept
+instead.
 
 ### 7. The rename
 

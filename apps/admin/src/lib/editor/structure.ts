@@ -1,4 +1,4 @@
-import { isCollectionBlockType } from "@static-cms/site";
+import { isCollectionBlockType } from "@webmio/site";
 import type { DocumentPath, Session } from "svedit";
 import {
   addItem,

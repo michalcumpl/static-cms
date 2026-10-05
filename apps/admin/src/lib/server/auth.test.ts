@@ -44,7 +44,7 @@ describe("magic-link sign-in", () => {
     const { db, userId, sent, mailer } = setup();
     db.update(users).set({ uiLanguage: "cs" }).where(eq(users.id, userId)).run();
     await requestSignIn(db, mailer, signInLimiter(), request("jana@example.cz"));
-    expect(sent[0]?.subject).toBe("Přihlášení do Static CMS");
+    expect(sent[0]?.subject).toBe("Přihlášení do Webmia");
     expect(sent[0]?.text).toMatch(/^Pro přihlášení otevřete tento odkaz \(platí 15 minut\):/);
     expect(sent[0]?.text).not.toContain("To sign in");
   });
@@ -55,7 +55,7 @@ describe("magic-link sign-in", () => {
       ...request("jana@example.cz"),
       locale: "cs",
     });
-    expect(sent[0]?.subject).toBe("Přihlášení do Static CMS");
+    expect(sent[0]?.subject).toBe("Přihlášení do Webmia");
   });
 
   it("emails a link to an existing account that signs in once", async () => {

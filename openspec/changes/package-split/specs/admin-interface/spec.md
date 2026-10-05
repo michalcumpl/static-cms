@@ -24,4 +24,4 @@ The editor SHALL show the same bar in a compact height above its toolbar. Pages 
 
 #### Scenario: Product name
 - **WHEN** a signed-in person opens the project list in Czech
-- **THEN** the top bar shows "Webmio", and the page title is "Webmio, vaše projekty"
+- **THEN** the top bar's mark is the link "Webmio, vaše projekty", and the page title is "Projekty – Webmio"

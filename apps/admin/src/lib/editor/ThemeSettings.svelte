@@ -9,7 +9,7 @@ import {
   MIN_CONTRAST,
   THEME_PRESETS,
   type ThemeColor,
-} from "@static-cms/site";
+} from "@webmio/site";
 import { getI18n, type Messages } from "$lib/i18n";
 import ImageSetting from "./ImageSetting.svelte";
 import { themeFieldElementId } from "./locate";

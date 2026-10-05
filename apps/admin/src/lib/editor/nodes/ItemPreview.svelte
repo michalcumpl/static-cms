@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { CollectionName } from "@static-cms/site";
+import type { CollectionName } from "@webmio/site";
 import type { SveditContext } from "svedit";
 import { getContext } from "svelte";
 import { getEditor } from "../state.svelte";

@@ -1,4 +1,4 @@
-import { siteSchema } from "@static-cms/site";
+import { siteSchema } from "@webmio/site";
 import type { DocumentSchema } from "svedit";
 
 /**

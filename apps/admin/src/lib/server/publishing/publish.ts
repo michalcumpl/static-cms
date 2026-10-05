@@ -1,4 +1,4 @@
-import { exportSiteLanguages, type Problem, usedMediaFiles } from "@static-cms/site";
+import { exportSiteLanguages, type Problem, usedMediaFiles } from "@webmio/site";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { type Locale, type Said, said, sayIn } from "$lib/i18n";
 import type { Db } from "../db/index";

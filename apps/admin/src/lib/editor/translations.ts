@@ -1,4 +1,4 @@
-import type { TranslationPage } from "@static-cms/site";
+import type { TranslationPage } from "@webmio/site";
 import type { Document, Session } from "svedit";
 
 // Pairing pages across languages (language-tools design.md decision 2): only the document of the

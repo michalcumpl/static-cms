@@ -5,7 +5,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 // One data folder per run, shared by the dev server, the global setup and the test workers
 // (workers load this config again, so the path travels in an environment variable).
-process.env.E2E_DATA_DIR ??= mkdtempSync(join(tmpdir(), "static-cms-e2e-"));
+process.env.E2E_DATA_DIR ??= mkdtempSync(join(tmpdir(), "webmio-e2e-"));
 const dataDir = process.env.E2E_DATA_DIR;
 const port = 5198;
 /** The fake Netlify API the dev server publishes to (src/lib/server/publishing/fake-netlify.ts). */

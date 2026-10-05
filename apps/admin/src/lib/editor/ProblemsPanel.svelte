@@ -1,5 +1,5 @@
 <script lang="ts">
-import { type Problem, validateSite } from "@static-cms/site";
+import { type Problem, validateSite } from "@webmio/site";
 import { tick, untrack } from "svelte";
 import { goto } from "$app/navigation";
 import { getI18n } from "$lib/i18n";

@@ -1,12 +1,13 @@
 // Serving a project's site from an export, as the preview and version previews do
 // (version-history design.md decision 2).
+
+import { error } from "@sveltejs/kit";
 import {
   exportSiteLanguages,
   type LanguageDocument,
   type Problem,
   usedMediaFiles,
-} from "@static-cms/site";
-import { error } from "@sveltejs/kit";
+} from "@webmio/site";
 import { contentType } from "$lib/content-type";
 import { siteFonts } from "./fonts";
 import { mediaFiles } from "./media";

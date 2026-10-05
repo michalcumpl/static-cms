@@ -1,6 +1,6 @@
 // A language's saved versions (version-history design.md decision 1): listing them with their
 // marks, reading one for its preview, and restoring one as a new version.
-import { applySharedFields, migrateSite, type Problem } from "@static-cms/site";
+import { applySharedFields, migrateSite, type Problem } from "@webmio/site";
 import { and, desc, eq, inArray, lt, or, sql } from "drizzle-orm";
 import type { Db } from "./db/index";
 import {

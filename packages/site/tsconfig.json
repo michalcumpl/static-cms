@@ -1,5 +1,5 @@
 {
-  "extends": "@static-cms/tsconfig/library.json",
+  "extends": "@webmio/tsconfig/library.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",

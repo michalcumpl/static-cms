@@ -1,4 +1,4 @@
-import { siteStrings } from "@static-cms/site";
+import { siteStrings } from "@webmio/site";
 import type { Transaction } from "svedit";
 import { checkLinkAddress, type LinkAddressCheck } from "./links";
 

@@ -311,7 +311,7 @@ importers:
       '@fontsource-variable/work-sans':
         specifier: 'catalog:'
         version: 5.3.0
-      '@static-cms/site':
+      '@webmio/site':
         specifier: workspace:*
         version: link:../../packages/site
       better-sqlite3:
@@ -339,9 +339,6 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
-      '@static-cms/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
       '@sveltejs/adapter-node':
         specifier: 'catalog:'
         version: 5.5.7(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.57.1)(vite@8.3.1(@types/node@22.20.4)(esbuild@0.28.2)(tsx@4.23.15)))(svelte@5.57.1)(typescript@6.0.3)(vite@8.3.1(@types/node@22.20.4)(esbuild@0.28.2)(tsx@4.23.15)))
@@ -360,6 +357,9 @@ importers:
       '@types/nodemailer':
         specifier: 'catalog:'
         version: 8.0.2
+      '@webmio/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
       drizzle-kit:
         specifier: 'catalog:'
         version: 0.31.11
@@ -385,12 +385,12 @@ importers:
         specifier: 'catalog:'
         version: 0.8.3
     devDependencies:
-      '@static-cms/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.4
+      '@webmio/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
       html-validate:
         specifier: 'catalog:'
         version: 9.7.1(vitest@5.0.2(@types/node@22.20.4)(vite@8.3.1(@types/node@22.20.4)(esbuild@0.28.2)(tsx@4.23.15)))

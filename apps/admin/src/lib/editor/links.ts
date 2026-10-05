@@ -1,4 +1,4 @@
-import { isSafeHref } from "@static-cms/site";
+import { isSafeHref } from "@webmio/site";
 
 /** Why an address was refused; components say it with `editor.links.<reason>`. */
 export type LinkProblem = "empty" | "notAllowed" | "noLabel";

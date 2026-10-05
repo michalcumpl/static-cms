@@ -8,7 +8,7 @@ import { parse } from "svelte/compiler";
 const WATCHED_ATTRIBUTES = new Set(["aria-label", "title", "placeholder", "alt", "label"]);
 
 /** Text that is the same in every language. */
-const ALLOWED = new Set(["Static CMS", "CS", "EN", "B", "I", "Aa"]);
+const ALLOWED = new Set(["Webmio", "CS", "EN", "B", "I", "Aa"]);
 
 const WORDS = /\p{L}{2,}/u;
 

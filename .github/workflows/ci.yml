@@ -18,5 +18,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm turbo run typecheck test build
-      - run: pnpm --filter @static-cms/admin exec playwright install --with-deps chromium
-      - run: pnpm --filter @static-cms/admin test:e2e
+      - run: pnpm --filter @webmio/admin exec playwright install --with-deps chromium
+      - run: pnpm --filter @webmio/admin test:e2e

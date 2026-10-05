@@ -152,7 +152,7 @@ describe("/p/[project]/preview/[...path]", () => {
     const { db, projectId } = project();
     const require = createRequire(import.meta.url);
     const v1 = JSON.parse(
-      readFileSync(require.resolve("@static-cms/site/fixtures/demo-site-v1.json"), "utf8"),
+      readFileSync(require.resolve("@webmio/site/fixtures/demo-site-v1.json"), "utf8"),
     );
     const current = db
       .select({ versionId: siteDocuments.currentVersionId })

@@ -1,5 +1,5 @@
 {
-  "name": "@static-cms/site",
+  "name": "@webmio/site",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -26,7 +26,7 @@
     "fflate": "catalog:"
   },
   "devDependencies": {
-    "@static-cms/tsconfig": "workspace:*",
+    "@webmio/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "html-validate": "catalog:",
     "typescript": "catalog:",

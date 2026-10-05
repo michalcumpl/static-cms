@@ -1,5 +1,5 @@
-import { usedMediaFiles } from "@static-cms/site";
 import { json } from "@sveltejs/kit";
+import { usedMediaFiles } from "@webmio/site";
 import { notFound, requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { siteFontNames } from "$lib/server/fonts";

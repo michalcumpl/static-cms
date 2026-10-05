@@ -1,5 +1,5 @@
 <script lang="ts">
-import { contactDetails } from "@static-cms/site";
+import { contactDetails } from "@webmio/site";
 import { type DocumentPath, Node, type SveditContext, TextProperty } from "svedit";
 import { getContext } from "svelte";
 import { getI18n } from "$lib/i18n";

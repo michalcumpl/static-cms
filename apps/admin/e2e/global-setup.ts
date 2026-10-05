@@ -39,7 +39,7 @@ export default async function globalSetup(): Promise<void> {
 
   const media = join(process.env.MEDIA_DIR ?? "", projectId);
   mkdirSync(media, { recursive: true });
-  const fixtures = dirname(require.resolve("@static-cms/site/fixtures/demo-site.json"));
+  const fixtures = dirname(require.resolve("@webmio/site/fixtures/demo-site.json"));
   copyFileSync(join(fixtures, "media", "hero.png"), join(media, "hero.png"));
   // As the server does at startup for files from before the library.
   await registerLegacyMedia(db, projectId);

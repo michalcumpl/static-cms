@@ -49,12 +49,12 @@ describe("SMTP mailer", () => {
       return info;
     }) as typeof transport.sendMail;
 
-    await transportMailer(transport, "Static CMS <web@example.cz>").send(message);
+    await transportMailer(transport, "Webmio <web@example.cz>").send(message);
     expect(sent[0]).toMatchObject({
       subject: "Přihlášení",
       text: message.text,
       to: [{ address: "jana@example.cz" }],
-      from: { address: "web@example.cz", name: "Static CMS" },
+      from: { address: "web@example.cz", name: "Webmio" },
     });
   });
 

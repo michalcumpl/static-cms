@@ -8,7 +8,7 @@ const bar = (page: Page) => page.locator("header.app-bar");
 
 test("the top bar shows the mark and the account, which holds the language", async ({ page }) => {
   await page.goto("/");
-  await expect(bar(page).getByRole("link", { name: "Static CMS, your projects" })).toBeVisible();
+  await expect(bar(page).getByRole("link", { name: "Webmio, your projects" })).toBeVisible();
   // Two controls only: no language buttons of their own.
   await expect(bar(page).getByRole("button")).toHaveCount(1);
   await page.waitForLoadState("networkidle");
@@ -29,6 +29,24 @@ test("the top bar shows the mark and the account, which holds the language", asy
     "cursor",
     "pointer",
   );
+});
+
+test("Product name", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  await bar(page).getByRole("button", { name: "Account: jana@example.cz" }).click();
+  await page.getByRole("menuitemradio", { name: "Čeština" }).click();
+  try {
+    await expect(bar(page).getByRole("link", { name: "Webmio, vaše projekty" })).toBeVisible();
+    await expect(page).toHaveTitle("Projekty – Webmio");
+  } finally {
+    // The language is stored on the account; later tests expect English.
+    await bar(page)
+      .getByRole("button", { name: /^Účet: / })
+      .click();
+    await page.getByRole("menuitemradio", { name: "English" }).click();
+    await expect(bar(page).getByRole("link", { name: "Webmio, your projects" })).toBeVisible();
+  }
 });
 
 test("switch workspace from the top bar", async ({ page }) => {
@@ -111,8 +129,8 @@ test("buttons show a focus ring and are large enough for fingers on touch screen
 test("a focused control shows the focus ring", async ({ page }) => {
   await page.goto("/");
   await page.keyboard.press("Tab");
-  await expect(bar(page).getByRole("link", { name: "Static CMS, your projects" })).toBeFocused();
-  await expect(bar(page).getByRole("link", { name: "Static CMS, your projects" })).toHaveCSS(
+  await expect(bar(page).getByRole("link", { name: "Webmio, your projects" })).toBeFocused();
+  await expect(bar(page).getByRole("link", { name: "Webmio, your projects" })).toHaveCSS(
     "outline-style",
     "solid",
   );

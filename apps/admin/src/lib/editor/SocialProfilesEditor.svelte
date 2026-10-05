@@ -1,5 +1,5 @@
 <script lang="ts">
-import { socialKind } from "@static-cms/site";
+import { socialKind } from "@webmio/site";
 import { getI18n } from "$lib/i18n";
 import {
   addSocialProfile,
