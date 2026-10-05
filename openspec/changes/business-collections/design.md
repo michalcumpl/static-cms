@@ -81,11 +81,26 @@ between items call new transforms instead of Svedit's array operations on the bl
 - **Deleting an item** removes the node from the collection and every `item_ref` pointing at it,
   across all pages of the document, in one Svedit transaction (one undo step).
 
-**Spike first (task 1):** Svedit selection and caret movement through a `Node` whose path lies
-outside the page's block tree. If the caret can't move through it reliably, the fallback is to
-render the items read-only on the canvas, with a small item panel (fields for the selected item)
-in the settings column. The specs hold either way: texts are "editable in place" only in the
-first approach, so a fallback would revise that one sentence in "Items in collection blocks".
+**Spike result (task 1.1, 2026-10-05): the approach works.** An end-to-end test on the demo
+home page compared the unchanged editor with two variants: the whole collection mounted with
+`NodeArrayProperty` at `[site, "services"]` (the `all` mode), and items mounted one by one with
+`Node` at `[site, "services", i]` (the `chosen` mode). Results:
+- **Typing, marks and undo:** identical to the unchanged editor in both variants.
+- **Arrow keys:** in the `all` variant, identical to today, gap carets included. In the `chosen`
+  variant the caret moves from field to field with no gap carets between items. That's fine,
+  because adding there goes through the handle menu and picker.
+- **Escape:** the first Escape selects the item. Svedit's select-parent only works for paths
+  longer than three segments and goes up the document path, so the second Escape stopped at the
+  item. `SafeSelectParentCommand` therefore handles a node selection in a site collection:
+  `is_enabled` is true, and it selects the block that renders the item. It finds the block from
+  the DOM, as the closest node element above the item, and reads its `data-path`.
+- **No console errors.**
+
+**Svedit's "one path = one DOM mount" rule.** One item path can be mounted once per canvas. The
+editor shows one page at a time, so this only matters when two blocks on the same page show the
+same item. The first block (in page order) mounts it editable. Later blocks render it read-only
+with the same markup as the published site, outside Svedit, and selecting it moves the caret to
+the editable copy.
 
 ### 5. Language sharing: structure and images from the primary, texts per language
 

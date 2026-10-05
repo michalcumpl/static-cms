@@ -5,7 +5,7 @@ check and the untranslated-text test enforce this.
 
 ## 1. Spike: editing collection items from a block
 
-- [ ] 1.1 Prove decision 4 first. On a throwaway branch, give the demo site a `services` node
+- [x] 1.1 Prove decision 4 first. On a throwaway branch, give the demo site a `services` node
   array on the site node and make `Services.svelte` render its items with `Node` at
   `[site, "services", i]`. Then, in the browser, check four things:
   - typing in a service's name and description;
@@ -92,11 +92,13 @@ check and the untranslated-text test enforce this.
   - in `chosen` mode: move, "Remove from this block", and the add picker (existing items and
     "New item");
   - deleting an item removes its refs everywhere, in one undo step;
-  - toolbar names such as "Question 2 of 5".
+  - toolbar names such as "Question 2 of 5";
+  - Escape from an item selects the block showing it (spike result in decision 4);
+  - an item shown twice on one page is editable in the first block, a preview in later ones.
 
   Verify with `structure.test.ts`/`handles.svelte.test.ts` units and e2e tests "Edit a
   highlighted service", "Remove a highlight", "Add an existing service to the highlights",
-  "Delete a shown service" and "Add a question".
+  "Delete a shown service", "Same service twice on one page" and "Add a question".
 - [ ] 7.3 Add the "All … / Chosen …" switch to the block panel. Verify with the e2e test "Switch
   to chosen" and a unit test that the switch is one undo step and doesn't change the rendered
   items.

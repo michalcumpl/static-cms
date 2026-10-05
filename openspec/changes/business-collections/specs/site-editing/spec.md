@@ -17,6 +17,8 @@ In a block showing **chosen** items:
 
 Deleting an item from a block showing all items SHALL delete it from the collection and remove it from every block that chose it, as one undoable step. When other pages show the item, the handle menu's Delete entry SHALL say on how many other pages it is shown ("Also shown on 2 other pages").
 
+When two blocks on the same page show the same item, the first block SHALL show it editable and later blocks SHALL show it as a preview. Clicking the preview SHALL put the caret in the editable copy.
+
 Every action SHALL be one undoable step. Items in a FAQ block SHALL be named "Question 2 of 5" in the toolbar, and items of the other collection blocks as today ("Service 2 of 3").
 
 #### Scenario: Edit a highlighted service
@@ -34,6 +36,10 @@ Every action SHALL be one undoable step. Items in a FAQ block SHALL be named "Qu
 #### Scenario: Delete a shown service
 - **WHEN** the owner deletes "Rohlíky" from the "Služby" page's block showing all services, and the home page's block chose it
 - **THEN** "Rohlíky" is gone from the collection and from both pages, and one undo brings it back in both places
+
+#### Scenario: Same service twice on one page
+- **WHEN** the home page has a chosen services block with "Chléb" and, further down, a block showing all services
+- **THEN** "Chléb" is editable in the first block and shown as a preview in the second, and clicking the preview puts the caret in the first block's "Chléb"
 
 #### Scenario: Add a question
 - **WHEN** the owner adds an item after the last question of an FAQ block showing all questions
