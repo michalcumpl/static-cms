@@ -13,7 +13,7 @@ import {
   imageVariants,
   shareFile,
   slugify,
-} from "@webmio/site";
+} from "@webmio/model";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import sharp, { type Metadata } from "sharp";
 import { type Said, said } from "$lib/i18n";

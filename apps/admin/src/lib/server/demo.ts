@@ -2,11 +2,11 @@ import { readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
-// Fixtures of @webmio/site, resolved through the package's `./fixtures/*` export.
+// Fixtures of @webmio/model, resolved through the package's `./fixtures/*` export.
 const require = createRequire(import.meta.url);
-const demoFile = require.resolve("@webmio/site/fixtures/demo-site.json");
-const starterFile = require.resolve("@webmio/site/fixtures/starter-site.json");
-const imageBlocksFile = require.resolve("@webmio/site/fixtures/image-blocks-site.json");
+const demoFile = require.resolve("@webmio/model/fixtures/demo-site.json");
+const starterFile = require.resolve("@webmio/model/fixtures/starter-site.json");
+const imageBlocksFile = require.resolve("@webmio/model/fixtures/image-blocks-site.json");
 const demoMediaDir = join(dirname(demoFile), "media");
 
 /** The demo site document (tests, and the images of an imported Milestone 2 working copy). */

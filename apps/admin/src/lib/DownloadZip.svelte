@@ -1,5 +1,5 @@
 <script lang="ts">
-import { exportSiteLanguages, type LanguageDocument, zipFiles } from "@webmio/site";
+import { exportSiteLanguages, type LanguageDocument, zipFiles } from "@webmio/export";
 import { getI18n } from "$lib/i18n";
 import { fontPath, type ProjectPaths } from "$lib/project-paths";
 import Button from "$lib/ui/Button.svelte";

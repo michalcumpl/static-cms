@@ -1,4 +1,4 @@
-import { validateSite } from "@webmio/site";
+import { validateSite } from "@webmio/model";
 import type { Session } from "svedit";
 import { describe, expect, it } from "vitest";
 import { projectPaths } from "$lib/project-paths";

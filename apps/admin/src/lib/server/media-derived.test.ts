@@ -89,7 +89,7 @@ describe("share files", () => {
 
   it("is made from the largest variant of an image used before the library", async () => {
     const require = createRequire(import.meta.url);
-    const variant = require.resolve("@webmio/site/fixtures/media/hero.png-320.webp");
+    const variant = require.resolve("@webmio/model/fixtures/media/hero.png-320.webp");
     mkdirSync(join(root, projectId), { recursive: true });
     copyFileSync(variant, join(root, projectId, "hero.png-320.webp"));
     const share = await derivedFile(projectId, "hero.png-share.jpg", root);

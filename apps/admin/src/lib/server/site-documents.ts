@@ -2,15 +2,14 @@ import { randomUUID } from "node:crypto";
 import {
   applySharedFields,
   copyPageInto,
-  isLanguageCode,
-  languageName,
   migrateSite,
   type Problem,
   type TranslationPage,
   translationStatus,
   translationSummary,
   validateSite,
-} from "@webmio/site";
+} from "@webmio/model";
+import { isLanguageCode, languageName } from "@webmio/render";
 import { and, eq, sql } from "drizzle-orm";
 import { type Said, said } from "$lib/i18n";
 import type { Db } from "./db/index";

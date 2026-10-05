@@ -1,4 +1,5 @@
-import { isFontId, siteCss, THEME_PRESETS } from "@webmio/site";
+import { isFontId, THEME_PRESETS } from "@webmio/model";
+import { siteCss } from "@webmio/render";
 
 type Theme = Parameters<typeof siteCss>[0];
 type ThemeField = Exclude<keyof Theme, "id" | "type">;

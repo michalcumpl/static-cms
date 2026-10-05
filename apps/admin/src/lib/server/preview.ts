@@ -2,12 +2,8 @@
 // (version-history design.md decision 2).
 
 import { error } from "@sveltejs/kit";
-import {
-  exportSiteLanguages,
-  type LanguageDocument,
-  type Problem,
-  usedMediaFiles,
-} from "@webmio/site";
+import { exportSiteLanguages, type LanguageDocument } from "@webmio/export";
+import { type Problem, usedMediaFiles } from "@webmio/model";
 import { contentType } from "$lib/content-type";
 import { siteFonts } from "./fonts";
 import { mediaFiles } from "./media";

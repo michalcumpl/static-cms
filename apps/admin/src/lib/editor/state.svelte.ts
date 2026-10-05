@@ -1,4 +1,4 @@
-import type { Problem } from "@webmio/site";
+import type { Problem } from "@webmio/model";
 import { type Document, type DocumentPath, Session } from "svedit";
 import { getContext, onDestroy, setContext } from "svelte";
 import type { ProjectPaths } from "../project-paths";

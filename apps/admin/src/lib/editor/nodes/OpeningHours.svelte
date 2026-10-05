@@ -1,5 +1,5 @@
 <script lang="ts">
-import { openingHoursTable } from "@webmio/site";
+import { openingHoursTable } from "@webmio/render";
 import { type DocumentPath, Node, type SveditContext, TextProperty } from "svedit";
 import { getContext } from "svelte";
 import { getI18n } from "$lib/i18n";

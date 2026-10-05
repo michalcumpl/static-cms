@@ -1,4 +1,5 @@
-import { migrateSite, type Redirect } from "@webmio/site";
+import type { Redirect } from "@webmio/export";
+import { migrateSite } from "@webmio/model";
 import { and, asc, eq } from "drizzle-orm";
 import type { Db } from "../db/index";
 import { publishDocuments, publishes, versions } from "../db/schema";

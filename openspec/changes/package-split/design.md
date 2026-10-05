@@ -61,10 +61,14 @@ history follows them, and `packages/site` is deleted once empty.
 
 Each package's `index.ts` exports what `packages/site/src/index.ts` exports from its files today.
 On top of that:
-- **model** exports `isValidBaseUrl`, `problem` and `graphemes`;
+- **model** exports `isValidBaseUrl`, `problem`, `graphemes`, and the font catalogue's `fontFile` and
+  `UNICODE_RANGES`, and `isDerivedImageProperty` (found while moving the files);
 - **render** exports `escapeHtml` and `RenderContext`.
 
-These are marked in a comment as exports for sibling packages.
+These are marked in a comment as exports for sibling packages. Checked after the move (task 6.2): together the
+three packages export every name `@static-cms/site` exported, plus exactly these eight
+(`RenderContext`, `UNICODE_RANGES`, `escapeHtml`, `fontFile`, `graphemes`,
+`isDerivedImageProperty`, `isValidBaseUrl`, `problem`).
 
 *Alternative:* an `internal` subpath per package. That's more configuration for five names, and
 nothing outside the monorepo consumes these packages.
@@ -75,7 +79,9 @@ Each `@static-cms/site` import is rewritten to the package that exports each nam
 are split into one import per package. A script does it from the three packages' export lists,
 so no name is assigned by hand, and the type check confirms every name resolves. The browser
 editor then imports only `@webmio/model` and `@webmio/render`. A check on the admin's client
-build confirms that `fflate` isn't in any client chunk.
+build confirms that `fflate` is only in the Publishing tab's chunk, which builds the ZIP
+download in the browser, and not in the editor's (verified in task 7.1: route
+`(tabs)/publishing` only).
 
 *Alternative (the plan before the rename was folded in):* keep `@static-cms/site` as a facade
 until the rename. Doing both in one change touches the admin's imports once instead of twice.

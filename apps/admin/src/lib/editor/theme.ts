@@ -1,4 +1,4 @@
-import { isFontId, PRESET_PROPERTIES, type ThemePreset } from "@webmio/site";
+import { isFontId, PRESET_PROPERTIES, type ThemePreset } from "@webmio/model";
 import type { Document, Session } from "svedit";
 import { changeSlotImage, siteSettings, slotImage } from "./site";
 import type { ChosenImage } from "./transforms";

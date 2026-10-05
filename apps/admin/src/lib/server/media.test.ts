@@ -270,7 +270,7 @@ describe("mediaFile", () => {
 describe("media from before the library", () => {
   function placeDemoHero() {
     const require = createRequire(import.meta.url);
-    const demoHero = require.resolve("@webmio/site/fixtures/media/hero.png");
+    const demoHero = require.resolve("@webmio/model/fixtures/media/hero.png");
     mkdirSync(join(root, projectId), { recursive: true });
     copyFileSync(demoHero, join(root, projectId, "hero.png"));
   }

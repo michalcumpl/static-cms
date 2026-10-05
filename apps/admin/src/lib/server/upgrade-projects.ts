@@ -3,7 +3,7 @@
 // whole project can do: items that exist only in a non-primary language move into the primary,
 // because which items exist is now shared from the primary.
 import { randomUUID } from "node:crypto";
-import { COLLECTION_BLOCK_TYPES, COLLECTIONS, migrateSite, validateSite } from "@webmio/site";
+import { COLLECTION_BLOCK_TYPES, COLLECTIONS, migrateSite, validateSite } from "@webmio/model";
 import { eq } from "drizzle-orm";
 import type { Db } from "./db/index";
 import { projects, siteDocuments, versions } from "./db/schema";

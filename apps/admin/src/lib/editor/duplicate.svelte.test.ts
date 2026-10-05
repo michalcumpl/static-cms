@@ -1,4 +1,4 @@
-import { validateSite } from "@webmio/site";
+import { validateSite } from "@webmio/model";
 import { describe, expect, it } from "vitest";
 import { projectPaths } from "$lib/project-paths";
 import { demoSite, imageBlocksSite } from "$lib/server/demo";

@@ -1,4 +1,4 @@
-import { siteStrings } from "@webmio/site";
+import { siteStrings } from "@webmio/render";
 import type { Transaction } from "svedit";
 import { checkLinkAddress, type LinkAddressCheck } from "./links";
 

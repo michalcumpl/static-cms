@@ -35,7 +35,7 @@ export interface TestEvent {
 
 const require = createRequire(import.meta.url);
 const demoMediaDir = join(
-  dirname(require.resolve("@webmio/site/fixtures/demo-site.json")),
+  dirname(require.resolve("@webmio/model/fixtures/demo-site.json")),
   "media",
 );
 

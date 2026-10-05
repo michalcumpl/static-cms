@@ -18,7 +18,7 @@ frozen.
 
 - **One document per site.** The whole site is one Svedit-compatible JSON document. The
   editor edits it directly (no second model), and every save is a snapshot of it.
-- **Renderer separate from the editor.** `@static-cms/site` turns the document into HTML without
+- **Renderer separate from the editor.** `@webmio/render` (then `@static-cms/site`) turns the document into HTML without
   Svelte or Svedit, in Node and in the browser.
 - **Business blocks, not layout primitives:** "Services", not rows, columns and spacers.
 - **Accessibility and standards are enforced** by validation and checked with `html-validate`.
@@ -194,7 +194,7 @@ upload are all out of M2 on purpose. All of them are done.
     Polish characters (Inter, Work Sans, Source Sans 3, Nunito, Lora, Source Serif 4,
     Merriweather, Playfair Display) and two system fonts. Published sites ship the WOFF2 files and
     licences under `assets/fonts/`; nothing loads from Google. The files come from pinned
-    `@fontsource-variable/*` packages; `@static-cms/site` only knows the catalog. Document format 6
+    `@fontsource-variable/*` packages; the model package only knows the catalog. Document format 6
     stores catalog IDs instead of CSS font lists.
   - **Logo in the header** (WebP variants, at most 3rem tall), with the name next to it or alone;
     alone, the site name of each language describes it. It is the organisation's logo in the
@@ -287,8 +287,8 @@ beta.
 | # | Milestone | OpenSpec change | What | Status |
 | --- | --- | --- | --- | --- |
 | 1 | A | [`business-collections`](../openspec/changes/archive/2026-10-05-business-collections/) | services, team, testimonials and FAQs held once per site; blocks show all or chosen items; social profiles; format 7 | done |
-| 2 | A | [`package-split`](../openspec/changes/package-split/) | `@static-cms/site` split into `@webmio/model`, `@webmio/render` and `@webmio/export`, and everything renamed to Webmio (packages, product name in the admin, docs) | planned |
-| 3 | A | `business-locations` | several locations, each with address, hours and contact | |
+| 2 | A | [`package-split`](../openspec/changes/package-split/) | `@static-cms/site` split into `@webmio/model`, `@webmio/render` and `@webmio/export`, and everything renamed to Webmio (packages, product name in the admin, docs) | done |
+| 3 | A | `business-locations` | several locations, each with address, hours and contact | next |
 | 4 | B | `control-panel` | the website home: Business, What you offer, About you, Website, Publish; forms per item | |
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
@@ -320,10 +320,12 @@ beta.
     keyboard Backspace on a selected item deletes it like the handle menu does.
 - **Blocks become views:** a services, team, testimonials or FAQ block shows the whole
   collection, or chosen items in its own order (home page highlights).
-- **Package split and rename** (`package-split`): `@webmio/model` (schema, validation,
-  migrations), `@webmio/render` and `@webmio/export`; templates get their package with
-  `template-system`. Everything is renamed to Webmio in the same change: packages, the admin's
-  product name, docs.
+- **Rename and package split: done** ([`package-split`](../openspec/changes/package-split/)). First
+  everything was renamed to Webmio (`@webmio/*` packages, the admin's product name and emails,
+  Czech "do Webmia", "ve Webmiu"), then `@webmio/site` was split into `@webmio/model` (schema,
+  validation, upgrades, fixtures), `@webmio/render` and `@webmio/export`, with one-way imports
+  checked by a test. The editor no longer loads the export code. Templates get their package with
+  `template-system`.
 - **Several locations** (`business-locations`), each with its address, hours and contact.
 
 ### B. Business control panel

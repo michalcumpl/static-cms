@@ -1,4 +1,4 @@
-import type { Problem } from "@webmio/site";
+import type { Problem } from "@webmio/model";
 import type { ProjectPaths } from "./project-paths";
 
 // The browser side of publishing: start a publish, follow it until it finishes, and keep the

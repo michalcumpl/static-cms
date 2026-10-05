@@ -1,5 +1,6 @@
 <script lang="ts">
-import { contactDetails, openingHoursTable, socialKind } from "@webmio/site";
+import { socialKind } from "@webmio/model";
+import { contactDetails, openingHoursTable } from "@webmio/render";
 import { type DocumentPath, Node, type SveditContext } from "svedit";
 import { getContext } from "svelte";
 import { getEditor } from "../state.svelte";

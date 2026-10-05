@@ -32,11 +32,10 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
   already (format 6). Add: a template version per site; a template declares which document
   formats and collections it supports; template releases are tested against all fixture sites.
   Themes stay part of the document (brand), not versioned separately.
-- [ ] **Split the site package: yes, now.** Collections and templates are the natural seams.
-  Proposed: `@webmio/model` (schema, types, validation, migrations), `@webmio/render` (HTML,
-  CSS, metadata, structured data), `@webmio/templates` (one folder per template, maybe one
-  package each later), `@webmio/export` (file tree, ZIP, robots, icons). The pure-TypeScript,
-  no-filesystem rule stays for all of them.
+- [x] **Split the site package** (`package-split`): `@webmio/model` (schema, types, validation,
+  upgrades), `@webmio/render` (HTML, CSS, metadata, structured data) and `@webmio/export` (file
+  tree, ZIP, robots, icons), pure TypeScript without filesystem access. `@webmio/templates`
+  comes with `template-system`.
 - [x] **Business data as collections** (`business-collections`): services, team, testimonials
   and FAQs held once per site, social profiles, document format 7.
 - [ ] **Several locations** (`business-locations`), each with address, hours and contact.

@@ -2,15 +2,15 @@
 
 The Webmio admin app: SvelteKit (Svelte 5) with `adapter-node`, so the UI and the server routes
 ship as one Node app. People sign in with an emailed link and edit the websites (projects) of the
-workspaces they belong to. Sites are stored in SQLite, previewed, and exported with
-`@webmio/site`.
+workspaces they belong to. Sites are stored in SQLite, validated with `@webmio/model`, previewed
+with `@webmio/render`, and exported with `@webmio/export`.
 
 ## First run (development)
 
 ```sh
 pnpm install
 pnpm --filter @webmio/admin admin create-user you@example.com "My studio"
-pnpm dev             # from the repo root: builds @webmio/site, then starts vite dev
+pnpm dev             # from the repo root: builds the @webmio packages, then starts vite dev
 ```
 
 `create-user` prints a sign-in link. Open it (the default link targets http://localhost:5173) and
@@ -202,7 +202,7 @@ ORIGIN=https://admin.example.cz BODY_SIZE_LIMIT=25M SMTP_URL=… MAIL_FROM=… n
   one: the sitemap, page addresses in link previews, share images and structured data.
 - **AI crawlers:** the Site settings' switches *AI search and answers* and *AI training* add
   `Disallow` groups for those crawlers to `robots.txt` (the lists are in
-  `packages/site/src/export/robots.ts`, checked against the vendors' documentation on
+  `packages/export/src/robots.ts`, checked against the vendors' documentation on
   2026-09-30). `robots.txt` is a request, not a lock: well-known crawlers follow it, but some
   fetchers acting on a user's request say they may not (ChatGPT-User, Perplexity-User,
   Meta-ExternalFetcher), and nothing stops a crawler that ignores it. Search engines and

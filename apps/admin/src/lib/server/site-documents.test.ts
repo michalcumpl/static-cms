@@ -29,7 +29,7 @@ const require = createRequire(import.meta.url);
 
 /** The demo site in the version-1 format (home first, with an empty slug). */
 function demoSiteV1(): Doc {
-  const file = require.resolve("@webmio/site/fixtures/demo-site-v1.json");
+  const file = require.resolve("@webmio/model/fixtures/demo-site-v1.json");
   return JSON.parse(readFileSync(file, "utf8"));
 }
 
@@ -230,7 +230,7 @@ describe("upgrading stored documents", () => {
     const db = openDatabase(":memory:");
     const { workspaceId } = setup(db);
     const v2 = JSON.parse(
-      readFileSync(require.resolve("@webmio/site/fixtures/demo-site-v2.json"), "utf8"),
+      readFileSync(require.resolve("@webmio/model/fixtures/demo-site-v2.json"), "utf8"),
     ) as Doc;
     const projectId = createProject(db, workspaceId, "Stará pekárna", v2);
     const site = readSite(db, projectId);

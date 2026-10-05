@@ -4,12 +4,12 @@ import {
   contrastRatio,
   FONT_IDS,
   FONTS,
-  fontPreviewCss,
   fontStack,
   MIN_CONTRAST,
   THEME_PRESETS,
   type ThemeColor,
-} from "@webmio/site";
+} from "@webmio/model";
+import { fontPreviewCss } from "@webmio/render";
 import { getI18n, type Messages } from "$lib/i18n";
 import ImageSetting from "./ImageSetting.svelte";
 import { themeFieldElementId } from "./locate";

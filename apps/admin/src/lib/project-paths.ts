@@ -1,4 +1,4 @@
-import { imageFile, imageVariants, srcVariant } from "@webmio/site";
+import { imageFile, imageVariants, srcVariant } from "@webmio/model";
 
 /** A file of the site fonts, the same for every project (`GET /fonts/[name]`). */
 export const fontPath = (name: string) => `/fonts/${encodeURIComponent(name)}`;

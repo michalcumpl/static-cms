@@ -41,47 +41,48 @@ then the split. Code moves without behaviour change; the only visible change is 
 
 ## 3. Step 2: `@webmio/model`
 
-- [ ] 3.1 Create `packages/model` (package.json, tsconfigs, README) and `git mv` the model files
+- [x] 3.1 Create `packages/model` (package.json, tsconfigs, README) and `git mv` the model files
   and `fixtures/` into it (decision 1). Add the sibling exports `isValidBaseUrl`, `problem` and
   `graphemes` (decision 2). Verify with `pnpm --filter @webmio/model typecheck build`.
-- [ ] 3.2 Move the test helpers to `src/testing.ts`, exported as `@webmio/model/testing`
+- [x] 3.2 Move the test helpers to `src/testing.ts`, exported as `@webmio/model/testing`
   (decision 4), and update the model's tests to it. Verify that the model's tests pass,
   unchanged apart from import paths.
 
 ## 4. Step 2: `@webmio/render`
 
-- [ ] 4.1 Create `packages/render` and `git mv` `render/` (with `__snapshots__/`) into it.
+- [x] 4.1 Create `packages/render` and `git mv` `render/` (with `__snapshots__/`) into it.
   Replace relative model imports with `@webmio/model`, and export `escapeHtml` and
   `RenderContext` (decision 2). Verify with `vitest run --ci`: all render tests pass, and no
   snapshot is written.
 
 ## 5. Step 2: `@webmio/export`
 
-- [ ] 5.1 Create `packages/export` and `git mv` `export/` into it, with `fflate` and
+- [x] 5.1 Create `packages/export` and `git mv` `export/` into it, with `fflate` and
   `scripts/build-demo.ts`. Replace relative imports with the model and render packages, and
   point the root `build-demo` script at `@webmio/export`. Verify that its tests pass and
   `pnpm build-demo` runs.
 
 ## 6. Step 2: boundaries and the admin's imports
 
-- [ ] 6.1 Add the boundary tests: one-way imports, and no `node:*` reachable from the main
+- [x] 6.1 Add the boundary tests: one-way imports, and no `node:*` reachable from the main
   entries (decisions 4 and 5). Verify that they pass, and that they fail when a forbidden import
   is added by hand (then remove it).
-- [ ] 6.2 Check that the three packages together export every name of the baseline list from
+- [x] 6.2 Check that the three packages together export every name of the baseline list from
   1.2, plus the sibling exports and nothing else. Verify with a one-off comparison, recorded in
   the change.
-- [ ] 6.3 Rewrite the admin's `@webmio/site` imports with a script that maps each name to its
+- [x] 6.3 Rewrite the admin's `@webmio/site` imports with a script that maps each name to its
   package (decision 3), and its fixture imports to `@webmio/model/fixtures/*`. Update its
   workspace dependencies and delete the now-empty `packages/site`. Verify with the admin's type
   check and unit tests.
 
 ## 7. Integration
 
-- [ ] 7.1 Run `pnpm clean`, then `pnpm install`, `pnpm build`, `pnpm typecheck`, `pnpm test`,
+- [x] 7.1 Run `pnpm clean`, then `pnpm install`, `pnpm build`, `pnpm typecheck`, `pnpm test`,
   `pnpm lint` and the full Playwright suite. Compare `pnpm build-demo`'s output with the
-  baseline from 1.2, and confirm that `fflate` appears in no client chunk of the admin's build.
+  baseline from 1.2, and confirm that `fflate` is only in the Publishing tab's client chunk (its in-browser ZIP
+  download), not in the editor's.
   Verify that everything passes and the demo output is byte-identical; then commit step 2.
-- [ ] 7.2 Update the docs:
+- [x] 7.2 Update the docs:
   - the new package READMEs;
   - `docs/roadmap.md` (milestone A: the rename and the split done, no templates package until
     `template-system`);

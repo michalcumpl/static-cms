@@ -1,5 +1,6 @@
 <script lang="ts">
-import { LANGUAGES, type TranslationPage } from "@webmio/site";
+import { type TranslationPage } from "@webmio/model";
+import { LANGUAGES } from "@webmio/render";
 import { invalidateAll } from "$app/navigation";
 import { getI18n } from "$lib/i18n";
 import type { ProjectPaths } from "$lib/project-paths";

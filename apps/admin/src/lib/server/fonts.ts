@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { fontPackagePath, usedFontFiles } from "@webmio/site";
+import { fontPackagePath, usedFontFiles } from "@webmio/model";
 
 // Font files come from the pinned @fontsource-variable/* packages (theme-and-branding design.md
 // decision 2), resolved through each package's exports so they're found wherever pnpm puts them.

@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { contrastRatio } from "@webmio/site";
+import { contrastRatio } from "@webmio/model";
 import { describe, expect, it } from "vitest";
 
 const css = readFileSync(new URL("./tokens.css", import.meta.url), "utf8");

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { renderSite } from "@webmio/site";
+import { renderSite } from "@webmio/render";
 import { and, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { type Db, openDatabase } from "./db/index";
@@ -17,7 +17,7 @@ const require = createRequire(import.meta.url);
 const text = (content: string) => ({ content, marks: [], annotations: [] });
 
 function demoV6(): Doc {
-  const file = require.resolve("@webmio/site/fixtures/demo-site-v6.json");
+  const file = require.resolve("@webmio/model/fixtures/demo-site-v6.json");
   return JSON.parse(readFileSync(file, "utf8"));
 }
 

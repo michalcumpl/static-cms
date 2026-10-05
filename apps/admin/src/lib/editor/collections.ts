@@ -3,7 +3,7 @@ import {
   type CollectionBlockType,
   type CollectionName,
   isCollectionBlockType,
-} from "@webmio/site";
+} from "@webmio/model";
 import type { DocumentPath, Session, Transaction } from "svedit";
 import { list, text } from "./transforms";
 

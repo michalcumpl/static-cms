@@ -1,5 +1,6 @@
 <script lang="ts">
-import { BUSINESS_TYPES, formatPhone } from "@webmio/site";
+import { BUSINESS_TYPES } from "@webmio/model";
+import { formatPhone } from "@webmio/render";
 import type { FullAutoFill } from "svelte/elements";
 import { getI18n } from "$lib/i18n";
 import {

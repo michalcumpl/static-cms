@@ -1,4 +1,4 @@
-import { graphemeLength } from "@webmio/site";
+import { graphemeLength } from "@webmio/model";
 import {
   AddNewLineCommand,
   BreakTextNodeCommand,

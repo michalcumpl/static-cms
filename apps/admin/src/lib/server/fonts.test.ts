@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { FONT_IDS, type FontId, themeFontFiles, usedFontFiles } from "@webmio/site";
+import { FONT_IDS, type FontId, themeFontFiles, usedFontFiles } from "@webmio/model";
 import { describe, expect, it } from "vitest";
 import { GET } from "../../routes/fonts/[name]/+server";
 import { fontFile, fontFilePath, fontFiles } from "./fonts";
