@@ -187,7 +187,9 @@ The editor SHALL indicate when there are unsaved changes and SHALL warn before t
 - **THEN** the browser asks for confirmation before leaving
 
 ### Requirement: Problems panel
-The editor SHALL list the document's validation problems after each save and whenever the document changes, and clicking a problem SHALL select the node it concerns when that node is on the current page, or switch to the page containing it. A problem about a page's own settings (title, slug, SEO description, home page) SHALL switch to that page and focus the matching field in the page settings panel. A problem about a link inside text SHALL switch to the page containing that text and select exactly the linked words.
+The editor SHALL list the document's validation problems after each save and whenever the document changes, and clicking a problem SHALL select the node it concerns when that node is on the current page, or switch to the page containing it. A problem about a page's own settings (title, slug, SEO description, home page) SHALL switch to that page and focus the matching field in the page settings panel. A problem about a theme field or the logo SHALL open the Design tab at the field. A problem about a link inside text SHALL switch to the page containing that text and select exactly the linked words. A problem about the site's or the business's fields SHALL open the Settings tab, as "Settings from the editor" says (see the project-page capability).
+
+The panel SHALL be in the editor's left column, under the pages list, with its own scrolling when the list is long, so the pages stay in view. It SHALL show the number of problems in its heading, and say when there are none. The details column SHALL hold only the settings of the Page and Design tabs and the panel of the selected block.
 
 #### Scenario: Empty heading reported
 - **WHEN** the owner inserts a rich text block and leaves its subheading empty
@@ -204,6 +206,18 @@ The editor SHALL list the document's validation problems after each save and whe
 #### Scenario: Go to a broken text link
 - **WHEN** the Kontakt page has been deleted, and the owner, while on another page, clicks the problem "This link points to a page that no longer exists" about the words "stránce Kontakt" on the home page
 - **THEN** the editor switches to the home page and selects the words "stránce Kontakt"
+
+#### Scenario: Under the pages
+- **WHEN** the editor is open on a site with three problems
+- **THEN** the left column shows the pages list and, under it, the problems panel with "3 problems", and the details column has no problems list
+
+#### Scenario: Long list
+- **WHEN** the site has thirty problems
+- **THEN** the problems list scrolls inside its panel and the pages list stays fully visible above it
+
+#### Scenario: Go to a business problem
+- **WHEN** the owner clicks the problem that the phone number isn't in international form
+- **THEN** the Settings tab opens with the phone field focused
 
 ### Requirement: Adding pages
 The owner SHALL be able to add a page by giving it a title. The new page SHALL get a slug made from the title, made unique within the site with a numeric suffix when taken. It SHALL start with one text block with placeholder content, SHALL get a navigation item at the end of the menu labelled with its title, and the editor SHALL switch to it. The whole addition SHALL be one undoable action.
@@ -253,8 +267,9 @@ The owner SHALL be able to make any page the home page. Setting the home page SH
 The editor SHALL show a settings panel for the current page with:
 - its title, slug and SEO description;
 - its share image;
-- a "show in menu" switch;
-- the actions to duplicate, delete, and set it as home.
+- a "show in menu" switch.
+
+The actions to duplicate, delete and set the page as home are in the page's menu in the pages list (see "Page actions menu"), not in this panel.
 
 Changes to the title and SEO description SHALL apply to the document as the owner types. The slug field SHALL apply its value when the owner leaves the field or confirms it, normalised by slugifying; while typing, the panel SHALL show the slug that will be applied and the page's resulting address. For the home page, the panel SHALL explain that the page is served at the site root and that its slug is used only if it stops being home. An empty title or an empty slug after normalising SHALL be reported as a problem rather than refused.
 
@@ -397,80 +412,6 @@ While the caret or a text selection is in a text on the canvas, Cmd+A (Ctrl+A) S
 - **WHEN** the caret is in a paragraph and the owner presses Escape
 - **THEN** the paragraph is selected as a whole, as before
 
-### Requirement: Site settings panel
-The editor SHALL offer site settings, opened from the sidebar, with:
-- the site name;
-- the site description;
-- the favicon;
-- the default share image;
-- the switches "AI search and answers" and "AI training", each with a sentence explaining what it allows.
-
-Changes to the name and description SHALL apply to the document as the owner types, and each switch SHALL apply when changed. The favicon and default share image SHALL be chosen from the media library, shown as thumbnails (the favicon as the square icon it becomes), and be changeable and removable. The default share image's description SHALL be editable. Every change SHALL be undoable with the editor's undo, and SHALL mark the site as having unsaved changes. Problems about the site's settings, when selected in the problems panel, SHALL open the site settings at the field concerned.
-
-#### Scenario: Rename the site
-- **WHEN** the owner changes the site name to "Anideti Brno" in site settings
-- **THEN** the site name in the canvas's header shows "Anideti Brno", and undo restores the old name
-
-#### Scenario: Choose a favicon
-- **WHEN** the owner chooses a logo from the library as the favicon
-- **THEN** the site's favicon list holds one image node with the logo's media key, width and height, and the panel shows a square thumbnail
-
-#### Scenario: Switch off AI training
-- **WHEN** the owner switches "AI training" off and saves
-- **THEN** the saved document has AI training not allowed, and the next export's `robots.txt` disallows the AI training crawlers
-
-#### Scenario: Missing description problem
-- **WHEN** the problems panel lists that "Kontakt" has no description, and the owner selects the problem
-- **THEN** the editor shows the page "Kontakt" with its SEO description field focused
-
-### Requirement: Business tab
-The editor's settings column SHALL have a Business tab next to Page and Site, with:
-- the business name, with the site name shown as the placeholder;
-- the street, postal code, city and country;
-- the phone and email;
-- the map address;
-- the type of business, as a list of names owners understand (such as "Bakery" and "Café");
-- the weekly opening hours, and the note;
-- the "Show contact details in the footer" switch.
-
-Text fields SHALL apply to the document as the owner types, except the phone. The phone SHALL be applied when the owner leaves the field, normalised to international form:
-- spaces, dashes and brackets are removed;
-- a leading `00` becomes `+`;
-- a number without a country code gets the country's code (`+420` for `CZ`, `+421` for `SK`).
-
-A number that can't be normalised SHALL be kept as typed and reported as a problem.
-
-The opening hours SHALL list Monday to Sunday. Each day shows its ranges as pairs of time fields, with buttons to add and remove a range. A day without ranges SHALL read "Closed". An action SHALL copy Monday's hours to Tuesday to Friday.
-
-Every change SHALL be undoable and SHALL mark the site as having unsaved changes. Problems about the business details, when selected in the problems panel, SHALL open the Business tab at the field concerned (for hours, at the day).
-
-#### Scenario: Normalise the phone
-- **WHEN** the owner types `321 123 456` into the phone field of a business in `CZ` and leaves the field
-- **THEN** the business's phone is `+420321123456`, and the field shows `+420 321 123 456`
-
-#### Scenario: Lunch break
-- **WHEN** the owner sets Monday to 08:00–12:00 and adds a range 13:00–17:00
-- **THEN** Monday has two ranges, and the canvas's opening hours block shows "8:00–12:00, 13:00–17:00"
-
-#### Scenario: Copy Monday to the weekdays
-- **WHEN** Monday is 06:00–17:00 and the owner copies Monday's hours to Tuesday to Friday
-- **THEN** Tuesday to Friday have one range 06:00–17:00 each, and one undo restores their previous hours
-
-#### Scenario: Overlap problem
-- **WHEN** the problems panel lists that Wednesday's hours overlap, and the owner selects the problem
-- **THEN** the Business tab opens with Wednesday's first time field focused
-
-### Requirement: Business blocks on the canvas
-The canvas SHALL show the `contact` and `opening_hours` blocks, and the footer, as the published site will, from the current business details. Changes in the Business tab SHALL show on the canvas as the owner types. The heading of a business block SHALL be editable in place. The details themselves SHALL NOT be editable on the canvas; the block SHALL offer a link to the Business tab ("Edit business details"). The contact block's switches SHALL be shown in a panel for the selected block.
-
-#### Scenario: Details follow the Business tab
-- **WHEN** the owner changes the city to "Kolín 2" in the Business tab
-- **THEN** the canvas's contact block and footer show "Kolín 2"
-
-#### Scenario: Edit details from the block
-- **WHEN** the owner chooses "Edit business details" on a contact block
-- **THEN** the Business tab opens
-
 ### Requirement: Button panel
 When a button of a hero or a call to action is selected, or the caret is in its label, the details column SHALL show a button panel. In it, the owner can:
 - make the button link to a page of the site, chosen from the list of pages;
@@ -514,21 +455,6 @@ When the project has more than one language, the editor SHALL show a language sw
 - **WHEN** the owner edits the Czech "Kontakt" and chooses English
 - **THEN** the editor shows the English page with the same translation key, and saving saves the English document
 
-### Requirement: Shared fields outside the primary language
-In a language other than the primary, the Site, Business and Theme tabs SHALL show the shared fields (see the languages capability) read-only, with the note "Edited in <primary language name>" and a link to the same tab in the primary language. The whole Theme tab, presets and logo included, SHALL be read-only there. Translatable fields stay editable:
-- the site name and description;
-- the default share image's description;
-- the business name;
-- the note on the opening hours.
-
-#### Scenario: Phone in English
-- **WHEN** the owner opens the Business tab in English
-- **THEN** the phone field can't be edited and says it is edited in Čeština, and the note on the opening hours can be edited
-
-#### Scenario: Theme in English
-- **WHEN** the owner opens the Theme tab in English
-- **THEN** no preset, colour, font, radius, width, logo or switch can be changed, and the tab says it is edited in Čeština with a link to the Czech Theme tab
-
 ### Requirement: Translation keys of new pages
 Adding a page SHALL give it a translation key of its own, and duplicating a page SHALL give the copy a new translation key, so neither is paired with another language's page.
 
@@ -568,8 +494,8 @@ The editor's left column SHALL link to the history of the language being edited.
 - **WHEN** the owner edits English and follows the History link
 - **THEN** the English history opens
 
-### Requirement: Theme tab
-The editor's settings column SHALL have a Theme tab next to Page, Site and Business, with:
+### Requirement: Design tab
+The editor's settings column SHALL have a Design tab next to Page, with:
 - **Presets:** each preset shown by its name, a swatch of its colours and a sample in its heading font. Choosing one applies it (see "Theme presets" in the theming capability).
 - **Colours:** primary, secondary, background and text, each with a colour picker and a hex text field. A hex value SHALL be applied as soon as it is a valid colour; an incomplete value SHALL not change the document.
 - **Contrast:** each contrast pair (see "Theme colour contrast" in the theming capability) with a sample, its measured ratio and whether it passes, updated as the colours change.
@@ -579,7 +505,7 @@ The editor's settings column SHALL have a Theme tab next to Page, Site and Busin
 - **Logo:** chosen from the media library, shown as a thumbnail, changeable and removable.
 - **The switch "Show the site name next to the logo"**, available only while there is a logo.
 
-A radius or width that isn't one of the named choices SHALL be shown as "Custom" and kept until another choice is made. Every change SHALL be one undoable step (typing a hex value batches into one step) and SHALL mark the site as having unsaved changes. Problems about the theme or the logo, when selected in the problems panel, SHALL open the Theme tab at the field concerned (for a contrast problem, at the first colour of the pair).
+A radius or width that isn't one of the named choices SHALL be shown as "Custom" and kept until another choice is made. Every change SHALL be one undoable step (typing a hex value batches into one step) and SHALL mark the site as having unsaved changes. Problems about the theme or the logo, when selected in the problems panel, SHALL open the Design tab at the field concerned (for a contrast problem, at the first colour of the pair).
 
 #### Scenario: Apply a preset
 - **WHEN** the owner chooses a preset on a site with content width `76rem`
@@ -595,7 +521,7 @@ A radius or width that isn't one of the named choices SHALL be shown as "Custom"
 
 #### Scenario: Go to a contrast problem
 - **WHEN** the owner selects the problem about text on panels
-- **THEN** the Theme tab opens with the text colour field focused
+- **THEN** the Design tab opens with the text colour field focused
 
 #### Scenario: Choose a logo
 - **WHEN** the owner chooses a logo from the library
@@ -710,7 +636,7 @@ After a block is inserted, the editor SHALL:
 
 #### Scenario: Pictures in the picker
 - **WHEN** the picker is open
-- **THEN** every block is a card with a drawing of the block, its name and its description, such as "Opening hours" with "Your weekly hours, from the Business tab"
+- **THEN** every block is a card with a drawing of the block, its name and its description, such as "Opening hours" with "Your weekly hours, from the business settings"
 
 #### Scenario: Empty page
 - **WHEN** the owner opens a page without blocks
@@ -727,3 +653,60 @@ After a block is inserted, the editor SHALL:
 #### Scenario: Touch
 - **WHEN** the caret is in the services block and the pointer isn't over the canvas
 - **THEN** the "+ Add block" buttons above and below the services block are shown
+
+### Requirement: Page actions menu
+Every entry of the editor's pages list SHALL have a "⋯" button, named for the entry ("Actions for “Kontakt”"), that opens a menu with the actions for it. Entries of the menu section and of the "Not in menu" section SHALL have it alike. The menu SHALL work as a menu button does: arrow keys move, Enter chooses, Escape closes and returns focus to the button.
+
+For a page the menu SHALL offer:
+- **Rename**, which asks for a new title and applies it as the title field does, including the slug and menu label that follow it;
+- **Duplicate**;
+- **Move up** and **Move down**, for a page in the menu, which move its menu item;
+- **Show in menu** or **Remove from menu**;
+- **Set as home**;
+- **Delete**, which confirms and counts the links to the page as "Deleting pages" says.
+
+For an external link of the menu it SHALL offer **Edit**, **Move up**, **Move down** and **Remove from menu**.
+
+An action that can't be used SHALL be shown disabled with the reason: Move up on the first menu entry, Move down on the last, Set as home on the home page ("Already the home page"), Delete on the home page and on the only page. Each action SHALL be one undoable action. The pages list SHALL NOT have separate ↑ and ↓ buttons; dragging entries SHALL still work.
+
+#### Scenario: Delete from the list
+- **WHEN** the owner opens the "⋯" menu of the page "Kontakt" and chooses Delete, and confirms
+- **THEN** the page and its menu item are gone, as when deleting from the page's settings before, and one undo brings them back
+
+#### Scenario: Move in the menu
+- **WHEN** the owner chooses Move up from the menu of "Kontakt", which is second in the menu
+- **THEN** "Kontakt" is first in the menu, on the canvas's navigation too
+
+#### Scenario: Home page can't be deleted
+- **WHEN** the owner opens the menu of the home page
+- **THEN** Delete is disabled and says another page must be set as home first, and Set as home is disabled and says "Already the home page"
+
+#### Scenario: Rename
+- **WHEN** the owner chooses Rename on "O nás" and enters "O firmě"
+- **THEN** the page's title is "O firmě", and its slug and menu label follow as they do for the title field
+
+#### Scenario: Keyboard
+- **WHEN** the owner tabs to a page's "⋯" button, presses Enter, then the down arrow until Delete is focused, and Enter
+- **THEN** the confirmation to delete the page opens
+
+#### Scenario: Not in the menu
+- **WHEN** the owner opens the menu of a page under "Not in menu"
+- **THEN** it offers "Show in menu" and has no Move up or Move down
+
+### Requirement: Business blocks in the editor
+The canvas SHALL show the `contact` and `opening_hours` blocks, and the footer, as the published site will, from the saved business details. The heading of a business block SHALL be editable in place. The details themselves SHALL NOT be editable on the canvas; the block SHALL offer a link to the Settings tab ("Edit business details"), as "Settings from the editor" says (see the project-page capability). The contact block's switches SHALL be shown in a panel for the selected block.
+
+#### Scenario: Details follow the settings
+- **WHEN** the owner changes the city to "Kolín 2" on the Settings tab, saves, and opens the editor
+- **THEN** the canvas's contact block and footer show "Kolín 2"
+
+#### Scenario: Edit details from a block
+- **WHEN** the owner chooses "Edit business details" on a contact block
+- **THEN** the Settings tab opens, at the business settings
+
+### Requirement: Design outside the primary language
+In a language other than the primary, the Design tab SHALL show the theme and the logo read-only, with the note "Edited in <primary language name>" and a link to the Design tab in the primary language. The whole tab, presets and logo included, SHALL be read-only there. The shared fields of the site and the business are read-only in the same way on the Settings tab (see the project-page capability).
+
+#### Scenario: Design in English
+- **WHEN** the owner opens the Design tab in English
+- **THEN** no preset, colour, font, radius, width, logo or switch can be changed, and the tab says it is edited in Čeština with a link to the Czech Design tab

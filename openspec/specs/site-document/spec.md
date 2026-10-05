@@ -370,7 +370,7 @@ Every field except the type and the switch MAY be empty. Validation SHALL report
 - a map address that isn't an `https` URL;
 - a country that isn't two capital letters.
 
-Messages SHALL name the field as the Business tab does ("the phone number"), never the property.
+Messages SHALL name the field as the business settings do ("the phone number"), never the property.
 
 #### Scenario: Valid business details
 - **WHEN** the business has street "Lipová 12", postal code "280 02", city "Kolín", phone `+420321123456` and email `objednavky@pekarna-ulipy.example`
@@ -413,11 +413,11 @@ Violations SHALL be reported as errors that name the day ("Monday's hours: …")
 - **THEN** validation reports an invalid-value error for that range
 
 ### Requirement: Business blocks with nothing to show
-A `contact` block whose shown details are all empty, or an `opening_hours` block on a site whose days are all closed and whose note is empty, SHALL be reported as a warning naming its page, which says that the business details are filled in on the Business tab. A `contact` block with every switch off SHALL be reported the same way.
+A `contact` block whose shown details are all empty, or an `opening_hours` block on a site whose days are all closed and whose note is empty, SHALL be reported as a warning naming its page, which says that the business details are filled in in the business settings. A `contact` block with every switch off SHALL be reported the same way.
 
 #### Scenario: Contact block before the details are filled in
 - **WHEN** the page "Kontakt" has a `contact` block and the business has no address, phone, email or map address
-- **THEN** validation reports a warning that the contact block on "Kontakt" has nothing to show yet
+- **THEN** validation reports a warning that the contact block on "Kontakt" has nothing to show yet, and that the details are filled in in the business settings
 
 ### Requirement: Upgrading version-3 documents
 A version-3 document SHALL be upgradable to the current version without losing content. The upgrade SHALL add:
