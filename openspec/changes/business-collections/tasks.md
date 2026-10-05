@@ -38,7 +38,7 @@ check and the untranslated-text test enforce this.
 
 ## 3. Upgrade to version 7 (`packages/site`)
 
-- [ ] 3.1 Implement `toVersion7` in `migrate.ts` (decision 8): lwhere ift items in page and block
+- [ ] 3.1 Implement `toVersion7` in `migrate.ts` (decision 8): lift items in page and block
   order, merge exact duplicates, set `show` and `chosen`, add empty `faqs` and `social`, and
   bump the version. Update the `migrateSite` doc comment. Verify with `migrate.test.ts` cases
   "One services block", "Highlights and a full list" and "Same name, different text", and that
