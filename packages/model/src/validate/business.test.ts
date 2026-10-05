@@ -8,7 +8,7 @@ const text = (content: string) => ({ content, marks: [], annotations: [] });
 /** The demo site with a filled-in business and, optionally, opening hours per day. */
 function site(hours: Partial<Record<string, [string, string][]>> = {}) {
   const { doc, nodes } = editableDemoSite();
-  Object.assign(nodes.business_1, {
+  Object.assign(nodes.location_1, {
     street: "Lipová 12",
     postal_code: "280 02",
     city: "Kolín",
@@ -36,8 +36,14 @@ function addBusinessBlocks(nodes: LooseNodes) {
     show_phone: true,
     show_email: true,
     show_map: true,
+    location_id: "",
   };
-  nodes.hours_1 = { id: "hours_1", type: "opening_hours", heading: text("Otevírací doba") };
+  nodes.hours_1 = {
+    id: "hours_1",
+    type: "opening_hours",
+    heading: text("Otevírací doba"),
+    location_id: "",
+  };
   nodes.page_contact.blocks.nodes.push("contact_1", "hours_1");
 }
 
@@ -57,12 +63,12 @@ describe("business details", () => {
 
   it("wants the phone in international form", () => {
     const { doc, nodes } = site();
-    nodes.business_1.phone = "321 123 456";
+    nodes.location_1.phone = "321 123 456";
     expect(problems(doc)).toEqual([
       expect.objectContaining({
         code: "invalid-phone",
         severity: "error",
-        nodeId: "business_1",
+        nodeId: "location_1",
         property: "phone",
         message:
           'The phone number "321 123 456" must be in international form, like +420 321 123 456.',
@@ -72,9 +78,9 @@ describe("business details", () => {
 
   it("checks the email, map address and country", () => {
     const { doc, nodes } = site();
-    nodes.business_1.email = "objednavky";
-    nodes.business_1.map_url = "http://maps.example/pekarna";
-    nodes.business_1.country = "Czechia";
+    nodes.location_1.email = "objednavky";
+    nodes.location_1.map_url = "http://maps.example/pekarna";
+    nodes.location_1.country = "Czechia";
     expect(problems(doc).map((p) => [p.code, p.property])).toEqual([
       ["invalid-email", "email"],
       ["invalid-map-url", "map_url"],
@@ -84,9 +90,9 @@ describe("business details", () => {
 
   it("needs each day from Monday to Sunday once", () => {
     const { doc, nodes } = site();
-    nodes.business_1.days.nodes = [...nodes.business_1.days.nodes].reverse();
+    nodes.location_1.days.nodes = [...nodes.location_1.days.nodes].reverse();
     expect(problems(doc)).toContainEqual(
-      expect.objectContaining({ code: "invalid-value", nodeId: "business_1", property: "days" }),
+      expect.objectContaining({ code: "invalid-value", nodeId: "location_1", property: "days" }),
     );
   });
 });
@@ -175,7 +181,118 @@ describe("business blocks", () => {
       show_email: false,
       show_map: false,
     });
-    nodes.business_1.hours_note = "Po domluvě";
+    nodes.location_1.hours_note = "Po domluvě";
     expect(problems(doc).map((p) => p.nodeId)).toEqual(["contact_1"]);
+  });
+});
+
+describe("locations", () => {
+  /** The demo site's business with a second location, "Kutná Hora", with an address. */
+  function twoShops() {
+    const { doc, nodes } = site();
+    nodes.location_1.name = "Kolín – Lipová";
+    nodes.location_kh = {
+      ...structuredClone(nodes.location_1),
+      id: "location_kh",
+      name: "Kutná Hora",
+      street: "Palackého 3",
+      city: "Kutná Hora",
+      days: list([]),
+    };
+    // Its own seven closed days.
+    const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((day) => {
+      const id = `kh_${day}`;
+      nodes[id] = { id, type: "opening_day", day, ranges: list([]) };
+      return id;
+    });
+    nodes.location_kh.days = list(days);
+    nodes.business_1.locations = list(["location_1", "location_kh"]);
+    return { doc, nodes };
+  }
+
+  it("Two shops", () => {
+    expect(problems(twoShops().doc)).toEqual([]);
+  });
+
+  it("Second location without a name", () => {
+    const { doc, nodes } = twoShops();
+    nodes.location_kh.name = " ";
+    expect(only(doc)).toEqual([
+      ["empty-name", "Location 2 needs a name; once there are several locations, each is named."],
+    ]);
+  });
+
+  it("Phone of a branch", () => {
+    const { doc, nodes } = twoShops();
+    nodes.location_kh.phone = "321 123 456";
+    expect(only(doc)).toEqual([
+      [
+        "invalid-phone",
+        'Kutná Hora: The phone number "321 123 456" must be in international form, like +420 321 123 456.',
+      ],
+    ]);
+  });
+
+  it("names the location in hours messages when there are several", () => {
+    const { doc, nodes } = twoShops();
+    nodes.kh_tue_r = { id: "kh_tue_r", type: "time_range", opens: "17:00", closes: "08:00" };
+    nodes.kh_tue.ranges = list(["kh_tue_r"]);
+    expect(only(doc)).toEqual([
+      ["invalid-hours", "Kutná Hora: Tuesday's hours close before they open (17:00–08:00)."],
+    ]);
+  });
+
+  it("needs at least one location", () => {
+    const { doc, nodes } = site();
+    nodes.business_1.locations = list([]);
+    for (const id of [
+      "location_1",
+      "day_mon",
+      "day_tue",
+      "day_wed",
+      "day_thu",
+      "day_fri",
+      "day_sat",
+      "day_sun",
+    ])
+      delete nodes[id];
+    expect(problems(doc)).toContainEqual(
+      expect.objectContaining({
+        code: "invalid-value",
+        category: "structure",
+        property: "locations",
+      }),
+    );
+  });
+
+  it("Contact block for one shop", () => {
+    const { doc, nodes } = twoShops();
+    addBusinessBlocks(nodes);
+    nodes.contact_1.location_id = "location_kh";
+    expect(problems(doc).filter((p) => p.nodeId === "contact_1")).toEqual([]);
+  });
+
+  it("Location removed", () => {
+    const { doc, nodes } = twoShops();
+    addBusinessBlocks(nodes);
+    nodes.contact_1.location_id = "location_gone";
+    const forContact = problems(doc).filter((p) => p.nodeId === "contact_1");
+    expect(forContact.map((p) => [p.code, p.message])).toEqual([
+      [
+        "missing-location",
+        'The contact block on "Kontakt" shows a location that no longer exists; choose another in the block\'s panel.',
+      ],
+    ]);
+  });
+
+  it("warns when the one chosen location has nothing to show, though another has", () => {
+    const { doc, nodes } = twoShops();
+    addBusinessBlocks(nodes);
+    nodes.hours_1.location_id = "location_kh";
+    nodes.range_mon_0 = { id: "range_mon_0", type: "time_range", opens: "08:00", closes: "12:00" };
+    nodes.day_mon.ranges = list(["range_mon_0"]);
+    expect(problems(doc).map((p) => [p.code, p.nodeId])).toEqual([["nothing-to-show", "hours_1"]]);
+    nodes.hours_1.location_id = "";
+    expect(problems(doc)).toEqual([]);
   });
 });

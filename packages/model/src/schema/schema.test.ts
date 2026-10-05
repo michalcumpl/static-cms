@@ -35,6 +35,7 @@ const typesFromTs: Record<NodeType, true> = {
   social_link: true,
   opening_hours: true,
   business: true,
+  location: true,
   opening_day: true,
   time_range: true,
   image: true,

@@ -449,6 +449,21 @@ img {
   margin-bottom: 1.5rem;
 }
 
+.footer-locations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.footer-locations .business-name {
+  grid-column: 1 / -1;
+}
+
+.location + .location {
+  margin-top: 1.5rem;
+}
+
 .footer-social ul {
   display: flex;
   flex-wrap: wrap;

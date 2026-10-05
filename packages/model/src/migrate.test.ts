@@ -47,7 +47,30 @@ const COLLECTION_OF = { services: "services", team: "team", testimonials: "testi
  * collections, item references and social profiles version 7 adds. Lets the tests of earlier
  * upgrades keep comparing whole documents.
  */
-function asVersion6(doc: { nodes: LooseNodes }): { nodes: LooseNodes } {
+/**
+ * An upgraded document as version 7 had it: the business's one location folded back into the
+ * business, and no location choice on blocks.
+ */
+function asVersion7(doc: { nodes: LooseNodes }): { nodes: LooseNodes } {
+  const nodes: LooseNodes = { ...doc.nodes };
+  const businessId = nodes.site_1.business;
+  const { locations, ...business } = nodes[businessId];
+  const [locationId] = locations.nodes;
+  const { id: _id, type: _type, name: _name, ...fields } = nodes[locationId];
+  delete nodes[locationId];
+  nodes[businessId] = { ...business, ...fields };
+  for (const [id, node] of Object.entries(nodes)) {
+    if (node.type === "contact" || node.type === "opening_hours") {
+      const { location_id: _l, ...block } = node;
+      nodes[id] = block;
+    }
+  }
+  nodes.site_1 = { ...nodes.site_1, schema_version: 7 };
+  return { ...doc, nodes };
+}
+
+function asVersion6(upgraded: { nodes: LooseNodes }): { nodes: LooseNodes } {
+  const doc = asVersion7(upgraded);
   const nodes: LooseNodes = { ...doc.nodes };
   const { services, team, testimonials, faqs: _f, ...site } = nodes.site_1;
   const collections = { services, team, testimonials };
@@ -63,9 +86,10 @@ function asVersion6(doc: { nodes: LooseNodes }): { nodes: LooseNodes } {
     const { show: _s, chosen: _c, ...block } = node;
     nodes[id] = { ...block, [BLOCK_ITEMS[type]]: { nodes: ids, marks: [], annotations: [] } };
   }
-  if (nodes.business_1) {
-    const { social: _social, ...business } = nodes.business_1;
-    nodes.business_1 = business;
+  const businessId = nodes.site_1.business;
+  if (nodes[businessId]) {
+    const { social: _social, ...business } = nodes[businessId];
+    nodes[businessId] = business;
   }
   return { ...doc, nodes };
 }
@@ -193,7 +217,8 @@ describe("migrateSite", () => {
     expect(result.nodes.business_1.type).toBe("hero");
   });
 
-  it("produces the current demo site from versions 2, 3, 4, 5 and 6", () => {
+  it("produces the current demo site from versions 2, 3, 4, 5, 6 and 7", () => {
+    expect(migrateSite(loadFixture("demo-site-v7.json"))).toEqual(loadDemoSite());
     expect(migrateSite(loadDemoSiteV6())).toEqual(loadDemoSite());
     expect(migrateSite(loadDemoSiteV2())).toEqual(loadDemoSite());
     expect(migrateSite(loadDemoSiteV5())).toEqual(loadDemoSite());
@@ -345,9 +370,87 @@ describe("upgrading version-6 documents", () => {
   });
 
   it("adds an empty FAQ collection and no social profiles", () => {
-    const result = migrateSite(loadDemoSiteV6()) as { nodes: LooseNodes };
+    const result = asVersion7(migrateSite(loadDemoSiteV6()) as { nodes: LooseNodes });
     expect(result.nodes.site_1.faqs).toEqual(list([]));
     expect(result.nodes.business_1.social).toEqual(list([]));
     expect(result.nodes.site_1.schema_version).toBe(7);
+  });
+});
+
+describe("upgrading version-7 documents", () => {
+  const range = (id: string, opens: string, closes: string) => ({
+    id,
+    type: "time_range",
+    opens,
+    closes,
+  });
+
+  /** The version-7 demo as a bakery at Lipová 12 with a phone, open Monday to Friday. */
+  function bakery() {
+    const v7 = loadFixture("demo-site-v7.json");
+    Object.assign(v7.nodes.business_1, {
+      business_type: "Bakery",
+      street: "Lipová 12",
+      city: "Kolín",
+      phone: "+420321123456",
+      hours_note: "Ve svátky zavřeno",
+    });
+    for (const day of ["mon", "tue", "wed", "thu", "fri"]) {
+      v7.nodes[`range_${day}`] = range(`range_${day}`, "06:00", "17:00");
+      v7.nodes[`day_${day}`].ranges = { nodes: [`range_${day}`], marks: [], annotations: [] };
+    }
+    v7.nodes.contact_1 = {
+      id: "contact_1",
+      type: "contact",
+      heading: { content: "Kontakt", marks: [], annotations: [] },
+      show_address: true,
+      show_phone: true,
+      show_email: true,
+      show_map: true,
+    };
+    v7.nodes.page_contact.blocks.nodes.push("contact_1");
+    return v7;
+  }
+
+  it("Upgrade the bakery: one unnamed location holds the details and hours", () => {
+    const v7 = bakery();
+    const before = structuredClone(v7);
+    const result = migrateSite(v7) as { nodes: LooseNodes };
+    expect(v7).toEqual(before);
+    expect(result.nodes.site_1.schema_version).toBe(8);
+    expect(result.nodes.business_1).toMatchObject({
+      business_type: "Bakery",
+      locations: { nodes: ["location_1"] },
+    });
+    expect(result.nodes.business_1.street).toBeUndefined();
+    expect(result.nodes.location_1).toMatchObject({
+      type: "location",
+      name: "",
+      street: "Lipová 12",
+      city: "Kolín",
+      phone: "+420321123456",
+      hours_note: "Ve svátky zavřeno",
+      days: {
+        nodes: ["day_mon", "day_tue", "day_wed", "day_thu", "day_fri", "day_sat", "day_sun"],
+      },
+    });
+    expect(result.nodes.contact_1.location_id).toBe("");
+    expect(validateSite(result).problems).toEqual([]);
+  });
+
+  it("gives every language's document the same location ID", () => {
+    const cs = bakery();
+    const en = bakery();
+    en.nodes.site_1.lang = "en";
+    en.nodes.business_1.hours_note = "Closed on holidays";
+    const [a, b] = [cs, en].map((doc) => migrateSite(doc) as { nodes: LooseNodes });
+    expect(a?.nodes.business_1.locations.nodes).toEqual(b?.nodes.business_1.locations.nodes);
+  });
+
+  it("takes a free location ID", () => {
+    const v7 = bakery();
+    v7.nodes.location_1 = { ...v7.nodes.hero_1, id: "location_1" };
+    const result = migrateSite(v7) as { nodes: LooseNodes };
+    expect(result.nodes.business_1.locations.nodes).toEqual(["location_1_2"]);
   });
 });

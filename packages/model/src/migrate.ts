@@ -11,7 +11,9 @@ type RawDoc = { document_id: string; nodes: Record<string, RawNode> };
  * a translation key, its own ID; version 6 turns the theme's font lists into catalog fonts and
  * adds the site's logo (none) and header switch (name shown); version 7 lifts the items of
  * services, team and testimonials blocks into the site's collections, which the blocks then show
- * (all, or the items they chose), and adds the FAQ collection and social profiles, empty.
+ * (all, or the items they chose), and adds the FAQ collection and social profiles, empty;
+ * version 8 moves the business's contact details and opening hours into its one location, and
+ * lets contact and opening hours blocks show all locations.
  * Anything that isn't a site of an older version is returned unchanged, for validation to
  * judge. The input is not modified.
  */
@@ -24,6 +26,7 @@ export function migrateSite(doc: unknown): unknown {
   if (siteOf(current)?.schema_version === 4) current = toVersion5(current);
   if (siteOf(current)?.schema_version === 5) current = toVersion6(current);
   if (siteOf(current)?.schema_version === 6) current = toVersion7(current);
+  if (siteOf(current)?.schema_version === 7) current = toVersion8(current);
   return current;
 }
 
@@ -249,6 +252,54 @@ function toVersion7<T extends RawDoc>(doc: T): T {
     testimonials: { nodes: collections.testimonials, marks: [], annotations: [] },
     faqs: emptyList(),
   };
+  return { ...doc, nodes: upgraded };
+}
+
+/** The business fields version 8 moves into its location. */
+const LOCATION_FIELDS = [
+  "street",
+  "postal_code",
+  "city",
+  "country",
+  "phone",
+  "email",
+  "map_url",
+  "hours_note",
+  "days",
+] as const;
+
+/**
+ * Version 8 gives the business a list of locations (business-locations design decision 6): its
+ * contact details and opening hours become one unnamed location, `location_1` (or the first
+ * free `location_1_<n>`), so every language's document gets the same ID. Contact and opening
+ * hours blocks show all locations. Pages render as before.
+ */
+function toVersion8<T extends RawDoc>(doc: T): T {
+  const site = siteOf(doc) as RawNode;
+  const upgraded: Record<string, RawNode> = { ...doc.nodes };
+  const businessId = site.business;
+  const business = typeof businessId === "string" ? doc.nodes[businessId] : undefined;
+  if (isObject(business) && business.type === "business") {
+    let locationId = "location_1";
+    for (let n = 2; Object.hasOwn(upgraded, locationId); n++) locationId = `location_1_${n}`;
+    const location: RawNode = { id: locationId, type: "location", name: "" };
+    const rest: RawNode = { ...business };
+    for (const field of LOCATION_FIELDS) {
+      location[field] = business[field];
+      delete rest[field];
+    }
+    upgraded[locationId] = location;
+    upgraded[businessId as string] = {
+      ...rest,
+      locations: { nodes: [locationId], marks: [], annotations: [] },
+    };
+  }
+  for (const [id, node] of Object.entries(doc.nodes)) {
+    if (isObject(node) && (node.type === "contact" || node.type === "opening_hours")) {
+      upgraded[id] = { ...node, location_id: "" };
+    }
+  }
+  upgraded[doc.document_id] = { ...site, schema_version: 8 };
   return { ...doc, nodes: upgraded };
 }
 

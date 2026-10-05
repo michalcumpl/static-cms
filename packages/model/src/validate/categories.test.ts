@@ -96,6 +96,7 @@ describe("problem categories", () => {
       "chosen-items-unused": true,
       "invalid-social-url": true,
       "duplicate-social-url": true,
+      "missing-location": true,
     };
     for (const code of Object.keys(codes) as ProblemCode[]) {
       expect(["structure", "site"], code).toContain(problemCategory(code));

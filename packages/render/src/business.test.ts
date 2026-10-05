@@ -1,11 +1,11 @@
 import type { Weekday } from "@webmio/model";
 import { describe, expect, it } from "vitest";
 import {
-  type BusinessInfo,
   contactDetails,
   formatPhone,
   formatTime,
   groupDays,
+  type LocationInfo,
   mapLink,
   openingHoursTable,
 } from "./business.js";
@@ -14,8 +14,10 @@ import { siteStrings } from "./strings.js";
 const WEEK: Weekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 type Hours = Partial<Record<Weekday, [string, string][]>>;
 
-function business(fields: Partial<BusinessInfo> = {}, hours: Hours = {}): BusinessInfo {
+/** A location of a business, as the contact details and hours render it. */
+function business(fields: Partial<LocationInfo> = {}, hours: Hours = {}): LocationInfo {
   return {
+    id: "location_1",
     name: "",
     street: "Lipová 12",
     postal_code: "280 02",
@@ -24,10 +26,7 @@ function business(fields: Partial<BusinessInfo> = {}, hours: Hours = {}): Busine
     phone: "+420321123456",
     email: "objednavky@pekarna-ulipy.example",
     map_url: "",
-    business_type: "LocalBusiness",
     hours_note: "",
-    show_in_footer: true,
-    social: [],
     days: WEEK.map((day) => ({
       day,
       ranges: (hours[day] ?? []).map(([opens, closes]) => ({ opens, closes })),

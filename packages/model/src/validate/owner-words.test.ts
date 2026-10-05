@@ -79,8 +79,8 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
     height: 32,
   };
   nodes.site_1.favicon = { nodes: ["image_favicon"], marks: [], annotations: [] };
-  nodes.business_1.phone = "321 123";
-  nodes.business_1.email = "objednavky";
+  nodes.location_1.phone = "321 123";
+  nodes.location_1.email = "objednavky";
   nodes.range_a = { id: "range_a", type: "time_range", opens: "08:00", closes: "13:00" };
   nodes.range_b = { id: "range_b", type: "time_range", opens: "12:00", closes: "07:00" };
   nodes.day_wed.ranges = { nodes: ["range_a", "range_b"], marks: [], annotations: [] };
@@ -92,6 +92,7 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
     show_phone: false,
     show_email: false,
     show_map: true,
+    location_id: "",
   };
   nodes.page_contact.blocks.nodes.push("contact_1");
   nodes.t_1 = {

@@ -64,20 +64,21 @@ describe("applySharedFields", () => {
 
   it("takes the business data and hours, keeping the name and hours note", () => {
     const { cs, en } = languages();
-    Object.assign(cs.nodes.business_1, {
+    cs.nodes.business_1.name = "Pekárna U Lípy";
+    Object.assign(cs.nodes.location_1, {
       phone: "+420321123456",
       city: "Kolín",
-      name: "Pekárna U Lípy",
       hours_note: "Ve svátky zavřeno",
     });
     setHours(cs.nodes, "mon", [["06:00", "17:00"]], "cs");
-    Object.assign(en.nodes.business_1, { name: "U Lípy Bakery", hours_note: "Closed on holidays" });
+    en.nodes.business_1.name = "U Lípy Bakery";
+    en.nodes.location_1.hours_note = "Closed on holidays";
     setHours(en.nodes, "mon", [["08:00", "12:00"]], "en");
     const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
-    expect(result.nodes.business_1).toMatchObject({
+    expect(result.nodes.business_1.name).toBe("U Lípy Bakery");
+    expect(result.nodes.location_1).toMatchObject({
       phone: "+420321123456",
       city: "Kolín",
-      name: "U Lípy Bakery",
       hours_note: "Closed on holidays",
     });
     expect(result.nodes.day_mon.ranges.nodes).toEqual(["cs_mon_0"]);
@@ -222,5 +223,74 @@ describe("applySharedFields: collections", () => {
     const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
     expect(result.nodes.business_1.social.nodes).toEqual(["social_ig"]);
     expect(result.nodes.social_ig.url).toBe("https://instagram.com/p");
+  });
+});
+
+describe("applySharedFields: locations", () => {
+  const closedWeek = (nodes: LooseNodes, prefix: string) =>
+    list(
+      ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((day) => {
+        const id = `${prefix}_${day}`;
+        nodes[id] = { id, type: "opening_day", day, ranges: list([]) };
+        return id;
+      }),
+    );
+  /** Adds the location "Kutná Hora" to a document, at the end of the business's list. */
+  function addShop(nodes: LooseNodes, name = "Kutná Hora") {
+    nodes.location_kh = {
+      ...structuredClone(nodes.location_1),
+      id: "location_kh",
+      name,
+      street: "Palackého 3",
+      days: closedWeek(nodes, "kh"),
+    };
+    nodes.business_1.locations = list(["location_1", "location_kh"]);
+  }
+
+  it("Second shop in English: the primary's new location, with its name, until translated", () => {
+    const { cs, en } = languages();
+    cs.nodes.location_1.name = "Kolín";
+    en.nodes.location_1.name = "Kolin";
+    addShop(cs.nodes);
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.business_1.locations.nodes).toEqual(["location_1", "location_kh"]);
+    expect(result.nodes.location_1.name).toBe("Kolin");
+    expect(result.nodes.location_kh).toMatchObject({ name: "Kutná Hora", street: "Palackého 3" });
+    expect(validateSite(result).problems).toEqual([]);
+  });
+
+  it("keeps a translated location name when the primary reorders its locations", () => {
+    const { cs, en } = languages();
+    addShop(cs.nodes);
+    addShop(en.nodes, "Kutna Hora shop");
+    cs.nodes.business_1.locations = list(["location_kh", "location_1"]);
+    cs.nodes.location_kh.street = "Palackého 5";
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.business_1.locations.nodes).toEqual(["location_kh", "location_1"]);
+    expect(result.nodes.location_kh).toMatchObject({
+      name: "Kutna Hora shop",
+      street: "Palackého 5",
+    });
+  });
+
+  it("shows all locations in a block that chose one the primary removed", () => {
+    const { cs, en } = languages();
+    addShop(en.nodes);
+    en.nodes.contact_kh = {
+      id: "contact_kh",
+      type: "contact",
+      heading: { content: "Contact", marks: [], annotations: [] },
+      show_address: true,
+      show_phone: true,
+      show_email: true,
+      show_map: true,
+      location_id: "location_kh",
+    };
+    en.nodes.page_contact.blocks.nodes.push("contact_kh");
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.location_kh).toBeUndefined();
+    expect(result.nodes.kh_mon).toBeUndefined();
+    expect(result.nodes.contact_kh.location_id).toBe("");
+    expect(validateSite(result).problems.filter((p) => p.severity === "error")).toEqual([]);
   });
 });

@@ -139,15 +139,20 @@ function languageSwitcher(ctx: RenderContext, translationKey?: string): Html | f
 }
 
 /**
- * The business's contact details and opening hours for the footer, when its switch is on and
- * anything is filled in; the business name is shown when it differs from the site's.
+ * The business's details for the footer, when its switch is on and anything is filled in; the
+ * business name is shown when it differs from the site's. One location shows its contact details
+ * and opening hours; several each show a compact entry: name, address and phone
+ * (business-locations, "Footer contact details").
  */
 function footerDetails(ctx: RenderContext): Html | false {
   const { business, strings, site } = ctx;
   if (!business.show_in_footer) return false;
   const name = business.name.trim() !== "" && business.name !== site.name ? business.name : "";
-  const contact = contactDetails(business, strings, undefined, name);
-  const hours = openingHoursTable(business, strings);
+  const [only, ...others] = business.locations;
+  if (!only) return false;
+  if (others.length > 0) return footerLocations(ctx, name);
+  const contact = contactDetails(only, strings, undefined, name);
+  const hours = openingHoursTable(only, strings);
   if (!contact && !hours) return false;
   return html`
         <div class="footer-business">${[contact, hours].map(
@@ -155,6 +160,39 @@ function footerDetails(ctx: RenderContext): Html | false {
             part &&
             html`
           ${indent(part, "          ")}`,
+        )}
+        </div>`;
+}
+
+/** Several locations in the footer: each one with a street, city or phone, compactly. */
+function footerLocations(ctx: RenderContext, name: string): Html | false {
+  const filled = (value: string) => value.trim() !== "";
+  const entries = ctx.business.locations.flatMap((location) => {
+    if (!filled(location.street) && !filled(location.city) && !filled(location.phone)) return [];
+    const details = contactDetails(location, ctx.strings, {
+      address: true,
+      phone: true,
+      email: false,
+      map: false,
+    });
+    return details
+      ? [
+          html`<div class="footer-location">
+  <p><strong>${location.name}</strong></p>
+  ${indent(details, "  ")}
+</div>`,
+        ]
+      : [];
+  });
+  if (entries.length === 0) return false;
+  return html`
+        <div class="footer-locations">${
+          name !== "" &&
+          html`
+          <p class="business-name">${name}</p>`
+        }${entries.map(
+          (entry) => html`
+          ${indent(entry, "          ")}`,
         )}
         </div>`;
 }

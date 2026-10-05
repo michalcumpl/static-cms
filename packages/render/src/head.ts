@@ -1,5 +1,6 @@
 import type { NodeOfType } from "@webmio/model";
 import { imageFile, shareFile, srcVariant } from "@webmio/model";
+import type { LocationInfo } from "./business.js";
 import type { RenderContext } from "./context.js";
 import { type Html, html, raw } from "./html.js";
 
@@ -111,17 +112,24 @@ function shareImage(ctx: RenderContext, page: NodeOfType<"page">): NodeOfType<"i
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+const filled = (value: string) => value.trim() !== "";
+
+/** Whether a location says where the business is: a street, a city or a phone. */
+const isPlace = (location: LocationInfo) =>
+  filled(location.street) || filled(location.city) || filled(location.phone);
+
 /**
- * The organization entry (business-info design.md decision 5): an `Organization` until the
- * business has a street, city or phone, then the business's own type with its address, phone,
- * email, map and opening hours. The `@id` stays the same, so the website's publisher matches.
+ * The organization entry (business-info design.md decision 5). With one location, an
+ * `Organization` until that location has a street, city or phone, then the business's own type
+ * with the location's details. With several, always an `Organization`; the locations get their
+ * own entries (`locationEntries`). The `@id` stays the same, so the website's publisher matches.
  */
 function organizationData(ctx: RenderContext, url: string): Record<string, unknown> {
   const { site, business } = ctx;
-  const filled = (value: string) => value.trim() !== "";
-  const isPlace = filled(business.street) || filled(business.city) || filled(business.phone);
+  const [only, ...others] = business.locations;
+  const single = only !== undefined && others.length === 0 && isPlace(only) ? only : undefined;
   const organization: Record<string, unknown> = {
-    "@type": isPlace ? business.business_type : "Organization",
+    "@type": single ? business.business_type : "Organization",
     "@id": `${url}#organization`,
     name: filled(business.name) ? business.name : site.name,
     url,
@@ -153,24 +161,52 @@ function organizationData(ctx: RenderContext, url: string): Record<string, unkno
       }),
     };
   }
-  if (!isPlace) return organization;
+  if (single) Object.assign(organization, placeData(single));
+  return organization;
+}
 
+/**
+ * With several locations, one entry per location that says where it is (business-locations
+ * design decision 4), each pointing at the organization.
+ */
+function locationEntries(ctx: RenderContext, url: string): Record<string, unknown>[] {
+  const { business, site } = ctx;
+  if (business.locations.length < 2) return [];
+  const businessName = filled(business.name) ? business.name : site.name;
+  return business.locations.flatMap((location, index) =>
+    isPlace(location)
+      ? [
+          {
+            "@type": business.business_type,
+            "@id": `${url}#location-${index + 1}`,
+            name: `${businessName} – ${location.name}`,
+            ...placeData(location),
+            parentOrganization: { "@id": `${url}#organization` },
+          },
+        ]
+      : [],
+  );
+}
+
+/** A location's postal address, phone, email, map and opening hours, each when filled in. */
+function placeData(location: LocationInfo): Record<string, unknown> {
+  const data: Record<string, unknown> = {};
   const address: Record<string, string> = { "@type": "PostalAddress" };
-  if (filled(business.street)) address.streetAddress = business.street;
-  if (filled(business.postal_code)) address.postalCode = business.postal_code;
-  if (filled(business.city)) address.addressLocality = business.city;
-  if (filled(business.country)) address.addressCountry = business.country;
+  if (filled(location.street)) address.streetAddress = location.street;
+  if (filled(location.postal_code)) address.postalCode = location.postal_code;
+  if (filled(location.city)) address.addressLocality = location.city;
+  if (filled(location.country)) address.addressCountry = location.country;
   // The default country alone says nothing about where the business is.
   if (Object.keys(address).some((key) => key !== "@type" && key !== "addressCountry")) {
-    organization.address = address;
+    data.address = address;
   }
-  if (filled(business.phone)) organization.telephone = business.phone;
-  if (filled(business.email)) organization.email = business.email;
-  if (filled(business.map_url)) organization.hasMap = business.map_url;
+  if (filled(location.phone)) data.telephone = location.phone;
+  if (filled(location.email)) data.email = location.email;
+  if (filled(location.map_url)) data.hasMap = location.map_url;
 
   // One entry per distinct range, listing the days that have it, in order of first use.
   const byRange = new Map<string, { opens: string; closes: string; days: string[] }>();
-  business.days.forEach((day, index) => {
+  location.days.forEach((day, index) => {
     for (const range of day.ranges) {
       const key = `${range.opens}-${range.closes}`;
       const entry = byRange.get(key) ?? { ...range, days: [] };
@@ -179,14 +215,14 @@ function organizationData(ctx: RenderContext, url: string): Record<string, unkno
     }
   });
   if (byRange.size > 0) {
-    organization.openingHoursSpecification = [...byRange.values()].map((entry) => ({
+    data.openingHoursSpecification = [...byRange.values()].map((entry) => ({
       "@type": "OpeningHoursSpecification",
       dayOfWeek: entry.days,
       opens: entry.opens,
       closes: entry.closes,
     }));
   }
-  return organization;
+  return data;
 }
 
 /** JSON-LD `WebSite` and the organization for the home page, when the site's address is known. */
@@ -206,7 +242,7 @@ function structuredData(ctx: RenderContext): Html | undefined {
   const organization = organizationData(ctx, url);
   const json = JSON.stringify({
     "@context": "https://schema.org",
-    "@graph": [website, organization],
+    "@graph": [website, organization, ...locationEntries(ctx, url)],
   });
   // `<` can't appear literally, so no text can end the script element early.
   return raw(`<script type="application/ld+json">${json.replaceAll("<", "\\u003c")}</script>`);

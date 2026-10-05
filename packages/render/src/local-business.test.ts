@@ -30,7 +30,7 @@ describe("organization structured data", () => {
   it("stays an Organization while the business has no address or phone", () => {
     const { doc, nodes } = editableDemoSite();
     withoutServices(nodes);
-    nodes.business_1.email = "objednavky@pekarna-ulipy.example";
+    nodes.location_1.email = "objednavky@pekarna-ulipy.example";
     expect(organization(doc)).toEqual({
       "@type": "Organization",
       "@id": "https://anideti.cz/#organization",
@@ -42,8 +42,8 @@ describe("organization structured data", () => {
   it("describes a bakery with its address, phone and opening hours", () => {
     const { doc, nodes } = editableDemoSite();
     withoutServices(nodes);
-    Object.assign(nodes.business_1, {
-      business_type: "Bakery",
+    nodes.business_1.business_type = "Bakery";
+    Object.assign(nodes.location_1, {
       street: "Lipová 12",
       postal_code: "280 02",
       city: "Kolín",
@@ -88,7 +88,7 @@ describe("organization structured data", () => {
 
   it("lists a day with a lunch break in two entries", () => {
     const { doc, nodes } = editableDemoSite();
-    nodes.business_1.city = "Kolín";
+    nodes.location_1.city = "Kolín";
     setHours(nodes, "mon", [
       ["08:00", "12:00"],
       ["13:00", "17:00"],
@@ -131,7 +131,8 @@ describe("organization structured data", () => {
 
   it("uses the business name when it has one", () => {
     const { doc, nodes } = editableDemoSite();
-    Object.assign(nodes.business_1, { name: "Pekárna U Lípy s.r.o.", phone: "+420321123456" });
+    nodes.business_1.name = "Pekárna U Lípy s.r.o.";
+    nodes.location_1.phone = "+420321123456";
     expect(organization(doc)).toMatchObject({
       "@type": "LocalBusiness",
       name: "Pekárna U Lípy s.r.o.",

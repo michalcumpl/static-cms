@@ -1,5 +1,5 @@
 // The business details as the site shows them (business-info design.md decisions 3 and 4):
-// contact details, the opening hours table and the footer. Pure functions of the business
+// a location's contact details and opening hours table, and the footer. Pure functions of the business
 // data, shared by the renderer and the editor's canvas so both show the same.
 import type { Weekday } from "@webmio/model";
 import { type Html, html } from "./html.js";
@@ -10,8 +10,10 @@ export interface TimeRange {
   closes: string;
 }
 
-/** The business details with their days resolved, as rendering uses them. */
-export interface BusinessInfo {
+/** One location's details with its days resolved, as rendering uses them. */
+export interface LocationInfo {
+  /** The location's node ID. */
+  id: string;
   name: string;
   street: string;
   postal_code: string;
@@ -20,11 +22,18 @@ export interface BusinessInfo {
   phone: string;
   email: string;
   map_url: string;
-  business_type: string;
   hours_note: string;
-  show_in_footer: boolean;
   /** Monday first. */
   days: { day: Weekday; ranges: TimeRange[] }[];
+}
+
+/** The business with its locations resolved (business-locations design decision 3). */
+export interface BusinessInfo {
+  name: string;
+  business_type: string;
+  show_in_footer: boolean;
+  /** The main location first. */
+  locations: LocationInfo[];
   /** The social profiles' addresses, in order. */
   social: string[];
 }
@@ -37,10 +46,27 @@ const ids = (value: unknown): string[] => {
 };
 const str = (value: unknown) => (typeof value === "string" ? value : "");
 
-/** Reads a business node and its days from a document's nodes. Tolerates missing parts. */
+/** Reads a business node and its locations from a document's nodes. Tolerates missing parts. */
 export function businessInfo(nodes: LooseNodes, businessId: string): BusinessInfo {
   const node = nodes[businessId] ?? {};
   return {
+    name: str(node.name),
+    business_type: str(node.business_type) || "LocalBusiness",
+    show_in_footer: node.show_in_footer !== false,
+    locations: ids(node.locations).flatMap((id) => {
+      const location = nodes[id];
+      return location ? [locationInfo(nodes, id, location)] : [];
+    }),
+    social: ids(node.social).flatMap((id) => {
+      const url = str(nodes[id]?.url);
+      return url === "" ? [] : [url];
+    }),
+  };
+}
+
+function locationInfo(nodes: LooseNodes, id: string, node: Record<string, unknown>): LocationInfo {
+  return {
+    id,
     name: str(node.name),
     street: str(node.street),
     postal_code: str(node.postal_code),
@@ -49,9 +75,7 @@ export function businessInfo(nodes: LooseNodes, businessId: string): BusinessInf
     phone: str(node.phone),
     email: str(node.email),
     map_url: str(node.map_url),
-    business_type: str(node.business_type) || "LocalBusiness",
     hours_note: str(node.hours_note),
-    show_in_footer: node.show_in_footer !== false,
     days: ids(node.days).flatMap((dayId) => {
       const day = nodes[dayId];
       if (!day) return [];
@@ -60,10 +84,6 @@ export function businessInfo(nodes: LooseNodes, businessId: string): BusinessInf
         return range ? [{ opens: str(range.opens), closes: str(range.closes) }] : [];
       });
       return [{ day: str(day.day) as Weekday, ranges }];
-    }),
-    social: ids(node.social).flatMap((id) => {
-      const url = str(nodes[id]?.url);
-      return url === "" ? [] : [url];
     }),
   };
 }
@@ -89,7 +109,7 @@ const sameRanges = (a: TimeRange[], b: TimeRange[]) =>
 
 /** Runs of consecutive days with the same ranges, closed days included; Monday first. */
 export function groupDays(
-  days: BusinessInfo["days"],
+  days: LocationInfo["days"],
 ): { first: number; last: number; ranges: TimeRange[] }[] {
   const groups: { first: number; last: number; ranges: TimeRange[] }[] = [];
   days.forEach((day, index) => {
@@ -101,13 +121,13 @@ export function groupDays(
 }
 
 /** Whether any day is open. */
-export const hasOpenDays = (business: BusinessInfo) =>
+export const hasOpenDays = (business: LocationInfo) =>
   business.days.some((day) => day.ranges.length > 0);
 
 const filled = (value: string) => value.trim() !== "";
 
 /** The "Show on map" address: the business's own, or a Google Maps search for its address. */
-export function mapLink(business: BusinessInfo): string | undefined {
+export function mapLink(business: LocationInfo): string | undefined {
   if (filled(business.map_url)) return business.map_url;
   if (!filled(business.street) && !filled(business.city)) return undefined;
   const town = [business.postal_code, business.city].filter(filled).join(" ");
@@ -129,7 +149,7 @@ const ALL_PARTS: ContactParts = { address: true, phone: true, email: true, map: 
  * when there is nothing to show. `name` is shown first when given (the footer).
  */
 export function contactDetails(
-  business: BusinessInfo,
+  business: LocationInfo,
   strings: SiteStrings,
   parts: ContactParts = ALL_PARTS,
   name = "",
@@ -160,7 +180,7 @@ export function contactDetails(
 }
 
 /** The opening hours table and note; only the note when every day is closed. */
-export function openingHoursTable(business: BusinessInfo, strings: SiteStrings): Html | false {
+export function openingHoursTable(business: LocationInfo, strings: SiteStrings): Html | false {
   const note =
     filled(business.hours_note) && html`<p class="hours-note">${business.hours_note}</p>`;
   if (!hasOpenDays(business)) return note;

@@ -5,14 +5,14 @@ check and the untranslated-text test enforce this.
 
 ## 1. Model (`packages/model`)
 
-- [ ] 1.1 Change the schema and types for decisions 1 and 2:
+- [x] 1.1 Change the schema and types for decisions 1 and 2:
   - the `location` node, `business.locations`, and the business without its contact and hours
     fields;
   - `location_id` on `contact` and `opening_hours`;
   - schema version 8.
 
   Verify with `schema.test.ts` and the type check.
-- [ ] 1.2 Validation:
+- [x] 1.2 Validation:
   - `checkBusiness` becomes per location, with the location named when there are several;
   - names required with two or more locations;
   - a business without locations is a structural error;
@@ -22,22 +22,22 @@ check and the untranslated-text test enforce this.
   Verify with tests for every scenario of "Locations", "Location of a business block",
   "Business details", "Opening hours" and "Business blocks with nothing to show" in the
   site-document delta.
-- [ ] 1.3 Implement `toVersion8` (decision 6), keep `demo-site-v7.json` as a fixture, and
+- [x] 1.3 Implement `toVersion8` (decision 6), keep `demo-site-v7.json` as a fixture, and
   regenerate the demo, starter and image-blocks fixtures. Verify with `migrate.test.ts`
   ("Upgrade the bakery", deterministic IDs across two languages' documents, input not modified)
   and the existing render snapshots passing **unchanged**.
-- [ ] 1.4 Extend `applySharedFields` (decision 5). Verify with `languages.test.ts`: "Second shop
+- [x] 1.4 Extend `applySharedFields` (decision 5). Verify with `languages.test.ts`: "Second shop
   in English", a translated location name kept after the primary reorders its locations, and a
   dropped location resetting a block's choice.
 
 ## 2. Render (`packages/render`)
 
-- [ ] 2.1 Refactor `businessInfo`, `contactDetails` and `openingHoursTable` to locations
+- [x] 2.1 Refactor `businessInfo`, `contactDetails` and `openingHoursTable` to locations
   (decision 3). Render contact and opening hours blocks for one or several locations, and the
   footer's compact entries for several. Verify with the scenarios of "Business blocks for
   several locations" and "Footer contact details" (including "Two shops in the footer"),
   html-validate on a two-location page, and the demo snapshots unchanged.
-- [ ] 2.2 Structured data for several locations (decision 4). Verify with "Two shops" and the
+- [x] 2.2 Structured data for several locations (decision 4). Verify with "Two shops" and the
   existing structured data tests unchanged.
 
 ## 3. Admin (`apps/admin`)

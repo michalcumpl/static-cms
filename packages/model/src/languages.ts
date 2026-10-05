@@ -6,18 +6,8 @@ type LooseNode = { id?: string; type?: string; [key: string]: unknown };
 type LooseDoc = { document_id: string; nodes: Record<string, LooseNode> };
 type NodeList = { nodes: string[]; marks: unknown[]; annotations: unknown[] };
 
-/** Business fields shared by every language; `name` and `hours_note` are per language. */
-const SHARED_BUSINESS_FIELDS = [
-  "street",
-  "postal_code",
-  "city",
-  "country",
-  "phone",
-  "email",
-  "map_url",
-  "business_type",
-  "show_in_footer",
-] as const;
+/** Business fields shared by every language; its `name` is per language. */
+const SHARED_BUSINESS_FIELDS = ["business_type", "show_in_footer"] as const;
 
 const list = (nodes: string[]): NodeList => ({ nodes, marks: [], annotations: [] });
 
@@ -95,34 +85,47 @@ export function applySharedFields<T>(primary: T, other: T): T {
   }
   site.share_image = list(shareIds);
 
-  // Business: shared fields and the opening hours, with the primary's day and range nodes.
+  // Business: shared fields, social profiles, and the locations (business-locations design
+  // decision 5): the primary's list and facts, each location's name and hours note per language.
   const pBusiness = p.nodes[pSite.business as string];
   const oBusinessId = oSite.business as string;
   const oBusiness = nodes[oBusinessId];
+  const droppedLocations = new Set<string>();
   if (pBusiness && oBusiness) {
-    for (const dayId of idsOf(oBusiness.days)) {
-      for (const rangeId of idsOf(o.nodes[dayId]?.ranges)) delete nodes[rangeId];
-      delete nodes[dayId];
-    }
     const business: LooseNode = { ...oBusiness };
     for (const field of SHARED_BUSINESS_FIELDS) business[field] = pBusiness[field];
-    const dayIds = idsOf(pBusiness.days);
-    for (const dayId of dayIds) {
-      const day = p.nodes[dayId];
-      if (!day) continue;
-      nodes[dayId] = { ...day };
-      for (const rangeId of idsOf(day.ranges)) {
-        const range = p.nodes[rangeId];
-        if (range) nodes[rangeId] = { ...range };
-      }
-    }
-    business.days = list(dayIds);
-    // Social profiles: the primary's.
     for (const id of idsOf(oBusiness.social)) delete nodes[id];
     const socialIds = idsOf(pBusiness.social);
     for (const id of socialIds) if (p.nodes[id]) nodes[id] = { ...p.nodes[id] };
     business.social = list(socialIds);
+
+    const pLocationIds = idsOf(pBusiness.locations).filter((id) => p.nodes[id]);
+    const shared = new Set(pLocationIds);
+    for (const id of idsOf(oBusiness.locations)) {
+      if (shared.has(id)) continue;
+      droppedLocations.add(id);
+      for (const owned of ownedIds(o.nodes, id)) delete nodes[owned];
+    }
+    for (const id of pLocationIds) {
+      const pLocation = p.nodes[id] as LooseNode;
+      const oLocation = o.nodes[id];
+      if (oLocation) for (const owned of ownedIds(o.nodes, id)) delete nodes[owned];
+      for (const owned of ownedIds(p.nodes, id)) nodes[owned] = { ...p.nodes[owned] };
+      if (oLocation?.type === "location") {
+        nodes[id] = { ...pLocation, name: oLocation.name, hours_note: oLocation.hours_note };
+      }
+    }
+    business.locations = list(pLocationIds);
     nodes[oBusinessId] = business;
+  }
+  // Blocks that chose a location the primary no longer has show all of them.
+  for (const [id, node] of Object.entries(nodes)) {
+    if (
+      (node.type === "contact" || node.type === "opening_hours") &&
+      droppedLocations.has(node.location_id as string)
+    ) {
+      nodes[id] = { ...node, location_id: "" };
+    }
   }
 
   // Collections: the primary's items and order. Items both have keep `other`'s texts and take

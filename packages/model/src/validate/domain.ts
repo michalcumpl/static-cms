@@ -28,7 +28,7 @@ const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const MIN_SHARE_WIDTH = 600;
 /** The largest icon made from a favicon that phones show on their home screens. */
 const MIN_FAVICON_SIZE = 180;
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -187,9 +187,23 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
 
   const business = site ? get(site.business, "business") : undefined;
   if (business) checkBusiness(business, get, problems);
+  const locationIds = new Set(business?.locations.nodes ?? []);
   for (const block of [...all("contact"), ...all("opening_hours")]) {
-    if (business && !hasSomethingToShow(block, business, get)) {
-      const what = block.type === "contact" ? "contact block" : "opening hours block";
+    if (!business) continue;
+    const what = block.type === "contact" ? "contact block" : "opening hours block";
+    if (block.location_id !== "" && !locationIds.has(block.location_id)) {
+      problems.error(
+        "missing-location",
+        block.id,
+        `The ${what} ${where(block.id)} shows a location that no longer exists; choose another in the block's panel.`,
+        "location_id",
+      );
+      continue;
+    }
+    const shown = (block.location_id === "" ? [...locationIds] : [block.location_id]).flatMap(
+      (id) => get(id, "location") ?? [],
+    );
+    if (!shown.some((location) => hasSomethingToShow(block, location, get))) {
       const fill = block.type === "contact" ? "business details" : "opening hours";
       problems.warning(
         "nothing-to-show",
@@ -376,30 +390,6 @@ function checkBusiness(
   get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
   problems: Problems,
 ): void {
-  if (business.phone !== "" && !PHONE.test(business.phone)) {
-    problems.error(
-      "invalid-phone",
-      business.id,
-      `The phone number "${business.phone}" must be in international form, like +420 321 123 456.`,
-      "phone",
-    );
-  }
-  if (business.email !== "" && !EMAIL.test(business.email)) {
-    problems.error(
-      "invalid-email",
-      business.id,
-      `"${business.email}" is not an email address.`,
-      "email",
-    );
-  }
-  if (business.map_url !== "" && !/^https:\/\/[^\s]+$/.test(business.map_url)) {
-    problems.error(
-      "invalid-map-url",
-      business.id,
-      "The map address must be a link starting with https://, such as the business's Google Maps or Mapy.com listing.",
-      "map_url",
-    );
-  }
   const seenProfiles = new Set<string>();
   business.social.nodes.forEach((id, i) => {
     const profile = get(id, "social_link");
@@ -421,22 +411,85 @@ function checkBusiness(
     }
     seenProfiles.add(profile.url);
   });
-  if (!COUNTRY.test(business.country)) {
+  const locations = business.locations.nodes;
+  if (locations.length === 0) {
+    problems.error(
+      "invalid-value",
+      business.id,
+      "The business needs at least one location.",
+      "locations",
+    );
+  }
+  locations.forEach((id, i) => {
+    const location = get(id, "location");
+    if (!location) return;
+    // With several locations, messages say which one (business-locations, "Locations").
+    const several = locations.length > 1;
+    if (several && location.name.trim() === "") {
+      problems.error(
+        "empty-name",
+        location.id,
+        `Location ${i + 1} needs a name; once there are several locations, each is named.`,
+        "name",
+      );
+    }
+    const at = several ? `${locationLabel(location, i)}: ` : "";
+    checkLocation(location, at, get, problems);
+  });
+}
+
+/** How messages name a location: its name, or "Location 2". */
+function locationLabel(location: NodeOfType<"location">, index: number): string {
+  return location.name.trim() || `Location ${index + 1}`;
+}
+
+/** A location's contact details and opening hours; `at` names it in messages ("Kolín: "). */
+function checkLocation(
+  location: NodeOfType<"location">,
+  at: string,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  if (location.phone !== "" && !PHONE.test(location.phone)) {
+    problems.error(
+      "invalid-phone",
+      location.id,
+      `${at}The phone number "${location.phone}" must be in international form, like +420 321 123 456.`,
+      "phone",
+    );
+  }
+  if (location.email !== "" && !EMAIL.test(location.email)) {
+    problems.error(
+      "invalid-email",
+      location.id,
+      `${at}"${location.email}" is not an email address.`,
+      "email",
+    );
+  }
+  if (location.map_url !== "" && !/^https:\/\/[^\s]+$/.test(location.map_url)) {
+    problems.error(
+      "invalid-map-url",
+      location.id,
+      `${at}The map address must be a link starting with https://, such as the location's Google Maps or Mapy.com listing.`,
+      "map_url",
+    );
+  }
+  if (!COUNTRY.test(location.country)) {
     problems.error(
       "invalid-country",
-      business.id,
-      `The country must be a two-letter code, like CZ, not "${business.country}".`,
+      location.id,
+      `${at}The country must be a two-letter code, like CZ, not "${location.country}".`,
       "country",
     );
   }
-  const days = business.days.nodes.map((id) => get(id, "opening_day"));
+  const days = location.days.nodes.map((id) => get(id, "opening_day"));
   const inOrder =
     days.length === WEEKDAYS.length && days.every((day, i) => day?.day === WEEKDAYS[i]);
   if (!inOrder) {
     problems.error(
       "invalid-value",
-      business.id,
-      "The opening hours must list each day from Monday to Sunday once.",
+      location.id,
+      `${at}The opening hours must list each day from Monday to Sunday once.`,
       "days",
     );
   }
@@ -454,7 +507,7 @@ function checkBusiness(
         problems.error(
           "invalid-value",
           range.id,
-          `${name}'s hours: "${bad}" is not a time; use hours and minutes, like 08:30.`,
+          `${at}${name}'s hours: "${bad}" is not a time; use hours and minutes, like 08:30.`,
           opensOk ? "closes" : "opens",
         );
         continue;
@@ -465,14 +518,14 @@ function checkBusiness(
         problems.error(
           "invalid-hours",
           range.id,
-          `${name}'s hours close before they open (${range.opens}–${range.closes}).`,
+          `${at}${name}'s hours close before they open (${range.opens}–${range.closes}).`,
           "closes",
         );
       } else if (opens < previousClose) {
         problems.error(
           "invalid-hours",
           range.id,
-          `${name}'s hours overlap or are out of order; each range must start after the previous one ends.`,
+          `${at}${name}'s hours overlap or are out of order; each range must start after the previous one ends.`,
           "opens",
         );
       }
@@ -623,26 +676,26 @@ const BLOCK_NAMES = {
   faq: "questions block",
 } as const;
 
-/** Whether a contact or opening hours block would show anything of the business. */
+/** Whether a contact or opening hours block would show anything of one location. */
 function hasSomethingToShow(
   block: NodeOfType<"contact"> | NodeOfType<"opening_hours">,
-  business: NodeOfType<"business">,
+  location: NodeOfType<"location">,
   get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
 ): boolean {
   if (block.type === "opening_hours") {
-    const open = business.days.nodes.some(
+    const open = location.days.nodes.some(
       (id) => (get(id, "opening_day")?.ranges.nodes.length ?? 0) > 0,
     );
-    return open || business.hours_note.trim() !== "";
+    return open || location.hours_note.trim() !== "";
   }
   const filled = (value: string) => value.trim() !== "";
-  const address = filled(business.street) || filled(business.city) || filled(business.postal_code);
+  const address = filled(location.street) || filled(location.city) || filled(location.postal_code);
   return (
     (block.show_address && address) ||
-    (block.show_phone && filled(business.phone)) ||
-    (block.show_email && filled(business.email)) ||
+    (block.show_phone && filled(location.phone)) ||
+    (block.show_email && filled(location.email)) ||
     (block.show_map &&
-      (filled(business.map_url) || filled(business.street) || filled(business.city)))
+      (filled(location.map_url) || filled(location.street) || filled(location.city)))
   );
 }
 

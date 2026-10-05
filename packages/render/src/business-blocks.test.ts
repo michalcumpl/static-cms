@@ -8,7 +8,7 @@ const text = (content: string) => ({ content, marks: [], annotations: [] });
 /** The demo site with a filled-in business, open Monday 6–17, and both blocks on "Kontakt". */
 function businessSite() {
   const { doc, nodes } = editableDemoSite();
-  Object.assign(nodes.business_1, {
+  Object.assign(nodes.location_1, {
     street: "Lipová 12",
     postal_code: "280 02",
     city: "Kolín",
@@ -31,8 +31,14 @@ function addBlocks(nodes: LooseNodes) {
     show_phone: true,
     show_email: true,
     show_map: true,
+    location_id: "",
   };
-  nodes.hours_1 = { id: "hours_1", type: "opening_hours", heading: text("Otevírací doba") };
+  nodes.hours_1 = {
+    id: "hours_1",
+    type: "opening_hours",
+    heading: text("Otevírací doba"),
+    location_id: "",
+  };
   nodes.page_contact.blocks.nodes.push("contact_1", "hours_1");
 }
 

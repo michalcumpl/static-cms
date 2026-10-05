@@ -64,7 +64,7 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 7 },
+      schema_version: { type: "integer", min: 1, default: 8 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
@@ -273,12 +273,16 @@ export const siteSchema = {
       show_phone: { type: "boolean", default: true },
       show_email: { type: "boolean", default: true },
       show_map: { type: "boolean", default: true },
+      /** A location of the business, or "" for all of them. */
+      location_id: { type: "string" },
     },
   },
   opening_hours: {
     kind: "block",
     properties: {
       heading: { type: "text", allow_newlines: false },
+      /** A location of the business, or "" for all of them. */
+      location_id: { type: "string" },
     },
   },
   call_to_action: {
@@ -320,6 +324,17 @@ export const siteSchema = {
     kind: "block",
     properties: {
       name: { type: "string" },
+      business_type: { type: "string", values: BUSINESS_TYPES, default: "LocalBusiness" },
+      show_in_footer: { type: "boolean", default: true },
+      /** The business's places, the main one first (business-locations design decision 1). */
+      locations: { type: "node_array", node_types: ["location"], default_node_type: "location" },
+      social: { type: "node_array", node_types: ["social_link"] },
+    },
+  },
+  location: {
+    kind: "block",
+    properties: {
+      name: { type: "string" },
       street: { type: "string" },
       postal_code: { type: "string" },
       city: { type: "string" },
@@ -327,11 +342,8 @@ export const siteSchema = {
       phone: { type: "string" },
       email: { type: "string" },
       map_url: { type: "string" },
-      business_type: { type: "string", values: BUSINESS_TYPES, default: "LocalBusiness" },
       hours_note: { type: "string" },
-      show_in_footer: { type: "boolean", default: true },
       days: { type: "node_array", node_types: ["opening_day"] },
-      social: { type: "node_array", node_types: ["social_link"] },
     },
   },
   /** A social profile of the business; its kind comes from the address (`socialKind`). */

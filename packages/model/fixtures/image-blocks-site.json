@@ -724,7 +724,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 7,
+      "schema_version": 8,
       "name": "Pekárna U Lípy",
       "lang": "cs",
       "base_url": "https://pekarna-ulipy.example",
@@ -851,6 +851,23 @@
       "id": "business_1",
       "type": "business",
       "name": "",
+      "business_type": "LocalBusiness",
+      "show_in_footer": true,
+      "social": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "locations": {
+        "nodes": ["location_1"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "location_1": {
+      "id": "location_1",
+      "type": "location",
+      "name": "",
       "street": "",
       "postal_code": "",
       "city": "",
@@ -858,16 +875,9 @@
       "phone": "",
       "email": "",
       "map_url": "",
-      "business_type": "LocalBusiness",
       "hours_note": "",
-      "show_in_footer": true,
       "days": {
         "nodes": ["day_mon", "day_tue", "day_wed", "day_thu", "day_fri", "day_sat", "day_sun"],
-        "marks": [],
-        "annotations": []
-      },
-      "social": {
-        "nodes": [],
         "marks": [],
         "annotations": []
       }

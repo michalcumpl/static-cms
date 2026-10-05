@@ -70,7 +70,9 @@ export type ProblemCode =
   | "duplicate-item"
   | "chosen-items-unused"
   | "invalid-social-url"
-  | "duplicate-social-url";
+  | "duplicate-social-url"
+  // Locations (business-locations)
+  | "missing-location";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -142,6 +144,7 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "chosen-items-unused": "site",
   "invalid-social-url": "site",
   "duplicate-social-url": "site",
+  "missing-location": "site",
 };
 
 export function problemCategory(code: ProblemCode): ProblemCategory {

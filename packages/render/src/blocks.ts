@@ -1,6 +1,6 @@
 import type { AnyNode, NodeOfType } from "@webmio/model";
 import { imageFile, imageVariants, srcVariant } from "@webmio/model";
-import { contactDetails, openingHoursTable } from "./business.js";
+import { contactDetails, type LocationInfo, openingHoursTable } from "./business.js";
 import type { RenderContext } from "./context.js";
 import { type Html, html, raw } from "./html.js";
 import { isEmpty, renderText } from "./text.js";
@@ -216,31 +216,62 @@ function nested(markup: Html | false, by: string): Html | false {
 
 /** The site's contact details; the block holds only its heading and which parts to show. */
 function renderContact(block: NodeOfType<"contact">, ctx: RenderContext): Html {
-  const details = contactDetails(ctx.business, ctx.strings, {
+  const parts = {
     address: block.show_address,
     phone: block.show_phone,
     email: block.show_email,
     map: block.show_map,
-  });
-  return html`<section class="block contact">
-      <div class="container">${blockHeading(block.heading, ctx)}${
-        details &&
-        html`
-        ${nested(details, "        ")}`
-      }
-      </div>
-    </section>`;
+  };
+  return locationsBlock(block, "contact", ctx, (location) =>
+    contactDetails(location, ctx.strings, parts),
+  );
 }
 
-/** The site's opening hours; the block holds only its heading. */
+/** The locations' opening hours; the block holds only its heading and location choice. */
 function renderOpeningHours(block: NodeOfType<"opening_hours">, ctx: RenderContext): Html {
-  const table = openingHoursTable(ctx.business, ctx.strings);
-  return html`<section class="block opening-hours">
-      <div class="container">${blockHeading(block.heading, ctx)}${
-        table &&
-        html`
-        ${nested(table, "        ")}`
-      }
+  return locationsBlock(block, "opening-hours", ctx, (location) =>
+    openingHoursTable(location, ctx.strings),
+  );
+}
+
+/**
+ * A business block for the locations it shows (business-locations, "Business blocks for several
+ * locations"): one location renders as before, several each under its name, one heading level
+ * below the block's. Locations with nothing to show are left out.
+ */
+function locationsBlock(
+  block: NodeOfType<"contact"> | NodeOfType<"opening_hours">,
+  cls: string,
+  ctx: RenderContext,
+  render: (location: LocationInfo) => Html | false,
+): Html {
+  const locations = ctx.locationsFor(block.location_id);
+  const tag = isEmpty(block.heading) ? "h2" : "h3";
+  const body =
+    locations.length <= 1
+      ? locations.map((location) => {
+          const part = render(location);
+          return (
+            part &&
+            html`
+        ${nested(part, "        ")}`
+          );
+        })
+      : locations.map((location) => {
+          const part = render(location);
+          const name =
+            tag === "h2" ? html`<h2>${location.name}</h2>` : html`<h3>${location.name}</h3>`;
+          return (
+            part &&
+            html`
+        <div class="location">
+          ${name}
+          ${nested(part, "          ")}
+        </div>`
+          );
+        });
+  return html`<section class="block ${cls}">
+      <div class="container">${blockHeading(block.heading, ctx)}${body}
       </div>
     </section>`;
 }

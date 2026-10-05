@@ -5,7 +5,7 @@ import {
   type CollectionItemNode,
   isSafeHref,
 } from "@webmio/model";
-import { type BusinessInfo, businessInfo } from "./business.js";
+import { type BusinessInfo, businessInfo, type LocationInfo } from "./business.js";
 import { type SiteStrings, siteStrings } from "./strings.js";
 
 const BASE_PATH = /^\/((?!\.\.?\/)[A-Za-z0-9._~-]+\/)*$/;
@@ -102,6 +102,15 @@ export class RenderContext {
       default:
         throw new Error(`Expected ${id} to be a mark node; validation should have caught this.`);
     }
+  }
+
+  /**
+   * The locations a contact or opening hours block shows: all of them for `""`, or the one it
+   * chose; none for a location that no longer exists.
+   */
+  locationsFor(locationId: string): LocationInfo[] {
+    const { locations } = this.business;
+    return locationId === "" ? locations : locations.filter((l) => l.id === locationId);
   }
 
   /** The items a collection block shows (business-collections design decision 3). */

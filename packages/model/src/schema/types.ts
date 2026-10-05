@@ -329,6 +329,8 @@ export interface ContactNode {
   show_phone: boolean;
   show_email: boolean;
   show_map: boolean;
+  /** A location of the business, or "" for all of them. */
+  location_id: string;
 }
 
 /** Shows the site's opening hours; holds none of its own. */
@@ -336,6 +338,8 @@ export interface OpeningHoursNode {
   id: string;
   type: "opening_hours";
   heading: TextValue;
+  /** A location of the business, or "" for all of them. */
+  location_id: string;
 }
 
 export type BusinessType =
@@ -353,10 +357,25 @@ export type BusinessType =
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 /** The business details, once per site; every text may be empty. */
+/** The business: its identity, and its places (business-locations design decision 1). */
 export interface BusinessNode {
   id: string;
   type: "business";
   /** Empty: the site name is used. */
+  name: string;
+  business_type: BusinessType;
+  show_in_footer: boolean;
+  /** `location` nodes, at least one; the first is the main location. */
+  locations: NodeArrayValue;
+  /** `social_link` nodes, in the order the footer lists them. */
+  social: NodeArrayValue;
+}
+
+/** One place of the business: its contact details and opening hours; every text may be empty. */
+export interface LocationNode {
+  id: string;
+  type: "location";
+  /** Empty only while it is the business's only location. */
   name: string;
   street: string;
   postal_code: string;
@@ -366,15 +385,11 @@ export interface BusinessNode {
   /** International form without spaces, e.g. `+420321123456`. */
   phone: string;
   email: string;
-  /** The business's own map listing (https), or "" to generate one from the address. */
+  /** The location's own map listing (https), or "" to generate one from the address. */
   map_url: string;
-  business_type: BusinessType;
   hours_note: string;
-  show_in_footer: boolean;
   /** Seven `opening_day` nodes, Monday first. */
   days: NodeArrayValue;
-  /** `social_link` nodes, in the order the footer lists them. */
-  social: NodeArrayValue;
 }
 
 export interface OpeningDayNode {
@@ -424,6 +439,7 @@ export type AnyNode =
   | ItemRefNode
   | SocialLinkNode
   | BusinessNode
+  | LocationNode
   | OpeningDayNode
   | TimeRangeNode
   | ImageNode
