@@ -62,7 +62,7 @@ check and the untranslated-text test enforce this.
 
 ## 5. Languages (`packages/site`)
 
-- [ ] 5.1 Extend `applySharedFields` (decision 5): collection membership and order from the
+- [x] 5.1 Extend `applySharedFields` (decision 5): collection membership and order from the
   primary, each language's own texts kept, images from the primary with `alt` kept while `src`
   matches, missing items copied, dangling `item_ref`s removed, and social profiles shared.
   Verify with `languages.test.ts` for "New service in Czech", "Translated service keeps its

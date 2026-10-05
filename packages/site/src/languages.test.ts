@@ -121,3 +121,106 @@ describe("applySharedFields", () => {
     expect(en.doc).toEqual(before);
   });
 });
+
+describe("applySharedFields: collections", () => {
+  const text = (content: string) => ({ content, marks: [], annotations: [] });
+  const names = (doc: { nodes: LooseNodes }) =>
+    doc.nodes.site_1.services.nodes.map((id: string) => doc.nodes[id].name.content);
+
+  it("New service in Czech", () => {
+    const { cs, en } = languages();
+    cs.nodes.service_vanocka = {
+      id: "service_vanocka",
+      type: "service_item",
+      name: text("Vánočka"),
+      description: text(""),
+      price: text(""),
+    };
+    cs.nodes.site_1.services.nodes.push("service_vanocka");
+    const before = structuredClone(en.doc);
+    const primaryBefore = structuredClone(cs.doc);
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(cs.doc).toEqual(primaryBefore);
+    expect(names(result)).toEqual([
+      "Kváskový chléb",
+      "Rohlíky a housky",
+      "Dorty na objednávku",
+      "Vánočka",
+    ]);
+    expect(en.doc).toEqual(before);
+    expect(validateSite(result).problems).toEqual([]);
+  });
+
+  it("Translated service keeps its translation", () => {
+    const { cs, en } = languages();
+    en.nodes.service_bread.name = text("Bread");
+    cs.nodes.site_1.services.nodes = ["service_rolls", "service_cakes", "service_bread"];
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(names(result)).toEqual(["Rohlíky a housky", "Dorty na objednávku", "Bread"]);
+  });
+
+  it("Service deleted in Czech", () => {
+    const { cs, en } = languages();
+    en.nodes.ref_bread = { id: "ref_bread", type: "item_ref", item_id: "service_bread" };
+    en.nodes.services_1.show = "chosen";
+    en.nodes.services_1.chosen = list(["ref_bread"]);
+    en.nodes.service_bread.name = text("Bread");
+    cs.nodes.site_1.services.nodes = ["service_rolls", "service_cakes"];
+    delete cs.nodes.service_bread;
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.service_bread).toBeUndefined();
+    expect(result.nodes.ref_bread).toBeUndefined();
+    expect(result.nodes.services_1.chosen.nodes).toEqual([]);
+    expect(validateSite(result).problems.filter((p) => p.severity === "error")).toEqual([]);
+  });
+
+  it("drops an item only the other language has, with its marks", () => {
+    const { cs, en } = languages();
+    cs.nodes.site_1.services.nodes = ["service_bread", "service_rolls"];
+    delete cs.nodes.service_cakes;
+    delete cs.nodes.emphasis_cakes;
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.service_cakes).toBeUndefined();
+    expect(result.nodes.emphasis_cakes).toBeUndefined();
+    expect(validateSite(result).problems).toEqual([]);
+  });
+
+  it("takes an item's image from the primary, keeping the description while it's the same", () => {
+    const { cs, en } = languages();
+    for (const [doc, alt] of [
+      [cs, "Jana Nováková"],
+      [en, "Jana Novakova, baker"],
+    ] as const) {
+      doc.nodes.photo_jana = image("photo_jana", "jana-1a2b", alt);
+      doc.nodes.person_jana = {
+        id: "person_jana",
+        type: "person",
+        name: text(doc === cs ? "Jana" : "Jana (EN)"),
+        role: text(""),
+        text: text(""),
+        image: list(["photo_jana"]),
+      };
+      doc.nodes.site_1.team = list(["person_jana"]);
+    }
+    let result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.photo_jana.alt).toBe("Jana Novakova, baker");
+    expect(result.nodes.person_jana.name.content).toBe("Jana (EN)");
+    cs.nodes.photo_jana = image("photo_jana_2", "jana-new", "Jana v pekárně");
+    cs.nodes.photo_jana_2 = cs.nodes.photo_jana;
+    delete cs.nodes.photo_jana;
+    cs.nodes.person_jana.image = list(["photo_jana_2"]);
+    result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.photo_jana).toBeUndefined();
+    expect(result.nodes.photo_jana_2).toMatchObject({ src: "jana-new", alt: "Jana v pekárně" });
+    expect(result.nodes.person_jana.image.nodes).toEqual(["photo_jana_2"]);
+  });
+
+  it("shares the social profiles", () => {
+    const { cs, en } = languages();
+    cs.nodes.social_ig = { id: "social_ig", type: "social_link", url: "https://instagram.com/p" };
+    cs.nodes.business_1.social = list(["social_ig"]);
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.business_1.social.nodes).toEqual(["social_ig"]);
+    expect(result.nodes.social_ig.url).toBe("https://instagram.com/p");
+  });
+});
