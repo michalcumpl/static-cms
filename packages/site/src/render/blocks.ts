@@ -29,6 +29,8 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderCallToAction(block, ctx);
     case "testimonials":
       return renderTestimonials(block, ctx);
+    case "faq":
+      return renderFaq(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -155,7 +157,7 @@ function renderGallery(block: NodeOfType<"gallery">, ctx: RenderContext): Html {
 function renderTeam(block: NodeOfType<"team">, ctx: RenderContext): Html {
   // Names sit one level below the block heading, so no heading level is skipped.
   const nameTag = isEmpty(block.heading) ? "h2" : "h3";
-  const people = ctx.children(block.people).map((person) => {
+  const people = ctx.items(block).map((person) => {
     if (person.type !== "person") return false;
     const image = imageOf(person, ctx);
     const name = renderText(person.name, ctx);
@@ -271,7 +273,7 @@ function renderCallToAction(block: NodeOfType<"call_to_action">, ctx: RenderCont
 
 /** Quotes with the person's name, detail and optional photo; no review markup (decision 4). */
 function renderTestimonials(block: NodeOfType<"testimonials">, ctx: RenderContext): Html {
-  const items = ctx.children(block.items).map((item) => {
+  const items = ctx.items(block).map((item) => {
     if (item.type !== "testimonial") return false;
     const image = imageOf(item, ctx);
     return html`
@@ -300,8 +302,25 @@ function renderTestimonials(block: NodeOfType<"testimonials">, ctx: RenderContex
     </section>`;
 }
 
+/** Questions that open without JavaScript (business-collections, "Block rendering"). */
+function renderFaq(block: NodeOfType<"faq">, ctx: RenderContext): Html {
+  const items = ctx.items(block).map(
+    (item) =>
+      item.type === "faq_item" &&
+      html`
+        <details>
+          <summary>${renderText(item.question, ctx)}</summary>
+          <p>${renderText(item.answer, ctx)}</p>
+        </details>`,
+  );
+  return html`<section class="block faq">
+      <div class="container">${blockHeading(block.heading, ctx)}${items}
+      </div>
+    </section>`;
+}
+
 function renderServices(block: NodeOfType<"services">, ctx: RenderContext): Html {
-  const items = ctx.children(block.items).map(
+  const items = ctx.items(block).map(
     (item) =>
       item.type === "service_item" &&
       html`

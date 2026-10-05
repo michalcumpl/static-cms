@@ -170,8 +170,9 @@
         "marks": [],
         "annotations": []
       },
-      "items": {
-        "nodes": ["service_bread", "service_rolls", "service_cakes"],
+      "show": "all",
+      "chosen": {
+        "nodes": [],
         "marks": [],
         "annotations": []
       }
@@ -421,7 +422,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 6,
+      "schema_version": 7,
       "name": "Pekárna U Lípy",
       "lang": "cs",
       "base_url": "https://pekarna-ulipy.example",
@@ -452,7 +453,27 @@
         "marks": [],
         "annotations": []
       },
-      "home_page_id": "page_home"
+      "home_page_id": "page_home",
+      "services": {
+        "nodes": ["service_bread", "service_rolls", "service_cakes"],
+        "marks": [],
+        "annotations": []
+      },
+      "team": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "testimonials": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "faqs": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
     },
     "day_mon": {
       "id": "day_mon",
@@ -540,6 +561,11 @@
       "show_in_footer": true,
       "days": {
         "nodes": ["day_mon", "day_tue", "day_wed", "day_thu", "day_fri", "day_sat", "day_sun"],
+        "marks": [],
+        "annotations": []
+      },
+      "social": {
+        "nodes": [],
         "marks": [],
         "annotations": []
       }

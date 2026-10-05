@@ -61,7 +61,16 @@ export type ProblemCode =
   | "invalid-hours"
   | "nothing-to-show"
   | "empty-quote"
-  | "duplicate-translation-key";
+  | "duplicate-translation-key"
+  // Collections (business-collections)
+  | "empty-question"
+  | "empty-answer"
+  | "missing-item"
+  | "wrong-collection"
+  | "duplicate-item"
+  | "chosen-items-unused"
+  | "invalid-social-url"
+  | "duplicate-social-url";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -125,6 +134,14 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "nothing-to-show": "site",
   "empty-quote": "site",
   "duplicate-translation-key": "site",
+  "empty-question": "site",
+  "empty-answer": "site",
+  "missing-item": "site",
+  "wrong-collection": "site",
+  "duplicate-item": "site",
+  "chosen-items-unused": "site",
+  "invalid-social-url": "site",
+  "duplicate-social-url": "site",
 };
 
 export function problemCategory(code: ProblemCode): ProblemCategory {

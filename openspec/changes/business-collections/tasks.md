@@ -19,7 +19,7 @@ check and the untranslated-text test enforce this.
 
 ## 2. Schema, types and validation (`packages/site`)
 
-- [ ] 2.1 Extend the schema and types for decisions 1, 2 and 6:
+- [x] 2.1 Extend the schema and types for decisions 1, 2 and 6:
   - collections on the site node (`services`, `team`, `testimonials`, `faqs`);
   - `faq_item`, `item_ref` and `social_link` nodes, and `business.social`;
   - `heading`, `show` and `chosen` on the `services`, `team` and `testimonials` blocks and the
@@ -27,10 +27,10 @@ check and the untranslated-text test enforce this.
   - schema version 7.
 
   Verify with `schema.test.ts` (Svedit schema shape, `isNodeType`) and the type check.
-- [ ] 2.2 Add `blockItems(doc, block)` (decision 3) and `socialKind(url)` (decision 6). Verify
+- [x] 2.2 Add `blockItems(doc, block)` (decision 3) and `socialKind(url)` (decision 6). Verify
   with unit tests: all vs. chosen, chosen order, a missing ref skipped, and every host in
   "Social profiles" (with `www.` and `m.` prefixes).
-- [ ] 2.3 Validation: item contents per collection with "Service 3"-style messages; missing-item,
+- [x] 2.3 Validation: item contents per collection with "Service 3"-style messages; missing-item,
   wrong-collection and duplicate-item errors on refs; empty-block warnings for collection blocks;
   social profile errors and the duplicate warning. Remove the block-scoped item rules. Verify
   with tests for every scenario of "Collections", "Collection blocks", "Social profiles", "Image
@@ -38,17 +38,17 @@ check and the untranslated-text test enforce this.
 
 ## 3. Upgrade to version 7 (`packages/site`)
 
-- [ ] 3.1 Implement `toVersion7` in `migrate.ts` (decision 8): lift items in page and block
+- [x] 3.1 Implement `toVersion7` in `migrate.ts` (decision 8): lift items in page and block
   order, merge exact duplicates, set `show` and `chosen`, add empty `faqs` and `social`, and
   bump the version. Update the `migrateSite` doc comment. Verify with `migrate.test.ts` cases
   "One services block", "Highlights and a full list" and "Same name, different text", and that
   the input isn't modified.
-- [ ] 3.2 Regenerate `fixtures/demo-site.json` at version 7 through the upgrade and review the
+- [x] 3.2 Regenerate `fixtures/demo-site.json` at version 7 through the upgrade and review the
   diff (decision 9). Verify that the existing render snapshots pass **unchanged**.
 
 ## 4. Rendering (`packages/site`)
 
-- [ ] 4.1 Render the `services`, `team` and `testimonials` blocks from `blockItems`, render
+- [x] 4.1 Render the `services`, `team` and `testimonials` blocks from `blockItems`, render
   nothing when nothing is shown, and add the `faq` block as `<details>`/`<summary>` with styles
   in `render/css.ts`. Verify with `blocks.test.ts` for "One service on two pages", "Chosen
   order", "Question and answer" and "Nothing to show", and a new snapshot of a page with an FAQ

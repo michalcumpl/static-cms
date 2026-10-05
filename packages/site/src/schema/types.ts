@@ -46,6 +46,11 @@ export interface SiteNode {
   nav: string;
   /** The business the site is for: contact details and opening hours. */
   business: string;
+  /** The collections: `service_item`, `person`, `testimonial` and `faq_item` nodes. */
+  services: NodeArrayValue;
+  team: NodeArrayValue;
+  testimonials: NodeArrayValue;
+  faqs: NodeArrayValue;
   pages: NodeArrayValue;
   /** ID of the home page, served at the site root. Its position in `pages` doesn't matter. */
   home_page_id: string;
@@ -143,11 +148,22 @@ export interface ListItemNode {
   content: TextValue;
 }
 
-export interface ServicesNode {
+/** What a collection block shows. */
+export type CollectionShow = "all" | "chosen";
+
+/** The shape every collection block shares (business-collections design decision 2). */
+interface CollectionBlock {
   id: string;
-  type: "services";
   heading: TextValue;
-  items: NodeArrayValue;
+  /** `all`: the whole collection in its order; `chosen`: the items `chosen` points at. */
+  show: CollectionShow;
+  /** `item_ref` nodes; empty while `show` is `all`. */
+  chosen: NodeArrayValue;
+}
+
+/** Shows the site's services. */
+export interface ServicesNode extends CollectionBlock {
+  type: "services";
 }
 
 export interface ServiceItemNode {
@@ -184,11 +200,9 @@ export interface GalleryItemNode {
   caption: TextValue;
 }
 
-export interface TeamNode {
-  id: string;
+/** Shows the site's team. */
+export interface TeamNode extends CollectionBlock {
   type: "team";
-  heading: TextValue;
-  people: NodeArrayValue;
 }
 
 export interface PersonNode {
@@ -264,11 +278,36 @@ export interface CallToActionNode {
   actions: NodeArrayValue;
 }
 
-export interface TestimonialsNode {
-  id: string;
+/** Shows the site's testimonials. */
+export interface TestimonialsNode extends CollectionBlock {
   type: "testimonials";
-  heading: TextValue;
-  items: NodeArrayValue;
+}
+
+/** Shows the site's questions and answers. */
+export interface FaqNode extends CollectionBlock {
+  type: "faq";
+}
+
+export interface FaqItemNode {
+  id: string;
+  type: "faq_item";
+  question: TextValue;
+  /** Bold, italic and links; line breaks allowed. */
+  answer: TextValue;
+}
+
+/** One item a collection block shows, named by its node ID. */
+export interface ItemRefNode {
+  id: string;
+  type: "item_ref";
+  item_id: string;
+}
+
+/** A social profile of the business: an `https` address. */
+export interface SocialLinkNode {
+  id: string;
+  type: "social_link";
+  url: string;
 }
 
 export interface TestimonialNode {
@@ -334,6 +373,8 @@ export interface BusinessNode {
   show_in_footer: boolean;
   /** Seven `opening_day` nodes, Monday first. */
   days: NodeArrayValue;
+  /** `social_link` nodes, in the order the footer lists them. */
+  social: NodeArrayValue;
 }
 
 export interface OpeningDayNode {
@@ -378,6 +419,10 @@ export type AnyNode =
   | CallToActionNode
   | TestimonialsNode
   | TestimonialNode
+  | FaqNode
+  | FaqItemNode
+  | ItemRefNode
+  | SocialLinkNode
   | BusinessNode
   | OpeningDayNode
   | TimeRangeNode

@@ -74,7 +74,7 @@ The business SHALL have an ordered list of social profiles, each an `https` addr
 - `tiktok.com`: TikTok;
 - any other host: the host itself.
 
-A `www.` or `m.` prefix SHALL be ignored when matching. An address that isn't an `https` URL SHALL be reported as an error, as the map address is. The same address twice SHALL be reported as a warning.
+The host SHALL also match any subdomain of these (`m.facebook.com`, `cz.linkedin.com`). For other hosts, a `www.` or `m.` prefix SHALL be left out of the name. An address that isn't an `https` URL SHALL be reported as an error, as the map address is. The same address twice SHALL be reported as a warning.
 
 #### Scenario: Instagram profile
 - **WHEN** the business has the social profile `https://www.instagram.com/pekarnaulipy`

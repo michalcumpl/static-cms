@@ -39,11 +39,22 @@ export const BUSINESS_TYPES = [
   "SportsActivityLocation",
 ] as const;
 
+/** What a collection block shows: its whole collection, or the items it chose. */
+export const COLLECTION_SHOW = ["all", "chosen"] as const;
+
 /** The days of the week, Monday first, as `opening_day` nodes name them. */
 export const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
 const INLINE_MARKS: readonly NodeType[] = ["strong", "emphasis", "link", "internal_link"];
 const LINK_TYPES: readonly NodeType[] = ["page_link", "external_link"];
+
+/** The properties every collection block has (business-collections design decision 2). */
+const COLLECTION_BLOCK = {
+  heading: { type: "text", allow_newlines: false },
+  show: { type: "string", values: COLLECTION_SHOW, default: "all" },
+  /** `item_ref` nodes; used only when `show` is `chosen`. */
+  chosen: { type: "node_array", node_types: ["item_ref"] },
+} as const;
 
 /**
  * The site document schema, in Svedit's schema format, so the editor can pass it
@@ -53,7 +64,7 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 6 },
+      schema_version: { type: "integer", min: 1, default: 7 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
@@ -67,6 +78,19 @@ export const siteSchema = {
       theme: { type: "node", node_types: ["theme"] },
       nav: { type: "node", node_types: ["nav"] },
       business: { type: "node", node_types: ["business"] },
+      /** The site's collections: each item is held once, and blocks show it. */
+      services: {
+        type: "node_array",
+        node_types: ["service_item"],
+        default_node_type: "service_item",
+      },
+      team: { type: "node_array", node_types: ["person"], default_node_type: "person" },
+      testimonials: {
+        type: "node_array",
+        node_types: ["testimonial"],
+        default_node_type: "testimonial",
+      },
+      faqs: { type: "node_array", node_types: ["faq_item"], default_node_type: "faq_item" },
       pages: { type: "node_array", node_types: ["page"], default_node_type: "page" },
       home_page_id: { type: "string" },
     },
@@ -127,6 +151,7 @@ export const siteSchema = {
           "opening_hours",
           "call_to_action",
           "testimonials",
+          "faq",
         ],
         default_node_type: "rich_text",
       },
@@ -176,17 +201,7 @@ export const siteSchema = {
       content: { type: "text", mark_types: INLINE_MARKS, allow_newlines: false },
     },
   },
-  services: {
-    kind: "block",
-    properties: {
-      heading: { type: "text", allow_newlines: false },
-      items: {
-        type: "node_array",
-        node_types: ["service_item"],
-        default_node_type: "service_item",
-      },
-    },
-  },
+  services: { kind: "block", properties: COLLECTION_BLOCK },
   service_item: {
     kind: "block",
     properties: {
@@ -222,13 +237,7 @@ export const siteSchema = {
       caption: { type: "text", allow_newlines: false },
     },
   },
-  team: {
-    kind: "block",
-    properties: {
-      heading: { type: "text", allow_newlines: false },
-      people: { type: "node_array", node_types: ["person"], default_node_type: "person" },
-    },
-  },
+  team: { kind: "block", properties: COLLECTION_BLOCK },
   person: {
     kind: "block",
     properties: {
@@ -281,13 +290,7 @@ export const siteSchema = {
       actions: { type: "node_array", node_types: LINK_TYPES },
     },
   },
-  testimonials: {
-    kind: "block",
-    properties: {
-      heading: { type: "text", allow_newlines: false },
-      items: { type: "node_array", node_types: ["testimonial"], default_node_type: "testimonial" },
-    },
-  },
+  testimonials: { kind: "block", properties: COLLECTION_BLOCK },
   testimonial: {
     kind: "block",
     properties: {
@@ -296,6 +299,21 @@ export const siteSchema = {
       /** Optional, e.g. "zákaznice od roku 2015". */
       detail: { type: "text", allow_newlines: false },
       image: { type: "node_array", node_types: ["image"] },
+    },
+  },
+  faq: { kind: "block", properties: COLLECTION_BLOCK },
+  faq_item: {
+    kind: "block",
+    properties: {
+      question: { type: "text", allow_newlines: false },
+      answer: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
+    },
+  },
+  /** Points a collection block at one item of its collection, by the item's node ID. */
+  item_ref: {
+    kind: "block",
+    properties: {
+      item_id: { type: "string" },
     },
   },
   business: {
@@ -313,6 +331,14 @@ export const siteSchema = {
       hours_note: { type: "string" },
       show_in_footer: { type: "boolean", default: true },
       days: { type: "node_array", node_types: ["opening_day"] },
+      social: { type: "node_array", node_types: ["social_link"] },
+    },
+  },
+  /** A social profile of the business; its kind comes from the address (`socialKind`). */
+  social_link: {
+    kind: "block",
+    properties: {
+      url: { type: "string" },
     },
   },
   opening_day: {

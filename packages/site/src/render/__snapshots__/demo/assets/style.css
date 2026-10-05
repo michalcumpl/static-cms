@@ -393,6 +393,23 @@ img {
   opacity: 0.8;
 }
 
+.faq details {
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--color-secondary);
+}
+
+.faq summary {
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.faq details p {
+  margin: 0.5rem 0 0;
+}
+
 .contact-details {
   font-style: normal;
 }

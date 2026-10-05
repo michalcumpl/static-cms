@@ -1,3 +1,9 @@
+import {
+  COLLECTION_NAMES,
+  COLLECTIONS,
+  type CollectionName,
+  isCollectionBlockType,
+} from "../collections.js";
 import { isFontId } from "../fonts.js";
 import { isSafeHref } from "../links.js";
 import {
@@ -12,7 +18,7 @@ import {
 import { slugify } from "../slug.js";
 import { CONTRAST_PAIRS, contrastRatio, MIN_CONTRAST, type ThemeColor } from "../themes.js";
 import type { GenericCheck } from "./generic.js";
-import type { Problems } from "./problems.js";
+import type { ProblemCode, Problems } from "./problems.js";
 
 const LANGUAGE = /^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$/;
 const HEX_COLOR = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -22,7 +28,7 @@ const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const MIN_SHARE_WIDTH = 600;
 /** The largest icon made from a favicon that phones show on their home screens. */
 const MIN_FAVICON_SIZE = 180;
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -89,6 +95,11 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
         "The site has no home page; set one of its pages as home.",
         "home_page_id",
       );
+    }
+    checkCollections(site, get, problems);
+    for (const pageId of pageIds) {
+      const page = get(pageId, "page");
+      if (page) checkCollectionBlocks(site, page, check, get, problems);
     }
     const nav = get(site.nav, "nav");
     if (nav) checkMenu(nav, get, problems);
@@ -253,6 +264,11 @@ function placesOf(
         visit(pageId, `on ${pageLabel(page as unknown as { title: string })}`);
     }
     visit(site.nav, "in the menu");
+    for (const collection of COLLECTION_NAMES) {
+      site[collection].nodes.forEach((id, i) => {
+        visit(id, `in ${ITEM_LABELS[collection]} ${i + 1}`);
+      });
+    }
   }
   return (id) => places.get(id) ?? "";
 }
@@ -384,6 +400,27 @@ function checkBusiness(
       "map_url",
     );
   }
+  const seenProfiles = new Set<string>();
+  business.social.nodes.forEach((id, i) => {
+    const profile = get(id, "social_link");
+    if (!profile) return;
+    if (!isHttpsUrl(profile.url)) {
+      problems.error(
+        "invalid-social-url",
+        profile.id,
+        `Social profile ${i + 1} must be a link starting with https://, like https://www.instagram.com/your-business.`,
+        "url",
+      );
+    } else if (seenProfiles.has(profile.url)) {
+      problems.warning(
+        "duplicate-social-url",
+        profile.id,
+        `Social profile ${i + 1} is listed twice.`,
+        "url",
+      );
+    }
+    seenProfiles.add(profile.url);
+  });
   if (!COUNTRY.test(business.country)) {
     problems.error(
       "invalid-country",
@@ -443,6 +480,148 @@ function checkBusiness(
     }
   }
 }
+
+function isHttpsUrl(value: string): boolean {
+  if (!/^https:\/\/[^\s]+$/.test(value)) return false;
+  try {
+    return new URL(value).hostname.includes(".");
+  } catch {
+    return false;
+  }
+}
+
+/** How messages name the items of each collection, with their position: "Service 3". */
+const ITEM_LABELS: Record<CollectionName, string> = {
+  services: "Service",
+  team: "Person",
+  testimonials: "Testimonial",
+  faqs: "Question",
+};
+
+/** Where an item is edited, for messages. */
+const ITEM_HOMES: Record<CollectionName, string> = {
+  services: "a services block",
+  team: "a team block",
+  testimonials: "a testimonials block",
+  faqs: "a questions block",
+};
+
+/** The items' own contents, collection by collection (business-collections, "Collections"). */
+function checkCollections(
+  site: NodeOfType<"site">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  for (const collection of COLLECTION_NAMES) {
+    site[collection].nodes.forEach((id, i) => {
+      const label = `${ITEM_LABELS[collection]} ${i + 1}`;
+      const home = `edit it in ${ITEM_HOMES[collection]} on any page`;
+      const need = (code: ProblemCode, nodeId: string, what: string, property: string) =>
+        problems.error(code, nodeId, `${label} needs ${what}; ${home}.`, property);
+      const tooMany = (nodeId: string, count: number, what: string) => {
+        if (count > 1) {
+          problems.error(
+            "too-many-items",
+            nodeId,
+            `${label} can have at most one ${what}.`,
+            "image",
+          );
+        }
+      };
+      const service = get(id, "service_item");
+      if (service && isBlank(service.name)) need("empty-name", id, "a name", "name");
+      const person = get(id, "person");
+      if (person) {
+        if (isBlank(person.name)) need("empty-name", id, "a name", "name");
+        tooMany(id, person.image.nodes.length, "portrait");
+      }
+      const testimonial = get(id, "testimonial");
+      if (testimonial) {
+        if (isBlank(testimonial.quote)) need("empty-quote", id, "its quote", "quote");
+        if (isBlank(testimonial.name)) need("empty-name", id, "the person's name", "name");
+        tooMany(id, testimonial.image.nodes.length, "photo");
+      }
+      const faq = get(id, "faq_item");
+      if (faq) {
+        if (isBlank(faq.question)) need("empty-question", id, "its question", "question");
+        if (isBlank(faq.answer)) need("empty-answer", id, "its answer", "answer");
+      }
+    });
+  }
+}
+
+/** What the collection blocks of a page show (business-collections, "Collection blocks"). */
+function checkCollectionBlocks(
+  site: NodeOfType<"site">,
+  page: NodeOfType<"page">,
+  check: GenericCheck,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const on = pageLabel(page);
+  for (const blockId of page.blocks.nodes) {
+    const node = check.wellFormed.has(blockId) ? check.nodes[blockId] : undefined;
+    if (!node || !isCollectionBlockType(node.type)) continue;
+    const block = get(blockId, node.type);
+    if (!block) continue;
+    const { collection } = COLLECTIONS[block.type];
+    const members = new Set(site[collection].nodes);
+    const name = BLOCK_NAMES[block.type];
+    if (block.show === "all") {
+      if (block.chosen.nodes.length > 0) {
+        problems.error(
+          "chosen-items-unused",
+          block.id,
+          `The ${name} on ${on} shows everything but also lists chosen items.`,
+          "chosen",
+        );
+      }
+      if (members.size === 0) {
+        problems.warning(
+          "empty-block",
+          block.id,
+          `The ${name} on ${on} has nothing to show yet; add the first one in the block.`,
+          "chosen",
+        );
+      }
+      continue;
+    }
+    if (block.chosen.nodes.length === 0) {
+      problems.warning("empty-block", block.id, `The ${name} on ${on} is empty.`, "chosen");
+    }
+    const seen = new Set<string>();
+    for (const refId of block.chosen.nodes) {
+      const ref = get(refId, "item_ref");
+      if (!ref) continue;
+      if (!members.has(ref.item_id)) {
+        const elsewhere = COLLECTION_NAMES.some((c) => site[c].nodes.includes(ref.item_id));
+        problems.error(
+          elsewhere ? "wrong-collection" : "missing-item",
+          ref.id,
+          elsewhere
+            ? `The ${name} on ${on} shows an item of another kind; remove it from the block.`
+            : `The ${name} on ${on} shows an item that no longer exists; remove it from the block.`,
+          "item_id",
+        );
+      } else if (seen.has(ref.item_id)) {
+        problems.error(
+          "duplicate-item",
+          ref.id,
+          `The ${name} on ${on} shows the same item twice.`,
+          "item_id",
+        );
+      }
+      seen.add(ref.item_id);
+    }
+  }
+}
+
+const BLOCK_NAMES = {
+  services: "services block",
+  team: "team block",
+  testimonials: "testimonials block",
+  faq: "questions block",
+} as const;
 
 /** Whether a contact or opening hours block would show anything of the business. */
 function hasSomethingToShow(
@@ -576,11 +755,10 @@ function checkPageBlocks(
         }
       }
     }
-    const services = get(blockId, "services");
-    if (services && !isBlank(services.heading)) hasH2 = true;
     checkImageBlock(blockId, page, get, problems);
     checkContentBlock(blockId, page, get, problems);
     for (const type of [
+      "services",
       "text_with_image",
       "gallery",
       "team",
@@ -589,6 +767,7 @@ function checkPageBlocks(
       "opening_hours",
       "call_to_action",
       "testimonials",
+      "faq",
     ] as const) {
       const block = get(blockId, type);
       if (block && !isBlank(block.heading)) hasH2 = true;
@@ -614,7 +793,7 @@ function checkPageBlocks(
   });
 }
 
-/** The call to action's heading and buttons, and testimonials (cta-and-testimonials decision 5). */
+/** The call to action's heading and buttons (cta-and-testimonials decision 5). */
 function checkContentBlock(
   blockId: string,
   page: NodeOfType<"page">,
@@ -648,42 +827,9 @@ function checkContentBlock(
       );
     }
   }
-  const testimonials = get(blockId, "testimonials");
-  if (!testimonials) return;
-  if (testimonials.items.nodes.length === 0) {
-    problems.warning(
-      "empty-block",
-      testimonials.id,
-      `A testimonials block on ${on} is empty.`,
-      "items",
-    );
-  }
-  for (const itemId of testimonials.items.nodes) {
-    const item = get(itemId, "testimonial");
-    if (!item) continue;
-    if (isBlank(item.quote)) {
-      problems.error("empty-quote", item.id, `A testimonial on ${on} needs its quote.`, "quote");
-    }
-    if (isBlank(item.name)) {
-      problems.error(
-        "empty-name",
-        item.id,
-        `A testimonial on ${on} needs the person's name.`,
-        "name",
-      );
-    }
-    if (item.image.nodes.length > 1) {
-      problems.error(
-        "too-many-items",
-        item.id,
-        "A testimonial can have at most one photo.",
-        "image",
-      );
-    }
-  }
 }
 
-/** The contents of gallery, team and logos blocks, and the image of a text with image block. */
+/** The contents of gallery and logos blocks, and the image of a text with image block. */
 function checkImageBlock(
   blockId: string,
   page: NodeOfType<"page">,
@@ -719,18 +865,6 @@ function checkImageBlock(
         );
       }
       tooMany(item.id, item.image.nodes.length, "A gallery photo");
-    }
-  }
-  const team = get(blockId, "team");
-  if (team) {
-    emptyBlock(team.id, team.people.nodes.length, "team", "people");
-    for (const personId of team.people.nodes) {
-      const person = get(personId, "person");
-      if (!person) continue;
-      if (isBlank(person.name)) {
-        problems.error("empty-name", person.id, `A person on ${on} needs a name.`, "name");
-      }
-      tooMany(person.id, person.image.nodes.length, "A person");
     }
   }
   const logos = get(blockId, "logos");

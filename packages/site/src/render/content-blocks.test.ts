@@ -58,8 +58,10 @@ function site() {
     id: "testimonials_1",
     type: "testimonials",
     heading: text("Co o nás říkají"),
-    items: list(["t_jana", "t_petr"]),
+    show: "all",
+    chosen: list([]),
   };
+  nodes.site_1.testimonials = list(["t_jana", "t_petr"]);
   nodes.page_contact.blocks.nodes.push("cta_1", "testimonials_1");
   return { doc, nodes };
 }

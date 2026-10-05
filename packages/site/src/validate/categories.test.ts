@@ -88,6 +88,14 @@ describe("problem categories", () => {
       "nothing-to-show": true,
       "empty-quote": true,
       "duplicate-translation-key": true,
+      "empty-question": true,
+      "empty-answer": true,
+      "missing-item": true,
+      "wrong-collection": true,
+      "duplicate-item": true,
+      "chosen-items-unused": true,
+      "invalid-social-url": true,
+      "duplicate-social-url": true,
     };
     for (const code of Object.keys(codes) as ProblemCode[]) {
       expect(["structure", "site"], code).toContain(problemCategory(code));

@@ -41,17 +41,18 @@ describe("image blocks", () => {
     nodes.logo_p6.name.content = "";
     const found = validateSite(doc).problems;
     expect(found.map((p) => [p.code, p.nodeId, p.category])).toEqual([
-      ["empty-name", "person_martina", "site"],
       ["empty-name", "logo_p6", "site"],
+      ["empty-name", "person_martina", "site"],
     ]);
-    expect(found[1]?.message).toContain("description");
-    expect(found[0]?.message).toContain('"Galerie"');
+    expect(found[0]?.message).toContain("description");
+    expect(found[1]?.message).toBe("Person 2 needs a name; edit it in a team block on any page.");
   });
 
   it("warns about empty galleries, teams and logo rows, and stays valid", () => {
     const { doc, nodes } = editableImageBlocksSite();
     nodes.gallery_work.items.nodes = [];
-    nodes.team_1.people.nodes = [];
+    nodes.site_1.team.nodes = [];
+    for (const id of ["person_katerina", "person_martina", "image_katerina"]) delete nodes[id];
     nodes.logos_1.items.nodes = [];
     expect(validateSite(doc).valid).toBe(true);
     expect(problems(doc)).toEqual([

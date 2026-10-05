@@ -1,3 +1,4 @@
+import { type CollectionBlockNode, isCollectionBlockType } from "../collections.js";
 import type { NodeOfType } from "../schema/index.js";
 import { renderBlock, renderImage, renderLink, siteLogoSizes } from "./blocks.js";
 import { contactDetails, openingHoursTable } from "./business.js";
@@ -12,7 +13,13 @@ export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
   const title = isHome ? site.name : `${page.title} – ${site.name}`;
   const own = page.seo_description.trim() !== "" ? page.seo_description : site.description;
   const description = own.trim() === "" ? "" : own;
-  const blocks = ctx.children(page.blocks);
+  // A collection block with nothing to show renders nothing.
+  const blocks = ctx
+    .children(page.blocks)
+    .filter(
+      (block) =>
+        !isCollectionBlockType(block.type) || ctx.items(block as CollectionBlockNode).length > 0,
+    );
   const heroIsH1 = blocks[0]?.type === "hero";
 
   const main = html`${

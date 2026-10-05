@@ -52,8 +52,10 @@ function site() {
     id: "testimonials_1",
     type: "testimonials",
     heading: text("Co o nás říkají"),
-    items: list(["t_jana", "t_petr"]),
+    show: "all",
+    chosen: list([]),
   };
+  nodes.site_1.testimonials = list(["t_jana", "t_petr"]);
   nodes.page_home.blocks.nodes.push("cta_1", "testimonials_1");
   return { doc, nodes };
 }
@@ -106,8 +108,16 @@ describe("call to action and testimonials", () => {
     nodes.t_petr.quote = text("");
     nodes.t_petr.name = text("");
     expect(problems(doc).map((p) => [p.code, p.nodeId, p.message])).toEqual([
-      ["empty-quote", "t_petr", 'A testimonial on "Úvod" needs its quote.'],
-      ["empty-name", "t_petr", 'A testimonial on "Úvod" needs the person\'s name.'],
+      [
+        "empty-quote",
+        "t_petr",
+        "Testimonial 2 needs its quote; edit it in a testimonials block on any page.",
+      ],
+      [
+        "empty-name",
+        "t_petr",
+        "Testimonial 2 needs the person's name; edit it in a testimonials block on any page.",
+      ],
     ]);
   });
 
@@ -125,7 +135,7 @@ describe("call to action and testimonials", () => {
 
   it("warn about an empty testimonials block", () => {
     const { doc, nodes } = site();
-    nodes.testimonials_1.items = list([]);
+    nodes.site_1.testimonials = list([]);
     for (const id of ["t_jana", "t_petr", "photo_jana"]) delete nodes[id];
     expect(problems(doc)).toEqual([
       expect.objectContaining({

@@ -9,7 +9,9 @@ type RawDoc = { document_id: string; nodes: Record<string, RawNode> };
  * description, favicon, share image and AI crawler switches, and each page's share image;
  * version 4 adds the business details, empty, with every day closed; version 5 gives every page
  * a translation key, its own ID; version 6 turns the theme's font lists into catalog fonts and
- * adds the site's logo (none) and header switch (name shown).
+ * adds the site's logo (none) and header switch (name shown); version 7 lifts the items of
+ * services, team and testimonials blocks into the site's collections, which the blocks then show
+ * (all, or the items they chose), and adds the FAQ collection and social profiles, empty.
  * Anything that isn't a site of an older version is returned unchanged, for validation to
  * judge. The input is not modified.
  */
@@ -21,6 +23,7 @@ export function migrateSite(doc: unknown): unknown {
   if (siteOf(current)?.schema_version === 3) current = toVersion4(current);
   if (siteOf(current)?.schema_version === 4) current = toVersion5(current);
   if (siteOf(current)?.schema_version === 5) current = toVersion6(current);
+  if (siteOf(current)?.schema_version === 6) current = toVersion7(current);
   return current;
 }
 
@@ -156,6 +159,149 @@ function toVersion6<T extends RawDoc>(doc: T): T {
     };
   }
   return { ...doc, nodes: upgraded };
+}
+
+/** Version-6 blocks that held items, the property they held them in, and their collection. */
+const LIFTED = {
+  services: { items: "items", collection: "services" },
+  team: { items: "people", collection: "team" },
+  testimonials: { items: "items", collection: "testimonials" },
+} as const;
+
+/**
+ * Version 7 holds services, people and testimonials once, on the site (business-collections
+ * design decision 8). Items are lifted in page order and block order, keeping their IDs; an item
+ * equal to one lifted from an earlier block (same texts, marks and image) is merged into it. A
+ * block whose items are then exactly its whole collection, in order, shows `all`; any other
+ * block shows its former items as `chosen`. Pages render as before.
+ */
+function toVersion7<T extends RawDoc>(doc: T): T {
+  const site = siteOf(doc) as RawNode;
+  const upgraded: Record<string, RawNode> = { ...doc.nodes };
+  const freeId = (base: string) => {
+    let id = base;
+    for (let n = 2; Object.hasOwn(upgraded, id); n++) id = `${base}_${n}`;
+    return id;
+  };
+  const collections = {
+    services: [] as string[],
+    team: [] as string[],
+    testimonials: [] as string[],
+  };
+  const byContent = new Map<string, string>();
+  const blocks: { id: string; ids: string[] }[] = [];
+
+  for (const pageId of pageIdsOf(site)) {
+    const page = typeof pageId === "string" ? doc.nodes[pageId] : undefined;
+    if (!isObject(page) || page.type !== "page") continue;
+    for (const blockId of idsIn(page.blocks)) {
+      const block = doc.nodes[blockId];
+      if (!isObject(block) || !Object.hasOwn(LIFTED, block.type as string)) continue;
+      const { items, collection } = LIFTED[block.type as keyof typeof LIFTED];
+      const ids: string[] = [];
+      for (const itemId of idsIn(block[items])) {
+        if (!isObject(doc.nodes[itemId])) continue;
+        const key = `${collection}:${canonical(doc.nodes, itemId)}`;
+        const earlier = byContent.get(key);
+        if (earlier !== undefined && !ids.includes(earlier)) {
+          for (const id of subtree(doc.nodes, itemId)) delete upgraded[id];
+          ids.push(earlier);
+          continue;
+        }
+        if (earlier === undefined) byContent.set(key, itemId);
+        collections[collection].push(itemId);
+        ids.push(itemId);
+      }
+      blocks.push({ id: blockId, ids });
+    }
+  }
+
+  for (const { id, ids } of blocks) {
+    const block = doc.nodes[id] as RawNode;
+    const { items, collection } = LIFTED[block.type as keyof typeof LIFTED];
+    const members = collections[collection];
+    const all = ids.length === members.length && ids.every((itemId, i) => members[i] === itemId);
+    const refIds = all
+      ? []
+      : ids.map((itemId) => {
+          const refId = freeId(`${id}_ref`);
+          upgraded[refId] = { id: refId, type: "item_ref", item_id: itemId };
+          return refId;
+        });
+    const { [items]: _lifted, ...rest } = block;
+    upgraded[id] = {
+      ...rest,
+      show: all ? "all" : "chosen",
+      chosen: { nodes: refIds, marks: [], annotations: [] },
+    };
+  }
+
+  const businessId = site.business;
+  const business = typeof businessId === "string" ? doc.nodes[businessId] : undefined;
+  if (isObject(business) && business.type === "business") {
+    upgraded[businessId as string] = { ...business, social: emptyList() };
+  }
+  upgraded[doc.document_id] = {
+    ...site,
+    schema_version: 7,
+    services: { nodes: collections.services, marks: [], annotations: [] },
+    team: { nodes: collections.team, marks: [], annotations: [] },
+    testimonials: { nodes: collections.testimonials, marks: [], annotations: [] },
+    faqs: emptyList(),
+  };
+  return { ...doc, nodes: upgraded };
+}
+
+/** The node IDs of a node list value, or none. */
+function idsIn(value: unknown): string[] {
+  const nodes = isObject(value) ? value.nodes : undefined;
+  return Array.isArray(nodes) ? nodes.filter((id): id is string => typeof id === "string") : [];
+}
+
+/**
+ * A node's content as a string that ignores node IDs: equal for two items with the same texts,
+ * marks and images.
+ */
+function canonical(nodes: Record<string, RawNode>, id: string): string {
+  const form = (nodeId: string): unknown => {
+    const node = nodes[nodeId];
+    if (!isObject(node)) return null;
+    const out: Record<string, unknown> = {};
+    for (const key of Object.keys(node).sort()) {
+      if (key === "id") continue;
+      const value = node[key];
+      if (isObject(value) && Array.isArray(value.nodes)) {
+        out[key] = { nodes: idsIn(value).map(form), marks: ranges(value.marks) };
+      } else if (isObject(value) && typeof value.content === "string") {
+        out[key] = { content: value.content, marks: ranges(value.marks) };
+      } else {
+        out[key] = value;
+      }
+    }
+    return out;
+  };
+  const ranges = (value: unknown) =>
+    (Array.isArray(value) ? value : []).map((range) =>
+      isObject(range) ? [range.start_offset, range.end_offset, form(String(range.node_id))] : null,
+    );
+  return JSON.stringify(form(id));
+}
+
+/** A node and every node it owns (list children, and the nodes its marks point at). */
+function subtree(nodes: Record<string, RawNode>, id: string): string[] {
+  const node = nodes[id];
+  if (!isObject(node)) return [];
+  const ids = [id];
+  for (const value of Object.values(node)) {
+    if (!isObject(value)) continue;
+    for (const child of idsIn(value)) ids.push(...subtree(nodes, child));
+    for (const range of Array.isArray(value.marks) ? value.marks : []) {
+      if (isObject(range) && typeof range.node_id === "string") {
+        ids.push(...subtree(nodes, range.node_id));
+      }
+    }
+  }
+  return ids;
 }
 
 /** The catalog font closest to a version-5 CSS font list. */

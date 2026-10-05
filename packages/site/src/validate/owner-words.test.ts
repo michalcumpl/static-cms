@@ -53,7 +53,7 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
   nodes.logo_harmonie.url = "ftp://harmonie.example";
   nodes.sub_about.content = text("");
   nodes.hero_1.heading = text("");
-  nodes.team_1.people.nodes = [];
+  nodes.site_1.team.nodes = [];
   delete nodes.person_katerina;
   delete nodes.person_martina;
   delete nodes.image_katerina;
@@ -106,8 +106,28 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
     id: "testimonials_1",
     type: "testimonials",
     heading: { content: "Reference", marks: [], annotations: [] },
-    items: { nodes: ["t_1"], marks: [], annotations: [] },
+    show: "all",
+    chosen: { nodes: [], marks: [], annotations: [] },
   };
+  nodes.site_1.testimonials = { nodes: ["t_1"], marks: [], annotations: [] };
+  nodes.faq_1 = {
+    id: "faq_1",
+    type: "faq_item",
+    question: { content: "Rozvážíte?", marks: [], annotations: [] },
+    answer: { content: "", marks: [], annotations: [] },
+  };
+  nodes.site_1.faqs = { nodes: ["faq_1"], marks: [], annotations: [] };
+  nodes.faq_ref_gone = { id: "faq_ref_gone", type: "item_ref", item_id: "faq_gone" };
+  nodes.faq_block = {
+    id: "faq_block",
+    type: "faq",
+    heading: { content: "Dotazy", marks: [], annotations: [] },
+    show: "chosen",
+    chosen: { nodes: ["faq_ref_gone"], marks: [], annotations: [] },
+  };
+  nodes.page_contact.blocks.nodes.push("faq_block");
+  nodes.social_bad = { id: "social_bad", type: "social_link", url: "instagram.com/pekarna" };
+  nodes.business_1.social = { nodes: ["social_bad"], marks: [], annotations: [] };
   nodes.cta_1 = {
     id: "cta_1",
     type: "call_to_action",
@@ -158,6 +178,9 @@ describe("owners' words", () => {
       "invalid-hours",
       "nothing-to-show",
       "empty-quote",
+      "empty-answer",
+      "missing-item",
+      "invalid-social-url",
       "invalid-color",
       "invalid-theme-value",
       "low-contrast",

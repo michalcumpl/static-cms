@@ -1,3 +1,4 @@
+import { blockItems, type CollectionBlockNode, type CollectionItemNode } from "../collections.js";
 import { isSafeHref } from "../links.js";
 import type { AnyNode, NodeOfType, NodeType, SiteDocument, SiteNode } from "../schema/index.js";
 import { type BusinessInfo, businessInfo } from "./business.js";
@@ -43,7 +44,7 @@ export class RenderContext {
   readonly strings: SiteStrings;
 
   constructor(
-    doc: SiteDocument,
+    readonly doc: SiteDocument,
     readonly basePath: string,
     /** The site's address without a trailing slash, like `https://anideti.cz`, when known. */
     readonly siteUrl?: string,
@@ -97,6 +98,11 @@ export class RenderContext {
       default:
         throw new Error(`Expected ${id} to be a mark node; validation should have caught this.`);
     }
+  }
+
+  /** The items a collection block shows (business-collections design decision 3). */
+  items(block: CollectionBlockNode): CollectionItemNode[] {
+    return blockItems(this.doc, block);
   }
 
   /** Nodes of a node_array, in order. */
