@@ -287,7 +287,7 @@ beta.
 | # | Milestone | OpenSpec change | What | Status |
 | --- | --- | --- | --- | --- |
 | 1 | A | [`business-collections`](../openspec/changes/archive/2026-10-05-business-collections/) | services, team, testimonials and FAQs held once per site; blocks show all or chosen items; social profiles; format 7 | done |
-| 2 | A | [`package-split`](../openspec/changes/package-split/) | `@static-cms/site` split into `@webmio/model`, `@webmio/render` and `@webmio/export`, and everything renamed to Webmio (packages, product name in the admin, docs) | done |
+| 2 | A | [`package-split`](../openspec/changes/archive/2026-10-05-package-split/) | `@static-cms/site` split into `@webmio/model`, `@webmio/render` and `@webmio/export`, and everything renamed to Webmio (packages, product name in the admin, docs) | done |
 | 3 | A | `business-locations` | several locations, each with address, hours and contact | next |
 | 4 | B | `control-panel` | the website home: Business, What you offer, About you, Website, Publish; forms per item | |
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
@@ -320,7 +320,7 @@ beta.
     keyboard Backspace on a selected item deletes it like the handle menu does.
 - **Blocks become views:** a services, team, testimonials or FAQ block shows the whole
   collection, or chosen items in its own order (home page highlights).
-- **Rename and package split: done** ([`package-split`](../openspec/changes/package-split/)). First
+- **Rename and package split: done** ([`package-split`](../openspec/changes/archive/2026-10-05-package-split/)). First
   everything was renamed to Webmio (`@webmio/*` packages, the admin's product name and emails,
   Czech "do Webmia", "ve Webmiu"), then `@webmio/site` was split into `@webmio/model` (schema,
   validation, upgrades, fixtures), `@webmio/render` and `@webmio/export`, with one-way imports

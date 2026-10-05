@@ -44,7 +44,7 @@ Every control SHALL have a visible label or an accessible name, a visible focus 
 
 ### Requirement: App shell
 Every signed-in page SHALL show a top bar with:
-- the product mark and name "Static CMS", linking to the project list;
+- the product mark and name "Webmio", linking to the project list;
 - the current workspace, with a switcher when the person belongs to several;
 - an account menu with the person's email address, the interface language (Čeština or English) and Sign out.
 
@@ -61,6 +61,10 @@ The editor SHALL show the same bar in a compact height above its toolbar. Pages 
 #### Scenario: Editor keeps its space
 - **WHEN** the editor is open
 - **THEN** the top bar is shown above the editor's toolbar, and the canvas still fills the rest of the window
+
+#### Scenario: Product name
+- **WHEN** a signed-in person opens the project list in Czech
+- **THEN** the top bar's mark is the link "Webmio, vaše projekty", and the page title is "Projekty – Webmio"
 
 ### Requirement: Interface language
 The admin's interface SHALL be available in Czech and English, covering every page, the editor's toolbars, panels and dialogs, and messages from the server. The site's validation messages are excepted for now and stay in English. The language SHALL be chosen in this order:
