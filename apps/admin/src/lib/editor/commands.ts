@@ -10,6 +10,7 @@ import {
   ToggleMarkCommand,
   UndoCommand,
 } from "svedit";
+import { canvasBlocksPath, collectionItemAt, selectedCollectionItem } from "./collections";
 import { deleteSelectedNode, isFixedList, moveSelectedNode, selectedNode } from "./structure";
 
 /** Moves the selected block or item up or down in its list. */
@@ -73,14 +74,66 @@ export class SelectFieldTextCommand extends Command {
   }
 }
 
-/** Svedit's "select parent", except it never selects inside a list whose structure is fixed. */
+/**
+ * Svedit's "select parent", except it never selects inside a list whose structure is fixed, and
+ * from a collection item selected as a whole it selects the block of the page that shows it
+ * (business-collections design decision 4): the item's own parent is the site.
+ */
 class SafeSelectParentCommand extends SelectParentCommand {
+  override is_enabled(): boolean {
+    const { session, editable } = this.context;
+    if (editable && selectedCollectionItem(session)) return true;
+    return super.is_enabled();
+  }
+
   override execute(): void {
     const { session } = this.context;
     const before = session.selection;
+    const owned = selectedCollectionItem(session);
+    const blocksPath = canvasBlocksPath(session);
+    if (owned && blocksPath) {
+      const index = owned.block.blockIndex;
+      session.selection = {
+        type: "node",
+        path: blocksPath,
+        anchor_offset: index,
+        focus_offset: index + 1,
+      };
+      return;
+    }
     session.select_parent();
     const after = session.selection;
     if (after?.type === "node" && isFixedList(session, after.path)) session.selection = before;
+  }
+}
+
+/**
+ * Backspace or Delete on a collection item selected as a whole: taken out of a block that shows
+ * chosen items, deleted everywhere from one that shows all of them. Other selections keep
+ * Svedit's own deletion.
+ */
+class DeleteCollectionItemCommand extends Command {
+  override is_enabled(): boolean {
+    return this.context.editable && selectedCollectionItem(this.context.session) !== undefined;
+  }
+
+  override execute(): void {
+    deleteSelectedNode(this.context.session);
+  }
+}
+
+/**
+ * Svedit's "insert a default node" (Enter at the end of an item), except in a block that shows
+ * chosen items, where a new item would land in the collection but not in the block, and in
+ * another language, where items are added in the primary.
+ */
+class SafeInsertDefaultNodeCommand extends InsertDefaultNodeCommand {
+  override is_enabled(): boolean {
+    const { session } = this.context;
+    const selection = session.selection as { path: (string | number)[] } | null;
+    const owned = selection ? collectionItemAt(session, selection.path) : undefined;
+    if (owned && (owned.block.mode === "chosen" || owned.fixed)) return false;
+    return super.is_enabled();
   }
 }
 
@@ -123,13 +176,14 @@ export function createCommandsAndKeymap(context: any) {
     internal_link: new ToggleMarkCommand("internal_link", context),
     unlink: new UnlinkCommand(context),
     break_text: new BreakTextNodeCommand(context),
-    insert_default: new InsertDefaultNodeCommand(context),
+    insert_default: new SafeInsertDefaultNodeCommand(context),
     new_line: new AddNewLineCommand(context),
     select_all: new SelectFieldTextCommand(context),
     select_parent: new SafeSelectParentCommand(context),
     move_up: new MoveNodeCommand(-1, context),
     move_down: new MoveNodeCommand(1, context),
     delete_node: new DeleteNodeCommand(context),
+    delete_collection_item: new DeleteCollectionItemCommand(context),
     ignore: new IgnoreCommand(context),
   };
   const keymap = define_keymap({
@@ -143,6 +197,7 @@ export function createCommandsAndKeymap(context: any) {
     "shift+enter": [commands.new_line],
     "meta+a,ctrl+a": [commands.select_all],
     escape: [commands.select_parent],
+    "backspace,delete": [commands.delete_collection_item],
     "alt+arrowup": [commands.move_up],
     "alt+arrowdown": [commands.move_down],
   });

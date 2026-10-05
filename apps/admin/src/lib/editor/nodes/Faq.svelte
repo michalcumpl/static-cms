@@ -7,9 +7,9 @@ let { path }: { path: DocumentPath } = $props();
 const i18n = getI18n();
 </script>
 
-<Node {path} tag="section" class="block testimonials">
+<Node {path} tag="section" class="block faq">
   <div class="container">
     <TextProperty tag="h2" path={[...path, "heading"]} placeholder={i18n.t("editor.canvas.headingOptional")} />
-    <CollectionItems {path} class="testimonial-list" />
+    <CollectionItems {path} tag="div" class="faq-list" />
   </div>
 </Node>

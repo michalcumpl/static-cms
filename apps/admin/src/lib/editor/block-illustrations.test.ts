@@ -18,7 +18,16 @@ describe("block illustrations", () => {
       m.includes("var(--color-primary"),
     );
     expect(withAccent.map(([type]) => type).sort()).toEqual(
-      ["call_to_action", "contact", "hero", "rich_text", "services", "team", "testimonials"].sort(),
+      [
+        "call_to_action",
+        "contact",
+        "faq",
+        "hero",
+        "rich_text",
+        "services",
+        "team",
+        "testimonials",
+      ].sort(),
     );
   });
 

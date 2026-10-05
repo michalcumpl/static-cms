@@ -578,6 +578,8 @@ export const cs: Messages = {
       noContact: "Zatím žádné kontaktní údaje.",
       noHours: "Zatím žádná otevírací doba.",
       editBusiness: "Upravit údaje o podniku",
+      question: "Otázka",
+      answer: "Odpověď",
     },
     links: {
       empty:
@@ -611,6 +613,7 @@ export const cs: Messages = {
         description: "Krátká pozvánka s jedním nebo dvěma tlačítky",
       },
       testimonials: { name: "Reference", description: "Co o vás říkají zákazníci" },
+      faq: { name: "Otázky", description: "Časté dotazy a odpovědi na ně" },
     },
     items: {
       list_item: "Položka seznamu",
@@ -619,6 +622,7 @@ export const cs: Messages = {
       person: "Osoba",
       logo_item: "Logo",
       testimonial: "Reference",
+      faq_item: "Otázka",
       other: "Položka",
     },
     handles: {
@@ -635,6 +639,43 @@ export const cs: Messages = {
       addBelow: "Přidat blok pod",
       addBlock: "+ Přidat blok",
       picker: "Přidat blok",
+      removeFromBlock: "Odebrat z tohoto bloku",
+      alsoShownOn: {
+        one: "Je i na {count} další stránce",
+        few: "Je i na {count} dalších stránkách",
+        other: "Je i na {count} dalších stránkách",
+      },
+      addedInPrimary: "{collection} se přidávají a odebírají v jazyce {language}",
+    },
+    collections: {
+      services: "Služby",
+      team: "Lidé",
+      testimonials: "Reference",
+      faqs: "Otázky",
+    },
+    collectionBlock: {
+      show: "Zobrazit",
+      all: {
+        services: "Všechny služby",
+        team: "Všechny lidi",
+        testimonials: "Všechny reference",
+        faqs: "Všechny otázky",
+      },
+      chosen: {
+        services: "Vybrané služby",
+        team: "Vybrané lidi",
+        testimonials: "Vybrané reference",
+        faqs: "Vybrané otázky",
+      },
+      addExisting: "Přidat do tohoto bloku",
+      choose: "Vyberte…",
+      add: "Přidat",
+      newItem: {
+        services: "Nová služba",
+        team: "Nový člověk",
+        testimonials: "Nová reference",
+        faqs: "Nová otázka",
+      },
     },
     unavailable: {
       heroTop: "Úvodní blok zůstává nahoře na stránce",

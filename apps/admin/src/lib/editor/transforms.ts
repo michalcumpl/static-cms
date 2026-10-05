@@ -57,6 +57,9 @@ export function insertListItem(tr: Tr, content: TextValue = text()): boolean {
   return true;
 }
 
+// Svedit's inserters for the collections (Enter at the end of an item, or typing in a gap of a
+// block that shows a whole collection): they insert at the node selection.
+
 export function insertServiceItem(tr: Tr): boolean {
   const id = tr.generate_id();
   tr.create({
@@ -67,6 +70,29 @@ export function insertServiceItem(tr: Tr): boolean {
     price: text(),
   });
   insertAndFocus(tr, id, "name");
+  return true;
+}
+
+/** A person without a portrait. */
+export function insertPerson(tr: Tr): boolean {
+  const id = tr.generate_id();
+  tr.create({ id, type: "person", name: text(), role: text(), text: text(), image: list() });
+  insertAndFocus(tr, id, "name");
+  return true;
+}
+
+/** An empty testimonial. */
+export function insertTestimonial(tr: Tr): boolean {
+  const id = createTestimonial(tr);
+  insertAndFocus(tr, id, "quote");
+  return true;
+}
+
+/** A placeholder question. */
+export function insertFaqItem(tr: Tr): boolean {
+  const id = tr.generate_id();
+  tr.create({ id, type: "faq_item", question: text("Nová otázka"), answer: text() });
+  insertAndFocus(tr, id, "question");
   return true;
 }
 
@@ -86,20 +112,38 @@ export function insertRichText(tr: Tr): boolean {
   return true;
 }
 
-export function insertServices(tr: Tr): boolean {
-  const item = tr.generate_id();
-  const block = tr.generate_id();
+/**
+ * A block showing a whole collection (business-collections). When the collection is still
+ * empty, `first` creates its first item, so the new block has something to edit.
+ */
+function insertCollectionBlock(
+  type: "services" | "team" | "testimonials" | "faq",
+  collection: "services" | "team" | "testimonials" | "faqs",
+  heading: string,
+  first?: (tr: Tr) => string,
+) {
+  return (tr: Tr): boolean => {
+    const siteId = tr.doc.document_id;
+    const members = (tr.get([siteId, collection]) as NodeList | undefined)?.nodes ?? [];
+    if (members.length === 0 && first) tr.set([siteId, collection], list([first(tr)]));
+    const block = tr.generate_id();
+    tr.create({ id: block, type, heading: text(heading), show: "all", chosen: list() });
+    insertAndFocus(tr, block, "heading");
+    return true;
+  };
+}
+
+export const insertServices = insertCollectionBlock("services", "services", "Služby", (tr) => {
+  const id = tr.generate_id();
   tr.create({
-    id: item,
+    id,
     type: "service_item",
     name: text("Nová služba"),
     description: text(),
     price: text(),
   });
-  tr.create({ id: block, type: "services", heading: text("Služby"), items: list([item]) });
-  insertAndFocus(tr, block, "heading");
-  return true;
-}
+  return id;
+});
 
 export function insertHero(tr: Tr): boolean {
   const block = tr.generate_id();
@@ -132,8 +176,8 @@ export function insertTextWithImage(tr: Tr): boolean {
   return true;
 }
 
-/** A gallery, team or logos block with a placeholder heading and no items yet. */
-function insertItemsBlock(type: "gallery" | "team" | "logos", items: "items" | "people") {
+/** A gallery or logos block with a placeholder heading and no items yet. */
+function insertItemsBlock(type: "gallery" | "logos", items: "items") {
   return (tr: Tr): boolean => {
     const block = tr.generate_id();
     tr.create({ id: block, type, heading: text("Nadpis"), [items]: list() });
@@ -143,16 +187,9 @@ function insertItemsBlock(type: "gallery" | "team" | "logos", items: "items" | "
 }
 
 export const insertGallery = insertItemsBlock("gallery", "items");
-export const insertTeam = insertItemsBlock("team", "people");
+/** A team block: people are added from the library, so an empty team starts empty. */
+export const insertTeam = insertCollectionBlock("team", "team", "Nadpis");
 export const insertLogos = insertItemsBlock("logos", "items");
-
-/** A person without a portrait (Enter at the end of a person, or "Add item"). */
-export function insertPerson(tr: Tr): boolean {
-  const id = tr.generate_id();
-  tr.create({ id, type: "person", name: text(), role: text(), text: text(), image: list() });
-  insertAndFocus(tr, id, "name");
-  return true;
-}
 
 /** Strings in the site's language, for placeholder headings of business blocks. */
 function stringsOf(tr: Tr) {
@@ -214,25 +251,20 @@ function createTestimonial(tr: Tr): string {
   return id;
 }
 
-/** A testimonials block with a placeholder heading and one empty testimonial. */
-export function insertTestimonials(tr: Tr): boolean {
-  const block = tr.generate_id();
-  tr.create({
-    id: block,
-    type: "testimonials",
-    heading: text("Nadpis"),
-    items: list([createTestimonial(tr)]),
-  });
-  insertAndFocus(tr, block, "heading");
-  return true;
-}
+/** A testimonials block; an empty collection gets one empty testimonial. */
+export const insertTestimonials = insertCollectionBlock(
+  "testimonials",
+  "testimonials",
+  "Nadpis",
+  createTestimonial,
+);
 
-/** An empty testimonial (Enter at the end of one, or "Add item"). */
-export function insertTestimonial(tr: Tr): boolean {
-  const id = createTestimonial(tr);
-  insertAndFocus(tr, id, "quote");
-  return true;
-}
+/** A questions block; an empty collection gets one placeholder question. */
+export const insertFaq = insertCollectionBlock("faq", "faqs", "Časté dotazy", (tr) => {
+  const id = tr.generate_id();
+  tr.create({ id, type: "faq_item", question: text("Nová otázka"), answer: text() });
+  return id;
+});
 
 export type BlockType =
   | "hero"
@@ -245,7 +277,8 @@ export type BlockType =
   | "contact"
   | "opening_hours"
   | "call_to_action"
-  | "testimonials";
+  | "testimonials"
+  | "faq";
 
 export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   hero: insertHero,
@@ -259,6 +292,7 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   opening_hours: insertOpeningHours,
   call_to_action: insertCallToAction,
   testimonials: insertTestimonials,
+  faq: insertFaq,
 };
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
@@ -277,6 +311,7 @@ export function insertableBlocks(blocks: { type: string }[], index: number): Blo
     "opening_hours",
     "call_to_action",
     "testimonials",
+    "faq",
   ];
   return heroAllowed ? ["hero", ...others] : others;
 }
@@ -398,9 +433,11 @@ export function logoNameFor(image: ChosenImage): string {
  * file), in the given order. Returns the new items' IDs.
  */
 export function addItemsWithImages(tr: Tr, blockId: string, images: ChosenImage[]): string[] {
-  const block = tr.get(blockId) as { type: string; items?: NodeList; people?: NodeList };
-  const property = block.type === "team" ? "people" : "items";
-  const existing = (block[property] as NodeList | undefined)?.nodes ?? [];
+  const block = tr.get(blockId) as { type: string; items?: NodeList; show?: string };
+  const siteId = tr.doc.document_id;
+  // People join the site's team, and a block showing chosen people shows them too.
+  const target: (string | number)[] = block.type === "team" ? [siteId, "team"] : [blockId, "items"];
+  const existing = (tr.get(target) as NodeList | undefined)?.nodes ?? [];
   const added = images.map((image) => {
     const id = tr.generate_id();
     if (block.type === "gallery") {
@@ -431,6 +468,15 @@ export function addItemsWithImages(tr: Tr, blockId: string, images: ChosenImage[
     }
     return id;
   });
-  tr.set([blockId, property], list([...existing, ...added]));
+  tr.set(target, list([...existing, ...added]));
+  if (block.type === "team" && block.show === "chosen") {
+    const refs = added.map((item_id) => {
+      const id = tr.generate_id();
+      tr.create({ id, type: "item_ref", item_id });
+      return id;
+    });
+    const chosen = (tr.get([blockId, "chosen"]) as NodeList | undefined)?.nodes ?? [];
+    tr.set([blockId, "chosen"], list([...chosen, ...refs]));
+  }
   return added;
 }

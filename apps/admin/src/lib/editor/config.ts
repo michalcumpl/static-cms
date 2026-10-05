@@ -3,6 +3,8 @@ import { createCommandsAndKeymap } from "./commands";
 import CallToAction from "./nodes/CallToAction.svelte";
 import Contact from "./nodes/Contact.svelte";
 import ExternalLink from "./nodes/ExternalLink.svelte";
+import Faq from "./nodes/Faq.svelte";
+import FaqItem from "./nodes/FaqItem.svelte";
 import Gallery from "./nodes/Gallery.svelte";
 import GalleryItem from "./nodes/GalleryItem.svelte";
 import Hero from "./nodes/Hero.svelte";
@@ -30,6 +32,7 @@ import Testimonial from "./nodes/Testimonial.svelte";
 import Testimonials from "./nodes/Testimonials.svelte";
 import TextWithImage from "./nodes/TextWithImage.svelte";
 import {
+  insertFaqItem,
   insertListItem,
   insertParagraph,
   insertPerson,
@@ -65,6 +68,8 @@ export const nodeComponents: Record<string, Component<any>> = {
   call_to_action: CallToAction,
   testimonials: Testimonials,
   testimonial: Testimonial,
+  faq: Faq,
+  faq_item: FaqItem,
   image: Image,
   strong: MarkStrong,
   emphasis: MarkEmphasis,
@@ -85,6 +90,7 @@ export function createConfig() {
       // Gallery photos and logos need an image, so they only come from the library.
       person: insertPerson,
       testimonial: insertTestimonial,
+      faq_item: insertFaqItem,
       rich_text: insertRichText,
     },
     create_commands_and_keymap: createCommandsAndKeymap,

@@ -19,6 +19,8 @@ const image = $derived.by(() => {
   return node?.type === "image" ? (node as ImageNode) : undefined;
 });
 const owner = $derived(image ? ownerOfSelectedImage(editor) : undefined);
+// Collection items' images are shared from the primary language; elsewhere only described.
+const COLLECTION_ITEM_TYPES = ["person", "testimonial"];
 
 type OwnerNode = {
   id: string;
@@ -91,7 +93,7 @@ function onDecorativeChange(event: Event & { currentTarget: HTMLInputElement }) 
   <section class="panel" aria-labelledby="image-panel-title">
     <h2 id="image-panel-title">{i18n.t("editor.imagePanel.title")}</h2>
     <p class="file">{image.src}</p>
-    {#if owner}
+    {#if owner && !(editor.sharedReadOnly && COLLECTION_ITEM_TYPES.includes(owner.type))}
       <div class="actions">
         <button type="button" onclick={() => owner && chooseImage(editor, owner.id)}>{i18n.t("editor.imagePanel.replace")}</button>
         {#if OPTIONAL_IMAGE_OWNERS.includes(owner.type)}

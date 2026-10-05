@@ -1,13 +1,17 @@
+import { isCollectionBlockType } from "@static-cms/site";
 import type { DocumentPath, Session } from "svedit";
 import {
-  type BlockType,
-  blockInserters,
-  insertableBlocks,
-  insertListItem,
-  insertPerson,
-  insertServiceItem,
-  insertTestimonial,
-} from "./transforms";
+  addItem,
+  canvasBlock,
+  collectionItemAt,
+  deleteItem,
+  duplicateItem,
+  isStructureFixed,
+  moveItem,
+  removeFromBlock,
+  selectedCollectionItem,
+} from "./collections";
+import { type BlockType, blockInserters, insertableBlocks, insertListItem } from "./transforms";
 
 type NodeSelection = {
   type: "node";
@@ -57,6 +61,11 @@ export function selectedNode(session: Session): { path: DocumentPath; index: num
 
 /** Moves the selected node one place up or down within its list. */
 export function moveSelectedNode(session: Session, direction: -1 | 1): boolean {
+  const owned = selectedCollectionItem(session);
+  if (owned) {
+    if (owned.fixed && owned.block.mode === "all") return false;
+    return moveItem(session, session.doc.document_id, owned.block, owned.item, direction);
+  }
   const selected = selectedNode(session);
   if (!selected) return false;
   const list = session.get(selected.path) as NodeList;
@@ -85,6 +94,12 @@ export function moveSelectedNode(session: Session, direction: -1 | 1): boolean {
  * most one, and it comes first.
  */
 export function duplicateSelectedNode(session: Session): boolean {
+  const owned = selectedCollectionItem(session);
+  if (owned) {
+    if (owned.fixed) return false;
+    duplicateItem(session, session.doc.document_id, owned.block, owned.item);
+    return true;
+  }
   const selected = selectedNode(session);
   if (!selected) return false;
   const list = session.get(selected.path) as NodeList;
@@ -111,7 +126,22 @@ export function canDuplicate(session: Session, id: string): boolean {
   return (session.get(id) as { type?: string } | undefined)?.type !== "hero";
 }
 
+/**
+ * Deletes the selected block or item. A collection item is taken out of a block that shows chosen
+ * items, and deleted from the site (every page included) from a block that shows all of them.
+ */
 export function deleteSelectedNode(session: Session): boolean {
+  const owned = selectedCollectionItem(session);
+  if (owned) {
+    if (owned.block.mode === "chosen") {
+      removeFromBlock(session, owned.block, owned.item);
+    } else if (owned.fixed) {
+      return false;
+    } else {
+      deleteItem(session, session.doc.document_id, owned.block.collection, owned.item.itemId);
+    }
+    return true;
+  }
   if (!selectedNode(session)) return false;
   session.apply(session.tr.delete_selection());
   return true;
@@ -143,25 +173,20 @@ export function insertBlockAt(
   return true;
 }
 
-/** The list or services item list the selection is in, and the position after the current item. */
+/** The list item list the selection is in, and the position after the current item. */
 export function itemInsertionPoint(
   session: Session,
 ): { path: DocumentPath; index: number } | undefined {
   const selection = session.selection as AnySelection | null;
   if (!selection) return undefined;
-  // Walk up the selection path to the innermost item list of a list, services, team or
-  // testimonials block.
-  // Gallery photos and logos need an image, so they come from the library instead.
+  // Walk up the selection path to the innermost item list of a bulleted list. Collection items
+  // have their own insertion (`collectionInsertion`); gallery photos and logos need an image,
+  // so they come from the library instead.
   for (let end = selection.path.length; end > 0; end--) {
     const path = selection.path.slice(0, end);
-    const property = path.at(-1);
-    if (property !== "items" && property !== "people") continue;
+    if (path.at(-1) !== "items") continue;
     const owner = session.get(path.slice(0, -1)) as { type?: string } | undefined;
-    const itemList =
-      (property === "items" &&
-        (owner?.type === "list" || owner?.type === "services" || owner?.type === "testimonials")) ||
-      (property === "people" && owner?.type === "team");
-    if (!itemList) continue;
+    if (owner?.type !== "list") continue;
     const next = selection.path[end];
     if (typeof next === "number") return { path, index: next + 1 };
     if (selection.type === "node") {
@@ -171,11 +196,42 @@ export function itemInsertionPoint(
   return undefined;
 }
 
-/** Inserts an empty list item, service item or person after the current one. */
+/**
+ * Where "Add item" puts a new collection item: after the item holding the selection, or at the
+ * end of the collection block holding it. Undefined outside collection blocks, and in another
+ * language than the primary, where items are added in the primary.
+ */
+function collectionInsertion(session: Session) {
+  const selection = session.selection as AnySelection | null;
+  if (!selection) return undefined;
+  const owned = selectedCollectionItem(session) ?? collectionItemAt(session, selection.path);
+  if (owned) return owned.fixed ? undefined : { block: owned.block, after: owned.item };
+  const at = selection.path.findIndex(
+    (segment, i) => segment === "blocks" && typeof selection.path[i + 1] === "number",
+  );
+  if (at < 0 || isStructureFixed(session)) return undefined;
+  const node = session.get(selection.path.slice(0, at + 2)) as
+    | { id?: string; type?: string }
+    | undefined;
+  if (!node?.id || !isCollectionBlockType(node.type)) return undefined;
+  const block = canvasBlock(session, node.id);
+  return block ? { block, after: undefined } : undefined;
+}
+
+/** Whether "Add item" can add something where the selection is. */
+export function canInsertItem(session: Session): boolean {
+  return itemInsertionPoint(session) !== undefined || collectionInsertion(session) !== undefined;
+}
+
+/** Inserts an empty list item, or a new collection item, after the current one. */
 export function insertItem(session: Session): boolean {
+  const collection = collectionInsertion(session);
+  if (collection) {
+    addItem(session, session.doc.document_id, collection.block, collection.after);
+    return true;
+  }
   const at = itemInsertionPoint(session);
   if (!at) return false;
-  const owner = session.get(at.path.slice(0, -1)) as { type: string };
   const tr = session.tr;
   tr.set_selection({
     type: "node",
@@ -183,15 +239,7 @@ export function insertItem(session: Session): boolean {
     anchor_offset: at.index,
     focus_offset: at.index,
   });
-  const inserter =
-    owner.type === "services"
-      ? insertServiceItem
-      : owner.type === "team"
-        ? insertPerson
-        : owner.type === "testimonials"
-          ? insertTestimonial
-          : insertListItem;
-  inserter(tr);
+  insertListItem(tr);
   session.apply(tr);
   return true;
 }

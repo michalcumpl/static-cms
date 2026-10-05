@@ -8,8 +8,10 @@ import { canDuplicate, duplicateSelectedNode } from "./structure";
 // biome-ignore lint/suspicious/noExplicitAny: tests read nodes freely.
 type AnyNode = Record<string, any>;
 
-function setup(document: unknown = demoSite()) {
-  const { session } = new EditorState({ document, version: "v1", problems: [] }, projectPaths("p"));
+function setup(document: unknown = demoSite(), pageId?: string) {
+  const editor = new EditorState({ document, version: "v1", problems: [] }, projectPaths("p"));
+  if (pageId) editor.showPage(pageId);
+  const { session } = editor;
   const get = (id: string) => session.get(id) as AnyNode;
   const select = (path: (string | number)[], index: number) => {
     session.selection = { type: "node", path, anchor_offset: index, focus_offset: index + 1 };
@@ -32,27 +34,20 @@ const blocksPath = (page: number) => ["site_1", "pages", page, "blocks"];
 const errors = (doc: unknown) => validateSite(doc).problems.filter((p) => p.severity === "error");
 
 describe("duplicateSelectedNode", () => {
-  it("copies a services block right after it, with a bold word, under fresh IDs, as one step", () => {
-    // A bold word in the first service's description.
-    const doc = demoSite() as { nodes: AnyNode };
-    doc.nodes.strong_bread = { id: "strong_bread", type: "strong" };
-    doc.nodes.service_bread.description.marks = [
-      { start_offset: 0, end_offset: 5, node_id: "strong_bread" },
-    ];
-    const { session, get, select, subtree } = setup(doc);
+  it("copies a services block right after it, showing the same services, as one step", () => {
+    const { session, get, select } = setup();
     select(blocksPath(0), 1);
     expect(duplicateSelectedNode(session)).toBe(true);
     const blocks = get("page_home").blocks.nodes;
     expect(blocks).toHaveLength(4);
     const [original, copy] = [blocks[1], blocks[2]];
-    expect(get(copy)).toMatchObject({ type: "services", heading: get(original).heading });
-    const names = (id: string) => get(id).items.nodes.map((item: string) => get(item).name.content);
-    expect(names(copy)).toEqual(names(original));
-    const copiedFirst = get(get(copy).items.nodes[0]);
-    expect(copiedFirst.description.marks).toHaveLength(1);
-    expect(get(copiedFirst.description.marks[0].node_id).type).toBe("strong");
-    const shared = subtree(copy).filter((id) => subtree(original).includes(id));
-    expect(shared).toEqual([]);
+    expect(get(copy)).toMatchObject({
+      type: "services",
+      heading: get(original).heading,
+      show: "all",
+    });
+    // The services themselves stay once in the site.
+    expect(get("site_1").services.nodes).toHaveLength(3);
     expect(session.selection).toMatchObject({
       path: blocksPath(0),
       anchor_offset: 2,
@@ -73,11 +68,11 @@ describe("duplicateSelectedNode", () => {
   });
 
   it("copies a person with an image node of their own, same media and description", () => {
-    const { session, get, select } = setup(imageBlocksSite());
-    const people = get("team_1").people.nodes;
-    select([...blocksPath(2), 2, "people"], people.indexOf("person_katerina"));
+    const { session, get, select } = setup(imageBlocksSite(), "page_gallery");
+    const people = get("site_1").team.nodes;
+    select(["site_1", "team"], people.indexOf("person_katerina"));
     duplicateSelectedNode(session);
-    const after = get("team_1").people.nodes;
+    const after = get("site_1").team.nodes;
     const copy = get(after[people.indexOf("person_katerina") + 1]);
     expect(copy.name.content).toBe("Kateřina");
     const [imageId] = copy.image.nodes;

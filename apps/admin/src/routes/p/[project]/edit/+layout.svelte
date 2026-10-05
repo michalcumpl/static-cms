@@ -16,7 +16,7 @@ import PagesSidebar from "$lib/editor/PagesSidebar.svelte";
 import ProblemsPanel from "$lib/editor/ProblemsPanel.svelte";
 import { saveStatusText, useMediaLibrary, useUnsavedGuard } from "$lib/editor/screen.svelte";
 import { EditorState, setEditor } from "$lib/editor/state.svelte";
-import { insertItem, isFixedList, itemInsertionPoint } from "$lib/editor/structure";
+import { canInsertItem, insertItem, isFixedList } from "$lib/editor/structure";
 import ThemeSettings from "$lib/editor/ThemeSettings.svelte";
 import { getI18n } from "$lib/i18n";
 import PublishButton from "$lib/PublishButton.svelte";
@@ -128,7 +128,7 @@ useUnsavedGuard(
 const commands = $derived(
   session.commands as Record<string, Command & { active?: boolean }> | undefined,
 );
-const canAddItem = $derived(itemInsertionPoint(session) !== undefined);
+const canAddItem = $derived(canInsertItem(session));
 // The block or item selected as a whole, in words (canvas-structure design.md decision 5).
 const selectedLabel = $derived(selectionLabel(session, i18n.t));
 

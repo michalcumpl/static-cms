@@ -75,6 +75,7 @@ describe("block insertion", () => {
     "opening_hours",
     "call_to_action",
     "testimonials",
+    "faq",
   ];
 
   it("offers the hero only at the top of a page without one, and nothing above a hero", () => {
@@ -114,11 +115,11 @@ describe("moving and deleting", () => {
     valid();
   });
 
-  it("moves list items and service items within their list", () => {
+  it("moves services within the site's services, from a block that shows them all", () => {
     const { session, selectNode } = setup();
-    selectNode(["services_1", "items"], 0);
+    selectNode(["site_1", "services"], 0);
     moveSelectedNode(session, 1);
-    expect((session.get(["services_1", "items"]) as { nodes: string[] }).nodes[1]).toBe(
+    expect((session.get(["site_1", "services"]) as { nodes: string[] }).nodes[1]).toBe(
       "service_bread",
     );
   });
@@ -139,12 +140,12 @@ describe("item insertion", () => {
     const { session, valid } = setup();
     session.selection = {
       type: "text",
-      path: ["site_1", "pages", 0, "blocks", 1, "items", 2, "name"],
+      path: ["site_1", "services", 2, "name"],
       anchor_offset: 0,
       focus_offset: 0,
     };
     expect(insertItem(session)).toBe(true);
-    const items = (session.get(["services_1", "items"]) as { nodes: string[] }).nodes;
+    const items = (session.get(["site_1", "services"]) as { nodes: string[] }).nodes;
     expect(items).toHaveLength(4);
     expect(session.get(items[3] as string)).toMatchObject({
       type: "service_item",
@@ -152,7 +153,7 @@ describe("item insertion", () => {
     });
     expect(session.selection).toMatchObject({
       type: "text",
-      path: ["site_1", "pages", 0, "blocks", 1, "items", 3, "name"],
+      path: ["site_1", "services", 3, "name"],
     });
     valid();
   });

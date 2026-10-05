@@ -12,12 +12,16 @@ let { path, label = i18n.t("editor.canvas.addImage") }: { path: DocumentPath; la
   $props();
 const svedit = getContext<SveditContext>("svedit");
 const editor = getEditor();
-const owner = $derived(svedit.session.get(path) as { id: string; image: { nodes: string[] } });
+const owner = $derived(
+  svedit.session.get(path) as { id: string; type: string; image: { nodes: string[] } },
+);
+// A collection item's image is chosen in the primary language (business-collections).
+const shared = $derived(editor.sharedReadOnly && ["person", "testimonial"].includes(owner.type));
 </script>
 
 {#if owner.image.nodes.length > 0}
   <Child path={[...path, "image", 0]} />
-{:else}
+{:else if !shared}
   <!-- Not part of the site: a way to add the image while editing. -->
   <div class="image-slot" contenteditable="false">
     <button type="button" onclick={() => chooseImage(editor, owner.id)}>{label}</button>

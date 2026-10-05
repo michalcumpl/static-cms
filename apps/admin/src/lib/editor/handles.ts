@@ -1,5 +1,6 @@
 import type { DocumentPath, Session } from "svedit";
 import type { I18n } from "$lib/i18n";
+import { type BlockView, canvasBlocksPath, collectionItemAt, type ItemView } from "./collections";
 import { isFixedList, selectedNode } from "./structure";
 import type { BlockType } from "./transforms";
 
@@ -19,6 +20,7 @@ export const BLOCK_TYPES: readonly BlockType[] = [
   "opening_hours",
   "call_to_action",
   "testimonials",
+  "faq",
 ];
 
 /** Why a block can't go somewhere; the picker says it with `editor.unavailable.<reason>`. */
@@ -45,6 +47,7 @@ const ITEM_TYPES = new Set([
   "person",
   "logo_item",
   "testimonial",
+  "faq_item",
 ]);
 
 /** The translator the names are made with: the interface language's `t`. */
@@ -65,6 +68,8 @@ export interface HandleTarget {
   type: string;
   /** The node's own path: `listPath` plus `index`. */
   path: DocumentPath;
+  /** For an item of a site collection: the block of the page showing it, and its place there. */
+  collection?: { block: BlockView; item: ItemView; fixed: boolean };
 }
 
 type NodeList = { nodes: string[] };
@@ -85,6 +90,15 @@ export function handleTargets(
   session: Session,
   path: DocumentPath,
 ): { block?: HandleTarget; item?: HandleTarget } {
+  // An item of a site collection belongs to the block of the page that shows it.
+  const owned = collectionItemAt(session, path);
+  const blocksPath = canvasBlocksPath(session);
+  if (owned && blocksPath) {
+    const block = target(session, blocksPath, owned.block.blockIndex);
+    const listPath = path.slice(0, 2);
+    const item = target(session, listPath, owned.item.index);
+    return block && item ? { block, item: { ...item, collection: owned } } : {};
+  }
   const at = path.findIndex(
     (segment, i) =>
       segment === "blocks" && path[i - 2] === "pages" && typeof path[i + 1] === "number",
@@ -126,7 +140,8 @@ export function targetName(target: HandleTarget, t: T): string {
   if (isBlock(target.type)) {
     return t("editor.handles.block", { name: t(`editor.blocks.${target.type}.name`) });
   }
-  return t("editor.handles.item", { name: itemName(target.type, t), number: target.index + 1 });
+  const number = (target.collection?.item.position ?? target.index) + 1;
+  return t("editor.handles.item", { name: itemName(target.type, t), number });
 }
 
 /**
@@ -142,10 +157,11 @@ export function selectionLabel(session: Session, t: T): string | undefined {
     target.listPath.length === selected.path.length &&
     target.index === selected.index;
   if (item && isSelected(item)) {
-    const count = (session.get(item.listPath) as NodeList).nodes.length;
+    const count =
+      item.collection?.block.items.length ?? (session.get(item.listPath) as NodeList).nodes.length;
     return t("editor.handles.itemOf", {
       name: itemName(item.type, t),
-      number: item.index + 1,
+      number: (item.collection?.item.position ?? item.index) + 1,
       count,
     });
   }

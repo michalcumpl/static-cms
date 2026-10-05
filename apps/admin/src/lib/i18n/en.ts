@@ -568,6 +568,8 @@ export const en = {
       noContact: "No contact details yet.",
       noHours: "No opening hours yet.",
       editBusiness: "Edit business details",
+      question: "Question",
+      answer: "Answer",
     },
     links: {
       empty:
@@ -601,6 +603,7 @@ export const en = {
         description: "A short invitation with one or two buttons",
       },
       testimonials: { name: "Testimonials", description: "What customers say about you" },
+      faq: { name: "Questions", description: "Frequently asked questions and their answers" },
     },
     items: {
       list_item: "List item",
@@ -609,6 +612,7 @@ export const en = {
       person: "Person",
       logo_item: "Logo",
       testimonial: "Testimonial",
+      faq_item: "Question",
       other: "Item",
     },
     handles: {
@@ -625,6 +629,42 @@ export const en = {
       addBelow: "Add block below",
       addBlock: "+ Add block",
       picker: "Add a block",
+      removeFromBlock: "Remove from this block",
+      alsoShownOn: {
+        one: "Also shown on {count} other page",
+        other: "Also shown on {count} other pages",
+      },
+      addedInPrimary: "{collection} are added and removed in {language}",
+    },
+    collections: {
+      services: "Services",
+      team: "People",
+      testimonials: "Testimonials",
+      faqs: "Questions",
+    },
+    collectionBlock: {
+      show: "Show",
+      all: {
+        services: "All services",
+        team: "All people",
+        testimonials: "All testimonials",
+        faqs: "All questions",
+      },
+      chosen: {
+        services: "Chosen services",
+        team: "Chosen people",
+        testimonials: "Chosen testimonials",
+        faqs: "Chosen questions",
+      },
+      addExisting: "Add to this block",
+      choose: "Choose…",
+      add: "Add",
+      newItem: {
+        services: "New service",
+        team: "New person",
+        testimonials: "New testimonial",
+        faqs: "New question",
+      },
     },
     unavailable: {
       heroTop: "The hero stays at the top of the page",

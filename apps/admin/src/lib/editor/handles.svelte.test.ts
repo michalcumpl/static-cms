@@ -9,8 +9,10 @@ import { EditorState } from "./state.svelte";
 const t = (key: Parameters<typeof translate>[1], params?: Record<string, string | number>) =>
   translate("en", key, params);
 
-function setup(document: unknown = demoSite()) {
-  return new EditorState({ document, version: "v1", problems: [] }, projectPaths("p")).session;
+function setup(document: unknown = demoSite(), pageId?: string) {
+  const editor = new EditorState({ document, version: "v1", problems: [] }, projectPaths("p"));
+  if (pageId) editor.showPage(pageId);
+  return editor.session;
 }
 
 const home = ["site_1", "pages", 0, "blocks"];
@@ -19,14 +21,15 @@ const gallery = ["site_1", "pages", 2, "blocks"];
 describe("handleTargets", () => {
   it("finds the service and its services block from inside the service's text", () => {
     const session = setup();
-    const { block, item } = handleTargets(session, [...home, 1, "items", 2, "description"]);
+    const { block, item } = handleTargets(session, ["site_1", "services", 2, "description"]);
     expect(block).toMatchObject({ listPath: home, index: 1, id: "services_1", type: "services" });
     expect(item).toMatchObject({
-      listPath: [...home, 1, "items"],
+      listPath: ["site_1", "services"],
       index: 2,
       id: "service_cakes",
       type: "service_item",
     });
+    expect(item?.collection?.item).toMatchObject({ position: 2, editable: true });
   });
 
   it("finds a bullet of a text block's list as an item, and a paragraph as only the block", () => {
@@ -38,8 +41,10 @@ describe("handleTargets", () => {
   });
 
   it("finds people and gallery photos", () => {
-    const session = setup(imageBlocksSite());
-    expect(handleTargets(session, [...gallery, 2, "people", 0, "name"]).item?.type).toBe("person");
+    const session = setup(imageBlocksSite(), "page_gallery");
+    const person = handleTargets(session, ["site_1", "team", 0, "name"]);
+    expect(person.item?.type).toBe("person");
+    expect(person.block).toMatchObject({ listPath: gallery, index: 2, type: "team" });
     expect(handleTargets(session, [...gallery, 1, "items", 2]).item?.id).toBe("gallery_item_3");
   });
 
@@ -68,7 +73,7 @@ describe("selectionLabel", () => {
   });
 
   it("names a selected item with its place in the list", () => {
-    const session = setup(imageBlocksSite());
+    const session = setup(imageBlocksSite(), "page_gallery");
     select(session, [...gallery, 1, "items"], 2);
     expect(selectionLabel(session, t)).toBe("Photo 3 of 3");
     const demo = setup();

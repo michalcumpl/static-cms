@@ -1,7 +1,8 @@
 import type { Problem } from "@static-cms/site";
-import { type Document, Session } from "svedit";
+import { type Document, type DocumentPath, Session } from "svedit";
 import { getContext, onDestroy, setContext } from "svelte";
 import type { ProjectPaths } from "../project-paths";
+import { type BlockView, pageCollections, provideCanvasContext } from "./collections";
 import { createConfig } from "./config";
 import { editorSchema } from "./schema";
 import type { ChosenImage } from "./transforms";
@@ -128,6 +129,11 @@ export class EditorState {
     const document = data.document as Document;
     this.session = new Session(editorSchema, document, createConfig());
     this.siteId = document.document_id;
+    provideCanvasContext(this.session, {
+      views: () => this.collections,
+      blocksPath: () => this.blocksPath,
+      structureFixed: () => this.sharedReadOnly,
+    });
     this.#markSaved(this.session.doc);
     this.version = data.version;
     this.savedProblems = data.problems;
@@ -161,6 +167,19 @@ export class EditorState {
   get pageIndex(): number {
     const current = this.pages.findIndex((page) => page.id === this.currentPageId);
     return current >= 0 ? current : this.pages.findIndex((page) => page.isHome);
+  }
+
+  /** The path of the canvas page's blocks. */
+  get blocksPath(): DocumentPath {
+    return [this.siteId, "pages", this.pageIndex, "blocks"];
+  }
+
+  /** What the canvas page's collection blocks show, and which of them mounts each item. */
+  get collections(): BlockView[] {
+    const page = this.session.get([this.siteId, "pages", this.pageIndex]) as
+      | { blocks?: { nodes: string[] } }
+      | undefined;
+    return pageCollections(this.session.doc, page?.blocks?.nodes ?? []);
   }
 
   /** Switches the canvas to another page. The selection belongs to the old page, so it goes. */

@@ -94,7 +94,9 @@ describe("node components", () => {
   it("has a canvas component for every node type of the schema shown on the canvas", () => {
     // The theme is never on the canvas; it is the stylesheet. The business details are edited
     // in the business settings; the canvas shows them through the contact and hours blocks.
-    const offCanvas = ["theme", "business", "opening_day", "time_range"];
+    // Item references and social profiles aren't drawn as nodes: blocks show the items they
+    // point at, and the footer shows the profiles from the business details.
+    const offCanvas = ["theme", "business", "opening_day", "time_range", "item_ref", "social_link"];
     const missing = Object.keys(siteSchema).filter(
       (type) => !offCanvas.includes(type) && !(type in nodeComponents),
     );
@@ -131,7 +133,17 @@ describe("adding several images at once", () => {
     const person = node(s, id as string);
     expect(person.name.content).toBe("Jméno");
     expect(node(s, person.image.nodes[0])).toMatchObject({ decorative: true, alt: "" });
-    expect(node(s, "team_1").people.nodes.at(-1)).toBe(id);
+    expect(node(s, "site_1").team.nodes.at(-1)).toBe(id);
+  });
+
+  it("adds people to a team block showing chosen people, too", () => {
+    const s = session();
+    const tr = s.tr;
+    tr.set(["team_1", "show"], "chosen");
+    s.apply(tr);
+    const [id] = apply(s, (tr) => addItemsWithImages(tr, "team_1", images.slice(0, 1))) as string[];
+    const refs = node(s, "team_1").chosen.nodes as string[];
+    expect(node(s, refs.at(-1) as string).item_id).toBe(id);
   });
 
   it("names logos after their files", () => {

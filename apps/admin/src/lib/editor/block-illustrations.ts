@@ -142,4 +142,19 @@ export const BLOCK_ILLUSTRATIONS: Record<BlockType, string> = {
         })
         .join(""),
   ),
+  // Questions as a column of rows, each with a disclosure triangle; the first one open.
+  faq: svg(
+    heading() +
+      [0, 1, 2]
+        .map((i) => {
+          const y = 18 + i * 15 + (i > 0 ? 8 : 0);
+          return (
+            `<path d="M8 ${y} l4 2.5 l-4 2.5 Z" fill="${P}"${i === 0 ? ` transform="rotate(90 10 ${y + 2.5})"` : ""}/>` +
+            bar(16, y + 1, [62, 54, 70][i] as number, 3) +
+            (i === 0 ? lines(16, y + 8, [88, 70], 5) : "") +
+            `<rect x="8" y="${y + (i === 0 ? 21 : 8)}" width="104" height="0.8" fill="${S}"/>`
+          );
+        })
+        .join(""),
+  ),
 };

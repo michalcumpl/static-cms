@@ -4,6 +4,13 @@ import { getI18n } from "$lib/i18n";
 import PopoverMenu, { type MenuEntry } from "$lib/ui/PopoverMenu.svelte";
 import { BLOCK_ILLUSTRATIONS } from "./block-illustrations";
 import {
+  deleteItem,
+  duplicateItem,
+  moveItem,
+  otherPagesShowing,
+  removeFromBlock,
+} from "./collections";
+import {
   BLOCK_TYPES,
   type HandleTarget,
   handleTargets,
@@ -150,7 +157,63 @@ function closeMenu(chosen: boolean) {
   if (!chosen) focusCanvas();
 }
 
+/** The menu of an item of a site collection (business-collections, "Items in collection blocks"). */
+function collectionEntries(target: HandleTarget): MenuEntry[] {
+  const owned = target.collection;
+  if (!owned) return [];
+  const { block, item, fixed } = owned;
+  const siteId = editor.siteId;
+  const run = (action: () => void) => () => {
+    action();
+    focusCanvas();
+  };
+  // In another language, which items exist and their order come from the primary.
+  const fixedReason = fixed
+    ? i18n.t("editor.handles.addedInPrimary", {
+        collection: i18n.t(`editor.collections.${block.collection}`),
+        language: editor.primaryName,
+      })
+    : undefined;
+  const orderFixed = block.mode === "all" ? fixedReason : undefined;
+  const members = (session.get([siteId, block.collection]) as { nodes: string[] }).nodes.length;
+  const first = block.mode === "all" ? item.index === 0 : item.position === 0;
+  const last =
+    block.mode === "all" ? item.index >= members - 1 : item.position >= block.items.length - 1;
+  const others = otherPagesShowing(session.doc, item.itemId, editor.currentPageId).length;
+  return [
+    {
+      label: i18n.t("editor.handles.moveUp"),
+      disabled: first,
+      disabledReason: orderFixed,
+      run: run(() => moveItem(session, siteId, block, item, -1)),
+    },
+    {
+      label: i18n.t("editor.handles.moveDown"),
+      disabled: last,
+      disabledReason: orderFixed,
+      run: run(() => moveItem(session, siteId, block, item, 1)),
+    },
+    {
+      label: i18n.t("editor.handles.duplicate"),
+      disabledReason: fixedReason,
+      run: run(() => duplicateItem(session, siteId, block, item)),
+    },
+    block.mode === "chosen"
+      ? {
+          label: i18n.t("editor.handles.removeFromBlock"),
+          run: run(() => removeFromBlock(session, block, item)),
+        }
+      : {
+          label: i18n.t("editor.handles.delete"),
+          detail: others > 0 ? i18n.t("editor.handles.alsoShownOn", { count: others }) : undefined,
+          disabledReason: fixedReason,
+          run: run(() => deleteItem(session, siteId, block.collection, item.itemId)),
+        },
+  ];
+}
+
 function menuEntries(kind: "block" | "item", target: HandleTarget): MenuEntry[] {
+  if (kind === "item" && target.collection) return collectionEntries(target);
   const count = (session.get(target.listPath) as { nodes: string[] }).nodes.length;
   const after = (action: () => void) => () => {
     select(target);

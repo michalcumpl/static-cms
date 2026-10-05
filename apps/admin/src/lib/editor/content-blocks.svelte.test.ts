@@ -47,8 +47,10 @@ describe("inserting the blocks", () => {
     const { session: s } = editor();
     appendBlock(s, 1, "testimonials");
     const block = contactBlocks(s).find((b) => b.type === "testimonials") as AnyNode;
-    expect(block.items.nodes).toHaveLength(1);
-    expect(node(s, block.items.nodes[0])).toMatchObject({
+    expect(block).toMatchObject({ show: "all", chosen: { nodes: [] } });
+    const testimonials = node(s, "site_1").testimonials.nodes as string[];
+    expect(testimonials).toHaveLength(1);
+    expect(node(s, testimonials[0] as string)).toMatchObject({
       type: "testimonial",
       quote: { content: "" },
       name: { content: "" },
@@ -67,18 +69,18 @@ describe("inserting the blocks", () => {
 
 describe("testimonial items", () => {
   it("adds a testimonial after the current one", () => {
-    const { session: s } = editor();
+    const ed = editor();
+    const s = ed.session;
+    ed.showPage("page_contact");
     appendBlock(s, 1, "testimonials");
-    const block = contactBlocks(s).find((b) => b.type === "testimonials") as AnyNode;
-    const index = contactBlocks(s).indexOf(block);
     s.selection = {
       type: "text",
-      path: ["site_1", "pages", 1, "blocks", index, "items", 0, "name"],
+      path: ["site_1", "testimonials", 0, "name"],
       anchor_offset: 0,
       focus_offset: 0,
     } as never;
     expect(insertItem(s)).toBe(true);
-    expect(node(s, block.id).items.nodes).toHaveLength(2);
+    expect(node(s, "site_1").testimonials.nodes).toHaveLength(2);
   });
 
   it("starts a testimonial's photo decorative, as a portrait, and removes it again", () => {
@@ -88,8 +90,7 @@ describe("testimonial items", () => {
     const ed = editor();
     const s = ed.session;
     appendBlock(s, 1, "testimonials");
-    const block = contactBlocks(s).find((b) => b.type === "testimonials") as AnyNode;
-    const id = block.items.nodes[0] as string;
+    const id = node(s, "site_1").testimonials.nodes[0] as string;
     const tr = s.tr;
     setImage(tr, id, { key: "jana-1a2b", width: 400, height: 400 }, { decorative: true });
     s.apply(tr);

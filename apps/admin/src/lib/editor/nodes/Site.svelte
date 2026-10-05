@@ -1,5 +1,5 @@
 <script lang="ts">
-import { contactDetails, openingHoursTable } from "@static-cms/site";
+import { contactDetails, openingHoursTable, socialKind } from "@static-cms/site";
 import { type DocumentPath, Node, type SveditContext } from "svedit";
 import { getContext } from "svelte";
 import { getEditor } from "../state.svelte";
@@ -18,6 +18,11 @@ const logo = $derived.by(() => {
     : (svedit.session.get(id) as { src: string; width: number; height: number } | undefined);
 });
 const showName = $derived(!logo || site.header_show_name);
+// The footer's social profile links, as the published footer shows them.
+const social = $derived.by(() => {
+  const { info } = businessView(svedit.session.doc);
+  return info.show_in_footer ? info.social : [];
+});
 // The footer's business details, as the published footer shows them.
 const footer = $derived.by(() => {
   const { info, strings, siteName } = businessView(svedit.session.doc);
@@ -57,6 +62,15 @@ const footer = $derived.by(() => {
           {#if footer.contact}{@html footer.contact.value}{/if}
           {#if footer.hours}{@html footer.hours.value}{/if}
         </div>
+      {/if}
+      {#if social.length > 0}
+        <nav class="footer-social">
+          <ul>
+            {#each social as url (url)}
+              <li><a href={url}>{socialKind(url).label || url}</a></li>
+            {/each}
+          </ul>
+        </nav>
       {/if}
       <p>© {site.name}</p>
     </div>
