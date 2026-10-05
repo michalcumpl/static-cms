@@ -154,6 +154,18 @@ describe("structured data", () => {
           name: "Pekárna U Lípy",
           url: "https://anideti.cz/",
           logo: "https://anideti.cz/icon-512.png",
+          hasOfferCatalog: {
+            "@type": "OfferCatalog",
+            name: "Služby",
+            itemListElement: [
+              ["Kváskový chléb", "Žitno-pšeničný bochník, 1 kg."],
+              ["Rohlíky a housky", "Každé ráno čerstvé, i celozrnné."],
+              ["Dorty na objednávku", "Svatby, narozeniny i firemní akce – ozvěte se nám předem."],
+            ].map(([name, description]) => ({
+              "@type": "Offer",
+              itemOffered: { "@type": "Service", name, description },
+            })),
+          },
         },
       ],
     });

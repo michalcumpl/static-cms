@@ -105,4 +105,6 @@ None. Collections extend the existing site document, rendering and editing capab
   - i18n catalogues (Czech and English).
 - **Risk:** Svedit editing a collection item from inside a page's block, through a path into the
   site's collection. A spike comes first, and the design has a fallback.
-- No new dependencies. Upgraded sites publish the same HTML as before.
+- No new dependencies. Upgraded sites publish the same pages as before, except for the
+  home page's structured data, which gains the services catalog, and the footer's social links
+  once profiles are added.

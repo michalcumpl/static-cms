@@ -53,11 +53,11 @@ check and the untranslated-text test enforce this.
   in `render/css.ts`. Verify with `blocks.test.ts` for "One service on two pages", "Chosen
   order", "Question and answer" and "Nothing to show", and a new snapshot of a page with an FAQ
   block.
-- [ ] 4.2 Add social links to the footer (a `<nav>` labelled through `render/strings.ts`, in
+- [x] 4.2 Add social links to the footer (a `<nav>` labelled through `render/strings.ts`, in
   Czech and English) and `sameAs` and `hasOfferCatalog` to the home page's JSON-LD. Verify with
   "Two profiles", "Switch off" and "Services and profiles" in `header.test.ts`/`metadata.test.ts`
   (or neighbours), and `html-validate` passing on the snapshot pages.
-- [ ] 4.3 Update `packages/site/README.md` (document shape, collections, `blockItems`). Verify by
+- [x] 4.3 Update `packages/site/README.md` (document shape, collections, `blockItems`). Verify by
   reading the section against the code.
 
 ## 5. Languages (`packages/site`)
@@ -120,7 +120,7 @@ check and the untranslated-text test enforce this.
 
 - [ ] 9.1 On a copy of a real database (or the seeded demo with a second language and an
   English-only service), run the admin, then export every project's ZIP before and after the
-  upgrade and diff them. Verify that the pages are identical apart from the new footer `<nav>`
-  where profiles exist (none yet). Record the result in the change.
+  upgrade and diff them. Verify that the pages are identical apart from the home page's new
+  `hasOfferCatalog` in the JSON-LD (and footer social links where profiles exist, none yet). Record the result in the change.
 - [ ] 9.2 Update `docs/roadmap.md` (milestone A: collections done, locations next) and
   `docs/tasks.md`. Verify by reading.

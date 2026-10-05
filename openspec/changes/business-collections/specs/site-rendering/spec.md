@@ -14,11 +14,11 @@ A `services`, `team`, `testimonials` or `faq` block SHALL render the items it sh
 - **THEN** its `<ul>` lists service 3 first and then service 1
 
 ### Requirement: Social links in the footer
-When the business's "show in the footer" switch is on and the business has social profiles, every page's footer (the not-found page included) SHALL list them, in their order, as text links named by their kind ("Instagram", or the host for other addresses), inside a `<nav>` whose accessible name comes from the site's language ("Sociální sítě", "Social media"). The footer SHALL load no icons, scripts or other files from third parties.
+When the business's "show in the footer" switch is on and the business has social profiles, every page's footer (the not-found page included) SHALL list them, in their order, as text links named by their kind ("Instagram", or the host for other addresses), inside a `<nav>` whose accessible name comes from the site's language ("Sociální sítě", "Social media"). The footer SHALL load no icons, scripts or other files from third parties. Because the page then has two navigation landmarks, the main menu SHALL get its accessible name ("Hlavní nabídka", "Main menu"), as it does next to a language switcher.
 
 #### Scenario: Two profiles
 - **WHEN** rendering a page of a Czech site whose business has an Instagram and a Facebook profile, with the switch on
-- **THEN** the footer has a `<nav aria-label="Sociální sítě">` with links "Instagram" and "Facebook" to the profiles' addresses
+- **THEN** the footer has a `<nav aria-label="Sociální sítě">` with links "Instagram" and "Facebook" to the profiles' addresses, and the main menu is labelled "Hlavní nabídka"
 
 #### Scenario: Switch off
 - **WHEN** the business has social profiles and the footer switch is off

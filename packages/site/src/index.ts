@@ -1,4 +1,18 @@
 export {
+  blockItems,
+  COLLECTION_BLOCK_TYPES,
+  COLLECTION_NAMES,
+  COLLECTIONS,
+  type CollectionBlockNode,
+  type CollectionBlockType,
+  type CollectionItemNode,
+  type CollectionItemType,
+  type CollectionName,
+  isCollectionBlockType,
+  type SocialKind,
+  socialKind,
+} from "./collections.js";
+export {
   type ExportOptions,
   type ExportResult,
   exportSite,

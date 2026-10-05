@@ -28,7 +28,9 @@ See proposal.md for the motivation. The current state that shapes the approach:
 
 **Goals:**
 - One node per fact: an item exists once per document; blocks only point at it.
-- Upgraded sites publish byte-identical HTML (snapshot tests prove it).
+- Upgraded sites publish the same pages (snapshot tests prove it), except for the additions
+  this change makes on purpose: the home page's `hasOfferCatalog` when the site has services,
+  and footer social links once profiles exist.
 - Owners keep the canvas workflow: edit an item where they see it.
 
 **Non-Goals:**

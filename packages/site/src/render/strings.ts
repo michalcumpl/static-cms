@@ -14,6 +14,10 @@ export interface SiteStrings {
   languageLabel: string;
   /** The accessible name of the main menu, once there is a language switcher beside it. */
   menuLabel: string;
+  /** The accessible name of the footer's social profile links. */
+  socialLabel: string;
+  /** The name of the business's offer catalog in structured data. */
+  servicesLabel: string;
 }
 
 const STRINGS: Record<string, SiteStrings> = {
@@ -28,6 +32,8 @@ const STRINGS: Record<string, SiteStrings> = {
     hoursHeading: "Otevírací doba",
     languageLabel: "Jazyk",
     menuLabel: "Hlavní nabídka",
+    socialLabel: "Sociální sítě",
+    servicesLabel: "Služby",
   },
   sk: {
     notFoundHeading: "Stránka sa nenašla",
@@ -40,6 +46,8 @@ const STRINGS: Record<string, SiteStrings> = {
     hoursHeading: "Otváracie hodiny",
     languageLabel: "Jazyk",
     menuLabel: "Hlavná ponuka",
+    socialLabel: "Sociálne siete",
+    servicesLabel: "Služby",
   },
   de: {
     notFoundHeading: "Seite nicht gefunden",
@@ -53,6 +61,8 @@ const STRINGS: Record<string, SiteStrings> = {
     hoursHeading: "Öffnungszeiten",
     languageLabel: "Sprache",
     menuLabel: "Hauptmenü",
+    socialLabel: "Soziale Medien",
+    servicesLabel: "Leistungen",
   },
   pl: {
     notFoundHeading: "Nie znaleziono strony",
@@ -65,6 +75,8 @@ const STRINGS: Record<string, SiteStrings> = {
     hoursHeading: "Godziny otwarcia",
     languageLabel: "Język",
     menuLabel: "Menu główne",
+    socialLabel: "Media społecznościowe",
+    servicesLabel: "Usługi",
   },
   en: {
     notFoundHeading: "Page not found",
@@ -77,6 +89,8 @@ const STRINGS: Record<string, SiteStrings> = {
     hoursHeading: "Opening hours",
     languageLabel: "Language",
     menuLabel: "Main menu",
+    socialLabel: "Social media",
+    servicesLabel: "Services",
   },
 };
 

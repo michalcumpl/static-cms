@@ -108,3 +108,48 @@ describe("collection blocks", () => {
     expect(report.results.flatMap((r) => r.messages.map((m) => m.message))).toEqual([]);
   });
 });
+
+describe("social links in the footer", () => {
+  function withProfiles(showInFooter: boolean) {
+    const { doc, nodes } = editableDemoSite();
+    nodes.social_ig = {
+      id: "social_ig",
+      type: "social_link",
+      url: "https://www.instagram.com/pekarnaulipy",
+    };
+    nodes.social_fb = { id: "social_fb", type: "social_link", url: "https://facebook.com/pekarna" };
+    nodes.business_1.social = list(["social_ig", "social_fb"]);
+    nodes.business_1.show_in_footer = showInFooter;
+    return doc;
+  }
+
+  it("Two profiles", () => {
+    const { home, contact } = pages(withProfiles(true));
+    expect(home).toContain('<nav class="site-nav" aria-label="Hlavní nabídka">');
+    for (const html of [home, contact]) {
+      const footer = html.slice(html.indexOf("<footer"));
+      expect(footer.replace(/\s+</g, "<")).toContain(
+        '<nav class="footer-social" aria-label="Sociální sítě"><ul><li><a href="https://www.instagram.com/pekarnaulipy">Instagram</a></li><li><a href="https://facebook.com/pekarna">Facebook</a></li></ul></nav>',
+      );
+    }
+  });
+
+  it("passes html-validate with the links", async () => {
+    const report = await new HtmlValidate({
+      extends: ["html-validate:recommended"],
+      rules: { "doctype-style": "off" },
+    }).validateString(pages(withProfiles(true)).home);
+    expect(report.results.flatMap((r) => r.messages.map((m) => m.message))).toEqual([]);
+  });
+
+  it("Switch off", () => {
+    const { home } = pages(withProfiles(false));
+    expect(home).not.toContain("footer-social");
+  });
+
+  it("shows the links on the not-found page too", () => {
+    const result = renderSite(withProfiles(true));
+    if (!result.ok) throw new Error("not rendered");
+    expect(result.site.notFound).toContain("footer-social");
+  });
+});

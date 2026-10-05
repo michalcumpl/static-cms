@@ -27,6 +27,7 @@ function business(fields: Partial<BusinessInfo> = {}, hours: Hours = {}): Busine
     business_type: "LocalBusiness",
     hours_note: "",
     show_in_footer: true,
+    social: [],
     days: WEEK.map((day) => ({
       day,
       ranges: (hours[day] ?? []).map(([opens, closes]) => ({ opens, closes })),

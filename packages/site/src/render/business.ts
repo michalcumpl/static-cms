@@ -25,6 +25,8 @@ export interface BusinessInfo {
   show_in_footer: boolean;
   /** Monday first. */
   days: { day: Weekday; ranges: TimeRange[] }[];
+  /** The social profiles' addresses, in order. */
+  social: string[];
 }
 
 type LooseNodes = Record<string, Record<string, unknown> | undefined>;
@@ -58,6 +60,10 @@ export function businessInfo(nodes: LooseNodes, businessId: string): BusinessInf
         return range ? [{ opens: str(range.opens), closes: str(range.closes) }] : [];
       });
       return [{ day: str(day.day) as Weekday, ranges }];
+    }),
+    social: ids(node.social).flatMap((id) => {
+      const url = str(nodes[id]?.url);
+      return url === "" ? [] : [url];
     }),
   };
 }

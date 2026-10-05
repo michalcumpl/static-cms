@@ -19,9 +19,18 @@ naming the root `site` node, and a flat `nodes` map. `siteSchema` is the schema 
 format, so the editor can pass it to Svedit unchanged. The TypeScript types (`SiteDocument`,
 `SiteNode`, `PageNode`, …) describe the same shape.
 
-- `site`: name, language, optional base URL, logo, theme, navigation, and pages (the first is the home page).
-- `page`: title, slug (empty for the home page), SEO description, and blocks.
-- Blocks: `hero` (first block only), `rich_text` (paragraphs, subheadings, bullet lists), `services`.
+- `site`: name, language, optional base URL, description, favicon, share image, logo, theme,
+  navigation, business details, the collections, the pages, and the ID of the home page.
+- `page`: title, slug, SEO description, share image, translation key, and blocks.
+- Blocks: `hero` (first block only), `rich_text`, `text_with_image`, `gallery`, `logos`,
+  `contact`, `opening_hours`, `call_to_action`, and the collection blocks `services`, `team`,
+  `testimonials` and `faq`.
+- **Collections** (format 7): the site holds its `services`, `team`, `testimonials` and `faqs`
+  once. A collection block holds no items: it shows its whole collection (`show: "all"`) or the
+  items its `item_ref` nodes name (`show: "chosen"`), in their order. `blockItems(doc, block)`
+  returns what a block shows; the renderer, validation and the editor all use it.
+- `business`: contact details, opening hours and social profiles (`social_link` nodes;
+  `socialKind(url)` names the network).
 - Links to pages use the page's node ID (`page_link`, `internal_link`), so they survive slug changes.
 - Text values are `{ content, marks, annotations }`. Mark offsets count grapheme clusters, as in Svedit.
 

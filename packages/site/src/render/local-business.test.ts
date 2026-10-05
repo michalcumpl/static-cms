@@ -11,6 +11,13 @@ function setHours(nodes: LooseNodes, day: string, ranges: [string, string][]) {
   nodes[`day_${day}`].ranges = { nodes: ids, marks: [], annotations: [] };
 }
 
+/** The demo site without its services, so the organization has no offer catalog. */
+function withoutServices(nodes: LooseNodes): void {
+  for (const id of nodes.site_1.services.nodes) delete nodes[id];
+  delete nodes.emphasis_cakes;
+  nodes.site_1.services.nodes = [];
+}
+
 function organization(doc: unknown): Record<string, unknown> {
   const result = renderSite(doc, { siteUrl: "https://anideti.cz" });
   if (!result.ok) throw new Error(result.problems.map((p) => p.message).join("\n"));
@@ -22,6 +29,7 @@ function organization(doc: unknown): Record<string, unknown> {
 describe("organization structured data", () => {
   it("stays an Organization while the business has no address or phone", () => {
     const { doc, nodes } = editableDemoSite();
+    withoutServices(nodes);
     nodes.business_1.email = "objednavky@pekarna-ulipy.example";
     expect(organization(doc)).toEqual({
       "@type": "Organization",
@@ -33,6 +41,7 @@ describe("organization structured data", () => {
 
   it("describes a bakery with its address, phone and opening hours", () => {
     const { doc, nodes } = editableDemoSite();
+    withoutServices(nodes);
     Object.assign(nodes.business_1, {
       business_type: "Bakery",
       street: "Lipová 12",
@@ -87,6 +96,37 @@ describe("organization structured data", () => {
     setHours(nodes, "tue", [["08:00", "12:00"]]);
     const specs = organization(doc).openingHoursSpecification as { dayOfWeek: string[] }[];
     expect(specs.map((s) => s.dayOfWeek)).toEqual([["Monday", "Tuesday"], ["Monday"]]);
+  });
+
+  it("Services and profiles", () => {
+    const { doc, nodes } = editableDemoSite();
+    for (const id of nodes.site_1.services.nodes.slice(1)) delete nodes[id];
+    delete nodes.emphasis_cakes;
+    nodes.site_1.services.nodes = ["service_bread"];
+    nodes.service_bread.name.content = "Chléb";
+    nodes.service_bread.description.content = "";
+    nodes.service_cake = {
+      ...nodes.service_bread,
+      id: "service_cake",
+      name: { content: "Dorty na zakázku", marks: [], annotations: [] },
+    };
+    nodes.site_1.services.nodes.push("service_cake");
+    nodes.social_ig = {
+      id: "social_ig",
+      type: "social_link",
+      url: "https://instagram.com/pekarna",
+    };
+    nodes.business_1.social = { nodes: ["social_ig"], marks: [], annotations: [] };
+    const org = organization(doc);
+    expect(org.sameAs).toEqual(["https://instagram.com/pekarna"]);
+    expect(org.hasOfferCatalog).toEqual({
+      "@type": "OfferCatalog",
+      name: "Služby",
+      itemListElement: [
+        { "@type": "Offer", itemOffered: { "@type": "Service", name: "Chléb" } },
+        { "@type": "Offer", itemOffered: { "@type": "Service", name: "Dorty na zakázku" } },
+      ],
+    });
   });
 
   it("uses the business name when it has one", () => {

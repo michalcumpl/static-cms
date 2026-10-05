@@ -134,6 +134,25 @@ function organizationData(ctx: RenderContext, url: string): Record<string, unkno
   } else if (site.favicon.nodes.length > 0) {
     organization.logo = ctx.absoluteUrl("icon-512.png");
   }
+  if (business.social.length > 0) organization.sameAs = business.social;
+  // The business's offer is its services collection, whether or not a page shows them; prices
+  // are free text, so they're left out (business-collections design decision 7).
+  const services = ctx
+    .children(site.services)
+    .flatMap((item) => (item.type === "service_item" ? [item] : []));
+  if (services.length > 0) {
+    organization.hasOfferCatalog = {
+      "@type": "OfferCatalog",
+      name: ctx.strings.servicesLabel,
+      itemListElement: services.map((service) => {
+        const offered: Record<string, string> = { "@type": "Service", name: service.name.content };
+        if (service.description.content.trim() !== "") {
+          offered.description = service.description.content;
+        }
+        return { "@type": "Offer", itemOffered: offered };
+      }),
+    };
+  }
   if (!isPlace) return organization;
 
   const address: Record<string, string> = { "@type": "PostalAddress" };

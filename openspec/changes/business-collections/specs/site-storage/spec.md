@@ -12,7 +12,7 @@ A failed upgrade SHALL leave the project's stored documents unchanged and SHALL 
 
 #### Scenario: Czech and English project
 - **WHEN** the admin starts with a project whose Czech and English documents are version 6, both holding the services "Chléb" and "Rohlíky" with the same node IDs
-- **THEN** both documents are stored as new version-7 versions with the same two services in their collections, and both languages publish the same HTML as before
+- **THEN** both documents are stored as new version-7 versions with the same two services in their collections, and both languages publish the same pages as before, apart from the services catalog added to the home page's structured data
 
 #### Scenario: A service only in English
 - **WHEN** the English document of a version-6 project has a services block with "Bread" and an extra item "Gluten-free bread" that the Czech document doesn't have

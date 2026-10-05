@@ -94,7 +94,7 @@ A version-6 document SHALL be upgradable to version 7 without changing what its 
 
 #### Scenario: One services block
 - **WHEN** a version-6 document whose only services block has three service items is upgraded
-- **THEN** the site's services collection holds those three items in order, the block is in the `all` mode, and the rendered page is identical to the one rendered before the upgrade
+- **THEN** the site's services collection holds those three items in order, the block is in the `all` mode, and the rendered services section is identical to the one rendered before the upgrade
 
 #### Scenario: Highlights and a full list
 - **WHEN** the home page's services block holds "Chléb" and "Rohlíky", and the "Služby" page's services block holds identical "Chléb" and "Rohlíky" and also "Dorty"

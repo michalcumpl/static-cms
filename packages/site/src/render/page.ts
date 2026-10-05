@@ -1,4 +1,4 @@
-import { type CollectionBlockNode, isCollectionBlockType } from "../collections.js";
+import { type CollectionBlockNode, isCollectionBlockType, socialKind } from "../collections.js";
 import type { NodeOfType } from "../schema/index.js";
 import { renderBlock, renderImage, renderLink, siteLogoSizes } from "./blocks.js";
 import { contactDetails, openingHoursTable } from "./business.js";
@@ -86,6 +86,9 @@ function renderDocument(
 ): Html {
   const { site } = ctx;
   const nav = ctx.node(site.nav, "nav");
+  // Several navigation landmarks each need their own name.
+  const social = socialLinks(ctx);
+  const labelMenu = ctx.multilingual || social !== false;
   return html`<!doctype html>
 <html lang="${site.lang}">
   <head>${head}
@@ -94,7 +97,7 @@ function renderDocument(
     <header class="site-header">
       <div class="container">
         <a class="site-name" href="${ctx.pageUrl(ctx.homeId)}">${siteBrand(ctx)}</a>
-        <nav class="site-nav"${ctx.multilingual && html` aria-label="${ctx.strings.menuLabel}"`}>
+        <nav class="site-nav"${labelMenu && html` aria-label="${ctx.strings.menuLabel}"`}>
           <ul>${ctx.children(nav.items).map(
             (item) => html`
             <li>${renderLink(item, ctx, undefined, item.type === "page_link" && item.page_id === currentPageId)}</li>`,
@@ -106,7 +109,7 @@ function renderDocument(
     <main>${main}
     </main>
     <footer class="site-footer">
-      <div class="container">${footerDetails(ctx)}
+      <div class="container">${footerDetails(ctx)}${social}
         <p>© ${site.name}</p>
       </div>
     </footer>
@@ -154,6 +157,20 @@ function footerDetails(ctx: RenderContext): Html | false {
           ${indent(part, "          ")}`,
         )}
         </div>`;
+}
+
+/** The social profiles as text links, when the footer switch is on (business-collections). */
+function socialLinks(ctx: RenderContext): Html | false {
+  const { business, strings } = ctx;
+  if (!business.show_in_footer || business.social.length === 0) return false;
+  return html`
+        <nav class="footer-social" aria-label="${strings.socialLabel}">
+          <ul>${business.social.map(
+            (url) => html`
+            <li><a href="${url}">${socialKind(url).label || url}</a></li>`,
+          )}
+          </ul>
+        </nav>`;
 }
 
 /** Indents every line after the first; block markup is written relative to its own start. */

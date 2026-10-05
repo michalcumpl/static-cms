@@ -508,6 +508,15 @@ img {
   margin-bottom: 1.5rem;
 }
 
+.footer-social ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
 .site-footer {
   margin-top: 2rem;
   border-top: 1px solid var(--color-secondary);
