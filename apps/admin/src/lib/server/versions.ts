@@ -16,8 +16,10 @@ import { primaryLanguage, readSite, saveSite } from "./site-documents";
 export interface VersionEntry {
   id: string;
   savedAt: Date;
-  /** The email of the member who saved it, or null for a removed account. */
+  /** The email of the member who saved it, or null for a removed account or the system. */
   savedBy: string | null;
+  /** Saved by the admin itself (a format upgrade), not by a member. */
+  system: boolean;
   current: boolean;
   /** Part of the publish the live site shows. */
   live: boolean;
@@ -62,6 +64,7 @@ export function listVersions(
       id: versions.id,
       createdAt: versions.createdAt,
       savedBy: users.email,
+      system: versions.system,
       restoredFrom: versions.restoredFrom,
       rowid: sql<number>`${versions}.rowid`,
     })
@@ -132,6 +135,7 @@ export function listVersions(
         id: row.id,
         savedAt: row.createdAt,
         savedBy: row.savedBy ?? null,
+        system: row.system,
         current: row.id === doc.currentVersionId,
         live: row.id === live,
         published: published.has(row.id) && row.id !== live,

@@ -18,6 +18,7 @@ interface Entry {
   id: string;
   savedAt: string | Date;
   savedBy: string | null;
+  system: boolean;
   current: boolean;
   live: boolean;
   published: boolean;
@@ -112,7 +113,11 @@ async function confirmRestore(event: SubmitEvent) {
       {#each entries as entry (entry.id)}
         <li>
           <span class="when">{when(entry.savedAt)}</span>
-          <span class="who">{entry.savedBy ?? i18n.t("history.formerMember")}</span>
+          <span class="who"
+            >{entry.system
+              ? i18n.t("history.system")
+              : (entry.savedBy ?? i18n.t("history.formerMember"))}</span
+          >
           <span class="marks">
             {#if entry.current}<Badge status="neutral">{i18n.t("history.current")}</Badge>{/if}
             {#if entry.live}<Badge status="success">{i18n.t("history.live")}</Badge>{/if}

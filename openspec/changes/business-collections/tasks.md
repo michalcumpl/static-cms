@@ -70,13 +70,13 @@ check and the untranslated-text test enforce this.
 
 ## 6. Project upgrade (`apps/admin`)
 
-- [ ] 6.1 Add `upgradeProjects(db)` (decision 8): find projects with a current document below
+- [x] 6.1 Add `upgradeProjects(db)` (decision 8): find projects with a current document below
   version 7, upgrade each language, append the primary's missing items, switch `all` blocks to
   `chosen` where needed, and save new versions with `created_by = null`, one transaction per
   project. Call it from `getDb()` after the migrations. Verify with `site-documents.test.ts` or
   a new `upgrade-projects.test.ts` for "Czech and English project", "A service only in English"
   and "Already upgraded", plus a failure case leaving the data unchanged.
-- [ ] 6.2 Show a version with no author as "System" in the History tab and its version page.
+- [x] 6.2 Show a version with no author as "System" in the History tab and its version page.
   Verify with a unit test of the history load and the catalogue strings.
 
 ## 7. Editor: collection blocks (`apps/admin`)

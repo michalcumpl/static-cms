@@ -204,6 +204,7 @@ export const en = {
     hint: "Every save of {language} is kept. Restoring a version saves it again as the newest one, so you can always go back.",
     versions: "Saved versions",
     formerMember: "a former member",
+    system: "System (format upgrade)",
     current: "Current",
     live: "Live",
     published: "Published",

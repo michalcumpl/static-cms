@@ -135,6 +135,8 @@ export const versions = sqliteTable(
     restoredFrom: text("restored_from").references((): AnySQLiteColumn => versions.id, {
       onDelete: "set null",
     }),
+    /** Saved by the admin itself, such as a format upgrade (business-collections), not a member. */
+    system: integer("system", { mode: "boolean" }).notNull().default(false),
   },
   (t) => [index("versions_document_idx").on(t.documentId)],
 );

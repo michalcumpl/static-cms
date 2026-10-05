@@ -116,6 +116,19 @@ describe("listVersions", () => {
     saveHeading("A");
     db.delete(users).where(eq(users.id, userId)).run();
     expect(listed().versions[0]?.savedBy).toBeNull();
+    expect(listed().versions[0]?.system).toBe(false);
+  });
+
+  it("marks versions the system saved, such as a format upgrade", () => {
+    saveHeading("A");
+    const [newest] = listed().versions;
+    if (!newest) throw new Error("no versions");
+    db.update(versions)
+      .set({ system: true, createdBy: null })
+      .where(eq(versions.id, newest.id))
+      .run();
+    expect(listed().versions[0]).toMatchObject({ system: true, savedBy: null });
+    expect(listed().versions[1]?.system).toBe(false);
   });
 
   it("is undefined for a language the project doesn't have", () => {

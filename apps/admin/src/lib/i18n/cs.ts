@@ -208,6 +208,7 @@ export const cs: Messages = {
     hint: "Každé uložení jazyka {language} se uchovává. Obnovení verze ji uloží znovu jako nejnovější, takže se můžete vždy vrátit.",
     versions: "Uložené verze",
     formerMember: "bývalý člen",
+    system: "Systém (převod formátu)",
     current: "Aktuální",
     live: "Na webu",
     published: "Zveřejněno",

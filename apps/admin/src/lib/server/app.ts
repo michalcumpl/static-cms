@@ -2,13 +2,28 @@
 import { RateLimiter, signInLimiter } from "./auth";
 import { type Db, openDatabase } from "./db/index";
 import { createMailer, type Mailer } from "./mail";
+import { upgradeProjects } from "./upgrade-projects";
 
 let db: Db | undefined;
 let mailer: Mailer | undefined;
 let limiter: RateLimiter | undefined;
 
+/**
+ * The database, opened on first use. Projects stored in an older document format are upgraded
+ * before anything else reads them; if that fails, every request fails until it is fixed.
+ */
 export function getDb(): Db {
-  db ??= openDatabase();
+  if (!db) {
+    const opened = openDatabase();
+    try {
+      const count = upgradeProjects(opened);
+      if (count > 0) console.info(`Upgraded ${count} project(s) to the current document format.`);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+    db = opened;
+  }
   return db;
 }
 

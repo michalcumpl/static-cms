@@ -149,9 +149,9 @@ because they're free text.
   1. run `toVersion7` on every language;
   2. append items missing from the primary, and switch `all` blocks to `chosen` in documents
      that lacked an appended item;
-  3. insert new versions with `created_by = null`.
-
-  The history shows a null author as "System" (new i18n string). An exception propagates out of
+  3. insert new versions with `created_by = null` and the new `versions.system` flag set
+     (migration `0006`). A null author alone already means "a former member" in the history,
+     so the flag tells the two apart; the history shows "System (format upgrade)". An exception propagates out of
   `getDb()`, so every request fails until it's fixed, and the stored data stays untouched.
 
 *Alternative:* only the per-document upgrade on read. That drops items that exist only in a
