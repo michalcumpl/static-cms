@@ -286,7 +286,7 @@ beta.
 
 | # | Milestone | OpenSpec change | What | Status |
 | --- | --- | --- | --- | --- |
-| 1 | A | [`business-collections`](../openspec/changes/business-collections/) | services, team, testimonials and FAQs held once per site; blocks show all or chosen items; social profiles; format 7 | done |
+| 1 | A | [`business-collections`](../openspec/changes/archive/2026-10-05-business-collections/) | services, team, testimonials and FAQs held once per site; blocks show all or chosen items; social profiles; format 7 | done |
 | 2 | A | `package-split` | `@static-cms/site` split into model, render, templates and export | next |
 | 3 | A | `rename-webmio` | `@webmio/*` packages, product name in the admin and docs | |
 | 4 | A | `business-locations` | several locations, each with address, hours and contact | |
@@ -307,7 +307,7 @@ beta.
 
 ### A. Business data as the source of truth
 
-- **Collections: done** ([`business-collections`](../openspec/changes/business-collections/)).
+- **Collections: done** ([`business-collections`](../openspec/changes/archive/2026-10-05-business-collections/)).
   `services`, `team`, `testimonials` and `faqs` on the site, with today's item fields (price
   stays a text). Which items exist, their order and their images are shared across languages;
   texts are translated. Document format 7: a one-time upgrade at start lifts the items of
