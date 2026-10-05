@@ -152,3 +152,7 @@ Section headings become `Card`s with titles, link lists become buttons where the
 - The database migration (`users.ui_language`) runs on start, as earlier migrations do. Rolling back to an older build ignores the column.
 - Existing accounts have no language chosen, so they get their browser's language. Czech owners see Czech automatically after the deploy. A note in the README says how to switch.
 - No document format change.
+
+## Manual check (2026-10-05)
+
+The owner used the admin in both languages and found it in order. Wording changes from the review before it: the interface language moved out of the top bar into the account menu (and below the sign-in and invitation forms), see decision 4.

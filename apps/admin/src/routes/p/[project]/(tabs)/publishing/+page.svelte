@@ -77,7 +77,7 @@ const when = (iso: string) => i18n.formatDate(iso);
   <title>{i18n.t("common.pageTitle", { page: i18n.t("publishing.pageTitle", { project: data.project.name }) })}</title>
 </svelte:head>
 
-<TabPanel width="narrow">
+<TabPanel>
   {#if info?.connected}
     <p class="team">{i18n.t("publishing.team", { team: info.team ?? "" })}</p>
   {/if}

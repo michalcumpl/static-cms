@@ -95,7 +95,7 @@ async function confirmRestore(event: SubmitEvent) {
   <title>{i18n.t("common.pageTitle", { page: i18n.t("history.pageTitle", { project: data.project.name }) })}</title>
 </svelte:head>
 
-<TabPanel width="narrow">
+<TabPanel>
   <p class="hint">{i18n.t("history.hint", { language: languageName })}</p>
 
   {#if message}

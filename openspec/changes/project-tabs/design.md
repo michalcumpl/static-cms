@@ -117,3 +117,7 @@ No data, API or document changes, so nothing to migrate. Deploying is a plain re
 ## Open Questions
 
 - Whether the Pages tab should offer Add page and the other page actions outside the editor. It can wait: nothing here depends on the answer.
+
+## Manual check (2026-10-05)
+
+The owner went through the tabs, the Settings tab, the "⋯" menus and the problems panel. One change came out of it: the Publishing and History tabs were still limited to the narrow width of their old standalone pages, and now use the full width like the other tabs. Everything else was fine.

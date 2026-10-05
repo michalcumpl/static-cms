@@ -40,5 +40,5 @@ Every task that adds interface text adds it to both catalogues (`en.ts` and `cs.
 
 - [x] 6.1 Change the business-block warning in `packages/site/src/validate/domain.ts` and the block picker's descriptions (both catalogues) to name the business settings (decision 8). Verify with the site package's tests updated and passing, and the block illustration test.
 - [x] 6.2 Update the roadmap (admin redesign step 2 done; the Pages tab's page actions as a later idea). Verify by reading it.
-- [ ] 6.3 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the whole e2e suite locally, then push and check CI. Verify that all pass.
-- [ ] 6.4 Manual check by the owner: open every tab on a project with two languages, edit the settings and save, use the "⋯" menu on pages and links, and open the Settings tab from a problem in the editor. Record the outcome and any changes in design.md.
+- [x] 6.3 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the whole e2e suite locally, then push and check CI. Verify that all pass.
+- [x] 6.4 Manual check by the owner: open every tab on a project with two languages, edit the settings and save, use the "⋯" menu on pages and links, and open the Settings tab from a problem in the editor. Record the outcome and any changes in design.md.
