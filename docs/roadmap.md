@@ -1,11 +1,18 @@
 # Roadmap
 
-**Goal:** a non-technical small-business owner goes from an empty project to a published,
-standards-compliant static website without touching code.
+**Goal:** Webmio, a managed website service for small businesses. The owner maintains the facts
+about their business, and we keep a fast, valid, always-working website live. The reasoning is in
+[`strategy.md`](strategy.md), open work in [`tasks.md`](tasks.md).
 
-This is a *website compiler with an editor*, not a general-purpose CMS. Out of scope for the MVP:
-blogging, e-commerce, memberships, complex forms, plugins, a block marketplace. Multi-language
-sites come after publishing (Milestone 5).
+Milestones 1–5 below were built as a block-based site editor ("website compiler with an
+editor"). The October 2026 strategy refresh moves the product above that: business data
+becomes the source of truth, templates generate the first site, the block editor stays for
+later changes, and there's still no free-form page builder. The
+milestones from A on follow the new direction; 6–9 from the old plan are folded into them.
+
+**MVP is out of scope for:** e-commerce, appointments, memberships, blogging, plugins, a
+marketplace, AI agents, advanced analytics, free-form layout. Multilingual is built, kept and
+frozen.
 
 ## Decisions so far
 
@@ -19,6 +26,13 @@ sites come after publishing (Milestone 5).
 - **AI edits the document** through the same operations as the editor, never raw HTML.
 - **A project holds one site document per language.** Theme, media and domain belong to the
   project. Languages may have different pages and structure.
+- **(2026-10) Business data is the source of truth; pages are generated views of it.** Services,
+  team, testimonials and FAQs move from block items into collections. Blocks become the sections
+  templates are built from. See milestone A.
+- **(2026-10) No free-form page builder, as a hard rule.** The block editor stays (business
+  blocks only, no columns, nesting or CSS). Customisation is brand, layout (template,
+  navigation, homepage sections on or off) and content.
+- **(2026-10) One hosting, ours.** Customers never choose a publishing target.
 
 ## Milestones
 
@@ -203,12 +217,9 @@ upload are all out of M2 on purpose. All of them are done.
   - **Czech and English** for the whole admin: pages, editor, server messages and emails, with
     Czech plural forms and date formats. The language comes from the account, else the switch on
     this device, else the browser; a test fails on text outside the catalogues.
-  - Next steps: a projects dashboard with live thumbnails, and a
-    presentation website for new users: what they get and for how much (one price per site,
-    free to build, paid when published; domains at cost), built and published with Static CMS
-    itself on its own domain, with new pricing-table and FAQ blocks and a request-access form
-    sent to a small form endpoint in the admin. Open sign-up and online payment come later. Also: translating the site's validation
-    (problem) messages, which stay in English for now.
+  - The planned steps 3 (projects dashboard) and 4 (presentation website) are superseded by
+    milestones B (business control panel) and F (webmio.cz). Still open: translating the site's
+    validation (problem) messages, which stay in English for now.
 - **Admin redesign, step 2 of 4 – project tabs: done** ([`project-tabs`](../openspec/changes/project-tabs/)).
   - **The project page is tabs,** each with its own address: Overview (address, last publish,
     Publish, validity, languages), Pages, Languages, Publishing (with the ZIP download), History
@@ -264,47 +275,114 @@ Still open: open sign-up (a switch, when billing exists) and Google sign-in.
     page list marks untranslated pages. Hints only: nothing blocks publishing.
 - Later: changing the primary language, a domain per language, machine translation (Milestone 9).
 
-### 6. Own hosting
+## After the strategy refresh
 
-Netlify has limits and ties each client to an account of their own. Sites move to our own
-hosting on AWS, built to grow with the number of sites and their traffic at almost no cost.
+Milestones in order. A private beta for friends (F) starts as soon as A–E work with at least two
+templates; the other two templates can land during the beta.
 
-- **S3 + CloudFront as our own Netlify:** one bucket and one multi-tenant CloudFront
-  distribution for all sites; each site is a tenant with its own domains and an automatically
-  issued certificate.
+### A. Business data as the source of truth
+
+- **Collections** next to the business details that already exist: `services`, `team`,
+  `testimonials`, `faqs`, with fields a template can rely on (a service has a name, summary,
+  description, optional price and image; FAQs have a question and an answer). `locations` and
+  `social` join the business. Shared across languages where they're facts (prices, photos,
+  links), translated where they're text. This is a new document format, with an upgrade that lifts
+  the items of existing services, team and testimonial blocks into the collections.
+- **Blocks become views:** a services section shows the collection (all, or chosen highlights)
+  instead of holding its own items.
+- **Package split** happens here (see [`tasks.md`](tasks.md)): model (schema, validation,
+  migrations), renderer, templates, export.
+- Rename to Webmio in code: `@webmio/*` packages, product name in the admin.
+
+### B. Business control panel
+
+- The website's home in the admin follows the customer's mental model: **Your website** (name,
+  ● Live, address), then **Business** (company, hours, locations, contact), **What you offer**
+  (services, pricing, FAQs), **About you** (team, photos, testimonials), **Website** (design,
+  navigation, domain, SEO) and **Publish**.
+- Forms for each object, with a live preview of where it appears on the site. Most of the
+  Settings tab (business, site, SEO) moves here unchanged.
+- The guided setup and the panel are the owner's start; the **block editor** stays one click
+  away for adding pages and arranging blocks afterwards.
+- **Image cropping** and focal points in the media library (open since milestone 3).
+- **Guided setup:** a step-by-step "Tell us about your business" wizard that ends in a
+  previewable site.
+- Replaces the planned projects dashboard; an account with several websites lists them as cards.
+
+### C. Templates as website systems
+
+- **A template contract:** the pages it generates, its sections and which collections they read,
+  navigation, typography and spacing, SEO and schema.org defaults, homepage sections that can be
+  switched on or off, and variants (single- or multi-page, image or video hero vs. classic
+  header).
+- **Four templates:** Local Services, Professional, Hospitality, Personal Professional.
+- **Template switching:** choose → preview with your own content → publish; nothing rewritten.
+  Pages and blocks the owner made in the editor are kept and restyled. Collections a template
+  doesn't show stay stored, and the preview says what won't be visible.
+- **Versioned templates:** a site records the template version it uses; template updates are
+  checked against every fixture site before release.
+- **Lighthouse 100** (performance, accessibility, best practices, SEO) for every template and
+  variant, as a CI gate on fixture sites; `html-validate` stays.
+- Brand stays as built: logo, colours with enforced contrast, fonts from the catalogue.
+
+### D. Safe publishing on our own hosting
+
+Was milestone 6.
+
+- **S3 + CloudFront as our own Netlify:** one bucket and one multi-tenant distribution; each site
+  a tenant with its own domains and an automatically issued certificate. Free address
+  `<site>.webmio.site`; previews there too.
 - **Atomic deploys and instant rollback:** each publish in its own folder, uploading only changed
-  files; a CloudFront Function with a key-value store points each domain at its live publish, so
-  publishing and *Make live again* switch a pointer.
-- **Another `PublishTarget`** next to Netlify; existing sites move over, and the Netlify adapter
-  stays until they have.
-- **Sites are hosted by us,** not on each workspace's account: hosting costs are ours, which
-  will need limits and, later, billing.
+  files; a CloudFront Function with a key-value store points each domain at its live publish.
+- **The publish pipeline** from the strategy: validate required fields, check links, generate
+  metadata and structured data, optimise images, build, deploy, **verify the live deployment**,
+  keep the previous version. On failure the previous version stays live and the owner sees
+  *Try again*.
+- Another `PublishTarget` next to Netlify; existing sites move over, then the Netlify adapter goes.
 
-### 7. Domains
+### E. Domains and website health
 
-- **Connecting an existing domain, seamlessly:** the owner points the domain's nameservers to a
-  Route 53 hosted zone we create; its existing records are imported (so email keeps working),
-  and the records for the bare domain and `www` and the certificate are created automatically.
-  This also solves bare domains, which a CNAME can't point at CloudFront.
-- **Registering a new domain** from the admin: generic endings (`.com`, `.eu`, …) through Route
-  53 Domains, `.cz` through a Czech registrar's API. Owner contact details, renewals and payment.
-- DNS records a client needs besides the site (email, verification) editable in the admin.
+Was milestone 7, plus health.
 
-### 8. Admin on AWS
+- **Connecting an existing domain:** for the beta, step-by-step DNS guides for the registrars our
+  customers use (WEDOS, Forpsi, Active24, Websupport, Subreg, GoDaddy, Namecheap) with a live
+  check of the records. Then the seamless version: nameservers to a Route 53 hosted zone we
+  create, existing records imported (email keeps working), bare domain, `www` and certificate
+  set up automatically.
+- **Website health:** a daily check (SSL, domain, pages published, no broken links, images
+  optimised, contact form working, required business information present, sitemap, valid
+  structured data) shown as *Website healthy* or a list of what to fix, and emailed when
+  something breaks.
+- **Contact form** (a strategy "included" item): submissions to a small endpoint, emailed to the
+  owner, spam-protected without third-party scripts.
+- Later: registering domains from the admin (generic endings through Route 53 Domains, `.cz`
+  through a Czech registrar's API), other DNS records editable in the admin.
 
-The admin serves only editors, so one server is enough for a long time; visitors never reach
-it.
+### F. Private beta
 
-- **One small server** (EC2 or Lightsail) in an EU region, with a deploy pipeline, monitoring and
-  alerts.
-- **Media in S3** instead of the server's disk, shared with publishing.
-- **SQLite kept,** continuously backed up to S3 with Litestream; Postgres (RDS) only when more
-  than one admin server is needed.
+Invite-only, small and cheap, for friends: it validates the data model, templates and publishing
+before anyone pays.
 
-### 9. AI
+- **Admin on AWS** (was milestone 8): one small EU server at `app.webmio.eu`, deploy pipeline,
+  monitoring and alerts; media in S3; SQLite with Litestream to S3.
+- **Presentation website** on `webmio.cz` (Czech) and `webmio.eu` (English), built and published
+  with Webmio itself: what you get, €79 / 1 899 Kč a year excl. VAT (free until the first publish), FAQ, *Request access* form.
+- **Legal:** terms of service, privacy policy, data processing agreement (we process the
+  customer's form submissions), cookie statement (sites set no cookies), complaints procedure.
+- **Operator console (minimum):** customers, websites, plan status and renewal dates, manual
+  invoices.
+- **Emails:** renewal reminders, publish failures, health alerts.
 
-- Generate an initial site.
-- Rewrite text, create sections.
-- Change business details on request (for example "change the opening hours to 8–17").
-- Suggest alt text and SEO text.
-- Translate a language version into another, and keep translations in sync.
+### G. After the beta
+
+- **Billing and open sign-up:** card payments, €79 / 1 899 Kč a year excl. VAT from the first
+  publish, renewals, invoices with VAT.
+- **Google sign-in** next to magic links.
+- **Owner statistics:** simple, privacy-friendly visit counts from CDN logs, in the panel and in a
+  monthly email with the health summary. No advanced analytics.
+- **Operator console:** cash flow, trends, renewal forecasts.
+- **Agencies:** an agency account sets up client websites, and clients get the simple panel.
+- **AI** (was milestone 9), building on health and the data model: suggested alt text and SEO
+  text, filling in the business from a few answers, "change the opening hours to 8–17",
+  nudges ("a service has no description"), translation. Runs on our key within fair use; no
+  bring-your-own-key.
