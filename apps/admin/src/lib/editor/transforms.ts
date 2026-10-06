@@ -208,6 +208,7 @@ export function insertContact(tr: Tr): boolean {
     show_phone: true,
     show_email: true,
     show_map: true,
+    location_id: "",
   });
   insertAndFocus(tr, block, "heading");
   return true;
@@ -216,7 +217,12 @@ export function insertContact(tr: Tr): boolean {
 /** An opening hours block with a placeholder heading. */
 export function insertOpeningHours(tr: Tr): boolean {
   const block = tr.generate_id();
-  tr.create({ id: block, type: "opening_hours", heading: text(stringsOf(tr).hoursHeading) });
+  tr.create({
+    id: block,
+    type: "opening_hours",
+    heading: text(stringsOf(tr).hoursHeading),
+    location_id: "",
+  });
   insertAndFocus(tr, block, "heading");
   return true;
 }

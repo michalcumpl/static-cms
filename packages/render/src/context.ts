@@ -5,7 +5,7 @@ import {
   type CollectionItemNode,
   isSafeHref,
 } from "@webmio/model";
-import { type BusinessInfo, businessInfo, type LocationInfo } from "./business.js";
+import { type BusinessInfo, businessInfo, type LocationInfo, locationsFor } from "./business.js";
 import { type SiteStrings, siteStrings } from "./strings.js";
 
 const BASE_PATH = /^\/((?!\.\.?\/)[A-Za-z0-9._~-]+\/)*$/;
@@ -109,8 +109,7 @@ export class RenderContext {
    * chose; none for a location that no longer exists.
    */
   locationsFor(locationId: string): LocationInfo[] {
-    const { locations } = this.business;
-    return locationId === "" ? locations : locations.filter((l) => l.id === locationId);
+    return locationsFor(this.business, locationId);
   }
 
   /** The items a collection block shows (business-collections design decision 3). */

@@ -53,6 +53,11 @@ const savedBusiness = (lang?: string) => {
   const doc = savedDocument(lang);
   return Object.values(doc.nodes).find((node) => node.type === "business");
 };
+/** The saved business's locations, in order. */
+const savedLocations = (lang?: string) => {
+  const doc = savedDocument(lang);
+  return savedBusiness(lang).locations.nodes.map((id: string) => doc.nodes[id]);
+};
 
 test.describe("the site", () => {
   test("rename it, undo it, then rename and save", async ({ page }) => {
@@ -124,7 +129,69 @@ test.describe("the business", () => {
     await phone.press("Tab");
     await expect(phone).toHaveValue("+420 321 123 456");
     await saveSettings(page);
-    expect(savedBusiness().phone).toBe("+420321123456");
+    expect(savedLocations()[0].phone).toBe("+420321123456");
+  });
+
+  test("Add a second shop", async ({ page }) => {
+    await openSettings(page);
+    await business(page).getByRole("button", { name: "Add a location" }).click();
+    const second = business(page).getByRole("group", { name: "Location 2" });
+    await expect(second.getByLabel("Name of the location")).toBeFocused();
+    await second.getByLabel("Name of the location").fill("Kutná Hora");
+    // Named, the location is headed by its name.
+    const branch = business(page).getByRole("group", { name: "Kutná Hora" });
+    await branch.getByLabel("Street and number").fill("Palackého 3");
+    await branch.getByLabel("City").fill("Kutná Hora");
+    await branch.getByRole("button", { name: "Open on Saturday" }).click();
+    const main = business(page).getByRole("group", { name: /Main location/ });
+    await main.getByLabel("Name of the location").fill("Kolín – Lipová");
+    await main.getByLabel("Street and number").fill("Lipová 12");
+    await saveSettings(page);
+    const [kolin, kh] = savedLocations();
+    expect(kolin).toMatchObject({ name: "Kolín – Lipová", street: "Lipová 12" });
+    expect(kh).toMatchObject({ name: "Kutná Hora", street: "Palackého 3" });
+    await page.goto(paths().preview);
+    const footer = page.locator("footer");
+    await expect(footer.getByText("Kolín – Lipová", { exact: true })).toBeVisible();
+    await expect(footer.getByText("Kutná Hora", { exact: true }).first()).toBeVisible();
+  });
+
+  test("Remove a chosen location", async ({ page }) => {
+    await openSettings(page);
+    await business(page).getByRole("button", { name: "Add a location" }).click();
+    await business(page)
+      .getByRole("group", { name: "Location 2" })
+      .getByLabel("Name of the location")
+      .fill("Kutná Hora");
+    await saveSettings(page);
+    // A contact block on "Kontakt" chooses the second location.
+    const { projectId, owner } = state();
+    const site = readSite(testDb(), projectId);
+    const doc = structuredClone(site?.document) as Doc;
+    const [, khId] = doc.nodes[savedBusiness().id].locations.nodes;
+    doc.nodes.contact_kh = {
+      id: "contact_kh",
+      type: "contact",
+      heading: { content: "Kutná Hora", marks: [], annotations: [] },
+      show_address: true,
+      show_phone: true,
+      show_email: true,
+      show_map: true,
+      location_id: khId,
+    };
+    doc.nodes.page_contact.blocks.nodes.push("contact_kh");
+    expect(saveSite(testDb(), projectId, owner.id, doc, site?.version ?? "").ok).toBe(true);
+
+    await openSettings(page);
+    const second = business(page).getByRole("group", { name: "Kutná Hora" });
+    await second.getByRole("button", { name: "Remove this location" }).click();
+    await expect(second.getByRole("alert")).toContainText("Kontakt");
+    await second.getByRole("button", { name: "Remove", exact: true }).click();
+    await expect(business(page).getByRole("group", { name: "Kutná Hora" })).toHaveCount(0);
+    await saveSettings(page);
+    const saved = savedDocument();
+    expect(saved.nodes.contact_kh.location_id).toBe("");
+    expect(savedLocations()).toHaveLength(1);
   });
 
   test("Add an Instagram profile", async ({ page }) => {
@@ -249,16 +316,16 @@ test.describe("saving", () => {
   });
 
   test("a field named in the address is focused when the tab opens", async ({ page }) => {
-    await page.goto(`${paths().settings}?focus=business-settings-phone`);
+    await page.goto(`${paths().settings}?focus=business-settings-location_1-phone`);
     await expect(business(page).getByLabel("Phone")).toBeFocused();
   });
 
   // Every field a problem can lead to (locate.ts `settingsTarget`) must exist here to be focused.
   const FIELDS = [
     ...["name", "description", "favicon", "share_image"].map((f) => `site-settings-${f}`),
+    ...["name", "business_type"].map((f) => `business-settings-${f}`),
     ...[
       "name",
-      "business_type",
       "street",
       "postal_code",
       "city",
@@ -274,7 +341,7 @@ test.describe("saving", () => {
       "hours_fri",
       "hours_sat",
       "hours_sun",
-    ].map((f) => `business-settings-${f}`),
+    ].map((f) => `business-settings-location_1-${f}`),
   ];
   for (const id of FIELDS) {
     test(`${id} can be focused`, async ({ page }) => {

@@ -1,6 +1,13 @@
 <script lang="ts">
 import { getI18n } from "$lib/i18n";
-import { type ContactSwitch, selectedContactBlock, setContactSwitch } from "./business";
+import {
+  type ContactSwitch,
+  locationsOf,
+  selectedBusinessBlock,
+  selectedContactBlock,
+  setBlockLocation,
+  setContactSwitch,
+} from "./business";
 import {
   addItem,
   type CollectionMode,
@@ -17,6 +24,10 @@ let { editor }: { editor: EditorState } = $props();
 const i18n = getI18n();
 
 const block = $derived(selectedContactBlock(editor.session));
+// Which location a contact or opening hours block shows, once there are several
+// (business-locations design decision 8).
+const businessBlock = $derived(selectedBusinessBlock(editor.session));
+const locations = $derived(locationsOf(editor.session.doc));
 const SWITCHES: ContactSwitch[] = ["show_address", "show_phone", "show_email", "show_map"];
 
 const collectionBlock = $derived.by(() => {
@@ -93,6 +104,26 @@ function addPicked() {
   </section>
 {/if}
 
+{#if businessBlock && locations.length > 1}
+  <section class="panel" aria-labelledby="location-panel-title" data-history-keys>
+    <h2 id="location-panel-title">{i18n.t("editor.businessBlock.title")}</h2>
+    <label class="field">
+      {i18n.t("editor.businessBlock.location")}
+      <select
+        value={businessBlock.location_id}
+        onchange={(e) => setBlockLocation(editor.session, businessBlock.id, e.currentTarget.value)}
+      >
+        <option value="">{i18n.t("editor.businessBlock.allLocations")}</option>
+        {#each locations as location, index (location.id)}
+          <option value={location.id}>
+            {location.name.trim() || i18n.t("editor.business.location", { number: index + 1 })}
+          </option>
+        {/each}
+      </select>
+    </label>
+  </section>
+{/if}
+
 {#if block}
   <section class="panel" aria-labelledby="block-panel-title" data-history-keys>
     <h2 id="block-panel-title">{i18n.t("editor.contactBlock.title")}</h2>
@@ -156,6 +187,13 @@ function addPicked() {
 
   .new-item {
     margin-top: 0.75rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.9rem;
   }
 
   .check {

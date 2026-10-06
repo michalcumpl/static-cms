@@ -122,3 +122,34 @@ test("an overlap problem in the editor opens the Settings tab at the day", async
     .click();
   await expect(business(page).getByLabel("Wednesday opens (1)")).toBeFocused();
 });
+
+test("Choose a shop", async ({ page }) => {
+  // Two locations, set up on the Settings tab.
+  await openSettings(page);
+  const main = business(page).getByRole("group", { name: "Main location" });
+  // The name last: once named, a location is headed by its name.
+  await main.getByLabel("City").fill("Kolín");
+  await main.getByLabel("Name of the location").fill("Kolín – Lipová");
+  await business(page).getByRole("button", { name: "Add a location" }).click();
+  await business(page)
+    .getByRole("group", { name: "Location 2" })
+    .getByLabel("Name of the location")
+    .fill("Kutná Hora");
+  const branch = business(page).getByRole("group", { name: "Kutná Hora" });
+  await branch.getByLabel("City").fill("Kutná Hora");
+  await saveSettings(page);
+
+  await openEditor(page, paths().edit("page_contact"));
+  await insert(page, "Contact");
+  const contact = canvas(page).locator("section.contact");
+  await expect(contact.locator("h3")).toHaveText(["Kolín – Lipová", "Kutná Hora"]);
+
+  const panel = page.getByRole("region", { name: "Locations shown" });
+  await panel.getByLabel("Location").selectOption({ label: "Kutná Hora" });
+  await expect(contact.locator("h3")).toHaveCount(0);
+  await expect(contact).toContainText("Kutná Hora");
+  await expect(contact).not.toContainText("Kolín");
+
+  await toolbar(page).getByRole("button", { name: "Undo" }).click();
+  await expect(contact.locator("h3")).toHaveText(["Kolín – Lipová", "Kutná Hora"]);
+});

@@ -42,22 +42,22 @@ check and the untranslated-text test enforce this.
 
 ## 3. Admin (`apps/admin`)
 
-- [ ] 3.1 Location operations in `business.ts` (decision 7), including `removeLocation`
+- [x] 3.1 Location operations in `business.ts` (decision 7), including `removeLocation`
   resetting the blocks that chose it in one transaction. Verify with unit tests: add, remove,
   move, a field per location, copy Monday within one location, and the reset undone in one
   step.
-- [ ] 3.2 `LocationSettings.svelte` and the business settings with the list of locations, the
+- [x] 3.2 `LocationSettings.svelte` and the business settings with the list of locations, the
   main-location mark, "Add a location", remove (with "Shown on …" when blocks chose it) and
   move. Fields are read-only outside the primary language, except each location's name and
   hours note. Verify with e2e tests "Add a second shop", "Remove a chosen location", and "Phone
   in English" and the other existing settings tests updated.
-- [ ] 3.3 Problems lead to a location's field (`locate.ts`, `businessFieldElementId` with a
+- [x] 3.3 Problems lead to a location's field (`locate.ts`, `businessFieldElementId` with a
   location). Verify with `locate.test.ts` cases for a branch's phone and a branch's Monday
   hours.
-- [ ] 3.4 The block panel's location choice (decision 8), and the canvas blocks and footer
+- [x] 3.4 The block panel's location choice (decision 8), and the canvas blocks and footer
   through `business-view.ts`. Verify with the e2e test "Choose a shop" and "Details follow the
   settings" still passing.
-- [ ] 3.5 Update the existing unit and e2e tests that read the business's address, phone or
+- [x] 3.5 Update the existing unit and e2e tests that read the business's address, phone or
   hours (`business.svelte.test.ts`, `settings.spec.ts`, `business.spec.ts`, …). Verify with
   the full admin unit suite and the Playwright suite.
 

@@ -178,27 +178,34 @@ describe("settingsTarget", () => {
   });
 
   it("leads business problems to the business settings' fields", () => {
-    expect(settingsTarget(doc(), "business_1", "phone")).toEqual({
+    expect(settingsTarget(doc(), "business_1", "name")).toEqual({ tab: "business", field: "name" });
+    expect(settingsTarget(doc(), "location_1", "phone")).toEqual({
       tab: "business",
       field: "phone",
+      locationId: "location_1",
     });
-    expect(settingsTarget(doc(), "business_1", "map_url")?.field).toBe("map_url");
-    expect(settingsTarget(doc(), "business_1", "days")).toEqual({
+    expect(settingsTarget(doc(), "location_1", "map_url")?.field).toBe("map_url");
+    expect(settingsTarget(doc(), "location_1", "days")).toEqual({
       tab: "business",
       field: "hours_mon",
+      locationId: "location_1",
     });
     expect(settingsTarget(doc(), "day_wed", undefined)).toEqual({
       tab: "business",
       field: "hours_wed",
+      locationId: "location_1",
     });
   });
 
   it("names the Settings tab's element for site and business problems only", () => {
-    expect(settingsFieldId(settingsTarget(doc(), "business_1", "phone"))).toBe(
-      "business-settings-phone",
+    expect(settingsFieldId(settingsTarget(doc(), "business_1", "name"))).toBe(
+      "business-settings-name",
+    );
+    expect(settingsFieldId(settingsTarget(doc(), "location_1", "phone"))).toBe(
+      "business-settings-location_1-phone",
     );
     expect(settingsFieldId(settingsTarget(doc(), "day_wed", undefined))).toBe(
-      "business-settings-hours_wed",
+      "business-settings-location_1-hours_wed",
     );
     expect(settingsFieldId({ tab: "site", field: "name" })).toBe("site-settings-name");
     expect(settingsFieldId({ tab: "page", pageId: "page_home", field: "title" })).toBeUndefined();
@@ -215,6 +222,7 @@ describe("settingsTarget", () => {
     expect(settingsTarget(d, "range_x", "closes")).toEqual({
       tab: "business",
       field: "hours_thu",
+      locationId: "location_1",
     });
   });
 
@@ -243,5 +251,40 @@ describe("locateMark", () => {
   it("finds nothing for nodes that aren't marks", () => {
     expect(locateMark(doc(), "hero_1")).toBeUndefined();
     expect(locateMark(doc(), "nope")).toBeUndefined();
+  });
+});
+
+describe("settingsTarget for a second location", () => {
+  /** The demo site with a second location, "Kutná Hora", whose Monday has a broken range. */
+  function branch() {
+    const d = doc();
+    const nodes = d.nodes as unknown as Record<string, Record<string, unknown>>;
+    nodes.kh_mon = {
+      id: "kh_mon",
+      type: "opening_day",
+      day: "mon",
+      ranges: { nodes: ["kh_r"], marks: [], annotations: [] },
+    };
+    nodes.kh_r = { id: "kh_r", type: "time_range", opens: "17:00", closes: "08:00" };
+    nodes.location_kh = {
+      id: "location_kh",
+      type: "location",
+      name: "Kutná Hora",
+      phone: "321",
+      days: { nodes: ["kh_mon"], marks: [], annotations: [] },
+    };
+    return d;
+  }
+
+  it("leads a branch's phone to its field", () => {
+    expect(settingsFieldId(settingsTarget(branch(), "location_kh", "phone"))).toBe(
+      "business-settings-location_kh-phone",
+    );
+  });
+
+  it("leads a branch's Monday hours to that location's Monday", () => {
+    expect(settingsFieldId(settingsTarget(branch(), "kh_r", "closes"))).toBe(
+      "business-settings-location_kh-hours_mon",
+    );
   });
 });

@@ -82,7 +82,7 @@ describe("version preview", () => {
     const englishVersion = readSite(db, projectId, "en")?.versionId as string;
     const site = readSite(db, projectId);
     const doc = structuredClone(site?.document) as Doc;
-    doc.nodes.business_1.phone = "+420321123456";
+    doc.nodes.location_1.phone = "+420321123456";
     saveSite(db, projectId, owner.id, doc, site?.version ?? "");
     const html = await (await get(englishVersion)).text();
     expect(html).toContain('<html lang="en">');

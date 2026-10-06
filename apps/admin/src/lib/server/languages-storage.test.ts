@@ -108,10 +108,10 @@ describe("reading and saving languages", () => {
     addLanguage(db, projectId, "en", userId);
     const before = readSite(db, projectId, "en");
     edit(undefined, (doc) => {
-      doc.nodes.business_1.phone = "+420321123456";
+      doc.nodes.location_1.phone = "+420321123456";
     });
     const after = readSite(db, projectId, "en");
-    expect(documentOf("en").nodes.business_1.phone).toBe("+420321123456");
+    expect(documentOf("en").nodes.location_1.phone).toBe("+420321123456");
     expect(after?.version).toBe(before?.version);
   });
 
@@ -119,12 +119,12 @@ describe("reading and saving languages", () => {
     addLanguage(db, projectId, "en", userId);
     edit("en", (doc) => {
       doc.nodes.page_contact.title = "Contact";
-      doc.nodes.business_1.hours_note = "Closed on holidays";
+      doc.nodes.location_1.hours_note = "Closed on holidays";
     });
     expect(documentOf().nodes.page_contact.title).toBe("Kontakt");
     const english = documentOf("en");
     expect(english.nodes.page_contact.title).toBe("Contact");
-    expect(english.nodes.business_1.hours_note).toBe("Closed on holidays");
+    expect(english.nodes.location_1.hours_note).toBe("Closed on holidays");
   });
 
   it("accepts saves of two languages made at once", () => {

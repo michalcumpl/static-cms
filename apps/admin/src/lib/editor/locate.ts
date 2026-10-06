@@ -151,7 +151,10 @@ export type SiteField = "name" | "description" | "favicon" | "share_image" | "sh
 
 type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
-/** A field of the business settings; a day's hours lead to that day's first time field. */
+/**
+ * A field of the business settings: the business's own (name, type), or a location's, which
+ * comes with the location's ID; a day's hours lead to that day's first time field.
+ */
 export type BusinessField =
   | "name"
   | "business_type"
@@ -165,9 +168,10 @@ export type BusinessField =
   | "hours_note"
   | `hours_${Weekday}`;
 
-const BUSINESS_FIELDS: readonly string[] = [
+const BUSINESS_FIELDS: readonly string[] = ["name", "business_type"];
+
+const LOCATION_FIELDS: readonly string[] = [
   "name",
-  "business_type",
   "street",
   "postal_code",
   "city",
@@ -206,7 +210,7 @@ const THEME_FIELDS: readonly string[] = [
 export type SettingsTarget =
   | { tab: "page"; pageId: string | undefined; field: PageField }
   | { tab: "site"; field: SiteField }
-  | { tab: "business"; field: BusinessField }
+  | { tab: "business"; field: BusinessField; locationId?: string }
   | { tab: "theme"; field: ThemeField };
 
 const PAGE_FIELDS: readonly string[] = ["title", "slug", "seo_description", "share_image"];
@@ -251,18 +255,29 @@ export function settingsTarget(
     if (property !== undefined && BUSINESS_FIELDS.includes(property)) {
       return { tab: "business", field: property as BusinessField };
     }
-    return { tab: "business", field: "hours_mon" };
+    return { tab: "business", field: "name" };
   }
+  if (node?.type === "location") {
+    const field =
+      property !== undefined && LOCATION_FIELDS.includes(property) ? property : "hours_mon";
+    return { tab: "business", field: field as BusinessField, locationId: nodeId };
+  }
+  // A day, or a time range, leads to that day's hours in its location.
+  const owner = (list: string, id: string) =>
+    Object.values(doc.nodes).find((candidate) =>
+      (candidate as unknown as Record<string, { nodes?: string[] }>)?.[list]?.nodes?.includes(id),
+    ) as unknown as { id: string; day?: Weekday } | undefined;
   if (node?.type === "opening_day") {
-    return { tab: "business", field: `hours_${(node as unknown as { day: Weekday }).day}` };
+    const location = owner("days", nodeId);
+    const day = (node as unknown as { day: Weekday }).day;
+    return { tab: "business", field: `hours_${day}`, locationId: location?.id };
   }
   if (node?.type === "time_range") {
-    const day = Object.values(doc.nodes).find(
-      (candidate) =>
-        candidate?.type === "opening_day" &&
-        (candidate as unknown as { ranges: { nodes: string[] } }).ranges.nodes.includes(nodeId),
-    ) as unknown as { day: Weekday } | undefined;
-    return day ? { tab: "business", field: `hours_${day.day}` } : undefined;
+    const day = owner("ranges", nodeId);
+    const location = day ? owner("days", day.id) : undefined;
+    return day?.day
+      ? { tab: "business", field: `hours_${day.day}`, locationId: location?.id }
+      : undefined;
   }
   if (node?.type !== "image") return undefined;
   const aboutAlt = property === "alt";
@@ -288,9 +303,9 @@ export function settingsTarget(
   return undefined;
 }
 
-/** The element ID of a business settings field, for focusing it from elsewhere. */
-export function businessFieldElementId(field: BusinessField): string {
-  return `business-settings-${field}`;
+/** The element ID of a business settings field, or of a location's, for focusing it. */
+export function businessFieldElementId(field: BusinessField, locationId?: string): string {
+  return locationId ? `business-settings-${locationId}-${field}` : `business-settings-${field}`;
 }
 
 /** The element ID of a Theme tab field, for focusing it from elsewhere. */
@@ -304,7 +319,7 @@ export function themeFieldElementId(field: ThemeField): string {
  */
 export function settingsFieldId(target: SettingsTarget | undefined): string | undefined {
   if (target?.tab === "site") return siteFieldElementId(target.field);
-  if (target?.tab === "business") return businessFieldElementId(target.field);
+  if (target?.tab === "business") return businessFieldElementId(target.field, target.locationId);
   return undefined;
 }
 

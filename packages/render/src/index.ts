@@ -122,7 +122,11 @@ export {
   businessInfo,
   type ContactParts,
   contactDetails,
+  footerBusiness,
   formatPhone,
+  type LocationInfo,
+  locationsBody,
+  locationsFor,
   mapLink,
   openingHoursTable,
 } from "./business.js";

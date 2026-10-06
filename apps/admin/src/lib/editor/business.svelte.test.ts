@@ -4,18 +4,26 @@ import { describe, expect, it } from "vitest";
 import { projectPaths } from "$lib/project-paths";
 import { demoSite } from "$lib/server/demo";
 import {
+  addLocation,
   addRange,
   addSocialProfile,
+  blocksChoosing,
   businessOf,
   copyMondayToWeekdays,
+  locationOf,
+  locationsOf,
+  moveLocation,
   moveSocialProfile,
   normalizePhone,
   normalizeSocialUrl,
   rangesOf,
+  removeLocation,
   removeRange,
   removeSocialProfile,
-  setBusinessField,
+  setBlockLocation,
+  setBusinessName,
   setBusinessType,
+  setLocationField,
   setPhone,
   setRangeTime,
   setShowInFooter,
@@ -40,21 +48,25 @@ function editor() {
 }
 
 const business = (s: Session) => businessOf(s.doc) as NonNullable<ReturnType<typeof businessOf>>;
-const hours = (s: Session, day: Parameters<typeof rangesOf>[1]) =>
-  rangesOf(s.doc, day).map((r) => `${r.opens}–${r.closes}`);
+const MAIN = "location_1";
+const main = (s: Session) => locationOf(s.doc, MAIN) as NonNullable<ReturnType<typeof locationOf>>;
+const hours = (s: Session, day: Parameters<typeof rangesOf>[2], location = MAIN) =>
+  rangesOf(s.doc, location, day).map((r) => `${r.opens}–${r.closes}`);
 const errors = (s: Session) => validateSite(s.doc).problems.filter((p) => p.severity === "error");
 
 describe("business fields", () => {
   it("follow typing, and a typing burst undoes as one step", () => {
     const { session: s } = editor();
-    setBusinessField(s, "street", "Lipová");
-    setBusinessField(s, "street", "Lipová 12");
-    setBusinessField(s, "city", "Kolín");
-    expect(business(s)).toMatchObject({ street: "Lipová 12", city: "Kolín" });
+    setLocationField(s, MAIN, "street", "Lipová");
+    setLocationField(s, MAIN, "street", "Lipová 12");
+    setLocationField(s, MAIN, "city", "Kolín");
+    expect(main(s)).toMatchObject({ street: "Lipová 12", city: "Kolín" });
     s.undo();
-    expect(business(s).city).toBe("");
+    expect(main(s).city).toBe("");
     s.undo();
-    expect(business(s).street).toBe("");
+    expect(main(s).street).toBe("");
+    setBusinessName(s, "Pekárna U Lípy s.r.o.");
+    expect(business(s).name).toBe("Pekárna U Lípy s.r.o.");
   });
 
   it("set the type and the footer switch, each one step", () => {
@@ -83,15 +95,15 @@ describe("phone numbers", () => {
 
   it("is stored normalised when the owner leaves the field", () => {
     const { session: s } = editor();
-    expect(setPhone(s, "321 123 456")).toBe("+420321123456");
-    expect(business(s).phone).toBe("+420321123456");
+    expect(setPhone(s, MAIN, "321 123 456")).toBe("+420321123456");
+    expect(main(s).phone).toBe("+420321123456");
     expect(errors(s)).toEqual([]);
   });
 
   it("is kept as typed, and reported, when it can't be normalised", () => {
     const { session: s } = editor();
-    setPhone(s, "321 123");
-    expect(business(s).phone).toBe("321 123");
+    setPhone(s, MAIN, "321 123");
+    expect(main(s).phone).toBe("321 123");
     expect(errors(s).map((p) => p.code)).toEqual(["invalid-phone"]);
   });
 });
@@ -99,19 +111,19 @@ describe("phone numbers", () => {
 describe("opening hours", () => {
   it("adds a lunch break after the first range", () => {
     const { session: s } = editor();
-    addRange(s, "mon");
+    addRange(s, MAIN, "mon");
     expect(hours(s, "mon")).toEqual(["08:00–17:00"]);
-    const [first] = rangesOf(s.doc, "mon");
+    const [first] = rangesOf(s.doc, MAIN, "mon");
     setRangeTime(s, first?.id as string, "closes", "12:00");
-    addRange(s, "mon");
+    addRange(s, MAIN, "mon");
     expect(hours(s, "mon")).toEqual(["08:00–12:00", "13:00–17:00"]);
     expect(errors(s)).toEqual([]);
   });
 
   it("removes a range, and undo brings it back", () => {
     const { session: s } = editor();
-    addRange(s, "sat");
-    removeRange(s, "sat", 0);
+    addRange(s, MAIN, "sat");
+    removeRange(s, MAIN, "sat", 0);
     expect(hours(s, "sat")).toEqual([]);
     s.undo();
     expect(hours(s, "sat")).toEqual(["08:00–17:00"]);
@@ -119,16 +131,16 @@ describe("opening hours", () => {
 
   it("copies Monday to Tuesday–Friday in one undoable step", () => {
     const { session: s } = editor();
-    addRange(s, "mon");
-    const [monday] = rangesOf(s.doc, "mon");
+    addRange(s, MAIN, "mon");
+    const [monday] = rangesOf(s.doc, MAIN, "mon");
     setRangeTime(s, monday?.id as string, "opens", "06:00");
-    addRange(s, "wed");
-    copyMondayToWeekdays(s);
+    addRange(s, MAIN, "wed");
+    copyMondayToWeekdays(s, MAIN);
     for (const day of ["tue", "wed", "thu", "fri"] as const) {
       expect(hours(s, day)).toEqual(["06:00–17:00"]);
     }
     // Copies, not shared nodes: changing Tuesday leaves Monday alone.
-    setRangeTime(s, rangesOf(s.doc, "tue")[0]?.id as string, "closes", "16:00");
+    setRangeTime(s, rangesOf(s.doc, MAIN, "tue")[0]?.id as string, "closes", "16:00");
     expect(hours(s, "mon")).toEqual(["06:00–17:00"]);
     s.undo();
     s.undo();
@@ -151,9 +163,11 @@ describe("inserting business blocks", () => {
       show_phone: true,
       show_email: true,
       show_map: true,
+      location_id: "",
     });
     expect(blocks.find((b) => b.type === "opening_hours")).toMatchObject({
       heading: { content: "Otevírací doba" },
+      location_id: "",
     });
   });
 });
@@ -183,5 +197,63 @@ describe("social profiles", () => {
     expect(normalizeSocialUrl("https://x.com/p")).toBe("https://x.com/p");
     expect(normalizeSocialUrl("http://x.com/p")).toBe("http://x.com/p");
     expect(normalizeSocialUrl("")).toBe("");
+  });
+});
+
+describe("locations", () => {
+  it("adds an empty location with every day closed, in the main location's country", () => {
+    const { session: s } = editor();
+    setLocationField(s, MAIN, "country", "SK");
+    const id = addLocation(s) as string;
+    expect(locationsOf(s.doc).map((l) => l.id)).toEqual([MAIN, id]);
+    expect(locationOf(s.doc, id)).toMatchObject({ name: "", country: "SK" });
+    expect(hours(s, "mon", id)).toEqual([]);
+    // Two locations need names.
+    expect(errors(s).map((p) => p.code)).toEqual(["empty-name", "empty-name"]);
+    setLocationField(s, MAIN, "name", "Kolín");
+    setLocationField(s, id, "name", "Kutná Hora");
+    expect(errors(s)).toEqual([]);
+  });
+
+  it("sets fields and hours per location, and copies Monday within one location", () => {
+    const { session: s } = editor();
+    const kh = addLocation(s) as string;
+    setPhone(s, kh, "327 111 222");
+    addRange(s, kh, "mon");
+    copyMondayToWeekdays(s, kh);
+    expect(locationOf(s.doc, kh)?.phone).toBe("+420327111222");
+    expect(main(s).phone).toBe("");
+    expect(hours(s, "fri", kh)).toEqual(["08:00–17:00"]);
+    expect(hours(s, "fri")).toEqual([]);
+  });
+
+  it("moves a location, making another the main one", () => {
+    const { session: s } = editor();
+    const kh = addLocation(s) as string;
+    moveLocation(s, kh, -1);
+    expect(locationsOf(s.doc).map((l) => l.id)).toEqual([kh, MAIN]);
+  });
+
+  it("never removes the only location", () => {
+    const { session: s } = editor();
+    expect(removeLocation(s, MAIN)).toBe(false);
+    expect(locationsOf(s.doc)).toHaveLength(1);
+  });
+
+  it("removes a chosen location, sets its blocks to all locations, and one undo restores both", () => {
+    const { session: s } = editor();
+    const kh = addLocation(s) as string;
+    appendBlock(s, 1, "contact");
+    const contact = (s.get("page_contact") as { blocks: { nodes: string[] } }).blocks.nodes.at(
+      -1,
+    ) as string;
+    setBlockLocation(s, contact, kh);
+    expect(blocksChoosing(s.doc, kh)).toEqual([{ blockId: contact, pageTitle: "Kontakt" }]);
+    expect(removeLocation(s, kh)).toBe(true);
+    expect(locationOf(s.doc, kh)).toBeUndefined();
+    expect((s.get(contact) as { location_id: string }).location_id).toBe("");
+    s.undo();
+    expect(locationOf(s.doc, kh)).toBeDefined();
+    expect((s.get(contact) as { location_id: string }).location_id).toBe(kh);
   });
 });

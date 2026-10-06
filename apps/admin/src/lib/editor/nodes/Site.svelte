@@ -1,6 +1,6 @@
 <script lang="ts">
 import { socialKind } from "@webmio/model";
-import { contactDetails, openingHoursTable } from "@webmio/render";
+import { footerBusiness } from "@webmio/render";
 import { type DocumentPath, Node, type SveditContext } from "svedit";
 import { getContext } from "svelte";
 import { getEditor } from "../state.svelte";
@@ -27,11 +27,7 @@ const social = $derived.by(() => {
 // The footer's business details, as the published footer shows them.
 const footer = $derived.by(() => {
   const { info, strings, siteName } = businessView(svedit.session.doc);
-  if (!info.show_in_footer) return undefined;
-  const name = info.name.trim() !== "" && info.name !== siteName ? info.name : "";
-  const contact = contactDetails(info, strings, undefined, name);
-  const hours = openingHoursTable(info, strings);
-  return contact || hours ? { contact, hours } : undefined;
+  return footerBusiness(info, strings, siteName);
 });
 </script>
 
@@ -58,12 +54,7 @@ const footer = $derived.by(() => {
   {/if}
   <footer class="site-footer">
     <div class="container" contenteditable="false">
-      {#if footer}
-        <div class="footer-business">
-          {#if footer.contact}{@html footer.contact.value}{/if}
-          {#if footer.hours}{@html footer.hours.value}{/if}
-        </div>
-      {/if}
+      {#if footer}{@html footer.value}{/if}
       {#if social.length > 0}
         <nav class="footer-social">
           <ul>

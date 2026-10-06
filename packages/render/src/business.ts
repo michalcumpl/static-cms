@@ -2,7 +2,7 @@
 // a location's contact details and opening hours table, and the footer. Pure functions of the business
 // data, shared by the renderer and the editor's canvas so both show the same.
 import type { Weekday } from "@webmio/model";
-import { type Html, html } from "./html.js";
+import { type Html, html, raw } from "./html.js";
 import type { SiteStrings } from "./strings.js";
 
 export interface TimeRange {
@@ -198,4 +198,114 @@ export function openingHoursTable(business: LocationInfo, strings: SiteStrings):
     html`
 ${note}`
   }`;
+}
+
+/** The locations a contact or opening hours block shows: all for `""`, or the one it chose. */
+export function locationsFor(business: BusinessInfo, locationId: string): LocationInfo[] {
+  const { locations } = business;
+  return locationId === "" ? locations : locations.filter((l) => l.id === locationId);
+}
+
+/** Indents every line after the first of a fragment written from column 0. */
+function nested(markup: Html | false, by: string): Html | false {
+  return markup && raw(markup.value.replaceAll("\n", `\n${by}`));
+}
+
+/**
+ * The inside of a contact or opening hours block for the locations it shows
+ * (business-locations, "Business blocks for several locations"): one location as before, several
+ * each under its name (`nameTag`, one level below the block's heading). Locations with nothing to
+ * show are left out. Shared by the renderer and the editor's canvas.
+ */
+export function locationsBody(
+  locations: readonly LocationInfo[],
+  part: (location: LocationInfo) => Html | false,
+  nameTag: "h2" | "h3",
+): Html {
+  const pieces =
+    locations.length <= 1
+      ? locations.map((location) => {
+          const markup = part(location);
+          return (
+            markup &&
+            html`
+        ${nested(markup, "        ")}`
+          );
+        })
+      : locations.map((location) => {
+          const markup = part(location);
+          const name =
+            nameTag === "h2" ? html`<h2>${location.name}</h2>` : html`<h3>${location.name}</h3>`;
+          return (
+            markup &&
+            html`
+        <div class="location">
+          ${name}
+          ${nested(markup, "          ")}
+        </div>`
+          );
+        });
+  return html`${pieces}`;
+}
+
+/**
+ * The business's details for the footer, when its switch is on and anything is filled in; the
+ * business name is shown when it differs from the site's. One location shows its contact details
+ * and opening hours; several each show a compact entry: name, address and phone
+ * (business-locations, "Footer contact details"). Shared by the renderer and the editor's canvas.
+ */
+export function footerBusiness(
+  business: BusinessInfo,
+  strings: SiteStrings,
+  siteName: string,
+): Html | false {
+  if (!business.show_in_footer) return false;
+  const name = business.name.trim() !== "" && business.name !== siteName ? business.name : "";
+  const [only, ...others] = business.locations;
+  if (!only) return false;
+  if (others.length > 0) return footerLocations(business, strings, name);
+  const contact = contactDetails(only, strings, undefined, name);
+  const hours = openingHoursTable(only, strings);
+  if (!contact && !hours) return false;
+  return html`
+        <div class="footer-business">${[contact, hours].map(
+          (part) =>
+            part &&
+            html`
+          ${nested(part, "          ")}`,
+        )}
+        </div>`;
+}
+
+/** Several locations in the footer: each one with a street, city or phone, compactly. */
+function footerLocations(business: BusinessInfo, strings: SiteStrings, name: string): Html | false {
+  const filled = (value: string) => value.trim() !== "";
+  const entries = business.locations.flatMap((location) => {
+    if (!filled(location.street) && !filled(location.city) && !filled(location.phone)) return [];
+    const details = contactDetails(location, strings, {
+      address: true,
+      phone: true,
+      email: false,
+      map: false,
+    });
+    return details
+      ? [
+          html`<div class="footer-location">
+  <p><strong>${location.name}</strong></p>
+  ${nested(details, "  ")}
+</div>`,
+        ]
+      : [];
+  });
+  if (entries.length === 0) return false;
+  return html`
+        <div class="footer-locations">${
+          name !== "" &&
+          html`
+          <p class="business-name">${name}</p>`
+        }${entries.map(
+          (entry) => html`
+          ${nested(entry, "          ")}`,
+        )}
+        </div>`;
 }

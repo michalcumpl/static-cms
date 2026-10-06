@@ -96,7 +96,15 @@ describe("node components", () => {
     // in the business settings; the canvas shows them through the contact and hours blocks.
     // Item references and social profiles aren't drawn as nodes: blocks show the items they
     // point at, and the footer shows the profiles from the business details.
-    const offCanvas = ["theme", "business", "opening_day", "time_range", "item_ref", "social_link"];
+    const offCanvas = [
+      "theme",
+      "business",
+      "location",
+      "opening_day",
+      "time_range",
+      "item_ref",
+      "social_link",
+    ];
     const missing = Object.keys(siteSchema).filter(
       (type) => !offCanvas.includes(type) && !(type in nodeComponents),
     );

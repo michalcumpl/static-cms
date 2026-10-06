@@ -13,13 +13,19 @@ import { businessFieldElementId } from "./locate";
 import type { EditorState } from "./state.svelte";
 
 // The week: each day's ranges as pairs of time fields (business-info design.md decision 7).
-let { editor, disabled = false }: { editor: EditorState; disabled?: boolean } = $props();
+let {
+  editor,
+  locationId,
+  disabled = false,
+}: { editor: EditorState; locationId: string; disabled?: boolean } = $props();
 const i18n = getI18n();
 
 const dayName = (day: Weekday) => i18n.t(`editor.hours.days.${day}`);
 const numbered = (text: string, count: number, index: number) =>
   count > 1 ? `${text} (${index + 1})` : text;
-const week = $derived(WEEK.map((day) => ({ day, ranges: rangesOf(editor.session.doc, day) })));
+const week = $derived(
+  WEEK.map((day) => ({ day, ranges: rangesOf(editor.session.doc, locationId, day) })),
+);
 </script>
 
 <fieldset class="hours" aria-describedby="hours-hint" {disabled}>
@@ -33,7 +39,7 @@ const week = $derived(WEEK.map((day) => ({ day, ranges: rangesOf(editor.session.
           <div class="range">
             <input
               type="time"
-              id={index === 0 ? businessFieldElementId(`hours_${day}`) : undefined}
+              id={index === 0 ? businessFieldElementId(`hours_${day}`, locationId) : undefined}
               aria-label={numbered(i18n.t("editor.hours.opens", { day: dayName(day) }), ranges.length, index)}
               value={range.opens}
               onchange={(e) => setRangeTime(editor.session, range.id, "opens", e.currentTarget.value)}
@@ -48,7 +54,7 @@ const week = $derived(WEEK.map((day) => ({ day, ranges: rangesOf(editor.session.
             <button
               type="button"
               aria-label={i18n.t("editor.hours.remove", { day: dayName(day), number: index + 1 })}
-              onclick={() => removeRange(editor.session, day, index)}>×</button
+              onclick={() => removeRange(editor.session, locationId, day, index)}>×</button
             >
           </div>
         {:else}
@@ -57,15 +63,15 @@ const week = $derived(WEEK.map((day) => ({ day, ranges: rangesOf(editor.session.
         <div class="day-actions">
           <button
             type="button"
-            id={ranges.length === 0 ? businessFieldElementId(`hours_${day}`) : undefined}
-            onclick={() => addRange(editor.session, day)}
+            id={ranges.length === 0 ? businessFieldElementId(`hours_${day}`, locationId) : undefined}
+            onclick={() => addRange(editor.session, locationId, day)}
           >
             {ranges.length === 0
               ? i18n.t("editor.hours.openOn", { day: dayName(day) })
               : i18n.t("editor.hours.addRange")}
           </button>
           {#if dayIndex === 0 && ranges.length > 0}
-            <button type="button" onclick={() => copyMondayToWeekdays(editor.session)}>
+            <button type="button" onclick={() => copyMondayToWeekdays(editor.session, locationId)}>
               {i18n.t("editor.hours.copyWeekdays")}
             </button>
           {/if}

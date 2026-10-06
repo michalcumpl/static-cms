@@ -159,13 +159,13 @@ describe("restoreVersion", () => {
     addLanguage(db, projectId, "en", userId);
     const site = readSite(db, projectId);
     const doc = structuredClone(site?.document) as Doc;
-    doc.nodes.business_1.phone = "+420321123456";
+    doc.nodes.location_1.phone = "+420321123456";
     saveSite(db, projectId, userId, doc, site?.version ?? "");
     const englishVersion = readSite(db, projectId, "en")?.version;
 
     restoreVersion(db, projectId, old, userId);
     const english = readSite(db, projectId, "en");
-    expect(docOf(english).nodes.business_1.phone).toBe("");
+    expect(docOf(english).nodes.location_1.phone).toBe("");
     expect(english?.version).toBe(englishVersion);
   });
 
@@ -224,10 +224,10 @@ describe("readVersion", () => {
     const englishVersion = readSite(db, projectId, "en")?.versionId as string;
     const site = readSite(db, projectId);
     const doc = structuredClone(site?.document) as Doc;
-    doc.nodes.business_1.phone = "+420321123456";
+    doc.nodes.location_1.phone = "+420321123456";
     saveSite(db, projectId, userId, doc, site?.version ?? "");
     const version = readVersion(db, projectId, englishVersion);
     expect(version?.lang).toBe("en");
-    expect(docOf(version).nodes.business_1.phone).toBe("+420321123456");
+    expect(docOf(version).nodes.location_1.phone).toBe("+420321123456");
   });
 });

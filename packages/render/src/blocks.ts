@@ -1,6 +1,6 @@
 import type { AnyNode, NodeOfType } from "@webmio/model";
 import { imageFile, imageVariants, srcVariant } from "@webmio/model";
-import { contactDetails, type LocationInfo, openingHoursTable } from "./business.js";
+import { contactDetails, type LocationInfo, locationsBody, openingHoursTable } from "./business.js";
 import type { RenderContext } from "./context.js";
 import { type Html, html, raw } from "./html.js";
 import { isEmpty, renderText } from "./text.js";
@@ -246,30 +246,7 @@ function locationsBlock(
   render: (location: LocationInfo) => Html | false,
 ): Html {
   const locations = ctx.locationsFor(block.location_id);
-  const tag = isEmpty(block.heading) ? "h2" : "h3";
-  const body =
-    locations.length <= 1
-      ? locations.map((location) => {
-          const part = render(location);
-          return (
-            part &&
-            html`
-        ${nested(part, "        ")}`
-          );
-        })
-      : locations.map((location) => {
-          const part = render(location);
-          const name =
-            tag === "h2" ? html`<h2>${location.name}</h2>` : html`<h3>${location.name}</h3>`;
-          return (
-            part &&
-            html`
-        <div class="location">
-          ${name}
-          ${nested(part, "          ")}
-        </div>`
-          );
-        });
+  const body = locationsBody(locations, render, isEmpty(block.heading) ? "h2" : "h3");
   return html`<section class="block ${cls}">
       <div class="container">${blockHeading(block.heading, ctx)}${body}
       </div>

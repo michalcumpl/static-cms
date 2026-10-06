@@ -1,13 +1,22 @@
 import type { Document, Session } from "svedit";
 import { list } from "./transforms";
 
-// Business details and opening hours (business-info design.md decision 7). Each operation is
-// one transaction, so each is one undo step; typing into a text field batches into one step.
+// Business details, its locations and their opening hours (business-info design.md decision 7,
+// business-locations design decision 7). Each operation is one transaction, so each is one
+// undo step; typing into a text field batches into one step.
 
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 export const WEEK: readonly Weekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 export interface BusinessFields {
+  id: string;
+  name: string;
+  business_type: string;
+  show_in_footer: boolean;
+  locations: { nodes: string[] };
+}
+
+export interface LocationFields {
   id: string;
   name: string;
   street: string;
@@ -17,9 +26,7 @@ export interface BusinessFields {
   phone: string;
   email: string;
   map_url: string;
-  business_type: string;
   hours_note: string;
-  show_in_footer: boolean;
   days: { nodes: string[] };
 }
 
@@ -35,8 +42,8 @@ export interface RangeFields {
   closes: string;
 }
 
-/** The text fields of the business settings that apply as the owner types. */
-export type BusinessTextField =
+/** The text fields of a location that apply as the owner types. */
+export type LocationTextField =
   | "name"
   | "street"
   | "postal_code"
@@ -53,25 +60,48 @@ export function businessOf(doc: Document): BusinessFields | undefined {
     : (doc.nodes[site.business] as unknown as BusinessFields | undefined);
 }
 
-/** The opening day node of a weekday. */
-export function dayOf(doc: Document, day: Weekday): DayFields | undefined {
-  const business = businessOf(doc);
-  const id = business?.days.nodes[WEEK.indexOf(day)];
+/** The business's locations, the main one first. */
+export function locationsOf(doc: Document): LocationFields[] {
+  return (businessOf(doc)?.locations.nodes ?? []).flatMap((id) => {
+    const location = doc.nodes[id] as unknown as LocationFields | undefined;
+    return location ? [location] : [];
+  });
+}
+
+export function locationOf(doc: Document, locationId: string): LocationFields | undefined {
+  return locationsOf(doc).find((location) => location.id === locationId);
+}
+
+/** The opening day node of a weekday of a location. */
+export function dayOf(doc: Document, locationId: string, day: Weekday): DayFields | undefined {
+  const id = locationOf(doc, locationId)?.days.nodes[WEEK.indexOf(day)];
   return id === undefined ? undefined : (doc.nodes[id] as unknown as DayFields | undefined);
 }
 
 /** A day's ranges, in order. */
-export function rangesOf(doc: Document, day: Weekday): RangeFields[] {
-  return (dayOf(doc, day)?.ranges.nodes ?? []).flatMap((id) => {
+export function rangesOf(doc: Document, locationId: string, day: Weekday): RangeFields[] {
+  return (dayOf(doc, locationId, day)?.ranges.nodes ?? []).flatMap((id) => {
     const range = doc.nodes[id] as unknown as RangeFields | undefined;
     return range ? [range] : [];
   });
 }
 
-export function setBusinessField(session: Session, field: BusinessTextField, value: string): void {
+/** Sets the business's name (the only text field of the business itself). */
+export function setBusinessName(session: Session, value: string): void {
   const business = businessOf(session.doc);
-  if (!business || business[field] === value) return;
-  session.apply(session.tr.set([business.id, field], value), { batch: true });
+  if (!business || business.name === value) return;
+  session.apply(session.tr.set([business.id, "name"], value), { batch: true });
+}
+
+export function setLocationField(
+  session: Session,
+  locationId: string,
+  field: LocationTextField,
+  value: string,
+): void {
+  const location = locationOf(session.doc, locationId);
+  if (!location || location[field] === value) return;
+  session.apply(session.tr.set([location.id, field], value), { batch: true });
 }
 
 export function setBusinessType(session: Session, type: string): void {
@@ -84,6 +114,88 @@ export function setShowInFooter(session: Session, show: boolean): void {
   const business = businessOf(session.doc);
   if (!business || business.show_in_footer === show) return;
   session.apply(session.tr.set([business.id, "show_in_footer"], show));
+}
+
+/**
+ * Adds an empty location at the end, every day closed, in the main location's country.
+ * Returns its ID.
+ */
+export function addLocation(session: Session): string | undefined {
+  const business = businessOf(session.doc);
+  if (!business) return undefined;
+  const tr = session.tr;
+  const days = WEEK.map((day) => {
+    const id = tr.generate_id();
+    tr.create({ id, type: "opening_day", day, ranges: list() });
+    return id;
+  });
+  const id = tr.generate_id();
+  tr.create({
+    id,
+    type: "location",
+    name: "",
+    street: "",
+    postal_code: "",
+    city: "",
+    country: locationsOf(session.doc)[0]?.country ?? "CZ",
+    phone: "",
+    email: "",
+    map_url: "",
+    hours_note: "",
+    days: list(days),
+  });
+  tr.set([business.id, "locations"], list([...business.locations.nodes, id]));
+  session.apply(tr);
+  return id;
+}
+
+/** The contact and opening hours blocks that chose a location, with their pages' titles. */
+export function blocksChoosing(
+  doc: Document,
+  locationId: string,
+): { blockId: string; pageTitle: string }[] {
+  const site = doc.nodes[doc.document_id] as unknown as { pages: { nodes: string[] } };
+  return site.pages.nodes.flatMap((pageId) => {
+    const page = doc.nodes[pageId] as unknown as { title: string; blocks: { nodes: string[] } };
+    return (page?.blocks.nodes ?? []).flatMap((blockId) => {
+      const block = doc.nodes[blockId] as unknown as { type: string; location_id?: string };
+      return (block?.type === "contact" || block?.type === "opening_hours") &&
+        block.location_id === locationId
+        ? [{ blockId, pageTitle: page.title }]
+        : [];
+    });
+  });
+}
+
+/**
+ * Removes a location, unless it is the only one; blocks that chose it show all locations
+ * again. One undo step brings both back.
+ */
+export function removeLocation(session: Session, locationId: string): boolean {
+  const business = businessOf(session.doc);
+  if (!business || business.locations.nodes.length < 2) return false;
+  const tr = session.tr;
+  for (const { blockId } of blocksChoosing(session.doc, locationId)) {
+    tr.set([blockId, "location_id"], "");
+  }
+  tr.set(
+    [business.id, "locations"],
+    list(business.locations.nodes.filter((id) => id !== locationId)),
+  );
+  session.apply(tr);
+  return true;
+}
+
+/** Moves a location one place up or down; the first is the main location. */
+export function moveLocation(session: Session, locationId: string, direction: -1 | 1): void {
+  const business = businessOf(session.doc);
+  if (!business) return;
+  const ids = [...business.locations.nodes];
+  const from = ids.indexOf(locationId);
+  const to = from + direction;
+  if (from < 0 || to < 0 || to >= ids.length) return;
+  [ids[from], ids[to]] = [ids[to] as string, ids[from] as string];
+  session.apply(session.tr.set([business.id, "locations"], list(ids)));
 }
 
 const COUNTRY_CODES: Record<string, string> = { CZ: "+420", SK: "+421" };
@@ -103,12 +215,12 @@ export function normalizePhone(input: string, country: string): string {
   return /^\+[1-9][0-9]{6,14}$/.test(digits) ? digits : typed;
 }
 
-/** Sets the phone, normalised (applied when the owner leaves the field). Returns it. */
-export function setPhone(session: Session, input: string): string {
-  const business = businessOf(session.doc);
-  if (!business) return input;
-  const phone = normalizePhone(input, business.country);
-  if (phone !== business.phone) session.apply(session.tr.set([business.id, "phone"], phone));
+/** Sets a location's phone, normalised (applied when the owner leaves the field). Returns it. */
+export function setPhone(session: Session, locationId: string, input: string): string {
+  const location = locationOf(session.doc, locationId);
+  if (!location) return input;
+  const phone = normalizePhone(input, location.country);
+  if (phone !== location.phone) session.apply(session.tr.set([location.id, "phone"], phone));
   return phone;
 }
 
@@ -125,10 +237,10 @@ const toTime = (minutes: number) => {
  * Adds a range to a day: 08:00–17:00 for a closed day, otherwise one starting an hour after
  * the last range closes and lasting four hours (until midnight at most).
  */
-export function addRange(session: Session, day: Weekday): void {
-  const node = dayOf(session.doc, day);
+export function addRange(session: Session, locationId: string, day: Weekday): void {
+  const node = dayOf(session.doc, locationId, day);
   if (!node) return;
-  const last = rangesOf(session.doc, day).at(-1);
+  const last = rangesOf(session.doc, locationId, day).at(-1);
   const opens = last ? toTime(toMinutes(last.closes) + 60) : "08:00";
   const closes = last ? toTime(toMinutes(opens) + 240) : "17:00";
   const tr = session.tr;
@@ -138,8 +250,13 @@ export function addRange(session: Session, day: Weekday): void {
   session.apply(tr);
 }
 
-export function removeRange(session: Session, day: Weekday, index: number): void {
-  const node = dayOf(session.doc, day);
+export function removeRange(
+  session: Session,
+  locationId: string,
+  day: Weekday,
+  index: number,
+): void {
+  const node = dayOf(session.doc, locationId, day);
   if (!node || index < 0 || index >= node.ranges.nodes.length) return;
   session.apply(
     session.tr.set([node.id, "ranges"], list(node.ranges.nodes.filter((_, i) => i !== index))),
@@ -159,12 +276,12 @@ export function setRangeTime(
   session.apply(session.tr.set([rangeId, which], value));
 }
 
-/** Gives Tuesday to Friday Monday's ranges (copies), in one undoable step. */
-export function copyMondayToWeekdays(session: Session): void {
-  const monday = rangesOf(session.doc, "mon");
+/** Gives a location's Tuesday to Friday its Monday's ranges (copies), in one undoable step. */
+export function copyMondayToWeekdays(session: Session, locationId: string): void {
+  const monday = rangesOf(session.doc, locationId, "mon");
   const tr = session.tr;
   for (const day of ["tue", "wed", "thu", "fri"] as const) {
-    const node = dayOf(session.doc, day);
+    const node = dayOf(session.doc, locationId, day);
     if (!node) continue;
     const ids = monday.map((range) => {
       const id = tr.generate_id();
@@ -195,6 +312,29 @@ export function selectedContactBlock(session: Session): ContactBlock | undefined
     if (node?.type === "contact") return node as ContactBlock;
   }
   return undefined;
+}
+
+/** The contact or opening hours block the selection is in or on, if any. */
+export function selectedBusinessBlock(
+  session: Session,
+): { id: string; type: "contact" | "opening_hours"; location_id: string } | undefined {
+  const isBusinessBlock = (node: { type?: string } | null | undefined) =>
+    node?.type === "contact" || node?.type === "opening_hours";
+  const selected = session.selected_node as { type?: string } | null;
+  if (isBusinessBlock(selected)) return selected as never;
+  const path = (session.selection as { path?: (string | number)[] } | null)?.path;
+  for (let end = path?.length ?? 0; end > 0; end--) {
+    const node = session.get((path as (string | number)[]).slice(0, end)) as { type?: string };
+    if (isBusinessBlock(node)) return node as never;
+  }
+  return undefined;
+}
+
+/** Sets which location a contact or opening hours block shows: one, or `""` for all. */
+export function setBlockLocation(session: Session, blockId: string, locationId: string): void {
+  const block = session.doc.nodes[blockId] as unknown as { location_id?: string } | undefined;
+  if (!block || block.location_id === locationId) return;
+  session.apply(session.tr.set([blockId, "location_id"], locationId));
 }
 
 export type ContactSwitch = "show_address" | "show_phone" | "show_email" | "show_map";

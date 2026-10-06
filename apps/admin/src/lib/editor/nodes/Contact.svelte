@@ -1,5 +1,5 @@
 <script lang="ts">
-import { contactDetails } from "@webmio/render";
+import { contactDetails, locationsBody, locationsFor } from "@webmio/render";
 import { type DocumentPath, Node, type SveditContext, TextProperty } from "svedit";
 import { getContext } from "svelte";
 import { getI18n } from "$lib/i18n";
@@ -16,16 +16,25 @@ const block = $derived(
     show_phone: boolean;
     show_email: boolean;
     show_map: boolean;
+    location_id: string;
+    heading: { content: string };
   },
 );
+// The same markup as the published block, for all locations or the chosen one.
 const details = $derived.by(() => {
   const { info, strings } = businessView(svedit.session.doc);
-  return contactDetails(info, strings, {
+  const parts = {
     address: block.show_address,
     phone: block.show_phone,
     email: block.show_email,
     map: block.show_map,
-  });
+  };
+  const body = locationsBody(
+    locationsFor(info, block.location_id),
+    (location) => contactDetails(location, strings, parts),
+    block.heading.content.trim() === "" ? "h2" : "h3",
+  );
+  return body.value.trim() === "" ? false : body;
 });
 const i18n = getI18n();
 </script>
