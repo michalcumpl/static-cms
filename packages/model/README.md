@@ -27,8 +27,10 @@ format, so the editor can pass it to Svedit unchanged. The TypeScript types (`Si
   once. A collection block holds no items: it shows its whole collection (`show: "all"`) or the
   items its `item_ref` nodes name (`show: "chosen"`), in their order. `blockItems(doc, block)`
   returns what a block shows; the renderer, validation and the editor all use it.
-- `business`: contact details, opening hours and social profiles (`social_link` nodes;
-  `socialKind(url)` names the network).
+- `business`: name, type, social profiles (`social_link` nodes;
+  `socialKind(url)` names the network) and, since format 8, an ordered list of `location`
+  nodes (address, phone, email, map address, opening hours), the first being the main one.
+  Contact and opening hours blocks name a location in `location_id`, or `""` for all.
 - Links to pages use the page's node ID (`page_link`, `internal_link`), so they survive slug changes.
 - Text values are `{ content, marks, annotations }`. Mark offsets count grapheme clusters, as in Svedit.
 

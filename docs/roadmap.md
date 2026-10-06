@@ -165,7 +165,7 @@ upload are all out of M2 on purpose. All of them are done.
     so nothing loads from third parties.
   - Why data: with one document per language (Milestone 5), these facts stay identical across
     languages and can be copied between them unchanged.
-  - Later: dated exceptions to the hours (holidays), several locations.
+  - Later: dated exceptions to the hours (holidays). Several locations: done in `business-locations`.
 - **Call to action and testimonials: done.**
   - Change: [`cta-and-testimonials`](../openspec/changes/archive/2026-10-01-cta-and-testimonials/).
   - **Call to action:** a heading, an optional text and one or two buttons (the second
@@ -288,8 +288,8 @@ beta.
 | --- | --- | --- | --- | --- |
 | 1 | A | [`business-collections`](../openspec/changes/archive/2026-10-05-business-collections/) | services, team, testimonials and FAQs held once per site; blocks show all or chosen items; social profiles; format 7 | done |
 | 2 | A | [`package-split`](../openspec/changes/archive/2026-10-05-package-split/) | `@static-cms/site` split into `@webmio/model`, `@webmio/render` and `@webmio/export`, and everything renamed to Webmio (packages, product name in the admin, docs) | done |
-| 3 | A | `business-locations` | several locations, each with address, hours and contact | next |
-| 4 | B | `control-panel` | the website home: Business, What you offer, About you, Website, Publish; forms per item | |
+| 3 | A | [`business-locations`](../openspec/changes/business-locations/) | several locations, each with address, hours and contact | done |
+| 4 | B | `control-panel` | the website home: Business, What you offer, About you, Website, Publish; forms per item | next |
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
 | 7 | C | `template-system` | the template contract, homepage sections on or off, template versions | |
@@ -326,7 +326,13 @@ beta.
   validation, upgrades, fixtures), `@webmio/render` and `@webmio/export`, with one-way imports
   checked by a test. The editor no longer loads the export code. Templates get their package with
   `template-system`.
-- **Several locations** (`business-locations`), each with its address, hours and contact.
+- **Several locations: done** ([`business-locations`](../openspec/changes/business-locations/)).
+  The business keeps its name, type and social profiles; its contact details and opening hours
+  live in an ordered list of locations, the first being the main one (document format 8, upgraded
+  on read with a predictable location ID). Contact and opening hours blocks show all locations,
+  each under its name, or the one chosen in the block's panel. With several locations the footer
+  lists each compactly, and structured data gives each its own entry with `parentOrganization`.
+  One location publishes exactly as before.
 
 ### B. Business control panel
 

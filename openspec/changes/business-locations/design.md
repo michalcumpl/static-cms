@@ -141,6 +141,14 @@ Choosing sets `location_id` as one undoable step.
 - **[A long settings page with several locations]** → each location's fieldset can be collapsed.
   The business control panel (milestone B) will give locations their own screen.
 
+## Rehearsal (task 4.1, 2026-10-06)
+
+On a copy of the local database (4 projects, 5 language documents at formats 1, 5, 6 and 7),
+every page, the not-found page and the stylesheet were rendered with `main`'s code and with this
+branch's, with the sites' addresses. All 26 pages and not-found pages were byte-identical. The
+stylesheets only gained the new rules (`.footer-locations`, `.location + .location`); no rule
+changed.
+
 ## Migration Plan
 
 Ship the model, render and admin together; stored documents upgrade on read and are saved as

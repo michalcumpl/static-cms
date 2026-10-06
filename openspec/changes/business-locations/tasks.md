@@ -63,8 +63,8 @@ check and the untranslated-text test enforce this.
 
 ## 4. Integration
 
-- [ ] 4.1 On a copy of the local database, render every project's pages with `main` and with
+- [x] 4.1 On a copy of the local database, render every project's pages with `main` and with
   this branch, as for format 7, and diff them. Verify that they are identical, and record the
   result in the design.
-- [ ] 4.2 Update `docs/roadmap.md` (milestone A: locations done, next change) and the model and
+- [x] 4.2 Update `docs/roadmap.md` (milestone A: locations done, next change) and the model and
   render READMEs. Verify by reading.

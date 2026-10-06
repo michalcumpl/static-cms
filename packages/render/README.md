@@ -21,5 +21,9 @@ if (rendered.ok) {
   subdirectory or a preview route. It must start and end with `/`.
 - **Deterministic.** The same document renders byte-identical HTML. The snapshot tests in
   `src/__snapshots__/` pin the demo site's output.
+- **Locations.** `businessInfo` resolves the business and its locations; `contactDetails` and
+  `openingHoursTable` render one location, `locationsBody` the inside of a contact or opening
+  hours block for one or several, and `footerBusiness` the footer's business details. The
+  editor's canvas uses the same functions, so it shows what will be published.
 - **Text the renderer writes itself** (the not-found page, day names, labels) comes from
   `siteStrings(lang)` in the site's language.
