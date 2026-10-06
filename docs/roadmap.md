@@ -289,7 +289,8 @@ beta.
 | 1 | A | [`business-collections`](../openspec/changes/archive/2026-10-05-business-collections/) | services, team, testimonials and FAQs held once per site; blocks show all or chosen items; social profiles; format 7 | done |
 | 2 | A | [`package-split`](../openspec/changes/archive/2026-10-05-package-split/) | `@static-cms/site` split into `@webmio/model`, `@webmio/render` and `@webmio/export`, and everything renamed to Webmio (packages, product name in the admin, docs) | done |
 | 3 | A | [`business-locations`](../openspec/changes/archive/2026-10-06-business-locations/) | several locations, each with address, hours and contact | done |
-| 4 | B | `control-panel` | the website home: Business, What you offer, About you, Website, Publish; forms per item | next |
+| 4 | B | [`control-panel`](../openspec/changes/control-panel/) | the website home: a dashboard and the Business, Website and Publish sections, replacing the project tabs | planned |
+| 4b | B | `offer-and-about` | What you offer (services, FAQs) and About you (team, testimonials): forms per item, with formatting | |
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
 | 7 | C | `template-system` | the template contract, homepage sections on or off, template versions | |
