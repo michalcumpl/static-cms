@@ -288,7 +288,7 @@ beta.
 | --- | --- | --- | --- | --- |
 | 1 | A | [`business-collections`](../openspec/changes/archive/2026-10-05-business-collections/) | services, team, testimonials and FAQs held once per site; blocks show all or chosen items; social profiles; format 7 | done |
 | 2 | A | [`package-split`](../openspec/changes/archive/2026-10-05-package-split/) | `@static-cms/site` split into `@webmio/model`, `@webmio/render` and `@webmio/export`, and everything renamed to Webmio (packages, product name in the admin, docs) | done |
-| 3 | A | [`business-locations`](../openspec/changes/business-locations/) | several locations, each with address, hours and contact | done |
+| 3 | A | [`business-locations`](../openspec/changes/archive/2026-10-06-business-locations/) | several locations, each with address, hours and contact | done |
 | 4 | B | `control-panel` | the website home: Business, What you offer, About you, Website, Publish; forms per item | next |
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
@@ -326,7 +326,7 @@ beta.
   validation, upgrades, fixtures), `@webmio/render` and `@webmio/export`, with one-way imports
   checked by a test. The editor no longer loads the export code. Templates get their package with
   `template-system`.
-- **Several locations: done** ([`business-locations`](../openspec/changes/business-locations/)).
+- **Several locations: done** ([`business-locations`](../openspec/changes/archive/2026-10-06-business-locations/)).
   The business keeps its name, type and social profiles; its contact details and opening hours
   live in an ordered list of locations, the first being the main one (document format 8, upgraded
   on read with a predictable location ID). Contact and opening hours blocks show all locations,
