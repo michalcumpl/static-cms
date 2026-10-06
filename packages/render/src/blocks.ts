@@ -2,7 +2,7 @@ import type { AnyNode, NodeOfType } from "@webmio/model";
 import { imageFile, imageVariants, srcVariant } from "@webmio/model";
 import { contactDetails, type LocationInfo, locationsBody, openingHoursTable } from "./business.js";
 import type { RenderContext } from "./context.js";
-import { type Html, html, raw } from "./html.js";
+import { type Html, html } from "./html.js";
 import { isEmpty, renderText } from "./text.js";
 
 export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
@@ -207,11 +207,6 @@ function renderLogos(block: NodeOfType<"logos">, ctx: RenderContext): Html {
         </ul>
       </div>
     </section>`;
-}
-
-/** Indents every line after the first of a fragment written from column 0. */
-function nested(markup: Html | false, by: string): Html | false {
-  return markup && raw(markup.value.replaceAll("\n", `\n${by}`));
 }
 
 /** The site's contact details; the block holds only its heading and which parts to show. */
