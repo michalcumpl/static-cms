@@ -8,12 +8,13 @@ let { editor, tab }: { editor: EditorState; tab: "site" | "business" | "theme" }
 const i18n = getI18n();
 
 const href = $derived.by(() => {
-  // The site's and the business's shared fields are edited on the primary language's Settings
-  // tab; the theme's still in the primary language's editor.
-  if (tab !== "theme") return `${editor.paths.overview}settings`;
+  // The site's and the business's shared fields are edited in the primary language's Website
+  // and Business sections; the theme's still in the primary language's editor.
+  if (tab === "site") return `${editor.paths.dashboard}website`;
+  if (tab === "business") return `${editor.paths.dashboard}business`;
   const page = editor.session.get(editor.currentPageId) as { translation_key?: string } | undefined;
   const key = page?.translation_key ? `&key=${encodeURIComponent(page.translation_key)}` : "";
-  return `${editor.paths.overview}edit/?tab=design${key}`;
+  return `${editor.paths.dashboard}edit/?tab=design${key}`;
 });
 </script>
 

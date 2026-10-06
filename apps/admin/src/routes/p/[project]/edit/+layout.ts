@@ -23,9 +23,10 @@ export interface EditorLanguage {
 export const load: LayoutLoad = async ({ fetch, params, url }) => {
   const lang = url.searchParams.get("lang") ?? undefined;
   const paths = projectPaths(params.project, lang);
-  // The site and business settings moved to the project's Settings tab; old addresses follow.
+  // The site and business settings moved to the panel's sections; old addresses follow.
   const asked = url.searchParams.get("tab");
-  if (asked === "site" || asked === "business") redirect(302, paths.settings);
+  if (asked === "site") redirect(302, paths.website);
+  if (asked === "business") redirect(302, paths.business);
   const [siteResponse, languagesResponse, translationsResponse] = await Promise.all([
     fetch(paths.api),
     fetch(paths.languages),

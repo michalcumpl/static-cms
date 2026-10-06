@@ -29,11 +29,15 @@ workspace named "Default". The first user created with `create-user` becomes its
 | `/invite/<token>`                      | Accept an invitation (creates the account if needed).              |
 | `/w/<workspace>/members`               | Members, roles and invitations (owners change them).               |
 | `/w/<workspace>/new`                   | Owners: create a project from the starter site.                    |
-| `/p/<project>`                         | The project's tabs. **Overview**: address, last publish, Publish, validity, languages. |
-| `/p/<project>/pages`                   | **Pages** of a language (`?lang=`): home, menu, translation marks, Edit and Preview. |
-| `/p/<project>/languages`               | **Languages**: add, publish, hide, remove; what is not translated yet. |
-| `/p/<project>/publishing`              | **Publishing**: address, domain, publish history, **Download ZIP**. |
-| `/p/<project>/history`                 | **History** of a language (`?lang=`): preview and restore versions. |
+| `/p/<project>`                         | The project's panel. **Your website**: live state, Publish, problems (each a link to where it's fixed), and a card per section. |
+| `/p/<project>/business`                | **Business** of a language (`?lang=`): name, type, locations with hours, social profiles; Save, Undo. |
+| `/p/<project>/website`                 | **Website** (`?lang=`): site name, description, favicon, share image, AI switches; the design card (**Change design** opens the editor). |
+| `/p/<project>/website/pages`           | **Pages and menu** of a language (`?lang=`): home, menu, translation marks, Edit and Preview. |
+| `/p/<project>/website/languages`       | **Languages**: add, publish, hide, remove; what is not translated yet. |
+| `/p/<project>/website/domain`          | **Domain**: the address and the custom domain with its DNS records. |
+| `/p/<project>/publish`                 | **Publish**: publish history, **Make live again**, **Download ZIP**. |
+| `/p/<project>/publish/versions`        | **Versions** of a language (`?lang=`): preview and restore versions. |
+| `/p/<project>/settings`, `/pages`, …   | The former tabs' addresses; they redirect (308) to their places in the panel. |
 | `/p/<project>/edit/`, `…/edit/<page-id>/` | The editor (Svedit); `/edit/` opens the home page. Cmd/Ctrl+S saves the whole site. |
 | `/p/<project>/preview/…`               | The saved site as it would be published, or its problems.          |
 | `GET/PUT /api/projects/<project>/site` | The document: 200, 409 (outdated version), 422 (broken document).  |
@@ -56,10 +60,11 @@ Everything except sign-in and invitations needs a session. Project pages and API
 - **Pages have a "⋯" menu** in the left column (and so do the menu's external links): Rename,
   Duplicate, Move up and down, Show in or Remove from menu, Set as home and Delete, with the
   reason shown when an action isn't possible. Dragging entries still works.
-- **Site and business settings are on the project's Settings tab,** not in the editor: the site
-  name and description, favicon, share image, AI switches, and the business's address, phone,
-  hours and so on. They are saved there, as in the editor (Save, Undo, a refusal if the site
-  changed elsewhere). Problems about them, and "Edit business details" on a block, lead there.
+- **Site and business settings are in the panel,** not in the editor: the site name and
+  description, favicon, share image and AI switches in the **Website** section, the business and
+  its locations in the **Business** section. They are saved there, as in the editor (Save, Undo,
+  a refusal if the site changed elsewhere). Problems about them, and "Edit business details" on a
+  block, lead there; the editor's left column links back to **Your website**.
   The editor's right column has **Page** and **Design** (the theme); the problems panel is under
   the pages in the left column.
 - **Keyboard.** Esc selects the paragraph, item or block around the cursor, step by step; Alt+↑/↓

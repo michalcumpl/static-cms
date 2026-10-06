@@ -230,10 +230,18 @@ export async function resetPublishing(): Promise<void> {
 }
 
 /** Opens the project's Settings tab (of a language, the primary without one) and waits for it. */
-export async function openSettings(page: Page, lang?: string): Promise<void> {
-  await page.goto(projectPaths(state().projectId, lang).settings);
+/** Opens the panel's Business section (in a language) and waits until it can be edited. */
+export async function openBusiness(page: Page, lang?: string): Promise<void> {
+  await page.goto(projectPaths(state().projectId, lang).business);
+  await expect(page.getByRole("region", { name: "Business", exact: true })).toBeVisible();
+  // The section's fields work once its script has taken over.
+  await page.waitForLoadState("networkidle");
+}
+
+/** Opens the panel's Website section (in a language) and waits until it can be edited. */
+export async function openWebsite(page: Page, lang?: string): Promise<void> {
+  await page.goto(projectPaths(state().projectId, lang).website);
   await expect(page.getByRole("region", { name: "Site", exact: true })).toBeVisible();
-  // The tab's fields work once its script has taken over.
   await page.waitForLoadState("networkidle");
 }
 

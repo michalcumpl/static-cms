@@ -1,6 +1,6 @@
 <script lang="ts">
 import { type Problem, validateSite } from "@webmio/model";
-import { tick, untrack } from "svelte";
+import { onMount, tick, untrack } from "svelte";
 import { goto } from "$app/navigation";
 import { getI18n } from "$lib/i18n";
 import {
@@ -53,6 +53,18 @@ async function showPage(pageId: string | undefined) {
     await tick();
   }
 }
+
+// Opened from a link to a problem (the panel's dashboard): show it once the editor is there.
+onMount(() => {
+  const params = new URL(window.location.href).searchParams;
+  const nodeId = params.get("problem");
+  if (!nodeId) return;
+  const property = params.get("property") ?? undefined;
+  const problem = editor.savedProblems.find(
+    (p) => p.nodeId === nodeId && (property === undefined || p.property === property),
+  );
+  if (problem) void show(problem);
+});
 
 async function show(problem: Problem) {
   const doc = editor.session.doc as unknown as Doc;

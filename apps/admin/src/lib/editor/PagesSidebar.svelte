@@ -186,7 +186,7 @@ function untranslated(page: EditorPage): boolean {
 {/snippet}
 
 <aside class="sidebar" aria-label={i18n.t("editor.left.pages")} data-history-keys>
-  <a class="back" href={editor.paths.overview}>← {projectName}</a>
+  <a class="back" href={editor.paths.dashboard}>← {projectName}</a>
 
   <section aria-labelledby="menu-heading">
     <h2 id="menu-heading">{i18n.t("editor.left.menu")}</h2>

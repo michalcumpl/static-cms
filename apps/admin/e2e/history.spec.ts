@@ -6,8 +6,8 @@ import {
   caretAtEnd,
   connectTestWorkspace,
   expect,
+  openBusiness,
   openEditor,
-  openSettings,
   paths,
   resetPublishing,
   state,
@@ -45,7 +45,7 @@ test("save twice, preview the first version from the history, restore it", async
   await save(page);
 
   await page.getByRole("link", { name: "History" }).click();
-  await expect(page).toHaveURL(/\/history$/);
+  await expect(page).toHaveURL(/\/publish\/versions$/);
   await expect(versions(page).first()).toContainText("Current");
   const first = versions(page).nth(1);
   const preview = await first.getByRole("link", { name: /Preview/ }).getAttribute("href");
@@ -69,17 +69,17 @@ test("restoring Czech brings its phone number back in English", async ({ page })
   doc.nodes.business_1.phone = "+420321123456";
   saveSite(testDb(), projectId, owner.id, doc, site?.version ?? "");
 
-  await page.goto(paths().history);
+  await page.goto(paths().versionsPage);
   await page.waitForLoadState("networkidle");
   await page
     .getByRole("listitem")
-    .filter({ has: page.locator(`a[href$="/history/${original}/"]`) })
+    .filter({ has: page.locator(`a[href$="/publish/versions/${original}/"]`) })
     .getByRole("button", { name: /Restore/ })
     .click();
   await expect(page.getByRole("dialog")).toContainText("change for every language");
   await confirmRestore(page);
 
-  await openSettings(page, "en");
+  await openBusiness(page, "en");
   await expect(page.getByLabel("Phone")).toHaveValue("");
 });
 
@@ -92,7 +92,7 @@ test("the history marks the live and published versions", async ({ page }) => {
   await page.keyboard.type(" (new)");
   await save(page);
 
-  await page.goto(paths().history);
+  await page.goto(paths().versionsPage);
   await page.waitForLoadState("networkidle");
   await expect(versions(page).first()).toContainText("Current");
   await expect(versions(page).nth(1)).toContainText("Live");
@@ -103,6 +103,6 @@ test("open the English history from the English editor", async ({ page }) => {
   addLanguage(testDb(), projectId, "en", owner.id);
   await openEditor(page, projectPaths(projectId, "en").edit());
   await page.getByRole("link", { name: "History" }).click();
-  await expect(page).toHaveURL(/\/history\?lang=en$/);
+  await expect(page).toHaveURL(/\/publish\/versions\?lang=en$/);
   await expect(page.getByRole("combobox", { name: "Language", exact: true })).toHaveValue("en");
 });

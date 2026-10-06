@@ -49,7 +49,7 @@ const total = $derived(data.workspaces.reduce((sum, w) => sum + w.projects.lengt
             <li>
               <Card>
                 <div class="project">
-                  <a class="name" href={projectPaths(project.id).overview}>{project.name}</a>
+                  <a class="name" href={projectPaths(project.id).dashboard}>{project.name}</a>
                   <Button href={projectPaths(project.id).edit()} kind="primary" icon="pencil" size="sm">{i18n.t("common.edit")}</Button>
                 </div>
               </Card>

@@ -74,9 +74,9 @@ test("without a Netlify connection, Publish is disabled and says why", async ({ 
   await expect(toolbar(page).getByRole("link", { name: "Not connected to Netlify" })).toBeVisible();
 });
 
-test("the Overview publishes too", async ({ page }) => {
+test("the dashboard publishes too", async ({ page }) => {
   await connectTestWorkspace();
-  await page.goto(paths().overview);
+  await page.goto(paths().dashboard);
   await page.waitForLoadState("networkidle");
   const section = page.getByRole("region", { name: "Your website" });
   await section.getByRole("button", { name: "Publish", exact: true }).click();
@@ -87,7 +87,7 @@ test.describe("the Publishing page", () => {
   test("says an owner must connect Netlify when the workspace isn't connected", async ({
     page,
   }) => {
-    await page.goto(paths().publishing);
+    await page.goto(paths().publishPage);
     await expect(page.getByRole("status").first()).toContainText("isn't connected to Netlify yet");
     await expect(page.getByRole("link", { name: "Open the Netlify settings" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Publish", exact: true })).toBeDisabled();
@@ -95,9 +95,8 @@ test.describe("the Publishing page", () => {
 
   test("publishes, connects a domain and shows its DNS records", async ({ page }) => {
     await connectTestWorkspace();
-    await page.goto(paths().publishing);
+    await page.goto(paths().publishPage);
     await page.waitForLoadState("networkidle");
-    await expect(page.getByText("Publish the site once, then connect your domain.")).toBeVisible();
     await page.getByRole("button", { name: "Publish", exact: true }).click();
     const address = page
       .getByRole("region", { name: "Address" })
@@ -105,6 +104,9 @@ test.describe("the Publishing page", () => {
       .first();
     await expect(address).toBeVisible({ timeout: 15_000 });
 
+    // The domain is on the Website section's Domain page now.
+    await page.goto(paths().domainPage);
+    await page.waitForLoadState("networkidle");
     await page.getByLabel("Your domain").fill("https://anideti.example/kontakt");
     await page.getByRole("button", { name: "Connect" }).click();
     await expect(page.getByRole("alert")).toContainText("domain name only");
@@ -127,7 +129,7 @@ test.describe("the Publishing page", () => {
 
   test("makes an earlier publish live again", async ({ page }) => {
     await connectTestWorkspace();
-    await page.goto(paths().publishing);
+    await page.goto(paths().publishPage);
     await page.waitForLoadState("networkidle");
     const publish = page.getByRole("button", { name: "Publish", exact: true });
     const history = page.getByRole("region", { name: "History" }).getByRole("listitem");

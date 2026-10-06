@@ -30,8 +30,10 @@ export function useUnsavedGuard(editor: EditorState, staysHere: (to: URL) => boo
 }
 
 /**
- * Opens the project's Settings tab for this language, at a field (its element ID) when given.
- * Unsaved changes are saved first, after asking, so the tab shows what the editor shows.
+ * Opens the panel section that holds a settings field, for this language: the Website section
+ * for the site's settings, the Business section otherwise (control-panel design decision 4), at
+ * the field (its element ID) when given. Unsaved changes are saved first, after asking, so the
+ * section shows what the editor shows.
  */
 export async function openSettings(
   editor: EditorState,
@@ -43,7 +45,7 @@ export async function openSettings(
     await editor.save();
     if (editor.dirty || editor.status.kind !== "saved") return;
   }
-  const base = editor.paths.settings;
+  const base = fieldId?.startsWith("site-settings-") ? editor.paths.website : editor.paths.business;
   await goto(
     fieldId ? `${base}${base.includes("?") ? "&" : "?"}focus=${encodeURIComponent(fieldId)}` : base,
   );

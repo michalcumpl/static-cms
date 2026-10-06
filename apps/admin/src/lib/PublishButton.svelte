@@ -67,7 +67,7 @@ const failure = $derived.by(() => {
   </Button>
   <span class="publish-status" aria-live="polite">
     {#if !connected}
-      <a href={paths.publishing}>{i18n.t("publish.notConnected")}</a>
+      <a href={paths.publishPage}>{i18n.t("publish.notConnected")}</a>
     {:else if status.kind === "published"}
       {i18n.t("publish.published")} · <a href={status.url} target="_blank" rel="noopener">{status.url.replace(/^https:\/\//, "")}</a>
     {:else if status.kind === "failed"}

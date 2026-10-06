@@ -12,8 +12,8 @@ import {
   connectTestWorkspace,
   expect,
   fakeNetlify,
+  openBusiness,
   openEditor,
-  openSettings,
   paths,
   resetPublishing,
   saveSettings,
@@ -59,7 +59,7 @@ function documentOf(lang?: string): Doc {
 test.beforeEach(() => resetPublishing());
 
 test("add English on the Languages tab, edit it, publish, hide and remove it", async ({ page }) => {
-  await page.goto(paths().languagesTab);
+  await page.goto(paths().websiteLanguages);
   // The section's script must have taken over before choosing.
   await page.waitForLoadState("networkidle");
   await languagesSection(page).getByLabel("Add a language").selectOption({ label: "English" });
@@ -77,7 +77,7 @@ test("add English on the Languages tab, edit it, publish, hide and remove it", a
   expect(saved.nodes.hero_1.heading.content).toBe("Čerstvý chléb každé ráno (EN)");
   expect(documentOf().nodes.hero_1.heading.content).toBe("Čerstvý chléb každé ráno");
 
-  await page.goto(paths().languagesTab);
+  await page.goto(paths().websiteLanguages);
   // As above: the buttons only work once the section's script has taken over.
   await page.waitForLoadState("networkidle");
   await row.getByRole("button", { name: "Publish English" }).click();
@@ -105,13 +105,13 @@ test("switch to Čeština on the same page", async ({ page }) => {
 
 test("shared fields are edited in Čeština and read-only in English", async ({ page }) => {
   addEnglish();
-  await openSettings(page);
+  await openBusiness(page);
   const phone = page.getByLabel("Phone");
   await phone.fill("321 123 456");
   await phone.press("Tab");
   await saveSettings(page);
 
-  await openSettings(page, "en");
+  await openBusiness(page, "en");
   await expect(page.getByLabel("Phone")).toHaveValue("+420 321 123 456");
   await expect(page.getByLabel("Phone")).toBeDisabled();
   await expect(page.getByText("Edited in Čeština").first()).toBeVisible();

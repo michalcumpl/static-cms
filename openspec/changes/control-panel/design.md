@@ -123,6 +123,22 @@ The card renders the four colours as swatches and the fonts by catalogue name, f
 dashboard's and Website page's loads. "Change design" links to `edit()` with `?tab=theme`, which
 the editor already accepts.
 
+### 8. Changes made while building
+
+- **Path names:** the page paths are `publishPage`, `domainPage` and `versionsPage`, because
+  `publish`, `domain` and `versions` already name API endpoints in `project-paths.ts`.
+- **Section pages render on the server:** Business and Website don't set `ssr = false`. The
+  server renders the frame, so the project's access check answers "not found" to non-members
+  (the Settings tab returned an empty 200 page to them). The section screen itself appears in the
+  browser only.
+- **The editor opens at a problem:** `?problem=<node>&property=<prop>` makes the editor's
+  problems panel show that problem when it opens. This is how dashboard links lead "to the editor
+  at the node".
+- **The language survives detours:** panel links carry `?lang=`, so going through Publish, which
+  shows no language, keeps it.
+- **Tests:** the settings scenarios live in `e2e/sections.spec.ts`. `business.spec.ts` already
+  holds the editor's business-block tests.
+
 ## Risks / Trade-offs
 
 - **[Many e2e specs use the old tab addresses]** → the redirects keep old links working, but

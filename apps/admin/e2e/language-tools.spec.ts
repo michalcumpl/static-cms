@@ -120,7 +120,7 @@ test("the Languages tab lists what English still needs", async ({ page }) => {
   edit("en", (doc) => {
     doc.nodes.page_home.title = "Home";
   });
-  await page.goto(paths().languagesTab);
+  await page.goto(paths().websiteLanguages);
   const row = page
     .getByRole("region", { name: "Languages" })
     .getByRole("listitem")

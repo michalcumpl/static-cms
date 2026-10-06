@@ -13,7 +13,7 @@ const page = $derived(
   editor.session.get(pageId) as { translation_key: string; title: string } | undefined,
 );
 const others = $derived(editor.translations.filter((l) => l.lang !== editor.lang));
-const projectId = $derived(editor.paths.overview.split("/")[2] ?? "");
+const projectId = $derived(editor.paths.dashboard.split("/")[2] ?? "");
 const hasCounterparts = $derived(
   page !== undefined && others.some((l) => counterpartIn(l, page.translation_key)),
 );

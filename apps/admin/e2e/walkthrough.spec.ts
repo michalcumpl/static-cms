@@ -54,7 +54,7 @@ test("a version-1 project: add, duplicate, set as home, delete, save, preview an
   const intro = await page.request.get(`${paths().preview}uvod/`);
   expect(await intro.text()).toContain("<title>Úvod – Pekárna U Lípy</title>");
 
-  await page.goto(paths().publishing);
+  await page.goto(paths().publishPage);
   // The ZIP is built in the browser: click only once the page's script has taken over.
   await page.waitForLoadState("networkidle");
   const downloading = page.waitForEvent("download");

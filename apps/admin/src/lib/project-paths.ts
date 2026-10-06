@@ -5,11 +5,18 @@ export const fontPath = (name: string) => `/fonts/${encodeURIComponent(name)}`;
 
 /** Every URL of a project, in one place (design.md decision 6). */
 export interface ProjectPaths {
-  overview: string;
-  /** The project's Pages, Languages and Settings tabs (`?lang=` for other languages than the primary). */
-  pagesTab: string;
-  languagesTab: string;
-  settings: string;
+  /** The panel's home, "Your website" (control-panel design decision 1). */
+  dashboard: string;
+  /** The Business section (`?lang=` for other languages than the primary). */
+  business: string;
+  /** The Website section and its subpages (`?lang=` on those that show one language). */
+  website: string;
+  websitePages: string;
+  websiteLanguages: string;
+  domainPage: string;
+  /** The Publish section, and its Versions subpage (`?lang=`). */
+  publishPage: string;
+  versionsPage: string;
   /** The editor: `…/edit/` opens the home page, `…/edit/<page-id>/` a given page. */
   edit(pageId?: string): string;
   /** Base path the preview renders with. */
@@ -26,8 +33,6 @@ export interface ProjectPaths {
   copyPage(lang: string): string;
   /** GET every language's pages and what each still needs. */
   translations: string;
-  /** The History tab of the language (`?lang=` for other languages than the primary). */
-  history: string;
   /** Base path of a version's read-only preview. */
   version(versionId: string): string;
   /** GET a language's versions; POST `…/<version>/restore` restores one. */
@@ -38,8 +43,6 @@ export interface ProjectPaths {
   media(name: string): string;
   /** An image's variant for showing it: `display` (up to 1600 px) or `thumbnail` (smallest). */
   image(key: string, width: number, use?: "display" | "thumbnail"): string;
-  /** The project's Publishing tab. */
-  publishing: string;
   /** POST starts a publish. */
   publish: string;
   /** GET the address, domain and publishes. */
@@ -59,10 +62,14 @@ export function projectPaths(projectId: string, lang?: string): ProjectPaths {
   const query = lang ? `?lang=${encodeURIComponent(lang)}` : "";
   const media = (name: string) => `/api/projects/${projectId}/media/${encodeURIComponent(name)}`;
   return {
-    overview: base,
-    pagesTab: `${base}pages${query}`,
-    languagesTab: `${base}languages`,
-    settings: `${base}settings${query}`,
+    dashboard: base,
+    business: `${base}business${query}`,
+    website: `${base}website${query}`,
+    websitePages: `${base}website/pages${query}`,
+    websiteLanguages: `${base}website/languages`,
+    domainPage: `${base}website/domain`,
+    publishPage: `${base}publish`,
+    versionsPage: `${base}publish/versions${query}`,
     edit: (pageId = "") => (pageId ? `${base}edit/${pageId}/${query}` : `${base}edit/${query}`),
     preview: `${base}preview/`,
     api: `/api/projects/${projectId}/site${query}`,
@@ -71,12 +78,10 @@ export function projectPaths(projectId: string, lang?: string): ProjectPaths {
     language: (lang) => `/api/projects/${projectId}/languages/${encodeURIComponent(lang)}`,
     copyPage: (lang) => `/api/projects/${projectId}/languages/${encodeURIComponent(lang)}/pages`,
     translations: `/api/projects/${projectId}/translations`,
-    history: `${base}history${query}`,
-    version: (versionId) => `${base}history/${versionId}/`,
+    version: (versionId) => `${base}publish/versions/${versionId}/`,
     versions: `/api/projects/${projectId}/versions${query}`,
     restoreVersion: (versionId) => `/api/projects/${projectId}/versions/${versionId}/restore`,
     library: `/api/projects/${projectId}/media`,
-    publishing: `${base}publishing`,
     publish: `/api/projects/${projectId}/publish`,
     publishes: `/api/projects/${projectId}/publishes`,
     restore: (publishId) => `/api/projects/${projectId}/publishes/${publishId}/restore`,

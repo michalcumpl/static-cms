@@ -54,7 +54,7 @@ test.describe("someone else's project", () => {
     await expect(page.getByText("Page not found")).toBeVisible();
     await expect(page.locator(".site-canvas")).toHaveCount(0);
     // The overview is rendered on the server and answers with the status itself.
-    const overview = await page.goto(paths().overview);
+    const overview = await page.goto(paths().dashboard);
     expect(overview?.status()).toBe(404);
     const api = await page.request.get(paths().api);
     expect(api.status()).toBe(404);

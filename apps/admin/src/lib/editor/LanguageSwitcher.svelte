@@ -31,15 +31,9 @@ let selected = $state(untrack(() => editor.lang));
 </script>
 
 <p class="history-link">
-  <a href={editor.paths.history}>{i18n.t("editor.left.history")}</a>
+  <a href={editor.paths.versionsPage}>{i18n.t("editor.left.history")}</a>
   ·
-  <a
-    href={editor.paths.settings}
-    onclick={(event) => {
-      event.preventDefault();
-      openSettings(editor, i18n.t);
-    }}>{i18n.t("editor.left.settings")}</a
-  >
+  <a href={editor.paths.dashboard}>{i18n.t("editor.left.dashboard")}</a>
 </p>
 
 {#if editor.languages.length > 1}

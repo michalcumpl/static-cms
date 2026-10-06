@@ -92,7 +92,7 @@ test("all four image blocks on a page: fill, describe, save, preview and ZIP", a
   expect(html).toContain('<h3 class="person-name">Kateřina</h3>');
   expect(html).toMatch(/<li><img [^>]*alt="hero"/);
 
-  await page.goto(paths().publishing);
+  await page.goto(paths().publishPage);
   await page.waitForLoadState("networkidle");
   const downloading = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download ZIP" }).click();

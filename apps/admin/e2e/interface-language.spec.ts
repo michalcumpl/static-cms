@@ -127,7 +127,7 @@ test.describe("signed in", () => {
     const context = await czechContext(browser, owner);
     contexts.push(context);
     const page = await context.newPage();
-    await page.goto(paths().history);
+    await page.goto(paths().versionsPage);
     const versions = page.getByRole("list", { name: "Uložené verze" });
     await expect(versions).toContainText(/\d{1,2}\. \d{1,2}\. \d{4} \d{1,2}:\d{2}/);
   });

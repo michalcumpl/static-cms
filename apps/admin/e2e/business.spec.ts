@@ -3,16 +3,16 @@ import {
   addBlockAfterCaret,
   canvas,
   expect,
+  openBusiness,
   openEditor,
-  openSettings,
   paths,
   resetPublishing,
   saveSettings,
   test,
 } from "./fixtures";
 
-// The business blocks in the editor. The details themselves are edited on the Settings tab
-// (see settings.spec.ts); here they are set there, and the editor shows them.
+// The business blocks in the editor. The details themselves are edited in the panel's Business
+// section (see settings.spec.ts); here they are set there, and the editor shows them.
 
 const toolbar = (page: Page) => page.getByRole("toolbar", { name: "Editing" });
 const business = (page: Page) => page.getByRole("region", { name: "Business", exact: true });
@@ -37,7 +37,7 @@ async function save(page: Page) {
 test.beforeEach(() => resetPublishing());
 
 test("a contact block shows the phone, which the block panel can hide", async ({ page }) => {
-  await openSettings(page);
+  await openBusiness(page);
   const phone = business(page).getByLabel("Phone");
   await phone.fill("321 123 456");
   await phone.press("Tab");
@@ -56,7 +56,7 @@ test("a contact block shows the phone, which the block panel can hide", async ({
 });
 
 test("opening hours with a lunch break show on the canvas", async ({ page }) => {
-  await openSettings(page);
+  await openBusiness(page);
   await business(page).getByRole("button", { name: "Open on Monday" }).click();
   await business(page).getByLabel("Monday closes").fill("12:00");
   await business(page)
@@ -73,7 +73,7 @@ test("opening hours with a lunch break show on the canvas", async ({ page }) => 
 });
 
 test("details follow the settings, and the block leads to them", async ({ page }) => {
-  await openSettings(page);
+  await openBusiness(page);
   await business(page).getByLabel("Street and number").fill("Lipová 12");
   await business(page).getByLabel("City").fill("Kolín 2");
   await saveSettings(page);
@@ -90,7 +90,7 @@ test("details follow the settings, and the block leads to them", async ({ page }
     .locator("section.contact")
     .getByRole("button", { name: "Edit business details" })
     .click();
-  await expect(page).toHaveURL(new RegExp(`${paths().settings}\\?focus=`));
+  await expect(page).toHaveURL(new RegExp(`${paths().business}\\?focus=`));
   await expect(business(page).getByLabel("Name", { exact: true })).toBeFocused();
 });
 
@@ -103,13 +103,13 @@ test("unsaved changes are saved first when the block leads to the settings", asy
     .locator("section.contact")
     .getByRole("button", { name: "Edit business details" })
     .click();
-  await expect(page).toHaveURL(new RegExp(`${paths().settings}\\?focus=`));
+  await expect(page).toHaveURL(new RegExp(`${paths().business}\\?focus=`));
   const preview = await (await page.request.get(`${paths().preview}kontakt/`)).text();
   expect(preview).toContain('<section class="block contact">');
 });
 
-test("an overlap problem in the editor opens the Settings tab at the day", async ({ page }) => {
-  await openSettings(page);
+test("an overlap problem in the editor opens the Business section at the day", async ({ page }) => {
+  await openBusiness(page);
   const wednesday = business(page).getByRole("group", { name: "Wednesday" });
   await wednesday.getByRole("button", { name: "Open on Wednesday" }).click();
   await wednesday.getByRole("button", { name: "Add range" }).click();
@@ -124,8 +124,8 @@ test("an overlap problem in the editor opens the Settings tab at the day", async
 });
 
 test("Choose a shop", async ({ page }) => {
-  // Two locations, set up on the Settings tab.
-  await openSettings(page);
+  // Two locations, set up in the Business section.
+  await openBusiness(page);
   const main = business(page).getByRole("group", { name: "Main location" });
   // The name last: once named, a location is headed by its name.
   await main.getByLabel("City").fill("Kolín");
