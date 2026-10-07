@@ -26,20 +26,20 @@ No interface text changes: the command's output is for operators and stays in En
 
 ## 3. The examples (local only)
 
-- [ ] 3.1 Aniděti: read the live site, download its images, write `build.ts`, build and load it
+- [x] 3.1 Aniděti: read the live site, download its images, write `build.ts`, build and load it
   into the development database (decision 4). Verify: `load-site` succeeds, the preview shows
   every page, the dashboard reports no errors, and `git status` shows nothing from
   `data/examples/`.
-- [ ] 3.2 Mareš Partners, Czech and English. Verify as 3.1, and that the English pages pair with
+- [x] 3.2 Mareš Partners, Czech and English. Verify as 3.1, and that the English pages pair with
   the Czech ones.
-- [ ] 3.3 Mortgage Specialist, English primary. Verify as 3.1.
-- [ ] 3.4 Fond 10X, Czech and English. Verify as 3.2.
-- [ ] 3.5 Roubenka Svitávka, Czech. Verify as 3.1.
+- [x] 3.3 Mortgage Specialist, English primary. Verify as 3.1.
+- [x] 3.4 Fond 10X, Czech and English. Verify as 3.2.
+- [x] 3.5 Roubenka Svitávka, Czech. Verify as 3.1.
 
 ## 4. Notes and docs
 
-- [ ] 4.1 `docs/layouts.md` and `docs/import-mapping.md` from the five migrations, with the
+- [x] 4.1 `docs/layouts.md` and `docs/import-mapping.md` from the five migrations, with the
   gaps the examples show (decision 5). Verify by reading: no content of the businesses beyond their public addresses.
-- [ ] 4.2 Update `apps/admin/README.md` (the command) and `docs/roadmap.md` (`example-sites`
+- [x] 4.2 Update `apps/admin/README.md` (the command) and `docs/roadmap.md` (`example-sites`
   done). Run the type check, unit tests, lint and the full Playwright suite; verify that all
   pass.

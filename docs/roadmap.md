@@ -282,8 +282,8 @@ of the six launch templates (Education, Law, Financial advisory, Investment mana
 Short-term rentals, Exhibitions); the others can land during the beta. The remaining templates
 come after launch.
 
-**Next steps** (2026-10-07): `project-deletion` and the cleanup (old projects deleted,
-migrations flattened) are done; next is `example-sites`; layouts become part of the model with
+**Next steps** (2026-10-07): `project-deletion`, the cleanup and `example-sites` are done; next is
+`image-cropping`, and the blocks the examples lack (`layouts.md`) are to be planned; layouts become part of the model with
 `template-system`.
 
 **Planned changes**, in order. A → B → C build on each other's data model and must go in
@@ -298,8 +298,8 @@ beta.
 | 4 | B | [`control-panel`](../openspec/changes/archive/2026-10-07-control-panel/) | the website home: a dashboard and the Business, Website and Publish sections, replacing the project tabs | done |
 | 4b | B | [`offer-and-about`](../openspec/changes/archive/2026-10-07-offer-and-about/) | What you offer (services, FAQs) and About you (team, testimonials): forms per item, with formatting | done |
 | 4c | B | [`project-deletion`](../openspec/changes/archive/2026-10-07-project-deletion/) | owners delete a website (typing its name; a published one goes offline), restore it or remove it for good | done |
-| 4d | B | `example-sites` | a command that loads a site document and its images into a new project; the launch examples (Aniděti, Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka Svitávka; Exhibitions once chosen) built with it in our own database, not committed. Before it: the old projects deleted, the database migrations flattened into one | next |
-| 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
+| 4d | B | [`example-sites`](../openspec/changes/example-sites/) | a command that loads a site document and its images into a new project; the launch examples (Aniděti, Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka Svitávka; Exhibitions once chosen) built with it in our own database, not committed. Before it: the old projects deleted, the database migrations flattened into one | done |
+| 5 | B | `image-cropping` | crop, focal point and rotation in the media library | next |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
 | 7 | C | `template-system` | the template contract, layouts (page recipes, also offered by "Add page"), homepage sections on or off, template versions | |
 | 7b | B | `site-import` | import a public website by its address (v1, no AI): pages, menu, redirects from the old addresses, business details, images, a guessed theme, texts as plain blocks, and a review before anything is published | |
@@ -375,7 +375,7 @@ beta.
     The existing database keeps its data: its migration record is rewritten to the new
     migration, so accounts, the workspace and its Netlify connection stay. The database is
     copied before anything changes.
-- **Example sites** (`example-sites`): `pnpm admin load-site <folder>` creates a project from a
+- **Example sites: done** (`example-sites`, five of six; Exhibitions once chosen). What they taught is in [`layouts.md`](layouts.md) (page recipes and the blocks we lack) and [`import-mapping.md`](import-mapping.md) (rules for `site-import`). Details: `pnpm admin load-site <folder>` creates a project from a
   site document and a folder of images (later also the templates' fixture sites). The launch
   examples are migrated with it into our own database:
   - **Aniděti** (Czech, Education): the courses and prices as services, the two teachers as

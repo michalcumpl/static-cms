@@ -169,6 +169,7 @@ export function siteBuilder(options: {
   const faqs: { id: string; input: { question: string; answer: string } }[] = [];
   const pages: { id: string; input: PageInput; blocks: BlockInput[] }[] = [];
   const menuLinks: LinkInput[] = [];
+  let headerShowName = true;
 
   return {
     theme(input: ThemeInput) {
@@ -183,8 +184,10 @@ export function siteBuilder(options: {
       locations.push({ id, input });
       return id;
     },
-    logo(image: ImageInput) {
+    /** The logo; `showName: false` when it already shows the site's name. */
+    logo(image: ImageInput, options: { showName?: boolean } = {}) {
       images.push({ slot: "logo", image });
+      headerShowName = options.showName ?? true;
     },
     favicon(image: ImageInput) {
       images.push({ slot: "favicon", image });
@@ -532,7 +535,7 @@ export function siteBuilder(options: {
         favicon: slot("favicon"),
         share_image: slot("share_image"),
         logo: slot("logo"),
-        header_show_name: true,
+        header_show_name: headerShowName,
         allow_ai_search: true,
         allow_ai_training: true,
         theme,

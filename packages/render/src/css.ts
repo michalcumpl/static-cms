@@ -338,6 +338,8 @@ img {
 }
 
 .person {
+  min-width: 0;
+  overflow-wrap: anywhere;
   text-align: center;
 }
 

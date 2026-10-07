@@ -301,6 +301,7 @@ same backup and rollback notes apply.
 ```sh
 pnpm --filter @webmio/admin admin create-user <email> "<workspace>"   # prints a sign-in link
 pnpm --filter @webmio/admin admin media-cleanup [--dry-run]   # delete files of removed, unused images
+pnpm --filter @webmio/admin admin load-site <folder> --workspace <id>   # a project from project.json, documents and images/
 pnpm --filter @webmio/admin db:generate  # new migration after a schema change
 pnpm --filter @webmio/admin typecheck    # svelte-check, e2e and scripts
 pnpm --filter @webmio/admin test         # vitest (in-memory databases)

@@ -146,6 +146,25 @@ templates.
 
 Both name the sites only by their public addresses.
 
+### 6. Changes made while building
+
+- **Two fixes the examples found:**
+  - long email addresses widened team cards; `.person` in the site stylesheet now wraps long
+    words (`min-width: 0; overflow-wrap: anywhere`), with the stylesheet snapshot updated;
+  - a logo that shows the name made the header repeat it; `site.logo(image, { showName: false })`
+    sets `header_show_name`.
+- **The builder lists all seven days, pads times to `HH:MM` and strips spaces from phones,** which
+  validation requires.
+- **`loadSite` checks documents with stand-in image sizes** (sizes come with the upload), and
+  writes the uploaded document into the project's first version instead of saving a second, so
+  version history doesn't start with broken images.
+- **Local helpers next to the examples** (ignored by git): `validate.ts` checks a built folder,
+  `check.ts` validates and renders a loaded project, `shots.ts` screenshots its preview, and
+  `remove.ts` removes it (Delete website, Delete now) so an example can be rebuilt.
+- **An empty database re-imports the old working copy:** with no projects, the server's startup
+  imported `data/site.json` as "Default" into a new workspace; both were removed again.
+- **Exhibitions** waits for its example site.
+
 ## Risks / Trade-offs
 
 - **[The builder drifts from the schema]** → it is typed against `@webmio/model`'s node types,
