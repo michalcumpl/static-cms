@@ -160,6 +160,14 @@ export async function startFakeNetlify(port = 0): Promise<FakeNetlify> {
       if (siteRoute) {
         const site = sites.get(decodeURIComponent(siteRoute[1] ?? ""));
         if (!site) return json(response, 404, { message: "Not found" });
+        if (request.method === "DELETE") {
+          sites.delete(site.id);
+          for (const [deployId, deploy] of deploys) {
+            if (deploy.siteId === site.id) deploys.delete(deployId);
+          }
+          response.writeHead(204);
+          return response.end();
+        }
         if (request.method === "PATCH") {
           const input = JSON.parse((await body(request)).toString());
           if ("custom_domain" in input) {

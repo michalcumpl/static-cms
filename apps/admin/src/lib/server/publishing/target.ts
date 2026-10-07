@@ -18,6 +18,8 @@ export interface PublishTarget {
   restore(siteId: string, deployId: string): Promise<void>;
   connectDomain(siteId: string, domain: string, aliases: string[]): Promise<void>;
   disconnectDomain(siteId: string): Promise<void>;
+  /** Deletes the site with its deploys and domain (project-deletion decision 3). */
+  deleteSite(siteId: string): Promise<void>;
   /** Whether the provider has issued the certificate for the site's custom domain. */
   certificateIssued(siteId: string): Promise<boolean>;
 }

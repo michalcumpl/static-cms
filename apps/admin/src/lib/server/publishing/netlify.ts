@@ -209,6 +209,12 @@ export function netlifyTarget(
       );
     },
 
+    async deleteSite(siteId) {
+      const response = await call(options, "DELETE", `/sites/${encodeURIComponent(siteId)}`);
+      // Already gone counts as done: a retried deletion mustn't fail on it.
+      if (response.status !== 404) await expectOk(response, "deleteSite");
+    },
+
     async certificateIssued(siteId) {
       const site = (await (
         await expectOk(

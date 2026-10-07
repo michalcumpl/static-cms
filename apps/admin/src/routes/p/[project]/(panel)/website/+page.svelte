@@ -2,6 +2,7 @@
 import { browser } from "$app/environment";
 import SectionScreen from "$lib/editor/SectionScreen.svelte";
 import { getI18n } from "$lib/i18n";
+import DeleteWebsite from "$lib/panel/DeleteWebsite.svelte";
 import DesignCard from "$lib/panel/DesignCard.svelte";
 import { designSummary, siteSummary } from "$lib/panel/summary";
 import { projectPaths } from "$lib/project-paths";
@@ -23,6 +24,7 @@ const summary = $derived(siteSummary(doc));
 const logoUrl = $derived(
   design.logo ? paths.image(design.logo.src, design.logo.width, "thumbnail") : undefined,
 );
+let screen: SectionScreen | undefined = $state();
 const editDesign = $derived(`${paths.edit()}${paths.edit().includes("?") ? "&" : "?"}tab=theme`);
 </script>
 
@@ -36,6 +38,7 @@ const editDesign = $derived(`${paths.edit()}${paths.edit().includes("?") ? "&" :
   {#if browser}
   {#key data.lang}
     <SectionScreen
+      bind:this={screen}
       section="site"
       projectId={data.project.id}
       site={data.site}
@@ -67,9 +70,25 @@ const editDesign = $derived(`${paths.edit()}${paths.edit().includes("?") ? "&" :
     </SectionScreen>
   {/key}
   {/if}
+  {#if data.role === "owner"}
+    <div class="delete">
+      <DeleteWebsite
+        projectId={data.project.id}
+        name={data.project.name}
+        address={data.defaultUrl}
+        domain={data.domain}
+        connected={data.connected}
+        beforeDelete={() => screen?.discard()}
+      />
+    </div>
+  {/if}
 </TabPanel>
 
 <style>
+  .delete {
+    margin-top: var(--ui-space-6);
+  }
+
   .side {
     display: flex;
     flex-direction: column;

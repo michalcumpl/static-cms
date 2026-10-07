@@ -106,6 +106,25 @@ describe("netlifyTarget", () => {
     expect(await target().certificateIssued(siteId)).toBe(false);
   });
 
+  it("deletes a site with its deploys, and takes an already deleted site as done", async () => {
+    const { siteId } = await target().createSite("sc-p1");
+    await target().deploy(siteId, files({ "index.html": "live" }));
+    await target().deleteSite(siteId);
+    expect(fake.sites.has(siteId)).toBe(false);
+    expect((await visit("sc-p1", "/")).status).toBe(404);
+    await expect(target().deleteSite(siteId)).resolves.toBeUndefined();
+  });
+
+  it("doesn't delete a site while Netlify is down or the token is refused", async () => {
+    const { siteId } = await target().createSite("sc-p1");
+    fake.setDown(true);
+    await expect(target().deleteSite(siteId)).rejects.toMatchObject({ kind: "unreachable" });
+    fake.setDown(false);
+    const revoked = netlifyTarget({ token: "revoked", account: "anideti", apiUrl: fake.url });
+    await expect(revoked.deleteSite(siteId)).rejects.toMatchObject({ kind: "unauthorized" });
+    expect(fake.sites.has(siteId)).toBe(true);
+  });
+
   it("reports an unreachable service and a refused token", async () => {
     const { siteId } = await target().createSite("sc-p1");
     fake.setDown(true);

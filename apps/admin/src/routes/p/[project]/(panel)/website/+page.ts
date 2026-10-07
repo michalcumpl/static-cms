@@ -2,7 +2,10 @@ import { loadSection } from "$lib/editor/section-load";
 import { projectPaths } from "$lib/project-paths";
 import type { PageLoad } from "./$types";
 
-/** The site settings' document, and the address and domain for the Domain link's summary. */
+/**
+ * The site settings' document; the address and domain for the Domain link's summary and, with the
+ * Netlify address and the connection, for the Delete website confirmation.
+ */
 export const load: PageLoad = async ({ fetch, params, parent, url }) => {
   const { lang, primaryLang } = await parent();
   const [section, publishing] = await Promise.all([
@@ -13,5 +16,7 @@ export const load: PageLoad = async ({ fetch, params, parent, url }) => {
     ...section,
     domain: (publishing?.domain as string | null) ?? null,
     address: (publishing?.address as string | null) ?? null,
+    defaultUrl: (publishing?.defaultUrl as string | null) ?? null,
+    connected: Boolean(publishing?.connected),
   };
 };

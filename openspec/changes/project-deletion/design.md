@@ -103,6 +103,17 @@ The name compares trimmed and exact (case and diacritics count), as typed in the
   and **Delete now** (with its own confirmation dialog). `?deleted=` shows a notice that the
   website was deleted and can be restored below.
 
+### 6. Changes made while building
+
+- **The operations have their own module,** `server/project-deletion.ts`, not
+  `site-documents.ts`: `deleteProject` needs the publishing code, which already imports
+  `site-documents.ts`.
+- **The migration's reference was fixed by hand:** drizzle-kit wrote `deleted_by` without
+  `ON DELETE set null`, so removing an account that deleted a project would have failed.
+- **The other direct `projects` queries stay as they are.** Each is reached through a route that
+  checks `projectAccess` first, or runs at start (format upgrades, legacy media registration),
+  where also upgrading a deleted project keeps it restorable.
+
 ## Risks / Trade-offs
 
 - **[A query that forgets `deleted_at`]** would let a deleted project leak. → Access goes through

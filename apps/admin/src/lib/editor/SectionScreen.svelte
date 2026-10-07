@@ -87,6 +87,11 @@ const linkEnabled = $derived(
 let linkDialog: LinkDialog | undefined = $state();
 let form: { focus_canvas: () => void } | undefined = $state();
 
+/** Drops unsaved changes without the leaving question (the website is being deleted). */
+export function discard(): void {
+  editor.leaving = true;
+}
+
 // Deleting an item that pages show asks first, saying on how many (offer-and-about decision 3).
 let deleteDialog: Dialog | undefined = $state();
 let deleting = $state<{

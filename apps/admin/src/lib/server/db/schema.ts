@@ -98,6 +98,9 @@ export const projects = sqliteTable(
     /** The language the project was created in: served at the root, the source of shared fields. */
     primaryLang: text("primary_lang").notNull().default("cs"),
     createdAt: createdAt(),
+    /** When an owner deleted the project (project-deletion decision 1); null while it lives. */
+    deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
+    deletedBy: text("deleted_by").references(() => users.id, { onDelete: "set null" }),
   },
   (t) => [index("projects_workspace_idx").on(t.workspaceId)],
 );

@@ -1,6 +1,6 @@
 // Workspaces, members and roles (specs/accounts: "Workspaces and roles"). Plain data rules,
 // usable from routes and from the admin command alike.
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import type { Db, DbOrTx } from "./db/index";
 import { memberships, projects, type Role, users, workspaces } from "./db/schema";
 import { newId } from "./ids";
@@ -26,7 +26,7 @@ export function listWorkspaces(db: Db, userId: string): WorkspaceSummary[] {
     projects: db
       .select({ id: projects.id, name: projects.name })
       .from(projects)
-      .where(eq(projects.workspaceId, w.id))
+      .where(and(eq(projects.workspaceId, w.id), isNull(projects.deletedAt)))
       .orderBy(asc(projects.name))
       .all(),
   }));
@@ -67,7 +67,7 @@ export function projectAccess(
       memberships,
       and(eq(memberships.workspaceId, workspaces.id), eq(memberships.userId, userId)),
     )
-    .where(eq(projects.id, projectId))
+    .where(and(eq(projects.id, projectId), isNull(projects.deletedAt)))
     .get();
   if (!row) return undefined;
   return {
