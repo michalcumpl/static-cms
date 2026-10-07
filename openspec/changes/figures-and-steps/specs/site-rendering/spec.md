@@ -1,11 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: Key figures and steps layout
-The site's stylesheet SHALL show figures as a row of large values in the theme's primary colour with their labels beneath, wrapping to two per row on narrow screens, and steps as a numbered sequence whose numbers are drawn from the list's order in the primary colour. Both SHALL pass the site's HTML validation and contrast rules like other blocks.
+The site's stylesheet SHALL show figures as large values in the theme's primary colour with their labels beneath: up to four figures in one row, five or six in rows of three, and two per row where the block is narrow (a phone, or the editor's phone width), and steps as a numbered sequence whose numbers are drawn from the list's order in the primary colour. Both SHALL pass the site's HTML validation and contrast rules like other blocks.
 
 #### Scenario: Figures on a phone
 - **WHEN** a figures block with four figures is shown 375 pixels wide
 - **THEN** the figures show two per row, each value above its label
+
+#### Scenario: Six figures
+- **WHEN** a figures block with six figures is shown on a wide screen
+- **THEN** they form two rows of three
 
 #### Scenario: Steps markup
 - **WHEN** a steps block "Jak to funguje" has three steps

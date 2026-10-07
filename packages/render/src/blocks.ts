@@ -31,6 +31,10 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderTestimonials(block, ctx);
     case "faq":
       return renderFaq(block, ctx);
+    case "figures":
+      return renderFigures(block, ctx);
+    case "steps":
+      return renderSteps(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -318,6 +322,56 @@ function renderFaq(block: NodeOfType<"faq">, ctx: RenderContext): Html {
   );
   return html`<section class="block faq">
       <div class="container">${blockHeading(block.heading, ctx)}${items}
+      </div>
+    </section>`;
+}
+
+/**
+ * How many figures share a row on wider screens: all of them up to four, else three, so six
+ * make two even rows instead of five and one (phones always show two).
+ */
+export function figureColumns(count: number): number {
+  return count <= 4 ? Math.max(count, 1) : 3;
+}
+
+/** Values and labels in separate elements, so templates can show the value large. */
+function renderFigures(block: NodeOfType<"figures">, ctx: RenderContext): Html {
+  const columns = figureColumns(block.items.nodes.length);
+  const items = ctx.children(block.items).map(
+    (item) =>
+      item.type === "figure" &&
+      html`
+          <li class="figure">
+            <p class="figure-value">${renderText(item.value, ctx)}</p>
+            <p class="figure-label">${renderText(item.label, ctx)}</p>
+          </li>`,
+  );
+  return html`<section class="block figures">
+      <div class="container">${blockHeading(block.heading, ctx)}
+        <ul class="figure-list figure-columns-${columns}">${items}
+        </ul>
+      </div>
+    </section>`;
+}
+
+/** An ordered list: the numbers come from the order (figures-and-steps design decision 1). */
+function renderSteps(block: NodeOfType<"steps">, ctx: RenderContext): Html {
+  const items = ctx.children(block.items).map(
+    (item) =>
+      item.type === "step" &&
+      html`
+          <li class="step">
+            <h3 class="step-title">${renderText(item.title, ctx)}</h3>${
+              !isEmpty(item.text) &&
+              html`
+            <p class="step-text">${renderText(item.text, ctx)}</p>`
+            }
+          </li>`,
+  );
+  return html`<section class="block steps">
+      <div class="container">${blockHeading(block.heading, ctx)}
+        <ol class="step-list">${items}
+        </ol>
       </div>
     </section>`;
 }

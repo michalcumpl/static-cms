@@ -125,6 +125,18 @@ The local Mortgage Specialist and Fond 10X `build.ts` files replace their bold l
 subheadings with the blocks, and are reloaded (`remove.ts`, `load-site`) to check them on real
 content; nothing of that is committed.
 
+### 6. Changes made while building
+
+- **Columns by count:** an auto-fitting grid put six figures in rows of five and one. The
+  renderer now adds `figure-columns-N` (`figureColumns`: all of them up to four, else three),
+  and the stylesheet applies it when the block is at least 44rem wide; narrower, two per row.
+- **A container query, not a media query:** the figures block is a size container, so the
+  editor's phone width shows two per row as a phone does; a media query would follow the
+  window. It is the site stylesheet's first such rule; the canvas scoping keeps at-rules intact.
+- **Step numbers are circles drawn with `clip-path`,** as portraits are: the stylesheet takes
+  every radius from the theme.
+- **`insertableBlocks` lists the new types** besides `BLOCK_TYPES`; both feed the picker.
+
 ## Risks / Trade-offs
 
 - **[Long values break the row]** → the 24-character warning, and values wrap within their cell.

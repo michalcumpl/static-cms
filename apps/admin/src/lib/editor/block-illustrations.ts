@@ -157,4 +157,28 @@ export const BLOCK_ILLUSTRATIONS: Record<BlockType, string> = {
         })
         .join(""),
   ),
+  // Three large numbers in the primary colour, each with a label under it.
+  figures: svg(
+    [0, 1, 2]
+      .map((i) => {
+        const x = 10 + i * 36;
+        return bar(x, 22, 24, 10, P) + bar(x, 38, 28) + bar(x, 45, 18);
+      })
+      .join(""),
+  ),
+  // A heading, then three numbered circles, each with a title and a line of text.
+  steps: svg(
+    heading() +
+      [0, 1, 2]
+        .map((i) => {
+          const y = 20 + i * 16;
+          return (
+            `<circle cx="13" cy="${y + 4}" r="5" fill="${P}"/>` +
+            `<text x="13" y="${y + 6.5}" font-size="7" font-family="sans-serif" text-anchor="middle" fill="#fff">${i + 1}</text>` +
+            bar(24, y, [40, 32, 36][i] as number, 4) +
+            bar(24, y + 7, [70, 60, 66][i] as number)
+          );
+        })
+        .join(""),
+  ),
 };

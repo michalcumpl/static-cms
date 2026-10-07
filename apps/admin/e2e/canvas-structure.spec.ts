@@ -131,6 +131,9 @@ test("add a block between two blocks with the picker, and undo", async ({ page }
   await expect(picker(page)).toBeVisible();
   const hours = picker(page).getByRole("menuitem", { name: /^Opening hours/ });
   await expect(hours).toContainText("Your weekly hours, from the business settings");
+  await expect(picker(page).getByRole("menuitem", { name: /^Key figures/ })).toContainText(
+    "Your numbers at a glance",
+  );
   const hero = picker(page).getByRole("menuitem", { name: /^Hero/ });
   await expect(hero).toHaveAttribute("aria-disabled", "true");
   await expect(hero).toContainText("A page has only one hero");
@@ -187,12 +190,15 @@ test("the picker shows each block as a card with a drawing, name and description
   await caretIn(page, "Co pečeme");
   await page.getByRole("button", { name: "+ Add block" }).last().click();
   const cards = picker(page).getByRole("menuitem");
-  await expect(cards).toHaveCount(12);
+  await expect(cards).toHaveCount(14);
   for (const card of await cards.all()) {
     await expect(card.locator(".illustration svg")).toBeVisible();
   }
   const hours = picker(page).getByRole("menuitem", { name: /^Opening hours/ });
   await expect(hours).toContainText("Your weekly hours, from the business settings");
+  await expect(picker(page).getByRole("menuitem", { name: /^Key figures/ })).toContainText(
+    "Your numbers at a glance",
+  );
   // Drawings are decoration: the card's name is its name and description only.
   await expect(hours.locator(".illustration")).toHaveAttribute("aria-hidden", "true");
 });

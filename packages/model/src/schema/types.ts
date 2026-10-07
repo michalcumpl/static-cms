@@ -296,6 +296,39 @@ export interface FaqItemNode {
   answer: TextValue;
 }
 
+/** Key figures (figures-and-steps design decision 1). */
+export interface FiguresNode {
+  id: string;
+  type: "figures";
+  heading: TextValue;
+  /** Up to six `figure` nodes. */
+  items: NodeArrayValue;
+}
+
+export interface FigureNode {
+  id: string;
+  type: "figure";
+  /** Short: "10+ let", "+28,9 %". */
+  value: TextValue;
+  label: TextValue;
+}
+
+/** Numbered steps; the numbers come from the order. */
+export interface StepsNode {
+  id: string;
+  type: "steps";
+  heading: TextValue;
+  items: NodeArrayValue;
+}
+
+export interface StepNode {
+  id: string;
+  type: "step";
+  title: TextValue;
+  /** Bold, italic and links; line breaks allowed. */
+  text: TextValue;
+}
+
 /** One item a collection block shows, named by its node ID. */
 export interface ItemRefNode {
   id: string;
@@ -436,6 +469,10 @@ export type AnyNode =
   | TestimonialNode
   | FaqNode
   | FaqItemNode
+  | FiguresNode
+  | FigureNode
+  | StepsNode
+  | StepNode
   | ItemRefNode
   | SocialLinkNode
   | BusinessNode

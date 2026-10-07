@@ -145,6 +145,28 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
     content_width: "wide",
   });
   nodes.site_1.header_show_name = false;
+  // Key figures and steps (figures-and-steps).
+  nodes.figure_1 = { id: "figure_1", type: "figure", value: text(""), label: text("") };
+  nodes.figure_2 = {
+    id: "figure_2",
+    type: "figure",
+    value: text("více než tři sta milionů korun českých"),
+    label: text("pod správou"),
+  };
+  nodes.figures_1 = {
+    id: "figures_1",
+    type: "figures",
+    heading: text(""),
+    items: { nodes: ["figure_1", "figure_2"], marks: [], annotations: [] },
+  };
+  nodes.step_1 = { id: "step_1", type: "step", title: text(""), text: text("") };
+  nodes.steps_1 = {
+    id: "steps_1",
+    type: "steps",
+    heading: text(""),
+    items: { nodes: ["step_1"], marks: [], annotations: [] },
+  };
+  nodes.page_contact.blocks.nodes.push("figures_1", "steps_1");
   return { doc, nodes };
 }
 
@@ -186,6 +208,10 @@ describe("owners' words", () => {
       "invalid-theme-value",
       "low-contrast",
       "name-without-logo",
+      "empty-value",
+      "empty-label",
+      "long-figure",
+      "empty-title",
     ]) {
       expect(codes, code).toContain(code);
     }

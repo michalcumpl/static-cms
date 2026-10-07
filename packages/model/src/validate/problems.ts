@@ -72,7 +72,12 @@ export type ProblemCode =
   | "invalid-social-url"
   | "duplicate-social-url"
   // Locations (business-locations)
-  | "missing-location";
+  | "missing-location"
+  // Key figures and steps (figures-and-steps)
+  | "empty-value"
+  | "empty-label"
+  | "long-figure"
+  | "empty-title";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -137,6 +142,10 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "empty-quote": "site",
   "duplicate-translation-key": "site",
   "empty-question": "site",
+  "empty-value": "site",
+  "empty-label": "site",
+  "long-figure": "site",
+  "empty-title": "site",
   "empty-answer": "site",
   "missing-item": "site",
   "wrong-collection": "site",

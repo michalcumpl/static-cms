@@ -94,7 +94,9 @@ export type BlockInput =
       show?: Partial<Record<"address" | "phone" | "email" | "map", boolean>>;
     }
   | { type: "opening_hours"; heading?: string; location?: string }
-  | { type: "call_to_action"; heading: string; text?: string; actions: LinkInput[] };
+  | { type: "call_to_action"; heading: string; text?: string; actions: LinkInput[] }
+  | { type: "figures"; heading?: string; items: { value: string; label: string }[] }
+  | { type: "steps"; heading: string; items: { title: string; text?: string }[] };
 
 /** Shorthands for writing blocks. */
 export const blocks = {
@@ -130,6 +132,10 @@ export const blocks = {
   }),
   callToAction: (b: Omit<Extract<BlockInput, { type: "call_to_action" }>, "type">) =>
     ({ type: "call_to_action", ...b }) as BlockInput,
+  figures: (b: Omit<Extract<BlockInput, { type: "figures" }>, "type">) =>
+    ({ type: "figures", ...b }) as BlockInput,
+  steps: (b: Omit<Extract<BlockInput, { type: "steps" }>, "type">) =>
+    ({ type: "steps", ...b }) as BlockInput,
 };
 
 const list = (nodes: string[] = []) => ({ nodes, marks: [], annotations: [] });
@@ -392,6 +398,24 @@ export function siteBuilder(options: {
               heading: text(input.heading),
               text: text(input.text),
               actions: list(input.actions.map(link)),
+            });
+          case "figures":
+            return add("figures", {
+              heading: text(input.heading),
+              items: list(
+                input.items.map((item) =>
+                  add("figure", { value: text(item.value), label: text(item.label) }),
+                ),
+              ),
+            });
+          case "steps":
+            return add("steps", {
+              heading: text(input.heading),
+              items: list(
+                input.items.map((item) =>
+                  add("step", { title: text(item.title), text: text(item.text) }),
+                ),
+              ),
             });
         }
       };

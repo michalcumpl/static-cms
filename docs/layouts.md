@@ -48,12 +48,12 @@ database only, not in this repository.
 
 By how many of the five needed it. Today's stand-in is in brackets.
 
-1. **Key figures** (4: years in business, amounts arranged, assets under management, returns)
-   [a bold bullet list, which reads weakly]. A block of 3–6 figures with a label
-   each.
+1. **Key figures** (4: years in business, amounts arranged, assets under management, returns):
+   **done**, the key figures block (`figures-and-steps`).
 2. **Full-photo hero** (4) [the split hero, text left and photo right]. A variant of the hero, or
    a template's default.
-3. **Steps** (2: Mortgage's "how it works", Fond 10X's investment process) [subheadings in text].
+3. **Steps** (2: Mortgage's "how it works", Fond 10X's investment process): **done**, the steps
+   block (`figures-and-steps`).
 4. **Service detail pages, or lists in a service** (2: Mareš's eight areas each with a scope list,
    Aniděti's long course descriptions) [lines starting with "–" in the description: tall cards].
 5. **Contact form** (3: Mortgage, Fond 10X, Roubenka) [email and phone buttons]. Planned as

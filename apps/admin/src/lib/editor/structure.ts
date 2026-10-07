@@ -11,7 +11,15 @@ import {
   removeFromBlock,
   selectedCollectionItem,
 } from "./collections";
-import { type BlockType, blockInserters, insertableBlocks, insertListItem } from "./transforms";
+import {
+  type BlockType,
+  blockInserters,
+  insertableBlocks,
+  insertFigure,
+  insertListItem,
+  insertStep,
+  MAX_FIGURES,
+} from "./transforms";
 
 type NodeSelection = {
   type: "node";
@@ -173,10 +181,16 @@ export function insertBlockAt(
   return true;
 }
 
-/** The list item list the selection is in, and the position after the current item. */
+/** The item lists "Add item" fills, by the type of the node holding them. */
+const ITEM_OWNERS = ["list", "figures", "steps"];
+
+/**
+ * The item list the selection is in (a bulleted list's items, a key figures or steps block's
+ * items), the position after the current item, and the list's owner type.
+ */
 export function itemInsertionPoint(
   session: Session,
-): { path: DocumentPath; index: number } | undefined {
+): { path: DocumentPath; index: number; owner: string } | undefined {
   const selection = session.selection as AnySelection | null;
   if (!selection) return undefined;
   // Walk up the selection path to the innermost item list of a bulleted list. Collection items
@@ -185,12 +199,20 @@ export function itemInsertionPoint(
   for (let end = selection.path.length; end > 0; end--) {
     const path = selection.path.slice(0, end);
     if (path.at(-1) !== "items") continue;
-    const owner = session.get(path.slice(0, -1)) as { type?: string } | undefined;
-    if (owner?.type !== "list") continue;
+    const owner = session.get(path.slice(0, -1)) as
+      | { type?: string; items?: { nodes: string[] } }
+      | undefined;
+    if (!owner?.type || !ITEM_OWNERS.includes(owner.type)) continue;
+    // A key figures block holds at most six.
+    if (owner.type === "figures" && (owner.items?.nodes.length ?? 0) >= MAX_FIGURES) return;
     const next = selection.path[end];
-    if (typeof next === "number") return { path, index: next + 1 };
+    if (typeof next === "number") return { path, index: next + 1, owner: owner.type };
     if (selection.type === "node") {
-      return { path, index: Math.max(selection.anchor_offset ?? 0, selection.focus_offset ?? 0) };
+      return {
+        path,
+        index: Math.max(selection.anchor_offset ?? 0, selection.focus_offset ?? 0),
+        owner: owner.type,
+      };
     }
   }
   return undefined;
@@ -239,7 +261,9 @@ export function insertItem(session: Session): boolean {
     anchor_offset: at.index,
     focus_offset: at.index,
   });
-  insertListItem(tr);
+  if (at.owner === "figures") insertFigure(tr);
+  else if (at.owner === "steps") insertStep(tr);
+  else insertListItem(tr);
   session.apply(tr);
   return true;
 }

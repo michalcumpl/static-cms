@@ -16,6 +16,7 @@ import {
   WEEKDAYS,
 } from "../schema/index.js";
 import { slugify } from "../slug.js";
+import { graphemeLength } from "../text.js";
 import { CONTRAST_PAIRS, contrastRatio, MIN_CONTRAST, type ThemeColor } from "../themes.js";
 import type { GenericCheck } from "./generic.js";
 import type { ProblemCode, Problems } from "./problems.js";
@@ -810,6 +811,7 @@ function checkPageBlocks(
     }
     checkImageBlock(blockId, page, get, problems);
     checkContentBlock(blockId, page, get, problems);
+    checkFiguresAndSteps(blockId, page, get, problems);
     for (const type of [
       "services",
       "text_with_image",
@@ -879,6 +881,71 @@ function checkContentBlock(
         "actions",
       );
     }
+  }
+}
+
+/** The longest figure value read at a glance (figures-and-steps design decision 2). */
+const LONG_FIGURE = 24;
+
+/** The contents of key figures and steps blocks (figures-and-steps design decision 2). */
+function checkFiguresAndSteps(
+  blockId: string,
+  page: NodeOfType<"page">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const on = pageLabel(page);
+  const figures = get(blockId, "figures");
+  if (figures) {
+    const count = figures.items.nodes.length;
+    if (count === 0) {
+      problems.warning("empty-block", figures.id, `The key figures on ${on} are empty.`, "items");
+    } else if (count > 6) {
+      problems.error(
+        "too-many-items",
+        figures.id,
+        `The key figures on ${on} can have at most six figures.`,
+        "items",
+      );
+    }
+    figures.items.nodes.forEach((itemId, i) => {
+      const figure = get(itemId, "figure");
+      if (!figure) return;
+      const label = `Figure ${i + 1} on ${on}`;
+      if (isBlank(figure.value)) {
+        problems.error("empty-value", figure.id, `${label} needs its number.`, "value");
+      } else if (graphemeLength(figure.value.content.trim()) > LONG_FIGURE) {
+        problems.warning(
+          "long-figure",
+          figure.id,
+          `${label} is long; a figure is read at a glance, so keep it to ${LONG_FIGURE} characters and put the rest in its label.`,
+          "value",
+        );
+      }
+      if (isBlank(figure.label)) {
+        problems.error("empty-label", figure.id, `${label} needs its label.`, "label");
+      }
+    });
+  }
+  const steps = get(blockId, "steps");
+  if (steps) {
+    if (isBlank(steps.heading)) {
+      problems.error(
+        "empty-heading",
+        steps.id,
+        `The steps on ${on} need a heading; the steps' titles are headings under it.`,
+        "heading",
+      );
+    }
+    if (steps.items.nodes.length === 0) {
+      problems.warning("empty-block", steps.id, `The steps on ${on} are empty.`, "items");
+    }
+    steps.items.nodes.forEach((itemId, i) => {
+      const step = get(itemId, "step");
+      if (step && isBlank(step.title)) {
+        problems.error("empty-title", step.id, `Step ${i + 1} on ${on} needs its title.`, "title");
+      }
+    });
   }
 }
 

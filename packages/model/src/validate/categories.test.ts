@@ -97,6 +97,10 @@ describe("problem categories", () => {
       "invalid-social-url": true,
       "duplicate-social-url": true,
       "missing-location": true,
+      "empty-value": true,
+      "empty-label": true,
+      "long-figure": true,
+      "empty-title": true,
     };
     for (const code of Object.keys(codes) as ProblemCode[]) {
       expect(["structure", "site"], code).toContain(problemCategory(code));

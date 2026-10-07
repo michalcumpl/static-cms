@@ -21,6 +21,8 @@ export const BLOCK_TYPES: readonly BlockType[] = [
   "call_to_action",
   "testimonials",
   "faq",
+  "figures",
+  "steps",
 ];
 
 /** Why a block can't go somewhere; the picker says it with `editor.unavailable.<reason>`. */
@@ -48,6 +50,8 @@ const ITEM_TYPES = new Set([
   "logo_item",
   "testimonial",
   "faq_item",
+  "figure",
+  "step",
 ]);
 
 /** The translator the names are made with: the interface language's `t`. */
@@ -55,7 +59,7 @@ type T = I18n["t"];
 
 /** The block or item types whose lists hold items with handles, by list property. */
 const ITEM_LISTS: Record<string, readonly string[]> = {
-  items: ["list", "services", "gallery", "logos", "testimonials"],
+  items: ["list", "services", "gallery", "logos", "testimonials", "figures", "steps"],
   people: ["team"],
 };
 

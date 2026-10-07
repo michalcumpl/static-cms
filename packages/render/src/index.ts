@@ -117,6 +117,7 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
   return { ok: true, site: { pages, css, notFound }, warnings: validation.problems };
 }
 
+export { figureColumns } from "./blocks.js";
 export {
   type BusinessInfo,
   businessInfo,

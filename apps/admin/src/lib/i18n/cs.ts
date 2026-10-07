@@ -714,6 +714,10 @@ export const cs: Messages = {
       editBusiness: "Upravit údaje o podniku",
       question: "Otázka",
       answer: "Odpověď",
+      figureValue: "Číslo",
+      figureLabel: "Co znamená",
+      stepTitle: "Krok",
+      stepTextOptional: "Co se v něm děje (nepovinné)",
     },
     links: {
       empty:
@@ -748,6 +752,11 @@ export const cs: Messages = {
       },
       testimonials: { name: "Reference", description: "Co o vás říkají zákazníci" },
       faq: { name: "Otázky", description: "Časté dotazy a odpovědi na ně" },
+      figures: {
+        name: "Klíčová čísla",
+        description: "Vaše čísla na první pohled, s tím, co znamenají",
+      },
+      steps: { name: "Postup", description: "Jak to funguje, krok za krokem" },
     },
     items: {
       list_item: "Položka seznamu",
@@ -757,6 +766,8 @@ export const cs: Messages = {
       logo_item: "Logo",
       testimonial: "Reference",
       faq_item: "Otázka",
+      figure: "Číslo",
+      step: "Krok",
       other: "Položka",
     },
     handles: {

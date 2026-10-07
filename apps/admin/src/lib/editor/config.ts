@@ -10,6 +10,8 @@ import Contact from "./nodes/Contact.svelte";
 import ExternalLink from "./nodes/ExternalLink.svelte";
 import Faq from "./nodes/Faq.svelte";
 import FaqItem from "./nodes/FaqItem.svelte";
+import Figure from "./nodes/Figure.svelte";
+import Figures from "./nodes/Figures.svelte";
 import Gallery from "./nodes/Gallery.svelte";
 import GalleryItem from "./nodes/GalleryItem.svelte";
 import Hero from "./nodes/Hero.svelte";
@@ -31,6 +33,8 @@ import RichText from "./nodes/RichText.svelte";
 import ServiceItem from "./nodes/ServiceItem.svelte";
 import Services from "./nodes/Services.svelte";
 import Site from "./nodes/Site.svelte";
+import Step from "./nodes/Step.svelte";
+import Steps from "./nodes/Steps.svelte";
 import Subheading from "./nodes/Subheading.svelte";
 import Team from "./nodes/Team.svelte";
 import Testimonial from "./nodes/Testimonial.svelte";
@@ -38,11 +42,13 @@ import Testimonials from "./nodes/Testimonials.svelte";
 import TextWithImage from "./nodes/TextWithImage.svelte";
 import {
   insertFaqItem,
+  insertFigure,
   insertListItem,
   insertParagraph,
   insertPerson,
   insertRichText,
   insertServiceItem,
+  insertStep,
   insertTestimonial,
 } from "./transforms";
 
@@ -75,6 +81,10 @@ export const nodeComponents: Record<string, Component<any>> = {
   testimonial: Testimonial,
   faq: Faq,
   faq_item: FaqItem,
+  figures: Figures,
+  figure: Figure,
+  steps: Steps,
+  step: Step,
   image: Image,
   strong: MarkStrong,
   emphasis: MarkEmphasis,
@@ -112,6 +122,8 @@ export function createConfig(view: EditorView = "canvas") {
       person: insertPerson,
       testimonial: insertTestimonial,
       faq_item: insertFaqItem,
+      figure: insertFigure,
+      step: insertStep,
       rich_text: insertRichText,
     },
     create_commands_and_keymap: createCommandsAndKeymap,

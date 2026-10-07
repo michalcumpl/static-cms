@@ -96,6 +96,54 @@ export function insertFaqItem(tr: Tr): boolean {
   return true;
 }
 
+/** At most this many figures in a key figures block (figures-and-steps design decision 2). */
+export const MAX_FIGURES = 6;
+
+function createFigure(tr: Tr): string {
+  const id = tr.generate_id();
+  tr.create({ id, type: "figure", value: text(), label: text() });
+  return id;
+}
+
+function createStep(tr: Tr): string {
+  const id = tr.generate_id();
+  tr.create({ id, type: "step", title: text(), text: text() });
+  return id;
+}
+
+/** An empty figure, unless the block already has six (Enter and "Add item"). */
+export function insertFigure(tr: Tr): boolean {
+  const at = insertionPoint(tr);
+  const count = at ? ((tr.get(at.path) as NodeList | undefined)?.nodes.length ?? 0) : 0;
+  if (count >= MAX_FIGURES) return false;
+  insertAndFocus(tr, createFigure(tr), "value");
+  return true;
+}
+
+/** An empty step (Enter and "Add item"). */
+export function insertStep(tr: Tr): boolean {
+  insertAndFocus(tr, createStep(tr), "title");
+  return true;
+}
+
+/** Key figures: no heading and three empty figures, the caret in the first value. */
+export function insertFigures(tr: Tr): boolean {
+  const items = [createFigure(tr), createFigure(tr), createFigure(tr)];
+  const block = tr.generate_id();
+  tr.create({ id: block, type: "figures", heading: text(), items: list(items) });
+  insertAndFocus(tr, block, "items", 0, "value");
+  return true;
+}
+
+/** Steps: a placeholder heading and three empty steps, the caret in the heading. */
+export function insertSteps(tr: Tr): boolean {
+  const items = [createStep(tr), createStep(tr), createStep(tr)];
+  const block = tr.generate_id();
+  tr.create({ id: block, type: "steps", heading: text("Jak to funguje"), items: list(items) });
+  insertAndFocus(tr, block, "heading");
+  return true;
+}
+
 /** Creates a text block with a placeholder subheading and an empty paragraph; returns its ID. */
 export function createRichText(tr: Tr): string {
   const heading = tr.generate_id();
@@ -284,7 +332,9 @@ export type BlockType =
   | "opening_hours"
   | "call_to_action"
   | "testimonials"
-  | "faq";
+  | "faq"
+  | "figures"
+  | "steps";
 
 export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   hero: insertHero,
@@ -299,6 +349,8 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   call_to_action: insertCallToAction,
   testimonials: insertTestimonials,
   faq: insertFaq,
+  figures: insertFigures,
+  steps: insertSteps,
 };
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
@@ -318,6 +370,8 @@ export function insertableBlocks(blocks: { type: string }[], index: number): Blo
     "call_to_action",
     "testimonials",
     "faq",
+    "figures",
+    "steps",
   ];
   return heroAllowed ? ["hero", ...others] : others;
 }

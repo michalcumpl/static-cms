@@ -131,3 +131,96 @@ describe("a page with both blocks", () => {
     expect(messages).toEqual([]);
   });
 });
+
+/** "Kontakt" with key figures (with or without a heading) and three steps. */
+function figuresAndSteps(heading = "") {
+  const { doc, nodes } = editableDemoSite();
+  const figures = [
+    ["10+ let", "na trhu"],
+    ["40+", "zemí našich klientů"],
+    ["300 mil. Kč", "pod správou"],
+  ].map(([value, label], i) => {
+    const id = `fig_${i + 1}`;
+    nodes[id] = { id, type: "figure", value: text(value ?? ""), label: text(label ?? "") };
+    return id;
+  });
+  nodes.figures_1 = {
+    id: "figures_1",
+    type: "figures",
+    heading: text(heading),
+    items: list(figures),
+  };
+  const steps = [
+    ["Posouzení", "Projdeme vaše příjmy a plány."],
+    ["Žádost", ""],
+    ["Schválení", "Až do čerpání."],
+  ].map(([title, body], i) => {
+    const id = `step_${i + 1}`;
+    nodes[id] = { id, type: "step", title: text(title ?? ""), text: text(body ?? "") };
+    return id;
+  });
+  // Bold on "příjmy", as the editor marks it.
+  nodes.strong_income = { id: "strong_income", type: "strong" };
+  nodes.step_1.text.marks = [{ start_offset: 14, end_offset: 20, node_id: "strong_income" }];
+  nodes.steps_1 = {
+    id: "steps_1",
+    type: "steps",
+    heading: text("Jak to funguje"),
+    items: list(steps),
+  };
+  nodes.page_contact.blocks.nodes.push("figures_1", "steps_1");
+  return doc;
+}
+
+describe("key figures (figures-and-steps)", () => {
+  it("renders each figure's value and label in their own elements", () => {
+    const html = section(contactPage(figuresAndSteps()), "figures");
+    expect(html).not.toContain("<h2>");
+    expect(html).toMatch(
+      /<ul class="figure-list figure-columns-3">\s*<li class="figure">\s*<p class="figure-value">10\+ let<\/p>\s*<p class="figure-label">na trhu<\/p>/,
+    );
+    expect(html.match(/class="figure"/g)).toHaveLength(3);
+  });
+
+  it("renders its heading when it has one", () => {
+    expect(section(contactPage(figuresAndSteps("V číslech")), "figures")).toContain(
+      "<h2>V číslech</h2>",
+    );
+  });
+});
+
+describe("steps (figures-and-steps)", () => {
+  it("Steps markup: a heading and an ordered list of titled steps", () => {
+    const html = section(contactPage(figuresAndSteps()), "steps");
+    expect(html).toContain("<h2>Jak to funguje</h2>");
+    expect(html).toContain('<ol class="step-list">');
+    expect(html.match(/<h3 class="step-title">/g)).toHaveLength(3);
+    expect(html).toContain(
+      '<p class="step-text">Projdeme vaše <strong>příjmy</strong> a plány.</p>',
+    );
+  });
+
+  it("leaves out an empty text", () => {
+    const html = section(contactPage(figuresAndSteps()), "steps");
+    expect(html).toMatch(/<h3 class="step-title">Žádost<\/h3>\s*<\/li>/);
+  });
+
+  it("passes html-validate with both blocks", async () => {
+    const validator = new HtmlValidate({
+      extends: ["html-validate:recommended"],
+      rules: { "doctype-style": "off" },
+    });
+    const report = await validator.validateString(contactPage(figuresAndSteps("V číslech")));
+    const messages = report.results.flatMap((r) =>
+      r.messages.map((m) => `${m.line}:${m.column} ${m.ruleId}: ${m.message}`),
+    );
+    expect(messages).toEqual([]);
+  });
+});
+
+describe("figure columns", () => {
+  it("puts up to four figures in one row, and five or six in rows of three", async () => {
+    const { figureColumns } = await import("./blocks.js");
+    expect([1, 2, 3, 4, 5, 6].map(figureColumns)).toEqual([1, 2, 3, 4, 3, 3]);
+  });
+});

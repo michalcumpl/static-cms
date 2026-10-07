@@ -152,6 +152,8 @@ export const siteSchema = {
           "call_to_action",
           "testimonials",
           "faq",
+          "figures",
+          "steps",
         ],
         default_node_type: "rich_text",
       },
@@ -311,6 +313,36 @@ export const siteSchema = {
     properties: {
       question: { type: "text", allow_newlines: false },
       answer: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
+    },
+  },
+  /** Key figures: short values with a label each (figures-and-steps design decision 1). */
+  figures: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      items: { type: "node_array", node_types: ["figure"], default_node_type: "figure" },
+    },
+  },
+  figure: {
+    kind: "block",
+    properties: {
+      value: { type: "text", allow_newlines: false },
+      label: { type: "text", allow_newlines: false },
+    },
+  },
+  /** Numbered steps; the numbers come from the order, so they aren't stored. */
+  steps: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      items: { type: "node_array", node_types: ["step"], default_node_type: "step" },
+    },
+  },
+  step: {
+    kind: "block",
+    properties: {
+      title: { type: "text", allow_newlines: false },
+      text: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
     },
   },
   /** Points a collection block at one item of its collection, by the item's node ID. */

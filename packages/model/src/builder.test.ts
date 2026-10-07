@@ -66,6 +66,20 @@ function everything(lang: "cs" | "en") {
     blocks.team(t("Lektorky", "Teachers")),
     blocks.testimonials(t("Reference", "Testimonials")),
     blocks.faq(t("Otázky", "Questions")),
+    blocks.figures({
+      heading: t("V číslech", "In numbers"),
+      items: [
+        { value: "10+", label: t("let", "years") },
+        { value: "40+", label: t("zemí", "countries") },
+      ],
+    }),
+    blocks.steps({
+      heading: t("Jak to funguje", "How it works"),
+      items: [
+        { title: t("Přihláška", "Sign up"), text: t("Napište **nám**.", "Write to **us**.") },
+        { title: "Start" },
+      ],
+    }),
     blocks.callToAction({
       heading: t("Přihlaste se", "Sign up"),
       actions: [{ label: "Web", url: "https://example.org" }],
@@ -97,6 +111,8 @@ describe("siteBuilder", () => {
       "contact",
       "opening_hours",
       "call_to_action",
+      "figures",
+      "steps",
     ]) {
       expect(types, type).toContain(type);
     }

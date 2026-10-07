@@ -699,6 +699,10 @@ export const en = {
       editBusiness: "Edit business details",
       question: "Question",
       answer: "Answer",
+      figureValue: "Number",
+      figureLabel: "What it means",
+      stepTitle: "Step",
+      stepTextOptional: "What happens in it (optional)",
     },
     links: {
       empty:
@@ -733,6 +737,11 @@ export const en = {
       },
       testimonials: { name: "Testimonials", description: "What customers say about you" },
       faq: { name: "Questions", description: "Frequently asked questions and their answers" },
+      figures: {
+        name: "Key figures",
+        description: "Your numbers at a glance, with what they mean",
+      },
+      steps: { name: "Steps", description: "How it works, step by step" },
     },
     items: {
       list_item: "List item",
@@ -742,6 +751,8 @@ export const en = {
       logo_item: "Logo",
       testimonial: "Testimonial",
       faq_item: "Question",
+      figure: "Figure",
+      step: "Step",
       other: "Item",
     },
     handles: {

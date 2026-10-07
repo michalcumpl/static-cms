@@ -150,3 +150,108 @@ describe("call to action and testimonials", () => {
     ]);
   });
 });
+
+describe("key figures and steps (figures-and-steps)", () => {
+  /** The demo's home page with a figures block and, on "Kontakt", a steps block. */
+  function withBlocks(figureCount = 3) {
+    const { doc, nodes } = editableDemoSite();
+    const figureIds = Array.from({ length: figureCount }, (_, i) => {
+      const id = `fig_${i + 1}`;
+      nodes[id] = { id, type: "figure", value: text(`${i + 1}0+`), label: text("let") };
+      return id;
+    });
+    nodes.figures_1 = {
+      id: "figures_1",
+      type: "figures",
+      heading: text(""),
+      items: list(figureIds),
+    };
+    nodes.page_home.blocks.nodes.push("figures_1");
+    const stepIds = ["Posouzení", "Žádost", "Schválení"].map((title, i) => {
+      const id = `step_${i + 1}`;
+      nodes[id] = { id, type: "step", title: text(title), text: text("") };
+      return id;
+    });
+    nodes.steps_1 = {
+      id: "steps_1",
+      type: "steps",
+      heading: text("Jak to funguje"),
+      items: list(stepIds),
+    };
+    nodes.page_contact.blocks.nodes.push("steps_1");
+    return { doc, nodes };
+  }
+  const found = (doc: unknown, code: string) =>
+    validateSite(doc).problems.filter((p) => p.code === code);
+
+  it("Valid figures and steps", () => {
+    const { doc } = withBlocks();
+    expect(validateSite(doc).problems.filter((p) => p.severity === "error")).toEqual([]);
+  });
+
+  it("Figure without a label", () => {
+    const { doc, nodes } = withBlocks();
+    nodes.fig_2.value = text("40+");
+    nodes.fig_2.label = text("");
+    expect(found(doc, "empty-label")).toEqual([
+      expect.objectContaining({
+        nodeId: "fig_2",
+        severity: "error",
+        message: 'Figure 2 on "Úvod" needs its label.',
+      }),
+    ]);
+  });
+
+  it("a figure without its number", () => {
+    const { doc, nodes } = withBlocks();
+    nodes.fig_1.value = text(" ");
+    expect(found(doc, "empty-value")[0]).toMatchObject({ nodeId: "fig_1", property: "value" });
+  });
+
+  it("Seven figures", () => {
+    const { doc } = withBlocks(7);
+    expect(found(doc, "too-many-items")).toEqual([
+      expect.objectContaining({ nodeId: "figures_1", severity: "error" }),
+    ]);
+    expect(found(withBlocks(6).doc, "too-many-items")).toEqual([]);
+  });
+
+  it("Long value", () => {
+    const { doc, nodes } = withBlocks();
+    nodes.fig_3.value = text("více než tři sta milionů korun českých");
+    const [warning] = found(doc, "long-figure");
+    expect(warning).toMatchObject({ nodeId: "fig_3", severity: "warning" });
+    expect(validateSite(doc).problems.filter((p) => p.severity === "error")).toEqual([]);
+  });
+
+  it("Steps without a heading", () => {
+    const { doc, nodes } = withBlocks();
+    nodes.steps_1.heading = text("");
+    expect(found(doc, "empty-heading")[0]).toMatchObject({
+      nodeId: "steps_1",
+      severity: "error",
+      message: expect.stringContaining('"Kontakt"'),
+    });
+  });
+
+  it("a step without a title", () => {
+    const { doc, nodes } = withBlocks();
+    nodes.step_2.title = text("");
+    expect(found(doc, "empty-title")[0]).toMatchObject({
+      nodeId: "step_2",
+      message: 'Step 2 on "Kontakt" needs its title.',
+    });
+  });
+
+  it("warns about empty blocks", () => {
+    const { doc, nodes } = withBlocks();
+    nodes.figures_1.items = list([]);
+    nodes.steps_1.items = list([]);
+    expect(found(doc, "empty-block").map((p) => [p.nodeId, p.severity])).toEqual(
+      expect.arrayContaining([
+        ["figures_1", "warning"],
+        ["steps_1", "warning"],
+      ]),
+    );
+  });
+});
