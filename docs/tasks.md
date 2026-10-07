@@ -45,6 +45,13 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
 
 - [ ] **Website creation guide, step by step:** the "Tell us about your business" wizard (type
   of business → template suggestion → name, contact, hours → services → photos → preview).
+- [ ] **Deleting a website:** owners only, confirmed by typing its name, offline at once,
+  restorable for 30 days (`project-deletion`).
+- [ ] **Clean up the database:** delete the old projects with `project-deletion` (Atelier
+  Aniděti's Netlify site included), then flatten the migrations into one, keeping accounts and
+  the workspace (copy the database first; check the schema matches).
+- [ ] **Example sites:** load the three launch examples into our database (`example-sites`):
+  content in `apps/admin/data/examples/`, not committed; their pages as the first layouts.
 - [ ] **Cropping and light editing of uploaded images:** crop to the shape a section needs,
   focal point, rotate. Done in the browser; the server keeps the original and derives variants.
 
@@ -58,9 +65,12 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
   `render/blocks.ts`, styles in the stylesheet, and an editor card. After A, a section is a
   renderer that reads collections plus template-scoped options. Owners place blocks in the
   editor; custom blocks made by customers are out (no free-form page builder).
-- [ ] **Target groups:** financial advisory and law go to *Professional*. One-person schools,
-  tutors and coaches go to *Personal Professional*. Single- vs. multi-page and image/video hero
-  vs. classic header are template variants, not extra templates.
+- [ ] **Launch templates:** *Education* (after-school activities, courses, tutors), *Law* and
+  *Financial advisory*, each with a migrated example site (Aniděti, Mareš Partners, Mortgage
+  Specialist). Local Services, Hospitality and Personal Professional after launch. Single- vs.
+  multi-page and image/video hero vs. classic header are template variants, not extra templates.
+- [ ] **Layouts:** page recipes (ordered blocks, no styling) that make up a template's pages and
+  are offered by "Add page" and the guided setup.
 - [ ] **Lighthouse 100** for generated sites: Lighthouse CI on every template and variant, with
   mobile settings, failing the build below 100.
 

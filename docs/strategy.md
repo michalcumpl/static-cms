@@ -1,6 +1,6 @@
 # Product strategy
 
-*Refreshed 2026-10-03. The roadmap that follows from it is in [`roadmap.md`](roadmap.md), open work
+*Refreshed 2026-10-03; launch templates and layouts decided 2026-10-07. The roadmap that follows from it is in [`roadmap.md`](roadmap.md), open work
 in [`tasks.md`](tasks.md).*
 
 ## Webmio
@@ -46,9 +46,9 @@ SMBs"**, because that still sells the mental model of a CMS. We build the layer 
    `Media[]`. Pages are generated views of this data: one service shows up in the homepage
    highlights, the service index, its own page, the navigation, the metadata and the structured
    data. AI later edits `service.price`, not a visual page.
-3. **Templates are complete website systems:** page architecture, typography, spacing,
-   components, SEO defaults, schema.org markup, responsive behaviour, supported content types and
-   navigation. We ship a few excellent ones, never a catalogue.
+3. **Templates are complete website systems:** page architecture (a set of layouts),
+   typography, spacing, components, SEO defaults, schema.org markup, responsive behaviour,
+   supported content types and navigation. We ship a few excellent ones, never a catalogue.
 4. **Your content is yours; your design is replaceable.** Template switching is a first-class
    feature: choose another template, preview it, publish it, and nothing gets rewritten.
 5. **Static publishing is invisible.** The customer sees *Save → Preview → Publish → ✓ Live*.
@@ -58,9 +58,9 @@ SMBs"**, because that still sells the mental model of a CMS. We build the layer 
    keeps the previous version. If anything fails: *"Publishing failed. We kept your previous
    version online. Try again."*
 7. **No page builder, as a hard rule.** No arbitrary columns, nested blocks, pixel positioning,
-   per-page typography or CSS editor. Customisation is controlled: **brand** (logo, colours,
-   fonts), **layout** (template, navigation, homepage sections on or off) and **content** (the
-   business objects). After the guided setup, owners can use the **block editor** to add pages
+   per-page typography or CSS editor. Customisation is controlled: **brand** (the design: logo,
+   colours, fonts), **structure** (template, layouts, navigation, homepage sections on or off)
+   and **content** (the business objects). After the guided setup, owners can use the **block editor** to add pages
    and arrange *business blocks* (services, team, contact, FAQ…) on them. Those blocks read the
    same data and are styled by the template, so the editor stays inside the rule.
 8. **Website health over analytics or AI.** A daily check (SSL, domain, pages published, no
@@ -75,18 +75,50 @@ SMBs"**, because that still sells the mental model of a CMS. We build the layer 
 
 ## Templates
 
-Four at launch:
+Three at launch, each proven on a real website migrated to Webmio as a presentation example (the
+designs needn't match the originals):
 
-| Template | For | Covers from our task list |
+| Template | For | Example |
 | --- | --- | --- |
-| **Local Services** | plumbers, electricians, cleaners, repairs | |
-| **Professional** | consultants, accountants, lawyers, agencies | financial advisory, law |
-| **Hospitality** | hotels, B&Bs, cafés, restaurants | |
-| **Personal Professional** | therapists, coaches, photographers, freelancers | one-person schools, tutors |
+| **Education** | after-school activities, clubs, courses, small schools, tutors | [Aniděti](https://www.anideti.cz/), an after-school animation club for primary school children |
+| **Law** | law firms, attorneys, notaries | [Mareš Partners](https://www.marespartners.cz/), a law firm |
+| **Financial advisory** | mortgage brokers, independent advisers, accountants | [Mortgage Specialist](https://www.mortgagespecialist.cz/), an independent mortgage broker |
+
+After launch: **Local Services** (plumbers, electricians, cleaners, repairs), **Hospitality**
+(hotels, B&Bs, cafés, restaurants) and **Personal Professional** (therapists, coaches,
+photographers, freelancers).
+
+The examples are built in our own database, not committed: their texts, people and photos belong
+to their owners. The templates' automated checks run on fixture sites with invented content.
 
 Because the platform owns the data model, any template produces a coherent business website.
 Single-page vs. multi-page, and a full-screen image or video hero vs. a classic header, are
 choices *inside* a template (a variant or a homepage-section option), not separate templates.
+
+### Templates, designs and layouts
+
+Three layers, each with one job:
+
+| Layer | What it decides | Owned by | On a template switch |
+| --- | --- | --- | --- |
+| **Template** | the website system: which pages exist, how every block is rendered (typography scale, spacing tokens, block variants), navigation, SEO and schema.org defaults | us | replaced |
+| **Design** | the owner's brand: colours, fonts, logo, corner radius | the owner | kept |
+| **Layout** | a page recipe: an ordered list of blocks with their settings, such as "Services page = hero, services (all), questions, call to action" | us; the owner picks one | kept, restyled |
+
+- **Layouts carry no styling.** No spacing, widths or alignment: those are the template's tokens.
+  A layout that styled itself would overlap the template and break switching.
+- **A template's page architecture is a set of layouts.** "Homepage sections on or off" is a
+  layout with optional blocks. Layouts are data, like the rest of the template.
+- **Owners meet layouts when a page is made:** the guided setup builds the first pages from them,
+  and "Add page" offers them ("About us", "Services", "Pricing", "Contact"), already filled from
+  the collections, instead of an empty page.
+- **Most layouts are shared** across templates (Contact, About, Services, FAQ); a template adds
+  its own where its trade needs one (Education: "Courses" with prices and the next term).
+- **The examples show which layouts a template needs.** Aniděti's "Jak pracujeme", "Nabídka
+  kroužků" and "Lektorky" are the Education template's How we work, Courses and Teachers
+  layouts.
+- **After a page is made it's the owner's:** the block editor changes it freely within the
+  rules, and nothing links it back to the layout.
 
 ## Pricing
 
@@ -108,8 +140,8 @@ Wix around $17, GoDaddy around $10.
 
 | Area | In |
 | --- | --- |
-| Admin | Business, Services, Team, Testimonials, FAQs, Media, Website settings |
-| Templates | 4, mobile-first, template switching |
+| Admin | Business, Services, Team, Testimonials, FAQs, Media, Website settings; deleting a website (restorable for 30 days) |
+| Templates | 3 (Education, Law, Financial advisory), mobile-first, layouts, template switching |
 | Publishing | preview, static build, validation, deploy, rollback, custom domain, SSL |
 | Reliability | backups, version history, health checks |
 | Pricing | €79 / 1 899 Kč a year excl. VAT, one plan, free until the first publish |
@@ -128,7 +160,11 @@ Decided 2026-10-05:
   site; after that, owners edit it in the block editor: add pages, add, move and remove business
   blocks. Blocks that show collections (services, team, testimonials, FAQs) display the shared
   data rather than holding copies, so edits in the control panel and template switching still
-  work. Template switching keeps the owner's pages and blocks and restyles them.
+  work. Template switching keeps the owner's pages and blocks and restyles them. New pages start
+  from a layout.
+- **Owners can delete a website** (decided 2026-10-07). Workspace owners only, confirmed by
+  typing its name; a published website goes offline. It can be restored for 30 days, then it's
+  gone with its versions and images.
 - **Netlify publishing: keep it until own hosting replaces it.** Customers never choose a
   publishing target.
 

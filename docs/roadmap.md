@@ -278,7 +278,12 @@ Still open: open sign-up (a switch, when billing exists) and Google sign-in.
 ## After the strategy refresh
 
 Milestones in order. A private beta for friends (F) starts as soon as A–E work with at least two
-templates; the other two templates can land during the beta.
+of the three launch templates (Education, Law, Financial advisory); the third can land during the
+beta. The other templates come after launch.
+
+**Next steps** (2026-10-07): `project-deletion`, then the cleanup (old projects deleted,
+migrations flattened), then `example-sites`; layouts become part of the model with
+`template-system`.
 
 **Planned changes**, in order. A → B → C build on each other's data model and must go in
 sequence. D doesn't depend on them and can run in parallel; it's the longest pole before the
@@ -291,11 +296,13 @@ beta.
 | 3 | A | [`business-locations`](../openspec/changes/archive/2026-10-06-business-locations/) | several locations, each with address, hours and contact | done |
 | 4 | B | [`control-panel`](../openspec/changes/archive/2026-10-07-control-panel/) | the website home: a dashboard and the Business, Website and Publish sections, replacing the project tabs | done |
 | 4b | B | [`offer-and-about`](../openspec/changes/archive/2026-10-07-offer-and-about/) | What you offer (services, FAQs) and About you (team, testimonials): forms per item, with formatting | done |
-| 5 | B | `image-cropping` | crop, focal point and rotation in the media library | next |
+| 4c | B | `project-deletion` | owners delete a website (typing its name; a published one goes offline) and can restore it for 30 days | next |
+| 4d | B | `example-sites` | a command that loads a site document and its images into a new project; the three launch examples (Aniděti, Mareš Partners, Mortgage Specialist) built with it in our own database, not committed. Before it: the old projects deleted, the database migrations flattened into one | |
+| 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
-| 7 | C | `template-system` | the template contract, homepage sections on or off, template versions | |
+| 7 | C | `template-system` | the template contract, layouts (page recipes, also offered by "Add page"), homepage sections on or off, template versions | |
 | 8 | C | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | |
-| 9 | C | `template-local-services`, `template-professional` | the first two templates, before the beta | |
+| 9 | C | `template-education`, `template-law`, `template-finance` | the three launch templates, each checked against its example site; two before the beta | |
 | 10 | C | `template-switching` | choose, preview with your own content, publish | |
 | 11 | D | `own-hosting` | S3 + CloudFront, `<site>.webmio.site`, atomic deploys, rollback | |
 | 12 | D | `safe-publishing` | the publish pipeline: link check, deploy verification, previous version kept on failure | |
@@ -303,7 +310,7 @@ beta.
 | 14 | E | `contact-form` | form endpoint, email to the owner, spam protection | |
 | 15 | E | `website-health` | daily checks, *Website healthy*, alerts | |
 | 16 | F | `admin-on-aws`, `presentation-site`, `operator-console`, legal documents | the private beta | |
-| 17 | C | `template-hospitality`, `template-personal-professional` | the other two templates, during the beta | |
+| 17 | C | `template-local-services`, `template-hospitality`, `template-personal-professional` | the templates after launch | |
 
 ### A. Business data as the source of truth
 
@@ -350,6 +357,35 @@ beta.
   and photos from the media library, Save and Undo. Each list says which pages show it. Problems
   about items lead to their field; other languages translate the texts only.
 
+- **Deleting a website** (`project-deletion`, next): workspace owners only (members can't),
+  from a "Delete website" area at the bottom of the Website section, confirmed by typing the
+  website's name. A published website is taken offline (its Netlify site deleted; our own
+  hosting later), and the confirmation says so. Deleted websites are listed in the workspace for
+  30 days and can be restored; then the project, its versions, publishes and images are removed
+  for good.
+- **Cleanup before the examples** (after `project-deletion`, decided 2026-10-07):
+  - **The old projects go:** Atelier Aniděti, RV Finance, cumpl.cz, Kubuv huliweb and test are
+    deleted with the new feature. Atelier Aniděti's Netlify site goes with it.
+  - **The migrations are flattened:** the seven migrations become one, generated from the
+    schema. A fresh database built from it must have exactly the schema of the existing one.
+    The existing database keeps its data: its migration record is rewritten to the new
+    migration, so accounts, the workspace and its Netlify connection stay. The database is
+    copied before anything changes.
+- **Example sites** (`example-sites`): `pnpm admin load-site <folder>` creates a project from a
+  site document and a folder of images (later also the templates' fixture sites). The three
+  launch examples are migrated with it into our own database:
+  - **Aniděti** (Czech, Education): the courses and prices as services, the two teachers as
+    people, the two places as locations, contact details and photos.
+  - **Mareš Partners** (Czech and English, Law): the eight practice areas as services, the
+    awards, contact details.
+  - **Mortgage Specialist** (English as the primary language, Financial advisory): services,
+    the key figures, reviews as testimonials, a free-consultation call to action.
+
+  Built with today's blocks and theme presets, close to the originals in spirit rather than
+  copies. Their pages are written as page recipes, the first layouts. The content (documents
+  and images) lives in `apps/admin/data/examples/`, which git ignores: the repository is
+  public, and the texts, people and photos belong to the businesses.
+
 - The website's home in the admin follows the customer's mental model: **Overview** (name,
   ● Live, address), then **Business** (company, hours, locations, contact), **What you offer**
   (services, pricing, FAQs), **About you** (team, photos, testimonials), **Website** (design,
@@ -369,7 +405,16 @@ beta.
   navigation, typography and spacing, SEO and schema.org defaults, homepage sections that can be
   switched on or off, and variants (single- or multi-page, image or video hero vs. classic
   header).
-- **Four templates:** Local Services, Professional, Hospitality, Personal Professional.
+- **Template, design, layout** (strategy, "Templates, designs and layouts"): the template is the
+  website system and owns the spacing tokens; the design is the owner's brand and survives a
+  switch; a layout is a page recipe, an ordered list of blocks with no styling. A template's page
+  architecture is a set of layouts, mostly shared ones (Contact, About, Services, FAQ) plus its
+  own. The guided setup and "Add page" create pages from layouts; after that a page is the
+  owner's.
+- **Three launch templates:** Education (after-school activities, courses, tutors), Law and
+  Financial advisory, each checked against its migrated example site by hand and against fixture
+  sites with invented content in CI. Local Services, Hospitality and Personal Professional
+  follow after launch.
 - **Template switching:** choose → preview with your own content → publish; nothing rewritten.
   Pages and blocks the owner made in the editor are kept and restyled. Collections a template
   doesn't show stay stored, and the preview says what won't be visible.
