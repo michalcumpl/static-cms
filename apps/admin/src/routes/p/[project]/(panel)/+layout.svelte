@@ -11,17 +11,20 @@ import type { LayoutProps } from "./$types";
 
 // The project's panel (control-panel design decision 1): one header, the section bar, a row of
 // subpages in Website and Publish, and the page under them. The pages that show one language
-// (Business, Website, Pages and menu, Versions) take it from `?lang=`, chosen here.
+// (Business, What you offer, About you, Website, Pages and menu, Versions) take it from `?lang=`,
+// chosen here.
 let { data, children }: LayoutProps = $props();
 const i18n = getI18n();
 
-type Section = "dashboard" | "business" | "website" | "publish";
+type Section = "dashboard" | "business" | "offer" | "about" | "website" | "publish";
 type Subpage = "site" | "pages" | "languages" | "domain" | "publishing" | "versions";
 
 /** Each page of the panel: its section, its subpage, and whether it shows one language. */
 const ROUTES: Record<string, { section: Section; subpage?: Subpage; perLanguage?: boolean }> = {
   "": { section: "dashboard" },
   "/business": { section: "business", perLanguage: true },
+  "/offer": { section: "offer", perLanguage: true },
+  "/about": { section: "about", perLanguage: true },
   "/website": { section: "website", subpage: "site", perLanguage: true },
   "/website/pages": { section: "website", subpage: "pages", perLanguage: true },
   "/website/languages": { section: "website", subpage: "languages" },
@@ -45,6 +48,8 @@ const keep = (href: string) =>
 const sections = $derived<{ section: Section; href: string }[]>([
   { section: "dashboard", href: paths.dashboard },
   { section: "business", href: paths.business },
+  { section: "offer", href: paths.offer },
+  { section: "about", href: paths.about },
   { section: "website", href: paths.website },
   { section: "publish", href: paths.publishPage },
 ]);

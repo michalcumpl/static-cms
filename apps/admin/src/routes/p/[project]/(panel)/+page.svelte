@@ -33,10 +33,6 @@ const logoUrl = $derived(
     : undefined,
 );
 const editDesign = $derived(`${paths.edit()}?tab=theme`);
-// Until the What you offer and About you sections exist, their cards open the editor where
-// those items are (control-panel design decision 1).
-const offerHref = $derived(paths.edit(summary.offerPageId));
-const aboutHref = $derived(paths.edit(summary.aboutPageId));
 </script>
 
 <svelte:head>
@@ -95,11 +91,11 @@ const aboutHref = $derived(paths.edit(summary.aboutPageId));
       </Card>
       <Card title={i18n.t("dashboard.offer")} id="offer-card">
         <p>{i18n.t("dashboard.services", { count: summary.services })} · {i18n.t("dashboard.questions", { count: summary.questions })}</p>
-        <a href={offerHref}>{i18n.t("dashboard.editOnPage")}</a>
+        <a href={paths.offer}>{i18n.t("dashboard.open", { section: i18n.t("project.sections.offer") })}</a>
       </Card>
       <Card title={i18n.t("dashboard.about")} id="about-card">
         <p>{i18n.t("dashboard.people", { count: summary.people })} · {i18n.t("dashboard.testimonials", { count: summary.testimonials })}</p>
-        <a href={aboutHref}>{i18n.t("dashboard.editOnPage")}</a>
+        <a href={paths.about}>{i18n.t("dashboard.open", { section: i18n.t("project.sections.about") })}</a>
       </Card>
     </div>
     <div class="column">

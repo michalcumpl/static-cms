@@ -1,6 +1,6 @@
 <script lang="ts">
-import { Command, define_keymap, KeyMapper, Svedit } from "svedit";
-import { setContext, untrack } from "svelte";
+import { type Command, Svedit } from "svedit";
+import { untrack } from "svelte";
 import { goto } from "$app/navigation";
 import BlockHandles from "$lib/editor/BlockHandles.svelte";
 import BlockPanel from "$lib/editor/BlockPanel.svelte";
@@ -14,7 +14,12 @@ import MediaLibrary from "$lib/editor/MediaLibrary.svelte";
 import PageSettings from "$lib/editor/PageSettings.svelte";
 import PagesSidebar from "$lib/editor/PagesSidebar.svelte";
 import ProblemsPanel from "$lib/editor/ProblemsPanel.svelte";
-import { saveStatusText, useMediaLibrary, useUnsavedGuard } from "$lib/editor/screen.svelte";
+import {
+  saveStatusText,
+  useEditorKeys,
+  useMediaLibrary,
+  useUnsavedGuard,
+} from "$lib/editor/screen.svelte";
 import { EditorState, setEditor } from "$lib/editor/state.svelte";
 import { canInsertItem, insertItem, isFixedList } from "$lib/editor/structure";
 import ThemeSettings from "$lib/editor/ThemeSettings.svelte";
@@ -49,44 +54,7 @@ untrack(() => {
 const session = editor.session;
 
 // Svedit pushes the focused document's shortcuts on top of the app-level ones.
-const keyMapper = new KeyMapper();
-setContext("key_mapper", keyMapper);
-class SaveCommand extends Command {
-  override execute() {
-    return editor.save();
-  }
-}
-/**
- * Undo and redo from the sidebar and the page settings panel. Svedit handles them while the
- * canvas has focus; elsewhere (dialogs included) inputs keep the browser's own undo.
- */
-function inHistoryKeysArea(): boolean {
-  const focused = document.activeElement;
-  return Boolean(focused?.closest("[data-history-keys]") && !focused.closest("dialog"));
-}
-class PanelUndoCommand extends Command {
-  override is_enabled() {
-    return inHistoryKeysArea();
-  }
-  override execute() {
-    editor.undo();
-  }
-}
-class PanelRedoCommand extends Command {
-  override is_enabled() {
-    return inHistoryKeysArea();
-  }
-  override execute() {
-    editor.redo();
-  }
-}
-keyMapper.push_scope(
-  define_keymap({
-    "meta+s,ctrl+s": [new SaveCommand({} as never)],
-    "meta+z,ctrl+z": [new PanelUndoCommand({} as never)],
-    "meta+shift+z,ctrl+shift+z,ctrl+y": [new PanelRedoCommand({} as never)],
-  }),
-);
+const keyMapper = useEditorKeys(editor);
 
 // The canvas follows the theme as it's edited (theme-and-branding design.md decision 8). The
 // theme node is only replaced when it changes, so typing in a page doesn't rebuild the CSS.

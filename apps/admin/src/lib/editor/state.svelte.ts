@@ -3,7 +3,7 @@ import { type Document, type DocumentPath, Session } from "svedit";
 import { getContext, onDestroy, setContext } from "svelte";
 import type { ProjectPaths } from "../project-paths";
 import { type BlockView, pageCollections, provideCanvasContext } from "./collections";
-import { createConfig } from "./config";
+import { createConfig, type EditorView } from "./config";
 import { editorSchema } from "./schema";
 import type { ChosenImage } from "./transforms";
 import type { EditorTranslations } from "./translations";
@@ -122,12 +122,13 @@ export class EditorState {
       primaryLang: string;
       languages: readonly EditorLanguageInfo[];
     } = { lang: "cs", primaryLang: "cs", languages: [] },
+    view: EditorView = "canvas",
   ) {
     this.lang = languages.lang;
     this.primaryLang = languages.primaryLang;
     this.languages = languages.languages;
     const document = data.document as Document;
-    this.session = new Session(editorSchema, document, createConfig());
+    this.session = new Session(editorSchema, document, createConfig(view));
     this.siteId = document.document_id;
     provideCanvasContext(this.session, {
       views: () => this.collections,
@@ -322,6 +323,11 @@ export function registerActiveEditor(project: string, editor: EditorState): () =
 
 export function activeEditor(project: string): EditorState | undefined {
   return active?.project === project ? active.editor : undefined;
+}
+
+/** Gives the components below `editor` without making it the open editor (a panel section). */
+export function provideEditor(editor: EditorState): EditorState {
+  return setContext(KEY, editor);
 }
 
 export function getEditor(): EditorState {

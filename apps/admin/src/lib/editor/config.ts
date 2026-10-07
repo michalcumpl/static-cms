@@ -1,5 +1,10 @@
 import type { Component } from "svelte";
 import { createCommandsAndKeymap } from "./commands";
+import FormPerson from "./form/FormPerson.svelte";
+import FormQuestion from "./form/FormQuestion.svelte";
+import FormService from "./form/FormService.svelte";
+import FormSite from "./form/FormSite.svelte";
+import FormTestimonial from "./form/FormTestimonial.svelte";
 import CallToAction from "./nodes/CallToAction.svelte";
 import Contact from "./nodes/Contact.svelte";
 import ExternalLink from "./nodes/ExternalLink.svelte";
@@ -77,11 +82,27 @@ export const nodeComponents: Record<string, Component<any>> = {
   internal_link: MarkLink,
 };
 
-/** Svedit session config for the site editor. */
-export function createConfig() {
+/**
+ * What the session renders: the page canvas, or the panel's list forms, which render the site
+ * as the section's lists and the items as labelled fields (offer-and-about decision 2).
+ */
+export type EditorView = "canvas" | "form";
+
+// biome-ignore lint/suspicious/noExplicitAny: node components take Svedit's path props.
+const formComponents: Record<string, Component<any>> = {
+  ...nodeComponents,
+  site: FormSite,
+  service_item: FormService,
+  faq_item: FormQuestion,
+  person: FormPerson,
+  testimonial: FormTestimonial,
+};
+
+/** Svedit session config for the site editor, or for the panel's list forms. */
+export function createConfig(view: EditorView = "canvas") {
   return {
     generate_id: () => `n${crypto.randomUUID()}`,
-    node_components: nodeComponents,
+    node_components: view === "form" ? formComponents : nodeComponents,
     // Default node types of each node_array (Enter at the end of a text, or typing in a gap).
     inserters: {
       paragraph: insertParagraph,

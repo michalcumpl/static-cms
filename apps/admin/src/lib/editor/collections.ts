@@ -1,4 +1,6 @@
 import {
+  COLLECTION_BLOCK_TYPES,
+  COLLECTION_NAMES,
   COLLECTIONS,
   type CollectionBlockType,
   type CollectionName,
@@ -395,6 +397,60 @@ export function setBlockMode(
 }
 
 /**
+ * A collection as the panel's list forms show it: like a block showing all of it, so the canvas's
+ * item operations (`addItem`, `moveItem`, `duplicateItem`) act on the collection alone and leave
+ * blocks showing chosen items as they are (offer-and-about decision 3).
+ */
+export function collectionView(
+  doc: { document_id: string; nodes: Record<string, unknown> },
+  collection: CollectionName,
+): BlockView {
+  const site = doc.nodes[doc.document_id] as AnyNode | undefined;
+  const type = COLLECTION_BLOCK_TYPES.find((t) => COLLECTIONS[t].collection === collection);
+  return {
+    blockId: "",
+    blockIndex: -1,
+    type: type ?? "services",
+    collection,
+    mode: "all",
+    items: nodesOf(site?.[collection]).map((itemId, index) => ({
+      itemId,
+      index,
+      refIndex: -1,
+      position: index,
+      editable: true,
+    })),
+    wholeList: true,
+  };
+}
+
+/**
+ * The pages that show a collection, in page order: through a block showing all of it, or one
+ * that chose some of its items. With `itemId`, the pages that show that item.
+ */
+export function pagesShowing(
+  doc: { document_id: string; nodes: Record<string, unknown> },
+  collection: CollectionName,
+  itemId?: string,
+): string[] {
+  const nodes = doc.nodes as Record<string, AnyNode | undefined>;
+  const site = nodes[doc.document_id];
+  const shows = (blockId: string) => {
+    const block = nodes[blockId];
+    if (!block || !isCollectionBlockType(block.type)) return false;
+    if (COLLECTIONS[block.type].collection !== collection) return false;
+    if (block.show !== "chosen") {
+      return itemId === undefined || nodesOf(site?.[collection]).includes(itemId);
+    }
+    const refs = nodesOf(block.chosen);
+    return itemId === undefined
+      ? refs.length > 0
+      : refs.some((refId) => nodes[refId]?.item_id === itemId);
+  };
+  return nodesOf(site?.pages).filter((id) => nodesOf(nodes[id]?.blocks).some(shows));
+}
+
+/**
  * The pages other than `pageId` that show an item: through a block showing all of its
  * collection, or one that chose it.
  */
@@ -403,16 +459,8 @@ export function otherPagesShowing(
   itemId: string,
   pageId: string,
 ): string[] {
-  const nodes = doc.nodes as Record<string, AnyNode | undefined>;
-  const site = nodes[doc.document_id];
-  const shows = (blockId: string) => {
-    const block = nodes[blockId];
-    if (!block || !isCollectionBlockType(block.type)) return false;
-    const { collection } = COLLECTIONS[block.type];
-    if (block.show !== "chosen") return nodesOf(site?.[collection]).includes(itemId);
-    return nodesOf(block.chosen).some((refId) => nodes[refId]?.item_id === itemId);
-  };
-  return nodesOf(site?.pages).filter(
-    (id) => id !== pageId && nodesOf(nodes[id]?.blocks).some(shows),
-  );
+  const site = doc.nodes[doc.document_id] as AnyNode | undefined;
+  const collection = COLLECTION_NAMES.find((name) => nodesOf(site?.[name]).includes(itemId));
+  if (!collection) return [];
+  return pagesShowing(doc, collection, itemId).filter((id) => id !== pageId);
 }

@@ -108,16 +108,8 @@ describe("call to action and testimonials", () => {
     nodes.t_petr.quote = text("");
     nodes.t_petr.name = text("");
     expect(problems(doc).map((p) => [p.code, p.nodeId, p.message])).toEqual([
-      [
-        "empty-quote",
-        "t_petr",
-        "Testimonial 2 needs its quote; edit it in a testimonials block on any page.",
-      ],
-      [
-        "empty-name",
-        "t_petr",
-        "Testimonial 2 needs the person's name; edit it in a testimonials block on any page.",
-      ],
+      ["empty-quote", "t_petr", "Testimonial 2 needs its quote; edit it in About you."],
+      ["empty-name", "t_petr", "Testimonial 2 needs the person's name; edit it in About you."],
     ]);
   });
 

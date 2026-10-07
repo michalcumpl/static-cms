@@ -47,10 +47,6 @@ export interface SiteSummary {
   people: number;
   testimonials: number;
   pages: number;
-  /** The first page with a services or questions block, for the What you offer card. */
-  offerPageId: string | undefined;
-  /** The first page with a team or testimonials block, for the About you card. */
-  aboutPageId: string | undefined;
 }
 
 export function siteSummary(doc: Doc): SiteSummary {
@@ -58,10 +54,6 @@ export function siteSummary(doc: Doc): SiteSummary {
   const business = doc.nodes[site.business] ?? {};
   const locations = ids(business.locations).map((id) => doc.nodes[id] ?? {});
   const pages = ids(site.pages);
-  const firstPageWith = (types: string[]) =>
-    pages.find((pageId) =>
-      ids(doc.nodes[pageId]?.blocks).some((blockId) => types.includes(doc.nodes[blockId]?.type)),
-    );
   return {
     siteName: String(site.name ?? ""),
     businessName: String(business.name || site.name || ""),
@@ -72,7 +64,5 @@ export function siteSummary(doc: Doc): SiteSummary {
     people: ids(site.team).length,
     testimonials: ids(site.testimonials).length,
     pages: pages.length,
-    offerPageId: firstPageWith(["services", "faq"]),
-    aboutPageId: firstPageWith(["team", "testimonials"]),
   };
 }

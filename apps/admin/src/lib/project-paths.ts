@@ -9,6 +9,9 @@ export interface ProjectPaths {
   dashboard: string;
   /** The Business section (`?lang=` for other languages than the primary). */
   business: string;
+  /** The What you offer and About you sections (`?lang=`), offer-and-about decision 1. */
+  offer: string;
+  about: string;
   /** The Website section and its subpages (`?lang=` on those that show one language). */
   website: string;
   websitePages: string;
@@ -64,6 +67,8 @@ export function projectPaths(projectId: string, lang?: string): ProjectPaths {
   return {
     dashboard: base,
     business: `${base}business${query}`,
+    offer: `${base}offer${query}`,
+    about: `${base}about${query}`,
     website: `${base}website${query}`,
     websitePages: `${base}website/pages${query}`,
     websiteLanguages: `${base}website/languages`,

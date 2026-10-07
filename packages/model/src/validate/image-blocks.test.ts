@@ -45,7 +45,7 @@ describe("image blocks", () => {
       ["empty-name", "person_martina", "site"],
     ]);
     expect(found[0]?.message).toContain("description");
-    expect(found[1]?.message).toBe("Person 2 needs a name; edit it in a team block on any page.");
+    expect(found[1]?.message).toBe("Person 2 needs a name; edit it in About you.");
   });
 
   it("warns about empty galleries, teams and logo rows, and stays valid", () => {

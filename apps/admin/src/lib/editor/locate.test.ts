@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { demoSite } from "$lib/server/demo";
-import { locateMark, locateNode, selectionFor, settingsFieldId, settingsTarget } from "./locate";
+import {
+  listFieldId,
+  listTarget,
+  listTargetOfFieldId,
+  locateMark,
+  locateNode,
+  selectionFor,
+  settingsFieldId,
+  settingsTarget,
+} from "./locate";
 
 type Doc = Parameters<typeof locateNode>[0];
 const doc = () => demoSite() as Doc;
@@ -286,5 +295,64 @@ describe("settingsTarget for a second location", () => {
     expect(settingsFieldId(settingsTarget(branch(), "kh_r", "closes"))).toBe(
       "business-settings-location_kh-hours_mon",
     );
+  });
+});
+
+describe("listTarget (offer-and-about decision 7)", () => {
+  // biome-ignore lint/suspicious/noExplicitAny: tests reshape the document.
+  const withTeam = (): any => {
+    // biome-ignore lint/suspicious/noExplicitAny: tests reshape the document.
+    const doc = demoSite() as any;
+    doc.nodes.portrait = {
+      id: "portrait",
+      type: "image",
+      src: "a.webp",
+      alt: "",
+      decorative: false,
+    };
+    doc.nodes["person-1"] = {
+      id: "person-1",
+      type: "person",
+      name: { content: "", marks: [], annotations: [] },
+      image: { nodes: ["portrait"] },
+    };
+    doc.nodes.site_1.team = { nodes: ["person-1"], marks: [], annotations: [] };
+    return doc;
+  };
+
+  it("leads to an item's text, its first text for the whole item, and its image", () => {
+    const doc = withTeam();
+    expect(listTarget(doc, "service_rolls", "price")).toEqual({
+      section: "offer",
+      collection: "services",
+      index: 1,
+      itemId: "service_rolls",
+      field: "price",
+    });
+    expect(listTarget(doc, "service_rolls", undefined)?.field).toBe("name");
+    expect(listTarget(doc, "person-1", "image")).toMatchObject({
+      section: "about",
+      field: "image",
+    });
+    expect(listTarget(doc, "portrait", "alt")).toMatchObject({
+      itemId: "person-1",
+      field: "image-alt",
+    });
+    expect(listTarget(doc, "hero_1", "heading")).toBeUndefined();
+  });
+
+  it("reads a field ID back, item IDs with dashes included", () => {
+    const doc = withTeam();
+    expect(
+      listTargetOfFieldId(doc, "about", listFieldId("about", "person-1", "name")),
+    ).toMatchObject({ index: 0, field: "name" });
+    expect(
+      listTargetOfFieldId(doc, "about", listFieldId("about", "person-1", "image-alt")),
+    ).toMatchObject({ itemId: "person-1", field: "image-alt" });
+    expect(listTargetOfFieldId(doc, "offer", "about-person-1-name")).toBeUndefined();
+    expect(listTargetOfFieldId(doc, "offer", "offer-service_bread-price")).toMatchObject({
+      collection: "services",
+      index: 0,
+    });
   });
 });

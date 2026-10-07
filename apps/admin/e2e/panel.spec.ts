@@ -40,7 +40,14 @@ test("Open a section", async ({ page }) => {
     "aria-current",
     "page",
   );
-  for (const section of ["Overview", "Business", "Website", "Publish"]) {
+  for (const section of [
+    "Overview",
+    "Business",
+    "What you offer",
+    "About you",
+    "Website",
+    "Publish",
+  ]) {
     await expect(tabs(page).getByRole("link", { name: section, exact: true })).toBeVisible();
   }
   await expect(page.getByRole("link", { name: "Preview" }).first()).toBeVisible();
@@ -69,6 +76,8 @@ test.describe("someone else's project", () => {
     for (const address of [
       paths().dashboard,
       paths().business,
+      paths().offer,
+      paths().about,
       paths().website,
       paths().domainPage,
       paths().websitePages,
@@ -87,6 +96,10 @@ test("Keep the language between sections", async ({ page }) => {
   await page.waitForLoadState("networkidle");
   await page.getByLabel("Language", { exact: true }).selectOption({ label: "English" });
   await expect(page).toHaveURL(projectPaths(state().projectId, "en").business);
+  await tabs(page).getByRole("link", { name: "What you offer" }).click();
+  await expect(page).toHaveURL(projectPaths(state().projectId, "en").offer);
+  await expect(page.getByRole("textbox", { name: "Name" }).first()).toBeVisible();
+  await expect(page.getByLabel("Language", { exact: true })).toHaveValue("en");
   await tabs(page).getByRole("link", { name: "Website", exact: true }).click();
   await expect(page).toHaveURL(projectPaths(state().projectId, "en").website);
   await expect(page.getByLabel("Language", { exact: true })).toHaveValue("en");
@@ -147,12 +160,14 @@ test.describe("Dashboard", () => {
     ).toBeFocused();
   });
 
-  test("Offer card before its section exists", async ({ page }) => {
+  test("Offer card", async ({ page }) => {
     await page.goto(paths().dashboard);
     const offer = page.getByRole("region", { name: "What you offer" });
     await expect(offer).toContainText("3 services");
-    await offer.getByRole("link", { name: "Edit on the page" }).click();
-    await expect(page).toHaveURL(/\/edit\/page_home\/$/);
+    await offer.getByRole("link", { name: "Open What you offer" }).click();
+    await expect(page).toHaveURL(paths().offer);
+    const about = page.getByRole("link", { name: "About you", exact: true });
+    await expect(about).toHaveAttribute("href", paths().about);
   });
 
   test("says when the project was never published, and summarises the sections", async ({

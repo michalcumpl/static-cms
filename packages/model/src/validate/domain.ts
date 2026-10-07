@@ -551,12 +551,12 @@ const ITEM_LABELS: Record<CollectionName, string> = {
   faqs: "Question",
 };
 
-/** Where an item is edited, for messages. */
+/** The panel section where an item is edited, for messages (offer-and-about decision 7). */
 const ITEM_HOMES: Record<CollectionName, string> = {
-  services: "a services block",
-  team: "a team block",
-  testimonials: "a testimonials block",
-  faqs: "a questions block",
+  services: "What you offer",
+  team: "About you",
+  testimonials: "About you",
+  faqs: "What you offer",
 };
 
 /** The items' own contents, collection by collection (business-collections, "Collections"). */
@@ -568,7 +568,7 @@ function checkCollections(
   for (const collection of COLLECTION_NAMES) {
     site[collection].nodes.forEach((id, i) => {
       const label = `${ITEM_LABELS[collection]} ${i + 1}`;
-      const home = `edit it in ${ITEM_HOMES[collection]} on any page`;
+      const home = `edit it in ${ITEM_HOMES[collection]}`;
       const need = (code: ProblemCode, nodeId: string, what: string, property: string) =>
         problems.error(code, nodeId, `${label} needs ${what}; ${home}.`, property);
       const tooMany = (nodeId: string, count: number, what: string) => {

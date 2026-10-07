@@ -123,6 +123,39 @@ the item buttons and "Add" are disabled with the reason the canvas's handle menu
 ("Services are added and removed in Čeština"), and `ImageSetting` gets `locked`. A
 `SharedNote`-style line links to the same section in the primary language.
 
+### 9. Changes made while building
+
+- **The spike (task 1.1) worked as planned.** Typing, marks already in the texts, Undo and Save
+  behave as in the editor. What Svedit needed:
+  - a `KeyMapper` in the `key_mapper` context, which Svedit requires. So `useEditorKeys` (decision
+    4) was extracted in the spike, and the editor layout uses it already;
+  - the components reach the `EditorState` through context: `provideEditor` sets it without
+    making it the open editor, which only the editor layout is;
+  - the editable attribute is on Svedit's own wrapper, so the form's titles and labels carry
+    `contenteditable="false"`.
+- **Svedit's insertion gaps** at the ends of a list reach outward to their containing block and
+  covered the list's "Shown on" links. The item container is `position: relative`, which keeps
+  them inside it.
+- **The "Shown on" links open the editor with a full page load.** Navigating within the app from
+  a list form to the editor on a page other than home threw in the canvas (a stale index path
+  while the editor switches from home to that page); the same navigation from other panel pages
+  doesn't. A full load avoids it, as `SharedNote`'s links already do.
+- **Item groups are `div`s with `role="group"`**, not `fieldset`s, which don't behave inside
+  editable text. Fields are `role="textbox"` and named by their labels.
+
+- **Images use `FormImage`, not `ImageSetting`.** Portraits and photos follow the canvas's image
+  rules: they start decorative (the name beside them describes them), with the decorative switch
+  and the description as in the editor's image panel. `ImageSetting` has only a description.
+  The control stops `beforeinput` from bubbling: Svedit takes any input inside its editable root
+  as typing in its own text.
+- **Item problems have their own `listTarget`** in `locate.ts`, next to `settingsTarget`, which
+  stays as it was: the editor's problems panel uses `settingsTarget` and keeps selecting items on
+  its canvas. `listTargetOfFieldId` reads a `?focus=` ID back, item IDs with dashes included.
+- **`openAfterSaving`** (in `screen.svelte.ts`) is the save-first step `openSettings` had, now
+  shared with the "Shown on" links.
+- **The dashboard's page summary is gone:** `offerPageId` and `aboutPageId` only served the
+  cards' editor links, as did the "Edit on the page" text.
+
 ## Risks / Trade-offs
 
 - **[Svedit outside the canvas]** Svedit has only rendered the page canvas here; label clicks,

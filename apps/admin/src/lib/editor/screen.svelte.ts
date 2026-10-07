@@ -1,3 +1,5 @@
+import { Command, define_keymap, KeyMapper } from "svedit";
+import { setContext } from "svelte";
 import { beforeNavigate, goto } from "$app/navigation";
 import { getI18n, type I18n } from "$lib/i18n";
 import type MediaLibrary from "./MediaLibrary.svelte";
@@ -7,6 +9,50 @@ import type { EditorState } from "./state.svelte";
 // before leaving with unsaved changes, and the media library dialog (project-tabs design.md
 // decision 3). The editor and the Settings tab both use them. Call them while a component
 // initialises.
+
+/**
+ * The keyboard shortcuts around a mounted Svedit, which pushes the focused document's own on top:
+ * Save, and Undo and Redo outside the editable text in areas marked `data-history-keys` (inputs
+ * elsewhere, dialogs included, keep the browser's own undo). Returns the key mapper; the screen
+ * passes the window's keydown events to it (offer-and-about decision 4).
+ */
+export function useEditorKeys(editor: EditorState): KeyMapper {
+  const keyMapper = new KeyMapper();
+  setContext("key_mapper", keyMapper);
+  const inHistoryKeysArea = () => {
+    const focused = document.activeElement;
+    return Boolean(focused?.closest("[data-history-keys]") && !focused.closest("dialog"));
+  };
+  class SaveCommand extends Command {
+    override execute() {
+      return editor.save();
+    }
+  }
+  class PanelUndoCommand extends Command {
+    override is_enabled() {
+      return inHistoryKeysArea();
+    }
+    override execute() {
+      editor.undo();
+    }
+  }
+  class PanelRedoCommand extends Command {
+    override is_enabled() {
+      return inHistoryKeysArea();
+    }
+    override execute() {
+      editor.redo();
+    }
+  }
+  keyMapper.push_scope(
+    define_keymap({
+      "meta+s,ctrl+s": [new SaveCommand({} as never)],
+      "meta+z,ctrl+z": [new PanelUndoCommand({} as never)],
+      "meta+shift+z,ctrl+shift+z,ctrl+y": [new PanelRedoCommand({} as never)],
+    }),
+  );
+  return keyMapper;
+}
 
 /**
  * Asks before leaving (a link, Back, closing the window) with unsaved changes. `staysHere` says
@@ -40,15 +86,33 @@ export async function openSettings(
   t: I18n["t"],
   fieldId?: string,
 ): Promise<void> {
+  const base = fieldId?.startsWith("site-settings-") ? editor.paths.website : editor.paths.business;
+  await openAfterSaving(
+    editor,
+    t("editor.settingsSaveFirst"),
+    fieldId ? `${base}${base.includes("?") ? "&" : "?"}focus=${encodeURIComponent(fieldId)}` : base,
+  );
+}
+
+/**
+ * Opens another screen of the project. Unsaved changes are saved first, after asking with
+ * `question`, so the other screen shows what this one does; nothing opens if saving fails.
+ * `reload` opens it with a full page load (the editor, from a list form: offer-and-about
+ * decision 9).
+ */
+export async function openAfterSaving(
+  editor: EditorState,
+  question: string,
+  href: string,
+  reload = false,
+): Promise<void> {
   if (editor.dirty) {
-    if (!confirm(t("editor.settingsSaveFirst"))) return;
+    if (!confirm(question)) return;
     await editor.save();
     if (editor.dirty || editor.status.kind !== "saved") return;
   }
-  const base = fieldId?.startsWith("site-settings-") ? editor.paths.website : editor.paths.business;
-  await goto(
-    fieldId ? `${base}${base.includes("?") ? "&" : "?"}focus=${encodeURIComponent(fieldId)}` : base,
-  );
+  if (reload) window.location.assign(href);
+  else await goto(href);
 }
 
 /** The save status in words: saving, saved, conflicts and failures (the editor's toolbar). */

@@ -29,8 +29,10 @@ workspace named "Default". The first user created with `create-user` becomes its
 | `/invite/<token>`                      | Accept an invitation (creates the account if needed).              |
 | `/w/<workspace>/members`               | Members, roles and invitations (owners change them).               |
 | `/w/<workspace>/new`                   | Owners: create a project from the starter site.                    |
-| `/p/<project>`                         | The project's panel. **Overview**: live state, Publish, problems (each a link to where it's fixed), and a card per section. |
+| `/p/<project>`                         | The project's panel. **Overview**: live state, Publish, problems (each a link to where it's fixed, items' problems to their list form), and a card per section. |
 | `/p/<project>/business`                | **Business** of a language (`?lang=`): name, type, locations with hours, social profiles; Save, Undo. |
+| `/p/<project>/offer`                   | **What you offer** of a language (`?lang=`): the services and the questions as list forms (formatting, add, move, duplicate, delete); the pages showing each list. |
+| `/p/<project>/about`                   | **About you** (`?lang=`): the people and the testimonials as list forms, with portraits and photos from the media library. |
 | `/p/<project>/website`                 | **Website** (`?lang=`): site name, description, favicon, share image, AI switches; the design card (**Change design** opens the editor). |
 | `/p/<project>/website/pages`           | **Pages and menu** of a language (`?lang=`): home, menu, translation marks, Edit and Preview. |
 | `/p/<project>/website/languages`       | **Languages**: add, publish, hide, remove; what is not translated yet. |
@@ -67,6 +69,9 @@ Everything except sign-in and invitations needs a session. Project pages and API
   block, lead there; the editor's left column links back to **Overview**.
   The editor's right column has **Page** and **Design** (the theme); the problems panel is under
   the pages in the left column.
+- **Services, questions, people and testimonials** are edited in **What you offer** and **About
+  you** as list forms, as well as on the canvas: the forms use the editor's session, so formatting,
+  Undo and the item actions behave the same. Which items a block shows is chosen in the editor.
 - **Keyboard.** Esc selects the paragraph, item or block around the cursor, step by step; Alt+↑/↓
   moves it. Handles and their menus are buttons and menus (arrow keys, Enter, Esc).
 - The handles are placed with CSS anchor positioning, as Svedit's selection outline is; without

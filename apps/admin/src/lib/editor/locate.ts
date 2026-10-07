@@ -1,3 +1,4 @@
+import { COLLECTION_NAMES, type CollectionName } from "@webmio/model";
 import type { DocumentPath, Selection } from "svedit";
 import { editorSchema } from "./schema";
 import { isFixedListProperty } from "./structure";
@@ -331,4 +332,90 @@ export function siteFieldElementId(field: SiteField): string {
 /** The element ID of a page settings field, for focusing it from elsewhere. */
 export function pageFieldElementId(field: PageField): string {
   return `page-settings-${field}`;
+}
+
+/** The panel section that lists each collection (offer-and-about decision 1). */
+export const LIST_SECTIONS: Record<CollectionName, "offer" | "about"> = {
+  services: "offer",
+  faqs: "offer",
+  team: "about",
+  testimonials: "about",
+};
+
+/** An item's first field, where a problem about the whole item leads. */
+const FIRST_FIELDS: Record<CollectionName, string> = {
+  services: "name",
+  faqs: "question",
+  team: "name",
+  testimonials: "quote",
+};
+
+/** A field of an item in a list form: one of its texts, its image (`image`) or its description. */
+export interface ListTarget {
+  section: "offer" | "about";
+  collection: CollectionName;
+  index: number;
+  itemId: string;
+  /** A text property of the item, `image`, or `image-alt` (the image's description). */
+  field: string;
+}
+
+/** The element ID of an item's field in a list form, as `?focus=` and the problems name it. */
+export function listFieldId(section: string, itemId: string, field: string): string {
+  return `${section}-${itemId}-${field}`;
+}
+
+/**
+ * The list form field a problem is about (offer-and-about decision 7): a text of an item of a
+ * collection, or the item's image and its description. Undefined for anything else.
+ */
+export function listTarget(
+  doc: Doc,
+  nodeId: string,
+  property: string | undefined,
+): ListTarget | undefined {
+  const site = doc.nodes[doc.document_id] as Record<string, { nodes?: string[] }> | undefined;
+  const isImage = doc.nodes[nodeId]?.type === "image";
+  for (const collection of COLLECTION_NAMES) {
+    const items = site?.[collection]?.nodes ?? [];
+    let index = items.indexOf(nodeId);
+    let field = property ?? FIRST_FIELDS[collection];
+    if (index < 0 && isImage) {
+      index = items.findIndex((id) =>
+        (doc.nodes[id]?.image as { nodes?: string[] } | undefined)?.nodes?.includes(nodeId),
+      );
+      field = property === "alt" ? "image-alt" : "image";
+    }
+    const itemId = items[index];
+    if (itemId !== undefined) {
+      return { section: LIST_SECTIONS[collection], collection, index, itemId, field };
+    }
+  }
+  return undefined;
+}
+
+/** The fields of each collection's items in the list forms. */
+const ITEM_FIELDS: Record<CollectionName, readonly string[]> = {
+  services: ["name", "description", "price"],
+  faqs: ["question", "answer"],
+  team: ["name", "role", "text", "image"],
+  testimonials: ["quote", "name", "detail", "image"],
+};
+
+/** The list form field an element ID (`?focus=`) names, in the section `section`. */
+export function listTargetOfFieldId(
+  doc: Doc,
+  section: string,
+  fieldId: string,
+): ListTarget | undefined {
+  if (!fieldId.startsWith(`${section}-`)) return undefined;
+  const rest = fieldId.slice(section.length + 1);
+  // Item IDs can hold dashes, so the field is found from the end.
+  const field = ["image-alt", ...Object.values(ITEM_FIELDS).flat()].find((f) =>
+    rest.endsWith(`-${f}`),
+  );
+  if (!field) return undefined;
+  const itemId = rest.slice(0, -(field.length + 1));
+  const target = listTarget(doc, itemId, field === "image-alt" ? undefined : field);
+  return target?.section === section ? { ...target, field } : undefined;
 }

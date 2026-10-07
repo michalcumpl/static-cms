@@ -6,9 +6,13 @@ import { demoSite } from "$lib/server/demo";
 import {
   addItem,
   chooseItem,
+  collectionView,
   deleteItem,
+  duplicateItem,
+  moveItem,
   otherPagesShowing,
   pageCollections,
+  pagesShowing,
   setBlockMode,
   unchosenItems,
 } from "./collections";
@@ -253,5 +257,47 @@ describe("Collections outside the primary language", () => {
     expect(moveSelectedNode(s, -1)).toBe(true);
     expect(deleteSelectedNode(s)).toBe(true);
     expect(names("services_pick")).toEqual(["Kváskový chléb"]);
+  });
+});
+
+describe("lists in the panel (offer-and-about decision 3)", () => {
+  const view = (s: Session) => collectionView(s.doc as never, "services");
+  const collection = (s: Session) => (s.get(["site_1", "services"]) as AnyNode).nodes;
+
+  it("adds, moves and duplicates in the collection only, leaving chosen blocks as they are", () => {
+    const { s, names, errors } = setup();
+    const added = addItem(s, "site_1", view(s));
+    expect(collection(s).at(-1)).toBe(added);
+    const rolls = view(s).items[1];
+    if (!rolls) throw new Error("no second service");
+    moveItem(s, "site_1", view(s), rolls, -1);
+    expect(collection(s).slice(0, 2)).toEqual(["service_rolls", "service_bread"]);
+    const bread = view(s).items[1];
+    if (!bread) throw new Error("no bread");
+    const copy = duplicateItem(s, "site_1", view(s), bread);
+    expect(collection(s).slice(0, 3)).toEqual(["service_rolls", "service_bread", copy]);
+    expect(names("services_pick")).toEqual(["Kváskový chléb", "Dorty na objednávku"]);
+    s.undo();
+    s.undo();
+    s.undo();
+    expect(collection(s)).toEqual(["service_bread", "service_rolls", "service_cakes"]);
+    expect(errors()).toEqual([]);
+  });
+
+  it("deletes from the collection and the blocks that chose the item", () => {
+    const { s, names } = setup();
+    deleteItem(s, "site_1", "services", "service_bread");
+    expect(collection(s)).toEqual(["service_rolls", "service_cakes"]);
+    expect(names("services_pick")).toEqual(["Dorty na objednávku"]);
+  });
+
+  it("finds the pages showing a list or an item, through both block modes", () => {
+    const { s } = setup();
+    const doc = s.doc as never;
+    expect(pagesShowing(doc, "services")).toEqual(["page_home", "page_contact"]);
+    expect(pagesShowing(doc, "services", "service_rolls")).toEqual(["page_home"]);
+    expect(pagesShowing(doc, "services", "service_cakes")).toEqual(["page_home", "page_contact"]);
+    expect(pagesShowing(doc, "faqs")).toEqual([]);
+    expect(otherPagesShowing(doc, "service_cakes", "page_home")).toEqual(["page_contact"]);
   });
 });

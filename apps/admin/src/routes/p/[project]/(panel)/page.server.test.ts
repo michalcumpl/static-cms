@@ -65,8 +65,6 @@ describe("Dashboard", () => {
       people: 0,
       testimonials: 0,
       pages: 2,
-      offerPageId: "page_home",
-      aboutPageId: undefined,
     });
     expect(data.design.colors).toHaveLength(4);
     expect(data.design.headingFont).not.toBe("");
@@ -79,6 +77,10 @@ describe("Dashboard", () => {
       nodes: Record<string, Record<string, unknown>>;
     };
     doc.nodes.location_1 = { ...doc.nodes.location_1, phone: "321" };
+    doc.nodes.service_rolls = {
+      ...doc.nodes.service_rolls,
+      name: { content: "", marks: [], annotations: [] },
+    };
     doc.nodes.hero_1 = {
       ...doc.nodes.hero_1,
       heading: { content: "", marks: [], annotations: [] },
@@ -89,6 +91,7 @@ describe("Dashboard", () => {
     expect(href("invalid-phone")).toBe(
       `/p/${projectId}/business?focus=business-settings-location_1-phone`,
     );
+    expect(href("empty-name")).toBe(`/p/${projectId}/offer?focus=offer-service_rolls-name`);
     expect(href("empty-heading")).toBe(
       `/p/${projectId}/edit/page_home/?problem=hero_1&property=heading`,
     );

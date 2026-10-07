@@ -238,6 +238,13 @@ export async function openBusiness(page: Page, lang?: string): Promise<void> {
   await page.waitForLoadState("networkidle");
 }
 
+/** Opens a list section of the panel (in a language) and waits until it can be edited. */
+export async function openLists(page: Page, section: "offer" | "about", lang?: string) {
+  await page.goto(projectPaths(state().projectId, lang)[section]);
+  await expect(page.locator("[contenteditable=true]:has(.list-forms)")).toBeVisible();
+  await page.waitForLoadState("networkidle");
+}
+
 /** Opens the panel's Website section (in a language) and waits until it can be edited. */
 export async function openWebsite(page: Page, lang?: string): Promise<void> {
   await page.goto(projectPaths(state().projectId, lang).website);

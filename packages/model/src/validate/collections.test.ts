@@ -85,7 +85,7 @@ describe("collections", () => {
         "error",
         "empty-name",
         "service_cakes",
-        "Service 3 needs a name; edit it in a services block on any page.",
+        "Service 3 needs a name; edit it in What you offer.",
       ],
     ]);
   });
@@ -98,7 +98,7 @@ describe("collections", () => {
         "error",
         "empty-answer",
         "faq_order",
-        "Question 2 needs its answer; edit it in a questions block on any page.",
+        "Question 2 needs its answer; edit it in What you offer.",
       ],
     ]);
   });

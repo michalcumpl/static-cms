@@ -289,9 +289,9 @@ beta.
 | 1 | A | [`business-collections`](../openspec/changes/archive/2026-10-05-business-collections/) | services, team, testimonials and FAQs held once per site; blocks show all or chosen items; social profiles; format 7 | done |
 | 2 | A | [`package-split`](../openspec/changes/archive/2026-10-05-package-split/) | `@static-cms/site` split into `@webmio/model`, `@webmio/render` and `@webmio/export`, and everything renamed to Webmio (packages, product name in the admin, docs) | done |
 | 3 | A | [`business-locations`](../openspec/changes/archive/2026-10-06-business-locations/) | several locations, each with address, hours and contact | done |
-| 4 | B | [`control-panel`](../openspec/changes/control-panel/) | the website home: a dashboard and the Business, Website and Publish sections, replacing the project tabs | done |
-| 4b | B | `offer-and-about` | What you offer (services, FAQs) and About you (team, testimonials): forms per item, with formatting | next |
-| 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
+| 4 | B | [`control-panel`](../openspec/changes/archive/2026-10-07-control-panel/) | the website home: a dashboard and the Business, Website and Publish sections, replacing the project tabs | done |
+| 4b | B | [`offer-and-about`](../openspec/changes/offer-and-about/) | What you offer (services, FAQs) and About you (team, testimonials): forms per item, with formatting | done |
+| 5 | B | `image-cropping` | crop, focal point and rotation in the media library | next |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
 | 7 | C | `template-system` | the template contract, homepage sections on or off, template versions | |
 | 8 | C | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | |
@@ -337,13 +337,18 @@ beta.
 
 ### B. Business control panel
 
-- **The panel: done** ([`control-panel`](../openspec/changes/control-panel/)). A project opens on
+- **The panel: done** ([`control-panel`](../openspec/changes/archive/2026-10-07-control-panel/)). A project opens on
   **Overview**: its live state and Publish, the saved site's problems (each a link to where
   it's fixed, the editor opening at the problem), and a card per section. **Business** and
   **Website** (with Pages and menu, Languages and Domain) replace the Settings, Pages and
   Languages tabs; **Publish** (with Versions) replaces Publishing and History. Design stays in
   the editor until templates; the Website section shows it at a glance with "Change design". Old
   tab addresses redirect.
+- **What you offer and About you: done** ([`offer-and-about`](../openspec/changes/offer-and-about/)).
+  Services and questions, people and testimonials each have a list form in their section, on the
+  editor's own Svedit session: bold, italic and links, add, move, duplicate and delete, portraits
+  and photos from the media library, Save and Undo. Each list says which pages show it. Problems
+  about items lead to their field; other languages translate the texts only.
 
 - The website's home in the admin follows the customer's mental model: **Overview** (name,
   ● Live, address), then **Business** (company, hours, locations, contact), **What you offer**
