@@ -296,7 +296,7 @@ beta.
 | 3 | A | [`business-locations`](../openspec/changes/archive/2026-10-06-business-locations/) | several locations, each with address, hours and contact | done |
 | 4 | B | [`control-panel`](../openspec/changes/archive/2026-10-07-control-panel/) | the website home: a dashboard and the Business, Website and Publish sections, replacing the project tabs | done |
 | 4b | B | [`offer-and-about`](../openspec/changes/archive/2026-10-07-offer-and-about/) | What you offer (services, FAQs) and About you (team, testimonials): forms per item, with formatting | done |
-| 4c | B | `project-deletion` | owners delete a website (typing its name; a published one goes offline), restore it or remove it for good | done |
+| 4c | B | [`project-deletion`](../openspec/changes/archive/2026-10-07-project-deletion/) | owners delete a website (typing its name; a published one goes offline), restore it or remove it for good | done |
 | 4d | B | `example-sites` | a command that loads a site document and its images into a new project; the three launch examples (Aniděti, Mareš Partners, Mortgage Specialist) built with it in our own database, not committed. Before it: the old projects deleted, the database migrations flattened into one | next |
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
@@ -358,7 +358,7 @@ beta.
   and photos from the media library, Save and Undo. Each list says which pages show it. Problems
   about items lead to their field; other languages translate the texts only.
 
-- **Deleting a website: done** (`project-deletion`): workspace owners only (members can't),
+- **Deleting a website: done** ([`project-deletion`](../openspec/changes/archive/2026-10-07-project-deletion/)): workspace owners only (members can't),
   from a "Delete website" area at the bottom of the Website section, confirmed by typing the
   website's name. A published website is taken offline (its Netlify site deleted; our own
   hosting later), and the confirmation says so. Owners see "Deleted websites" in the project
