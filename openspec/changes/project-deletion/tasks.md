@@ -1,0 +1,50 @@
+# Tasks
+
+Every task that adds interface text adds it to both catalogues (`en.ts` and `cs.ts`). The type
+check and the untranslated-text test enforce this.
+
+## 1. Storage
+
+- [ ] 1.1 The migration adding `deleted_at` and `deleted_by` to `projects` (decision 1), and
+  `deleted_at IS NULL` in `projectAccess` and `listWorkspaces`. Review every other direct
+  `projects` query (`publish.ts`, `domains.ts`, `site-documents.ts`, `media.ts`,
+  `import-working-copy.ts`, `upgrade-projects.ts`) and skip deleted projects where one runs on
+  its own. Verify with unit tests: a deleted project isn't listed and `projectAccess` returns
+  nothing for it.
+- [ ] 1.2 `deleteProject`, `restoreProject`, `purgeProject`, `purgeDeletedProjects` and
+  `deletedProjects` (decision 2), with the media folder removed after the commit. Verify with unit
+  tests: delete and restore keep versions and media; purge removes rows and files; only projects
+  deleted 30 days ago or more are purged; a missing folder is fine.
+
+## 2. Netlify
+
+- [ ] 2.1 `PublishTarget.deleteSite` in `netlify.ts` (404 counts as done) and the fake Netlify's
+  `DELETE /api/v1/sites/<id>` (decision 3); `deleteProject` deletes the site first, stops on a
+  `PublishError`, and skips Netlify when the workspace isn't connected. Verify with `netlify.test.ts`
+  cases and unit tests for "Offline at once" (the domain is free), "Netlify down" and the
+  not-connected case.
+
+## 3. Routes and the purge
+
+- [ ] 3.1 The three routes (decision 4): owners only, name check, origin check, workspace and
+  deleted-state checks. Verify with unit tests: "Editor can't delete" (403), "Wrong name" (422),
+  someone else's project (404), restore and Delete now of a project that isn't deleted (404).
+- [ ] 3.2 The purge at start and daily (decision 5). Verify with a unit test of
+  `purgeDeletedProjects` at 29 and 31 days ("After 30 days").
+
+## 4. Admin pages
+
+- [ ] 4.1 `DeleteWebsite.svelte` in the Website section for owners, its dialog (name, address and
+  domain, not-connected note), leaving without the unsaved-changes question, and the project
+  list's note (decision 6). Verify with e2e "Confirm with the name", "Published website",
+  "Editor" and "Delete a website" (the editor's address answers "not found").
+- [ ] 4.2 "Deleted websites" in the project list with the removal date, Restore and Delete now
+  (decision 6). Verify with e2e "Restore by mistake", "Days left", "Delete now", "Publish after
+  restoring" and "Netlify down".
+
+## 5. Integration
+
+- [ ] 5.1 Run the type check, unit tests, lint and the full Playwright suite. Verify that all
+  pass.
+- [ ] 5.2 Update `apps/admin/README.md` (routes, deleting a website) and `docs/roadmap.md`
+  (`project-deletion` done, the cleanup next). Verify by reading.
