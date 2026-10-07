@@ -55,7 +55,8 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
 - [x] **Clean up the database:** delete the old projects with `project-deletion` (Atelier
   Aniděti's Netlify site included), then flatten the migrations into one, keeping accounts and
   the workspace (copy the database first; check the schema matches).
-- [ ] **Example sites:** load the three launch examples into our database (`example-sites`):
+- [ ] **Example sites:** load the launch examples into our database (`example-sites`): Aniděti,
+  Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka Svitávka, and Exhibitions once chosen;
   content in `apps/admin/data/examples/`, not committed; their pages as the first layouts.
 - [ ] **Cropping and light editing of uploaded images:** crop to the shape a section needs,
   focal point, rotate. Done in the browser; the server keeps the original and derives variants.
@@ -70,9 +71,14 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
   `render/blocks.ts`, styles in the stylesheet, and an editor card. After A, a section is a
   renderer that reads collections plus template-scoped options. Owners place blocks in the
   editor; custom blocks made by customers are out (no free-form page builder).
-- [ ] **Launch templates:** *Education* (after-school activities, courses, tutors), *Law* and
-  *Financial advisory*, each with a migrated example site (Aniděti, Mareš Partners, Mortgage
-  Specialist). Local Services, Hospitality and Personal Professional after launch. Single- vs.
+- [ ] **Launch templates:** *Education* (after-school activities, courses, tutors), *Law*,
+  *Financial advisory*, *Investment management*, *Short-term rentals* and *Exhibitions*, each
+  with a migrated example site (Aniděti, Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka
+  Svitávka; Exhibitions to be chosen). Local Services, Hospitality (hotels, cafés, restaurants)
+  and Personal Professional after launch.
+- [ ] **Choose the Exhibitions example site.**
+- [ ] **Blocks the examples lack:** key figures, documents to download, booking through the
+  owner's booking service, newsletter signup. Single- vs.
   multi-page and image/video hero vs. classic header are template variants, not extra templates.
 - [ ] **Layouts:** page recipes (ordered blocks, no styling) that make up a template's pages and
   are offered by "Add page" and the guided setup.

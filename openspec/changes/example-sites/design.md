@@ -27,7 +27,7 @@ See proposal.md for the motivation. The current state:
 **Goals:**
 - A repeatable path from content to a stored project, with the site's own validation as the
   gate.
-- Nothing of the three businesses in the repository.
+- Nothing of the businesses in the repository.
 - What we learn while migrating becomes reusable: the builder, the layouts, the mapping rules.
 
 **Non-Goals:**
@@ -107,6 +107,8 @@ data/examples/
   anideti/        build.ts, images/, project.json, cs.json
   mares-partners/ build.ts, images/, project.json, cs.json, en.json
   mortgage-specialist/ build.ts, images/, project.json, en.json
+  fond10x/        build.ts, images/, project.json, cs.json, en.json
+  roubenka-svitavka/ build.ts, images/, project.json, cs.json
 ```
 
 `build.ts` imports the builder, holds the texts read from the live site, and writes the
@@ -121,9 +123,14 @@ How each site maps:
 | Aniděti | cs | Úvod, O nás, Lektorky, Jak pracujeme, Kroužky, Filmy, Kontakt | services: courses with prices; team: the two teachers; locations: Atelier Hanspaulka, ZŠ Dlouhý Lán |
 | Mareš Partners | cs (+ en) | Firma, Expertíza, Kariéra, Kontakt | services: the eight practice areas; logos: the three awards |
 | Mortgage Specialist | en | Home, Services, About, Contact | services; testimonials: the reviews; a call to action for the free consultation |
+| Fond 10X | cs (+ en) | Úvod, Jak investujeme, Tým, Pro investory, Kontakt | team: the founder, the committee and advisers; faqs; logos: portfolio companies |
+| Roubenka Svitávka | cs | Úvod, Ubytování, Dostupnost, Kontakt | services: the cottage and the chalets with capacities; a gallery; the booking service as a call to action's link |
 
 The exact pages follow what each site has; the table is the plan, and the notes (decision 5)
-record where it changed.
+record where it changed. What the examples need and we lack (key figures, documents to
+download, a booking embed, a newsletter signup) is written with existing blocks (a text block
+for figures, links for documents and booking) and listed in `docs/layouts.md` as gaps for the
+templates.
 
 ### 5. Committed notes: layouts and mapping rules
 
@@ -137,7 +144,7 @@ record where it changed.
   locations), with the signals that recognise it. Input for `site-import` v1; the parts that
   need AI are marked.
 
-Both name the three sites only by their public addresses.
+Both name the sites only by their public addresses.
 
 ## Risks / Trade-offs
 

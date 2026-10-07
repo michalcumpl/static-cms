@@ -75,7 +75,7 @@ SMBs"**, because that still sells the mental model of a CMS. We build the layer 
 
 ## Templates
 
-Three at launch, each proven on a real website migrated to Webmio as a presentation example (the
+Six at launch, each proven on a real website migrated to Webmio as a presentation example (the
 designs needn't match the originals):
 
 | Template | For | Example |
@@ -83,9 +83,12 @@ designs needn't match the originals):
 | **Education** | after-school activities, clubs, courses, small schools, tutors | [Aniděti](https://www.anideti.cz/), an after-school animation club for primary school children |
 | **Law** | law firms, attorneys, notaries | [Mareš Partners](https://www.marespartners.cz/), a law firm |
 | **Financial advisory** | mortgage brokers, independent advisers, accountants | [Mortgage Specialist](https://www.mortgagespecialist.cz/), an independent mortgage broker |
+| **Investment management** | investment funds, asset and wealth managers | [Fond 10X](https://fond10x.cz/en/), a private equity fund for qualified investors |
+| **Short-term rentals** | holiday cottages, chalets, apartments, guesthouses | [Roubenka Svitávka](https://roubenkasvitavka.cz/), a log cottage with garden chalets for groups |
+| **Exhibitions** | exhibitions, galleries, fairs | example to be chosen |
 
 After launch: **Local Services** (plumbers, electricians, cleaners, repairs), **Hospitality**
-(hotels, B&Bs, cafés, restaurants) and **Personal Professional** (therapists, coaches,
+(hotels, cafés, restaurants) and **Personal Professional** (therapists, coaches,
 photographers, freelancers).
 
 The examples are built in our own database, not committed: their texts, people and photos belong
@@ -141,7 +144,7 @@ Wix around $17, GoDaddy around $10.
 | Area | In |
 | --- | --- |
 | Admin | Business, Services, Team, Testimonials, FAQs, Media, Website settings; deleting and restoring a website |
-| Templates | 3 (Education, Law, Financial advisory), mobile-first, layouts, template switching |
+| Templates | 6 (Education, Law, Financial advisory, Investment management, Short-term rentals, Exhibitions), mobile-first, layouts, template switching |
 | Publishing | preview, static build, validation, deploy, rollback, custom domain, SSL |
 | Reliability | backups, version history, health checks |
 | Pricing | €79 / 1 899 Kč a year excl. VAT, one plan, free until the first publish |

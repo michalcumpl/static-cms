@@ -278,8 +278,9 @@ Still open: open sign-up (a switch, when billing exists) and Google sign-in.
 ## After the strategy refresh
 
 Milestones in order. A private beta for friends (F) starts as soon as A–E work with at least two
-of the three launch templates (Education, Law, Financial advisory); the third can land during the
-beta. The other templates come after launch.
+of the six launch templates (Education, Law, Financial advisory, Investment management,
+Short-term rentals, Exhibitions); the others can land during the beta. The remaining templates
+come after launch.
 
 **Next steps** (2026-10-07): `project-deletion` and the cleanup (old projects deleted,
 migrations flattened) are done; next is `example-sites`; layouts become part of the model with
@@ -297,13 +298,13 @@ beta.
 | 4 | B | [`control-panel`](../openspec/changes/archive/2026-10-07-control-panel/) | the website home: a dashboard and the Business, Website and Publish sections, replacing the project tabs | done |
 | 4b | B | [`offer-and-about`](../openspec/changes/archive/2026-10-07-offer-and-about/) | What you offer (services, FAQs) and About you (team, testimonials): forms per item, with formatting | done |
 | 4c | B | [`project-deletion`](../openspec/changes/archive/2026-10-07-project-deletion/) | owners delete a website (typing its name; a published one goes offline), restore it or remove it for good | done |
-| 4d | B | `example-sites` | a command that loads a site document and its images into a new project; the three launch examples (Aniděti, Mareš Partners, Mortgage Specialist) built with it in our own database, not committed. Before it: the old projects deleted, the database migrations flattened into one | next |
+| 4d | B | `example-sites` | a command that loads a site document and its images into a new project; the launch examples (Aniděti, Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka Svitávka; Exhibitions once chosen) built with it in our own database, not committed. Before it: the old projects deleted, the database migrations flattened into one | next |
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
 | 7 | C | `template-system` | the template contract, layouts (page recipes, also offered by "Add page"), homepage sections on or off, template versions | |
 | 7b | B | `site-import` | import a public website by its address (v1, no AI): pages, menu, redirects from the old addresses, business details, images, a guessed theme, texts as plain blocks, and a review before anything is published | |
 | 8 | C | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | |
-| 9 | C | `template-education`, `template-law`, `template-finance` | the three launch templates, each checked against its example site; two before the beta | |
+| 9 | C | `template-education`, `template-law`, `template-finance`, `template-investment`, `template-rentals`, `template-exhibitions` | the six launch templates, each checked against its example site; two before the beta | |
 | 10 | C | `template-switching` | choose, preview with your own content, publish | |
 | 11 | D | `own-hosting` | S3 + CloudFront, `<site>.webmio.site`, atomic deploys, rollback | |
 | 12 | D | `safe-publishing` | the publish pipeline: link check, deploy verification, previous version kept on failure | |
@@ -375,14 +376,19 @@ beta.
     migration, so accounts, the workspace and its Netlify connection stay. The database is
     copied before anything changes.
 - **Example sites** (`example-sites`): `pnpm admin load-site <folder>` creates a project from a
-  site document and a folder of images (later also the templates' fixture sites). The three
-  launch examples are migrated with it into our own database:
+  site document and a folder of images (later also the templates' fixture sites). The launch
+  examples are migrated with it into our own database:
   - **Aniděti** (Czech, Education): the courses and prices as services, the two teachers as
     people, the two places as locations, contact details and photos.
   - **Mareš Partners** (Czech and English, Law): the eight practice areas as services, the
     awards, contact details.
   - **Mortgage Specialist** (English as the primary language, Financial advisory): services,
     the key figures, reviews as testimonials, a free-consultation call to action.
+  - **Fond 10X** (Czech and English, Investment management): how they invest, the team, the
+    FAQs, the key figures, portfolio logos, contact.
+  - **Roubenka Svitávka** (Czech, Short-term rentals): the cottage and the garden chalets,
+    amenities, photo gallery, booking through their existing booking service, contact.
+  - **Exhibitions:** an example is still to be chosen; it is migrated the same way once it is.
 
   Built with today's blocks and theme presets, close to the originals in spirit rather than
   copies. Their pages are written as page recipes, the first layouts. The content (documents
@@ -418,7 +424,7 @@ beta.
   It runs as a background job with progress, and fetches pages safely: no internal addresses,
   size limits, timeouts; sites that build their content with JavaScript (Wix, Squarespace) need
   a headless browser. It produces what `load-site` reads (a site document and images), and the
-  three example sites are its test cases, kept locally like the examples.
+  example sites are its test cases, kept locally like the examples.
 - Replaces the planned projects dashboard; an account with several websites lists them as cards.
 
 ### C. Templates as website systems
@@ -433,10 +439,16 @@ beta.
   architecture is a set of layouts, mostly shared ones (Contact, About, Services, FAQ) plus its
   own. The guided setup and "Add page" create pages from layouts; after that a page is the
   owner's.
-- **Three launch templates:** Education (after-school activities, courses, tutors), Law and
-  Financial advisory, each checked against its migrated example site by hand and against fixture
-  sites with invented content in CI. Local Services, Hospitality and Personal Professional
-  follow after launch.
+- **Six launch templates:** Education (after-school activities, courses, tutors), Law,
+  Financial advisory, Investment management, Short-term rentals and Exhibitions, each checked
+  against its migrated example site by hand and against fixture sites with invented content in
+  CI. Local Services, Hospitality (hotels, cafés, restaurants) and Personal Professional follow
+  after launch.
+- **What the examples need that we don't have yet** (to settle in the template contract, or as
+  new blocks): key figures ("298M CZK managed", "1+ billion CZK in mortgages"); documents to
+  download (a fund's statute and key information documents); booking and availability through
+  the owner's existing booking service (a link or an embed); a newsletter signup. Until then
+  the examples use what exists and the gaps are noted.
 - **Template switching:** choose → preview with your own content → publish; nothing rewritten.
   Pages and blocks the owner made in the editor are kept and restyled. Collections a template
   doesn't show stay stored, and the preview says what won't be visible.
