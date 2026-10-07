@@ -141,13 +141,7 @@ export const en = {
       business: "Business",
     },
     overview: {
-      site: "Your website",
-      address: "Address",
-      notPublished: "Not published yet",
-      lastPublish: "Last publish",
       state: { running: "Publishing…", ready: "Published", failed: "Failed" },
-      lastSaved: "Last saved {date}",
-      lastSavedBy: "Last saved {date} by {person}",
     },
     openEditor: "Open the editor",
     preview: "Preview",

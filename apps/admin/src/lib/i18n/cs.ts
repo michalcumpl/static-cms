@@ -147,13 +147,7 @@ export const cs: Messages = {
       business: "Podnik",
     },
     overview: {
-      site: "Váš web",
-      address: "Adresa",
-      notPublished: "Zatím nezveřejněno",
-      lastPublish: "Poslední zveřejnění",
       state: { running: "Probíhá zveřejnění…", ready: "Zveřejněno", failed: "Nepovedlo se" },
-      lastSaved: "Naposledy uloženo {date}",
-      lastSavedBy: "Naposledy uloženo {date} ({person})",
     },
     openEditor: "Otevřít editor",
     preview: "Náhled",
