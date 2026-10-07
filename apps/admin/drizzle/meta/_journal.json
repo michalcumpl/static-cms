@@ -5,57 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1790696646762,
-      "tag": "0000_regular_proteus",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1790710137287,
-      "tag": "0001_lowly_brother_voodoo",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1790772506443,
-      "tag": "0002_blushing_karnak",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1790856984129,
-      "tag": "0003_worried_skin",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1790872613259,
-      "tag": "0004_smooth_wild_pack",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1790932043287,
-      "tag": "0005_tidy_shiva",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1791199977036,
-      "tag": "0006_early_firedrake",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1791354222959,
-      "tag": "0007_many_scourge",
+      "when": 1791355759280,
+      "tag": "0000_initial",
       "breakpoints": true
     }
   ]

@@ -1,1 +1,0 @@
-ALTER TABLE `versions` ADD `system` integer DEFAULT false NOT NULL;

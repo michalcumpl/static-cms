@@ -140,6 +140,10 @@ ORIGIN=https://admin.example.cz BODY_SIZE_LIMIT=25M SMTP_URL=… MAIL_FROM=… n
 - Run one process (the database handles concurrent saves; sign-in rate limits are in memory).
   Put a reverse proxy with HTTPS in front, and keep `ORIGIN` equal to the public URL.
 - Deploy the `drizzle/` folder with the app; migrations run when the server starts.
+- The migrations were flattened into one (`0000_initial`) on 2026-10-07. A database created
+  before then is upgraded by an earlier version first (commit `f28943a` has the last of the old
+  migrations), and its `__drizzle_migrations` record replaced by the new migration's hash and
+  timestamp, as was done for the development database.
 - `better-sqlite3` is a native module. Prebuilt binaries cover Linux x64/arm64 on Node 22; on
   other platforms install a C++ toolchain (`build-essential`, `python3`) before `pnpm install`.
   It is pinned to 12.x because 13.0.3 crashes on Node 22.13.

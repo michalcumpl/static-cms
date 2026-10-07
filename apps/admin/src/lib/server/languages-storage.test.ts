@@ -1,6 +1,3 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import Database from "better-sqlite3";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { type Db, openDatabase } from "./db/index";
@@ -138,45 +135,6 @@ describe("reading and saving languages", () => {
 
   it("answers nothing for a language the project doesn't have", () => {
     expect(readSite(db, projectId, "pl")).toBeUndefined();
-  });
-});
-
-describe("the languages migration", () => {
-  it("records each earlier publish's version as its primary language's", async () => {
-    const folder = join(import.meta.dirname, "../../../drizzle");
-    const files = readdirSync(folder)
-      .filter((f) => f.endsWith(".sql"))
-      .sort();
-    const sqlite = new Database(":memory:");
-    const run = (file: string) => {
-      for (const statement of readFileSync(join(folder, file), "utf8").split(
-        "--> statement-breakpoint",
-      )) {
-        if (statement.trim()) sqlite.exec(statement);
-      }
-    };
-    const before = files.filter((f) => f < "0003");
-    for (const file of before) run(file);
-    sqlite.exec(`
-      INSERT INTO workspaces (id, name, created_at) VALUES ('w1', 'W', 0);
-      INSERT INTO projects (id, workspace_id, name, created_at) VALUES ('p1', 'w1', 'P', 0);
-      INSERT INTO site_documents (id, project_id, lang, version, current_version_id)
-        VALUES ('d1', 'p1', 'cs', 'x', 'v1');
-      INSERT INTO versions (id, document_id, version, document, created_at)
-        VALUES ('v1', 'd1', 'x', '{}', 0);
-      INSERT INTO publishes (id, project_id, version_id, state, started_at)
-        VALUES ('pb1', 'p1', 'v1', 'ready', 0);
-    `);
-    for (const file of files.filter((f) => f >= "0003")) run(file);
-    expect(sqlite.prepare("SELECT * FROM publish_documents").all()).toEqual([
-      { publish_id: "pb1", lang: "cs", version_id: "v1" },
-    ]);
-    expect(sqlite.prepare("SELECT primary_lang FROM projects").get()).toEqual({
-      primary_lang: "cs",
-    });
-    expect(sqlite.prepare("SELECT published FROM site_documents").get()).toEqual({
-      published: 1,
-    });
   });
 });
 

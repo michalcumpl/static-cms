@@ -281,8 +281,8 @@ Milestones in order. A private beta for friends (F) starts as soon as A–E work
 of the three launch templates (Education, Law, Financial advisory); the third can land during the
 beta. The other templates come after launch.
 
-**Next steps** (2026-10-07): `project-deletion` (done), then the cleanup (old projects deleted,
-migrations flattened), then `example-sites`; layouts become part of the model with
+**Next steps** (2026-10-07): `project-deletion` and the cleanup (old projects deleted,
+migrations flattened) are done; next is `example-sites`; layouts become part of the model with
 `template-system`.
 
 **Planned changes**, in order. A → B → C build on each other's data model and must go in
@@ -365,7 +365,7 @@ beta.
   list, with Restore (back as it was, unpublished) and Delete now (the project, its versions,
   publishes and images removed for good). Automatic removal after 30 days comes with
   `scheduled-jobs`.
-- **Cleanup before the examples** (after `project-deletion`, decided 2026-10-07):
+- **Cleanup before the examples: done** (2026-10-07):
   - **The old projects go:** Atelier Aniděti, RV Finance, cumpl.cz, Kubuv huliweb and test are
     deleted with the new feature. Atelier Aniděti's Netlify site goes with it.
   - **The migrations are flattened:** the seven migrations become one, generated from the

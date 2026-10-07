@@ -48,7 +48,7 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
 - [ ] **Deleting a website:** owners only, confirmed by typing its name, offline at once;
   restorable from "Deleted websites", or removed for good with Delete now (`project-deletion`).
   Automatic removal after 30 days comes with scheduled jobs.
-- [ ] **Clean up the database:** delete the old projects with `project-deletion` (Atelier
+- [x] **Clean up the database:** delete the old projects with `project-deletion` (Atelier
   Aniděti's Netlify site included), then flatten the migrations into one, keeping accounts and
   the workspace (copy the database first; check the schema matches).
 - [ ] **Example sites:** load the three launch examples into our database (`example-sites`):
