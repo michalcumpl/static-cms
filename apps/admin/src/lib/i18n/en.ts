@@ -106,7 +106,7 @@ export const en = {
     tabsLabel: "Project sections",
     tabTitle: "{tab} – {project}",
     sections: {
-      dashboard: "Your website",
+      dashboard: "Overview",
       business: "Business",
       website: "Website",
       publish: "Publish",
@@ -313,7 +313,7 @@ export const en = {
     left: {
       history: "History",
       settings: "Settings",
-      dashboard: "Your website",
+      dashboard: "Overview",
       language: "Language",
       hiddenLanguage: "{language} (hidden)",
       pages: "Pages",

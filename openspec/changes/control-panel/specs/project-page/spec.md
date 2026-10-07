@@ -4,7 +4,7 @@
 
 ### Requirement: Project panel
 A project SHALL have a panel (control-panel design decision 1): a dashboard and section pages, shown under a header with the project's name, a link back to the project list, and the actions Preview and Open editor. A section bar SHALL link to:
-- **Your website**, the dashboard, at `/p/<project>/`;
+- **Overview**, the dashboard, at `/p/<project>/`;
 - **Business** at `/p/<project>/business`;
 - **Website** at `/p/<project>/website`, with its subpages Pages and menu (`/website/pages`), Languages (`/website/languages`) and Domain (`/website/domain`);
 - **Publish** at `/p/<project>/publish`, with its subpage Versions (`/publish/versions`).
@@ -24,7 +24,7 @@ Each page SHALL have its own address, so it can be bookmarked, opened in a new w
 - **THEN** the Website section shows the English site settings
 
 ### Requirement: Dashboard
-The dashboard SHALL show, at the top, "Your website":
+The dashboard, "Overview", SHALL show at the top:
 - the site's name;
 - its state: "Live" with the site's address as a link, or "Not published yet";
 - the Publish button, or, when the workspace isn't connected to hosting, the note and link the Publish section gives;

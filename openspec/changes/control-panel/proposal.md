@@ -6,14 +6,14 @@ The strategy says the admin is a **business control panel**: owners maintain the
 business, not pages (`docs/strategy.md`, principle 1). Today a project opens as six tabs shaped
 like a tool: Overview, Pages, Languages, Publishing, History and Settings. The business's facts
 sit in one long Settings tab next to the site's SEO settings. This change gives each website a
-home organised the way an owner thinks: **Your website**, **Business**, **What you offer**,
+home organised the way an owner thinks: **Overview**, **Business**, **What you offer**,
 **About you**, **Website**, **Publish**. Milestone B's later changes (`offer-and-about`, guided
 setup, photos) build on this structure.
 
 ## What Changes
 
 - **A dashboard replaces the Overview tab** at `/p/<project>/`:
-  - **"Your website":** the site's name, its live state (● Live / Not published yet), its address
+  - **"Overview":** the site's name, its live state (● Live / Not published yet), its address
     and the Publish button;
   - **the problems of the saved site:** a count, each problem leading to where it's fixed;
   - **one card per section**, with a short summary and a link:
@@ -25,7 +25,7 @@ setup, photos) build on this structure.
 
   Until `offer-and-about`, the What you offer and About you cards lead to the editor, on the
   first page that shows those items.
-- **Section pages replace the other tabs**, under a section bar (Your website · Business ·
+- **Section pages replace the other tabs**, under a section bar (Overview · Business ·
   Website · Publish):
   - **Business** (`/p/<project>/business`): the business settings that were on the Settings tab,
     with its explicit Save, Undo and Redo, and the conflict refusal.

@@ -78,7 +78,7 @@ test("the dashboard publishes too", async ({ page }) => {
   await connectTestWorkspace();
   await page.goto(paths().dashboard);
   await page.waitForLoadState("networkidle");
-  const section = page.getByRole("region", { name: "Your website" });
+  const section = page.getByRole("region", { name: "Overview" });
   await section.getByRole("button", { name: "Publish", exact: true }).click();
   await expect(section.getByText(/^Published · /)).toBeVisible({ timeout: 15_000 });
 });

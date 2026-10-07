@@ -5,7 +5,7 @@ export const fontPath = (name: string) => `/fonts/${encodeURIComponent(name)}`;
 
 /** Every URL of a project, in one place (design.md decision 6). */
 export interface ProjectPaths {
-  /** The panel's home, "Your website" (control-panel design decision 1). */
+  /** The panel's home, "Overview" (control-panel design decision 1). */
   dashboard: string;
   /** The Business section (`?lang=` for other languages than the primary). */
   business: string;

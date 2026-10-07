@@ -111,7 +111,7 @@ export const cs: Messages = {
     tabsLabel: "Části projektu",
     tabTitle: "{tab} – {project}",
     sections: {
-      dashboard: "Váš web",
+      dashboard: "Přehled",
       business: "Podnik",
       website: "Web",
       publish: "Zveřejnění",
@@ -321,7 +321,7 @@ export const cs: Messages = {
     left: {
       history: "Historie",
       settings: "Nastavení",
-      dashboard: "Váš web",
+      dashboard: "Přehled",
       language: "Jazyk",
       hiddenLanguage: "{language} (skrytý)",
       pages: "Stránky",

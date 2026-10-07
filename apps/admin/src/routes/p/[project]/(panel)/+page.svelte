@@ -11,7 +11,7 @@ import Notice from "$lib/ui/Notice.svelte";
 import TabPanel from "$lib/ui/TabPanel.svelte";
 import type { PageProps } from "./$types";
 
-// "Your website" (project-page spec, "Dashboard"): the site's state and the Publish button, the
+// "Overview" (project-page spec, "Dashboard"): the site's state and the Publish button, the
 // saved site's problems, each leading to where it's fixed, and one card per section.
 let { data }: PageProps = $props();
 const i18n = getI18n();
@@ -87,40 +87,44 @@ const aboutHref = $derived(paths.edit(summary.aboutPageId));
   {/if}
 
   <div class="cards">
-    <Card title={i18n.t("project.sections.business")} id="business-card">
-      <p>{summary.businessName}{summary.mainCity ? ` · ${summary.mainCity}` : ""}</p>
-      {#if summary.locations > 1}<p class="muted">{i18n.t("dashboard.locations", { count: summary.locations })}</p>{/if}
-      <a href={paths.business}>{i18n.t("dashboard.open", { section: i18n.t("project.sections.business") })}</a>
-    </Card>
-    <Card title={i18n.t("dashboard.offer")} id="offer-card">
-      <p>{i18n.t("dashboard.services", { count: summary.services })} · {i18n.t("dashboard.questions", { count: summary.questions })}</p>
-      <a href={offerHref}>{i18n.t("dashboard.editOnPage")}</a>
-    </Card>
-    <Card title={i18n.t("dashboard.about")} id="about-card">
-      <p>{i18n.t("dashboard.people", { count: summary.people })} · {i18n.t("dashboard.testimonials", { count: summary.testimonials })}</p>
-      <a href={aboutHref}>{i18n.t("dashboard.editOnPage")}</a>
-    </Card>
-    <Card title={i18n.t("project.sections.website")} id="website-card">
-      <p>
-        {i18n.t("panel.website.pages", { count: summary.pages })} · {data.languages.map((l) => l.name).join(", ")}
-      </p>
-      <p class="muted">{info?.domain ?? info?.address ?? i18n.t("dashboard.notPublished")}</p>
-      <DesignCard design={data.design} {logoUrl} editHref={editDesign} />
-      <a href={paths.website}>{i18n.t("dashboard.open", { section: i18n.t("project.sections.website") })}</a>
-    </Card>
-    <Card title={i18n.t("project.sections.publish")} id="publish-card">
-      {#if latest}
+    <div class="column">
+      <Card title={i18n.t("project.sections.business")} id="business-card">
+        <p>{summary.businessName}{summary.mainCity ? ` · ${summary.mainCity}` : ""}</p>
+        {#if summary.locations > 1}<p class="muted">{i18n.t("dashboard.locations", { count: summary.locations })}</p>{/if}
+        <a href={paths.business}>{i18n.t("dashboard.open", { section: i18n.t("project.sections.business") })}</a>
+      </Card>
+      <Card title={i18n.t("dashboard.offer")} id="offer-card">
+        <p>{i18n.t("dashboard.services", { count: summary.services })} · {i18n.t("dashboard.questions", { count: summary.questions })}</p>
+        <a href={offerHref}>{i18n.t("dashboard.editOnPage")}</a>
+      </Card>
+      <Card title={i18n.t("dashboard.about")} id="about-card">
+        <p>{i18n.t("dashboard.people", { count: summary.people })} · {i18n.t("dashboard.testimonials", { count: summary.testimonials })}</p>
+        <a href={aboutHref}>{i18n.t("dashboard.editOnPage")}</a>
+      </Card>
+    </div>
+    <div class="column">
+      <Card title={i18n.t("project.sections.website")} id="website-card">
         <p>
-          <Badge status={latest.state === "ready" ? "success" : latest.state === "failed" ? "problem" : "neutral"}>
-            {i18n.t(`project.overview.state.${latest.state}`)}
-          </Badge>
-          {when(latest.finishedAt ?? latest.startedAt)}
+          {i18n.t("panel.website.pages", { count: summary.pages })} · {data.languages.map((l) => l.name).join(", ")}
         </p>
-      {:else if info}
-        <p class="muted">{i18n.t("dashboard.notPublished")}</p>
-      {/if}
-      <a href={paths.publishPage}>{i18n.t("dashboard.open", { section: i18n.t("project.sections.publish") })}</a>
-    </Card>
+        <p class="muted">{info?.domain ?? info?.address ?? i18n.t("dashboard.notPublished")}</p>
+        <DesignCard design={data.design} {logoUrl} editHref={editDesign} />
+        <a href={paths.website}>{i18n.t("dashboard.open", { section: i18n.t("project.sections.website") })}</a>
+      </Card>
+      <Card title={i18n.t("project.sections.publish")} id="publish-card">
+        {#if latest}
+          <p>
+            <Badge status={latest.state === "ready" ? "success" : latest.state === "failed" ? "problem" : "neutral"}>
+              {i18n.t(`project.overview.state.${latest.state}`)}
+            </Badge>
+            {when(latest.finishedAt ?? latest.startedAt)}
+          </p>
+        {:else if info}
+          <p class="muted">{i18n.t("dashboard.notPublished")}</p>
+        {/if}
+        <a href={paths.publishPage}>{i18n.t("dashboard.open", { section: i18n.t("project.sections.publish") })}</a>
+      </Card>
+    </div>
   </div>
 </TabPanel>
 
@@ -169,10 +173,18 @@ const aboutHref = $derived(paths.edit(summary.aboutPageId));
     align-items: baseline;
   }
 
+  /* Two stacks instead of grid rows, so the tall Website card leaves no gaps: the business's
+     facts on the left, the site and its publishing on the right. */
   .cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
     gap: var(--ui-space-4);
     align-items: start;
+  }
+
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-4);
   }
 </style>

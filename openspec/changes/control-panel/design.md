@@ -59,7 +59,7 @@ The current state:
 
 - `(tabs)/` is renamed `(panel)/` with `git mv`, so each moved page keeps its history.
 - The layout keeps the header and the membership check. `Tabs` is replaced by a section bar
-  (Your website · Business · Website · Publish), with a second row of subpage links on Website
+  (Overview · Business · Website · Publish), with a second row of subpage links on Website
   and Publish.
 - What you offer and About you get no bar entries until `offer-and-about` gives them pages.
   Their dashboard cards lead to the editor.
@@ -136,6 +136,10 @@ the editor already accepts.
   at the node".
 - **The language survives detours:** panel links carry `?lang=`, so going through Publish, which
   shows no language, keeps it.
+- **"Overview", not "Your website":** "Your website" next to "Website" in the section bar read
+  as the same thing twice.
+- **The cards in two stacks:** Business, What you offer and About you on the left; Website and
+  Publish on the right. In grid rows, the tall Website card (with the design) left gaps.
 - **Tests:** the settings scenarios live in `e2e/sections.spec.ts`. `business.spec.ts` already
   holds the editor's business-block tests.
 

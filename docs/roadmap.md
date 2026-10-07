@@ -338,14 +338,14 @@ beta.
 ### B. Business control panel
 
 - **The panel: done** ([`control-panel`](../openspec/changes/control-panel/)). A project opens on
-  **Your website**: its live state and Publish, the saved site's problems (each a link to where
+  **Overview**: its live state and Publish, the saved site's problems (each a link to where
   it's fixed, the editor opening at the problem), and a card per section. **Business** and
   **Website** (with Pages and menu, Languages and Domain) replace the Settings, Pages and
   Languages tabs; **Publish** (with Versions) replaces Publishing and History. Design stays in
   the editor until templates; the Website section shows it at a glance with "Change design". Old
   tab addresses redirect.
 
-- The website's home in the admin follows the customer's mental model: **Your website** (name,
+- The website's home in the admin follows the customer's mental model: **Overview** (name,
   ● Live, address), then **Business** (company, hours, locations, contact), **What you offer**
   (services, pricing, FAQs), **About you** (team, photos, testimonials), **Website** (design,
   navigation, domain, SEO) and **Publish**.

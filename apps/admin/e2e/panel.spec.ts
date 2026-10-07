@@ -40,7 +40,7 @@ test("Open a section", async ({ page }) => {
     "aria-current",
     "page",
   );
-  for (const section of ["Your website", "Business", "Website", "Publish"]) {
+  for (const section of ["Overview", "Business", "Website", "Publish"]) {
     await expect(tabs(page).getByRole("link", { name: section, exact: true })).toBeVisible();
   }
   await expect(page.getByRole("link", { name: "Preview" }).first()).toBeVisible();
@@ -102,7 +102,7 @@ test.describe("Dashboard", () => {
     await connectTestWorkspace();
     await page.goto(paths().dashboard);
     await page.waitForLoadState("networkidle");
-    const site = page.getByRole("region", { name: "Your website" });
+    const site = page.getByRole("region", { name: "Overview" });
     await expect(site.getByText("Not published yet")).toBeVisible();
     await site.getByRole("button", { name: "Publish", exact: true }).click();
     await expect(site.getByRole("link", { name: /netlify\.app/ }).first()).toBeVisible({
@@ -121,7 +121,7 @@ test.describe("Dashboard", () => {
     await page.waitForLoadState("networkidle");
     await expect(page.getByRole("region", { name: "Problems" })).toContainText("1 error");
     await expect(
-      page.getByRole("region", { name: "Your website" }).getByRole("button", {
+      page.getByRole("region", { name: "Overview" }).getByRole("button", {
         name: "Publish",
         exact: true,
       }),

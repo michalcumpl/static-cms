@@ -111,7 +111,7 @@ test.describe("the site", () => {
     await page.goto(paths().dashboard);
     await page.waitForLoadState("networkidle");
     await page
-      .getByRole("region", { name: "Your website" })
+      .getByRole("region", { name: "Overview" })
       .getByRole("button", { name: "Publish", exact: true })
       .click();
     await expect(page.getByText(/^Published · sc-/)).toBeVisible({ timeout: 15_000 });
@@ -252,7 +252,7 @@ test.describe("the business", () => {
     await page.goto(paths().dashboard);
     await page.waitForLoadState("networkidle");
     await page
-      .getByRole("region", { name: "Your website" })
+      .getByRole("region", { name: "Overview" })
       .getByRole("button", { name: "Publish", exact: true })
       .click();
     await expect(page.getByText(/^Published · sc-/)).toBeVisible({ timeout: 15_000 });
@@ -280,7 +280,7 @@ test.describe("saving", () => {
     page.once("dialog", (dialog) => void dialog.dismiss());
     await page
       .getByRole("navigation", { name: "Project sections" })
-      .getByRole("link", { name: "Your website" })
+      .getByRole("link", { name: "Overview" })
       .click();
     await expect(page).toHaveURL(paths().business);
     await expect(business(page).getByLabel("City")).toHaveValue("Kolín 2");

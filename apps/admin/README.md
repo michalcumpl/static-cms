@@ -29,7 +29,7 @@ workspace named "Default". The first user created with `create-user` becomes its
 | `/invite/<token>`                      | Accept an invitation (creates the account if needed).              |
 | `/w/<workspace>/members`               | Members, roles and invitations (owners change them).               |
 | `/w/<workspace>/new`                   | Owners: create a project from the starter site.                    |
-| `/p/<project>`                         | The project's panel. **Your website**: live state, Publish, problems (each a link to where it's fixed), and a card per section. |
+| `/p/<project>`                         | The project's panel. **Overview**: live state, Publish, problems (each a link to where it's fixed), and a card per section. |
 | `/p/<project>/business`                | **Business** of a language (`?lang=`): name, type, locations with hours, social profiles; Save, Undo. |
 | `/p/<project>/website`                 | **Website** (`?lang=`): site name, description, favicon, share image, AI switches; the design card (**Change design** opens the editor). |
 | `/p/<project>/website/pages`           | **Pages and menu** of a language (`?lang=`): home, menu, translation marks, Edit and Preview. |
@@ -64,7 +64,7 @@ Everything except sign-in and invitations needs a session. Project pages and API
   description, favicon, share image and AI switches in the **Website** section, the business and
   its locations in the **Business** section. They are saved there, as in the editor (Save, Undo,
   a refusal if the site changed elsewhere). Problems about them, and "Edit business details" on a
-  block, lead there; the editor's left column links back to **Your website**.
+  block, lead there; the editor's left column links back to **Overview**.
   The editor's right column has **Page** and **Design** (the theme); the problems panel is under
   the pages in the left column.
 - **Keyboard.** Esc selects the paragraph, item or block around the cursor, step by step; Alt+↑/↓

@@ -34,7 +34,7 @@ check and the untranslated-text test enforce this.
 
 ## 3. Dashboard
 
-- [x] 3.1 The dashboard's server load and page (decision 3): Your website, problems, and the five
+- [x] 3.1 The dashboard's server load and page (decision 3): Overview, problems, and the five
   cards. Verify with a load unit test (counts, first offer and about pages, design summary),
   and the e2e tests "Published and valid", "Errors disable publishing" and "Offer card before
   its section exists".
