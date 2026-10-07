@@ -166,6 +166,11 @@ Decided 2026-10-05:
   typing its name; a published website goes offline. Deleted websites can be restored with their
   versions and images, or removed for good at once. Removing them automatically 30 days after
   deletion comes later with scheduled jobs.
+- **Import from your current website** (decided 2026-10-07): the guided setup can start from
+  an existing public website's address. Version 1 has no AI: pages, menu, redirects from the
+  old addresses, business details, images, a guessed theme and texts as plain blocks, reviewed
+  before publishing. Version 2 adds AI to sort texts into services, team, testimonials and
+  FAQs. Only content the owner may use is imported, never the design.
 - **Netlify publishing: keep it until own hosting replaces it.** Customers never choose a
   publishing target.
 

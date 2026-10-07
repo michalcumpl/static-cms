@@ -45,6 +45,10 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
 
 - [ ] **Website creation guide, step by step:** the "Tell us about your business" wizard (type
   of business → template suggestion → name, contact, hours → services → photos → preview).
+- [ ] **Import from your current website** (`site-import`): paste a public website's address;
+  v1 without AI imports pages, menu, old-address redirects, business details, images, a guessed
+  theme and plain-text blocks, with a review before publishing. v2 adds AI for services, team,
+  testimonials and FAQs (after the beta).
 - [ ] **Deleting a website:** owners only, confirmed by typing its name, offline at once;
   restorable from "Deleted websites", or removed for good with Delete now (`project-deletion`).
   Automatic removal after 30 days comes with scheduled jobs.

@@ -301,6 +301,7 @@ beta.
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
 | 7 | C | `template-system` | the template contract, layouts (page recipes, also offered by "Add page"), homepage sections on or off, template versions | |
+| 7b | B | `site-import` | import a public website by its address (v1, no AI): pages, menu, redirects from the old addresses, business details, images, a guessed theme, texts as plain blocks, and a review before anything is published | |
 | 8 | C | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | |
 | 9 | C | `template-education`, `template-law`, `template-finance` | the three launch templates, each checked against its example site; two before the beta | |
 | 10 | C | `template-switching` | choose, preview with your own content, publish | |
@@ -399,6 +400,25 @@ beta.
 - **Image cropping** and focal points in the media library (open since milestone 3).
 - **Guided setup:** a step-by-step "Tell us about your business" wizard that ends in a
   previewable site.
+- **Import from your current website** (`site-import`, decided 2026-10-07): the guided setup's
+  second way in, "Start from your current website". The owner pastes an address and confirms
+  the site is theirs or that they may use its content; the import takes texts and photos, never
+  the design. Version 1 has no AI:
+  - **Pages and menu** from the site's navigation and `sitemap.xml`, same domain only, around 20
+    pages at most, following `robots.txt`.
+  - **Old addresses** recorded per page, so "Redirects from earlier addresses" keeps search
+    engine links working after the switch.
+  - **Business details** from schema.org data, `tel:` and `mailto:` links, addresses and social
+    profile links; FAQs from `<details>` and FAQPage data.
+  - **Images** into the media library with their alt texts, de-duplicated; logo and favicon.
+  - **A guessed theme** (colours and fonts from the site's CSS) as a starting point.
+  - **Texts as plain blocks** (headings, paragraphs, lists) on pages built from layouts.
+  - **A review** before anything is published: what was imported, and what to check.
+
+  It runs as a background job with progress, and fetches pages safely: no internal addresses,
+  size limits, timeouts; sites that build their content with JavaScript (Wix, Squarespace) need
+  a headless browser. It produces what `load-site` reads (a site document and images), and the
+  three example sites are its test cases, kept locally like the examples.
 - Replaces the planned projects dashboard; an account with several websites lists them as cards.
 
 ### C. Templates as website systems
@@ -496,5 +516,7 @@ before anyone pays.
 - **Agencies:** an agency account sets up client websites, and clients get the simple panel.
 - **AI** (was milestone 9), building on health and the data model: suggested alt text and SEO
   text, filling in the business from a few answers, "change the opening hours to 8–17",
-  nudges ("a service has no description"), translation. Runs on our key within fair use; no
+  nudges ("a service has no description"), translation. **Import version 2** (`site-import`):
+  sorting imported texts into services with prices, team, testimonials and FAQs, and choosing
+  layouts, checked by our validation before the owner reviews it. Runs on our key within fair use; no
   bring-your-own-key.
