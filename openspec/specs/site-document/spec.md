@@ -504,7 +504,7 @@ An item SHALL belong to exactly one collection and SHALL NOT appear inside a blo
 - a non-empty quote (testimonials);
 - a non-empty question and answer (FAQ items).
 
-Images SHALL follow the image accessibility rule. Messages about an item SHALL name the collection and the item's position, such as "Service 3" or "Question 2", never a node ID. Each message SHALL say where the item can be fixed. An empty collection SHALL be valid.
+Images SHALL follow the image accessibility rule. Messages about an item SHALL name the collection and the item's position, such as "Service 3" or "Question 2", never a node ID. Each message SHALL say where the item can be fixed: the What you offer section for services and questions, the About you section for people and testimonials (see the project-page capability). An empty collection SHALL be valid.
 
 #### Scenario: Valid collections
 - **WHEN** the site has two services with names, one person with a name and a described portrait, one testimonial with a quote and a name, and one FAQ item with a question and an answer
@@ -512,7 +512,7 @@ Images SHALL follow the image accessibility rule. Messages about an item SHALL n
 
 #### Scenario: Service without a name
 - **WHEN** the third service in the collection has an empty name
-- **THEN** validation reports an empty-name error for "Service 3"
+- **THEN** validation reports an empty-name error for "Service 3", which says to edit it in What you offer
 
 #### Scenario: Question without an answer
 - **WHEN** the second FAQ item has the question "Do you deliver?" and an empty answer
