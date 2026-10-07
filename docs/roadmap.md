@@ -296,7 +296,7 @@ beta.
 | 3 | A | [`business-locations`](../openspec/changes/archive/2026-10-06-business-locations/) | several locations, each with address, hours and contact | done |
 | 4 | B | [`control-panel`](../openspec/changes/archive/2026-10-07-control-panel/) | the website home: a dashboard and the Business, Website and Publish sections, replacing the project tabs | done |
 | 4b | B | [`offer-and-about`](../openspec/changes/archive/2026-10-07-offer-and-about/) | What you offer (services, FAQs) and About you (team, testimonials): forms per item, with formatting | done |
-| 4c | B | `project-deletion` | owners delete a website (typing its name; a published one goes offline) and can restore it for 30 days | next |
+| 4c | B | `project-deletion` | owners delete a website for good (typing its name; a published one goes offline) | next |
 | 4d | B | `example-sites` | a command that loads a site document and its images into a new project; the three launch examples (Aniděti, Mareš Partners, Mortgage Specialist) built with it in our own database, not committed. Before it: the old projects deleted, the database migrations flattened into one | |
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
@@ -308,7 +308,8 @@ beta.
 | 12 | D | `safe-publishing` | the publish pipeline: link check, deploy verification, previous version kept on failure | |
 | 13 | E | `domain-guides` | DNS guides per registrar with a live record check | |
 | 14 | E | `contact-form` | form endpoint, email to the owner, spam protection | |
-| 15 | E | `website-health` | daily checks, *Website healthy*, alerts | |
+| 14b | E | `scheduled-jobs` | recurring server jobs in one place, and the first of them: a 30-day restore window for deleted websites, removed for good after it | |
+| 15 | E | `website-health` | daily checks, *Website healthy*, alerts (a scheduled job) | |
 | 16 | F | `admin-on-aws`, `presentation-site`, `operator-console`, legal documents | the private beta | |
 | 17 | C | `template-local-services`, `template-hospitality`, `template-personal-professional` | the templates after launch | |
 
@@ -360,9 +361,8 @@ beta.
 - **Deleting a website** (`project-deletion`, next): workspace owners only (members can't),
   from a "Delete website" area at the bottom of the Website section, confirmed by typing the
   website's name. A published website is taken offline (its Netlify site deleted; our own
-  hosting later), and the confirmation says so. Deleted websites are listed in the workspace for
-  30 days and can be restored; then the project, its versions, publishes and images are removed
-  for good.
+  hosting later), and the confirmation says so. The project, its versions, publishes and images
+  are removed for good; restoring comes with `scheduled-jobs`.
 - **Cleanup before the examples** (after `project-deletion`, decided 2026-10-07):
   - **The old projects go:** Atelier Aniděti, RV Finance, cumpl.cz, Kubuv huliweb and test are
     deleted with the new feature. Atelier Aniděti's Netlify site goes with it.
@@ -448,6 +448,17 @@ Was milestone 7, plus health.
   check of the records. Then the seamless version: nameservers to a Route 53 hosted zone we
   create, existing records imported (email keeps working), bare domain, `www` and certificate
   set up automatically.
+- **Scheduled jobs** (`scheduled-jobs`): one place for the server's recurring work, with each
+  job's last run and outcome visible to operators, safe to run twice and resumed after a restart
+  (on the AWS server, one instance runs them). The jobs it will carry:
+  - **removing deleted websites** after a 30-day restore window; with it, deleting a website
+    becomes restorable ("Deleted websites" in the project list, Restore, Delete now);
+  - **website health** checks, daily;
+  - **custom domain checks** until the certificate is issued, instead of on page load;
+  - **media cleanup** (images no version uses), today the `media-cleanup` command;
+  - **expired sign-in links, sessions and invitations** removed;
+  - **reminder emails:** renewals, and nudges such as opening hours not updated in a year;
+  - later, **backups** checked (Litestream) and **renewals** with billing.
 - **Website health:** a daily check (SSL, domain, pages published, no broken links, images
   optimised, contact form working, required business information present, sitemap, valid
   structured data) shown as *Website healthy* or a list of what to fix, and emailed when

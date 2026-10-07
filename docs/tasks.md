@@ -45,8 +45,8 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
 
 - [ ] **Website creation guide, step by step:** the "Tell us about your business" wizard (type
   of business → template suggestion → name, contact, hours → services → photos → preview).
-- [ ] **Deleting a website:** owners only, confirmed by typing its name, offline at once,
-  restorable for 30 days (`project-deletion`).
+- [ ] **Deleting a website:** owners only, confirmed by typing its name, offline at once, gone
+  for good (`project-deletion`). A restore window comes with scheduled jobs.
 - [ ] **Clean up the database:** delete the old projects with `project-deletion` (Atelier
   Aniděti's Netlify site included), then flatten the migrations into one, keeping accounts and
   the workspace (copy the database first; check the schema matches).
@@ -76,6 +76,10 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
 
 ## E. Domains and health
 
+- [ ] **Scheduled jobs** (`scheduled-jobs`): recurring server work in one place, safe to run
+  twice. First jobs: removing deleted websites after a 30-day restore window (and with it,
+  restoring them), website health, domain checks, media cleanup, expired sign-in links and
+  sessions, reminder emails.
 - [ ] **Domains and DNS:** for the beta, guides per registrar for pointing an existing domain,
   with a live record check. Registration comes later (Route 53 Domains, a Czech registrar API for
   `.cz`).
