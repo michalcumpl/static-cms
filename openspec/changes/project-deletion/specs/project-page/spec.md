@@ -2,12 +2,12 @@
 
 ### Requirement: Delete website
 For workspace owners, the Website section's main page SHALL end with a "Delete website" area, apart from the settings and not part of what Save saves. Choosing **Delete website** SHALL open a confirmation that:
-- says the website, its pages, versions and images are removed for good, and that this can't be undone;
+- says the website can be restored, with its pages, versions and images, from "Deleted websites" in the project list;
 - when the website is published, says it goes offline at once, and names its address and custom domain;
 - when it was published but the workspace is no longer connected to Netlify, says the old site stays on Netlify until it is removed there;
 - enables its Delete button only once the website's name has been typed exactly.
 
-When the website has unsaved changes, deleting SHALL discard them without asking to save. After deleting, the owner SHALL see the project list with a note that the website was deleted. Editors SHALL NOT see the area.
+When the website has unsaved changes, deleting SHALL discard them without asking to save. After deleting, the owner SHALL see the project list with a note that the website was deleted and can be restored there. Editors SHALL NOT see the area.
 
 #### Scenario: Confirm with the name
 - **WHEN** an owner chooses Delete website on "Pekárna U Lípy" and types "Pekárna U Lípy"

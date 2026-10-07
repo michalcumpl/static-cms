@@ -140,7 +140,7 @@ Wix around $17, GoDaddy around $10.
 
 | Area | In |
 | --- | --- |
-| Admin | Business, Services, Team, Testimonials, FAQs, Media, Website settings; deleting a website |
+| Admin | Business, Services, Team, Testimonials, FAQs, Media, Website settings; deleting and restoring a website |
 | Templates | 3 (Education, Law, Financial advisory), mobile-first, layouts, template switching |
 | Publishing | preview, static build, validation, deploy, rollback, custom domain, SSL |
 | Reliability | backups, version history, health checks |
@@ -163,9 +163,9 @@ Decided 2026-10-05:
   work. Template switching keeps the owner's pages and blocks and restyles them. New pages start
   from a layout.
 - **Owners can delete a website** (decided 2026-10-07). Workspace owners only, confirmed by
-  typing its name; a published website goes offline, and the website is gone for good with its
-  versions and images. A 30-day restore window comes later with scheduled jobs, which would
-  remove deleted websites after it.
+  typing its name; a published website goes offline. Deleted websites can be restored with their
+  versions and images, or removed for good at once. Removing them automatically 30 days after
+  deletion comes later with scheduled jobs.
 - **Netlify publishing: keep it until own hosting replaces it.** Customers never choose a
   publishing target.
 
