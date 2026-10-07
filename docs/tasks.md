@@ -75,11 +75,19 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
   *Financial advisory*, *Investment management*, *Short-term rentals* and *Exhibitions*, each
   with a migrated example site (Aniděti, Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka
   Svitávka; Exhibitions to be chosen). Local Services, Hospitality (hotels, cafés, restaurants)
-  and Personal Professional after launch.
+  and Personal Professional after launch. Single- vs. multi-page and image/video hero vs.
+  classic header are template variants, not extra templates.
 - [ ] **Choose the Exhibitions example site.**
-- [ ] **Blocks the examples lack:** key figures, documents to download, booking through the
-  owner's booking service, newsletter signup. Single- vs.
-  multi-page and image/video hero vs. classic header are template variants, not extra templates.
+- [ ] **Blocks the examples lack** (`docs/layouts.md`), before the templates:
+  - [ ] key figures and steps (`figures-and-steps`)
+  - [ ] full-photo hero, compact team list, services as a list, gallery showing whole images
+    (`block-variants`)
+  - [ ] a page per service, lists inside a service (`service-pages`)
+  - [ ] PDFs to download (`documents`)
+  - [ ] business types, company and regulatory details, check-in and check-out times
+    (`business-details`)
+- [ ] **During the beta:** reviews with a rating (`reviews`), video (`video`), timetables
+  (`timetable`), the owner's booking service (`booking`), newsletter signup (`newsletter`).
 - [ ] **Layouts:** page recipes (ordered blocks, no styling) that make up a template's pages and
   are offered by "Add page" and the guided setup.
 - [ ] **Lighthouse 100** for generated sites: Lighthouse CI on every template and variant, with

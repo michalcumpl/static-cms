@@ -301,10 +301,20 @@ beta.
 | 4d | B | [`example-sites`](../openspec/changes/archive/2026-10-08-example-sites/) | a command that loads a site document and its images into a new project; the launch examples (Aniděti, Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka Svitávka; Exhibitions once chosen) built with it in our own database, not committed. Before it: the old projects deleted, the database migrations flattened into one | done |
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | next |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
+| 6b | C | `figures-and-steps` | two blocks: **key figures** (3–6 numbers with a label, such as "300M CZK managed") and **steps** (numbered "how it works") | |
+| 6c | C | `block-variants` | **full-photo hero** (text over the image), **compact team list** (name, role, contact; for teams without portraits), **services as a list or accordion** (many or long items), **gallery showing whole images** (screenshots, logos). A block setting now; templates set the defaults later | |
+| 6d | C | `service-pages` | a page per service from the services collection (scope, price, a call to action), and lists inside a service's description | |
+| 6e | C | `documents` | PDFs in the media library next to images; a documents block and links to documents from texts | |
+| 6f | C | `business-details` | business types for education, legal, financial and lodging businesses; company ID and registration; a regulatory note in the footer (for example "supervised by the Czech National Bank"); check-in and check-out times for rentals | |
 | 7 | C | `template-system` | the template contract, layouts (page recipes, also offered by "Add page"), homepage sections on or off, template versions | |
 | 7b | B | `site-import` | import a public website by its address (v1, no AI): pages, menu, redirects from the old addresses, business details, images, a guessed theme, texts as plain blocks, and a review before anything is published | |
 | 8 | C | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | |
 | 9 | C | `template-education`, `template-law`, `template-finance`, `template-investment`, `template-rentals`, `template-exhibitions` | the six launch templates, each checked against its example site; two before the beta | |
+| 9b | C | `reviews` | reviews with a rating and its source ("4.9 on Google"), shown with the testimonials | during the beta |
+| 9c | C | `video` | YouTube and Vimeo videos, loaded only when clicked (no cookies before) | during the beta |
+| 9d | C | `timetable` | a table block for timetables and seasonal prices | during the beta |
+| 9e | C | `booking` | the owner's booking service (Lodgify and others): a booking button, and its availability calendar where the service allows embedding | during the beta |
+| 9f | C | `newsletter` | a signup form passing addresses to the owner's email service | during the beta |
 | 10 | C | `template-switching` | choose, preview with your own content, publish | |
 | 11 | D | `own-hosting` | S3 + CloudFront, `<site>.webmio.site`, atomic deploys, rollback | |
 | 12 | D | `safe-publishing` | the publish pipeline: link check, deploy verification, previous version kept on failure | |
@@ -444,11 +454,20 @@ beta.
   against its migrated example site by hand and against fixture sites with invented content in
   CI. Local Services, Hospitality (hotels, cafés, restaurants) and Personal Professional follow
   after launch.
-- **What the examples need that we don't have yet** (to settle in the template contract, or as
-  new blocks): key figures ("298M CZK managed", "1+ billion CZK in mortgages"); documents to
-  download (a fund's statute and key information documents); booking and availability through
-  the owner's existing booking service (a link or an embed); a newsletter signup. Until then
-  the examples use what exists and the gaps are noted.
+- **Blocks and settings the example sites showed we lack** (decided 2026-10-08; details and how
+  many examples need each in [`layouts.md`](layouts.md)). Before the templates, because they
+  render them:
+  - `figures-and-steps`: key figures and steps;
+  - `block-variants`: the full-photo hero, a compact team list, services as a list or accordion,
+    a gallery that shows whole images;
+  - `service-pages`: a page per service, and lists inside a service;
+  - `documents`: PDFs to download;
+  - `business-details`: business types for structured data, company and regulatory details,
+    check-in and check-out times.
+
+  During the beta: `reviews` (a rating with its source), `video` (click to load), `timetable`,
+  `booking` (the owner's booking service), `newsletter`. The contact form is `contact-form`
+  (milestone E).
 - **Template switching:** choose → preview with your own content → publish; nothing rewritten.
   Pages and blocks the owner made in the editor are kept and restyled. Collections a template
   doesn't show stay stored, and the preview says what won't be visible.
