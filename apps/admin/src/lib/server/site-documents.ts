@@ -421,6 +421,8 @@ export function createProject(
   name: string,
   document: unknown = starterSite(name),
   createdBy: string | null = null,
+  /** The project's primary language; the admin creates projects in Czech (example-sites). */
+  primaryLang: string = DEFAULT_LANG,
 ): string {
   const projectId = newId("p");
   const documentId = newId("d");
@@ -428,12 +430,14 @@ export function createProject(
   const version = randomUUID();
   const now = new Date();
   db.transaction((tx) => {
-    tx.insert(projects).values({ id: projectId, workspaceId, name, createdAt: now }).run();
+    tx.insert(projects)
+      .values({ id: projectId, workspaceId, name, primaryLang, createdAt: now })
+      .run();
     tx.insert(siteDocuments)
       .values({
         id: documentId,
         projectId,
-        lang: DEFAULT_LANG,
+        lang: primaryLang,
         version,
         currentVersionId: versionId,
       })

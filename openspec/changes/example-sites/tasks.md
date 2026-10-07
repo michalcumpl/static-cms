@@ -5,7 +5,7 @@ No interface text changes: the command's output is for operators and stays in En
 
 ## 1. Builder
 
-- [ ] 1.1 `siteBuilder` in `packages/model/src/builder.ts` (decision 1): site, theme, business,
+- [x] 1.1 `siteBuilder` in `packages/model/src/builder.ts` (decision 1): site, theme, business,
   locations with hours, social profiles, collections (services, team, testimonials, FAQs), pages
   with menu and home, every block type, the inline text syntax, deterministic IDs and
   translation keys. Verify with unit tests: a site using every block type has no validation
@@ -14,13 +14,13 @@ No interface text changes: the command's output is for operators and stays in En
 
 ## 2. Loading
 
-- [ ] 2.1 `createProject` takes a primary language (decision 3). Verify with a unit test: an
+- [x] 2.1 `createProject` takes a primary language (decision 3). Verify with a unit test: an
   English project reads and saves in English, and the admin's New project stays Czech.
-- [ ] 2.2 `loadSite` (decision 2): checks, project, uploads, image keys, languages, clean-up on
+- [x] 2.2 `loadSite` (decision 2): checks, project, uploads, image keys, languages, clean-up on
   failure. Verify with unit tests for "Load an English site", "Two languages" and "Broken
   folder" (no project, no files left), using a temporary folder built with the builder and the
   demo's image.
-- [ ] 2.3 `pnpm admin load-site <folder> --workspace <id>` in `scripts/admin.ts`, with usage,
+- [x] 2.3 `pnpm admin load-site <folder> --workspace <id>` in `scripts/admin.ts`, with usage,
   printed problems and exit codes. Verify by running it on a test folder against a temporary
   database (`DATABASE_PATH`).
 

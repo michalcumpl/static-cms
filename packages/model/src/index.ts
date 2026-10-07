@@ -2,6 +2,18 @@
 // collections, languages and page translation, and the catalogues (fonts, themes, image
 // variants) both rendering and export rely on. Pure TypeScript, no filesystem.
 export {
+  type BlockInput,
+  blocks,
+  type HoursInput,
+  type ImageInput,
+  type LinkInput,
+  type LocationInput,
+  type PageInput,
+  type SiteBuilder,
+  siteBuilder,
+  type ThemeInput,
+} from "./builder.js";
+export {
   blockItems,
   COLLECTION_BLOCK_TYPES,
   COLLECTION_NAMES,

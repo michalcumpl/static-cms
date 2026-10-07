@@ -7,6 +7,7 @@ import { newId } from "./ids";
 import {
   addLanguage,
   createProject,
+  primaryLanguage,
   projectLanguages,
   readSite,
   removeLanguage,
@@ -145,5 +146,20 @@ describe("documents of other projects", () => {
     expect(
       db.select().from(siteDocuments).where(eq(siteDocuments.projectId, other)).all(),
     ).toHaveLength(1);
+  });
+});
+
+describe("a project's primary language", () => {
+  it("is Czech by default, and English when created so", () => {
+    expect(primaryLanguage(db, projectId)).toBe("cs");
+    const workspaceId = newId("w");
+    db.insert(workspaces).values({ id: workspaceId, name: "Brokers", createdAt: new Date() }).run();
+    const english = createProject(db, workspaceId, "Mortgage Specialist", demoSite(), userId, "en");
+    expect(primaryLanguage(db, english)).toBe("en");
+    expect(projectLanguages(db, english).map((l) => l.lang)).toEqual(["en"]);
+    const site = readSite(db, english);
+    if (!site) throw new Error("no English document");
+    expect(readSite(db, english, "en")?.version).toBe(site.version);
+    expect(saveSite(db, english, userId, site.document, site.version).ok).toBe(true);
   });
 });
