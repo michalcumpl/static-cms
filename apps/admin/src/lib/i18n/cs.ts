@@ -768,6 +768,7 @@ export const cs: Messages = {
       noLabel: "Zadejte popisek do menu.",
     },
     blocks: {
+      cards: { name: "Karty", description: "Fotka, nadpis, pár řádků a odkaz, několik vedle sebe" },
       projects: {
         name: "Projekty",
         description: "Vaše práce jako dlaždice s fotkami, všechna nebo jedna kategorie",
@@ -803,6 +804,7 @@ export const cs: Messages = {
       steps: { name: "Postup", description: "Jak to funguje, krok za krokem" },
     },
     items: {
+      card: "Karta",
       list_item: "Položka seznamu",
       service_item: "Služba",
       gallery_item: "Fotka",
@@ -850,7 +852,19 @@ export const cs: Messages = {
       all: "Všechny",
       edit: "Upravit projekty",
     },
+    cardPanel: {
+      title: "Karta",
+      link: "Odkaz",
+      noLink: "Bez odkazu",
+      page: "Stránka webu",
+      item: "Projekt nebo služba",
+      itemLabel: "Projekt nebo služba",
+      noItems: "Zatím žádný projekt ani služba nemá vlastní stránku.",
+      address: "Adresa",
+      broken: "Odkaz vede na něco, co už nemá stránku; vyberte jiný.",
+    },
     look: {
+      cards: { below: "Text pod fotkou", over: "Nadpis přes fotku" },
       legend: "Vzhled",
       hero: { beside: "Vedle textu", cover: "Fotka přes celý blok" },
       services: { cards: "Karty", list: "Seznam", accordion: "Rozbalovací seznam" },
@@ -886,6 +900,8 @@ export const cs: Messages = {
       },
     },
     unavailable: {
+      lastCard: "Blok karet potřebuje alespoň jednu kartu",
+      maxCards: "Blok karet má nejvýš dvanáct karet",
       heroTop: "Úvodní blok zůstává nahoře na stránce",
       oneHero: "Stránka má jen jeden úvodní blok",
       onlyTop: "Jen nahoře na stránce bez úvodního bloku",

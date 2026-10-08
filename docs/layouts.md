@@ -97,7 +97,8 @@ Film added 15–20 and the second video. Today's stand-in is in brackets.
     browser stays out (no JavaScript): category pages do it.
 16. **Cards: image, title, text and a link** (2: both home pages lead to their categories with
     photo tiles; Scénografie's awards and capabilities) [galleries, which can't link; text with
-    image eight times in a row]. Planned as `cards`.
+    image eight times in a row]: **done**, the cards block (`cards`), text under the photo or the
+    title over it, linking to a page, a project or service, or an address.
 17. **Hero slideshow** (1, but the signature of film and creative agencies: Punk Film's home
     opens with its latest work, a still and title per slide linking to the project) [a
     full-photo hero with one still]. Needs pause and next/previous controls, no movement with

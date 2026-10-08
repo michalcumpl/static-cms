@@ -44,6 +44,7 @@ export const HERO_LAYOUTS = ["beside", "cover"] as const;
 export const SERVICES_LAYOUTS = ["cards", "list", "accordion"] as const;
 export const TEAM_LAYOUTS = ["cards", "list"] as const;
 export const GALLERY_IMAGE_FITS = ["fill", "whole"] as const;
+export const CARDS_LAYOUTS = ["below", "over"] as const;
 
 /** What a collection block shows: its whole collection, or the items it chose. */
 export const COLLECTION_SHOW = ["all", "chosen"] as const;
@@ -171,6 +172,7 @@ export const siteSchema = {
           "figures",
           "steps",
           "projects",
+          "cards",
         ],
         default_node_type: "rich_text",
       },
@@ -428,6 +430,28 @@ export const siteSchema = {
     properties: {
       label: { type: "text", allow_newlines: false },
       value: { type: "text", allow_newlines: false },
+    },
+  },
+  /** Cards: an image, a title, a text and a link each (cards design decision 1). */
+  cards: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      /** `below`: the image, then the title and text; `over`: the title over the image. */
+      layout: { type: "string", values: CARDS_LAYOUTS, default: "below" },
+      items: { type: "node_array", node_types: ["card"], default_node_type: "card" },
+    },
+  },
+  card: {
+    kind: "block",
+    properties: {
+      image: { type: "node_array", node_types: ["image"] },
+      title: { type: "text", allow_newlines: false },
+      text: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
+      /** A page, or a service or project with its own page, or "" for none. */
+      target_id: { type: "string" },
+      /** An outside address, or "" for none. At most one of `target_id` and `url` is set. */
+      url: { type: "string" },
     },
   },
   /** Points a collection block at one item of its collection, by the item's node ID. */

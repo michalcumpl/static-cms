@@ -10,6 +10,8 @@ import FormService from "./form/FormService.svelte";
 import FormSite from "./form/FormSite.svelte";
 import FormTestimonial from "./form/FormTestimonial.svelte";
 import CallToAction from "./nodes/CallToAction.svelte";
+import Card from "./nodes/Card.svelte";
+import Cards from "./nodes/Cards.svelte";
 import Contact from "./nodes/Contact.svelte";
 import ExternalLink from "./nodes/ExternalLink.svelte";
 import Faq from "./nodes/Faq.svelte";
@@ -47,6 +49,7 @@ import Testimonial from "./nodes/Testimonial.svelte";
 import Testimonials from "./nodes/Testimonials.svelte";
 import TextWithImage from "./nodes/TextWithImage.svelte";
 import {
+  insertCard,
   insertFact,
   insertFaqItem,
   insertFigure,
@@ -94,6 +97,8 @@ export const nodeComponents: Record<string, Component<any>> = {
   step: Step,
   projects: Projects,
   project: ProjectTile,
+  cards: Cards,
+  card: Card,
   image: Image,
   strong: MarkStrong,
   emphasis: MarkEmphasis,
@@ -138,6 +143,7 @@ export function createConfig(view: EditorView = "canvas") {
       faq_item: insertFaqItem,
       figure: insertFigure,
       fact: insertFact,
+      card: insertCard,
       step: insertStep,
       rich_text: insertRichText,
     },

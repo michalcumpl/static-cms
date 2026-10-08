@@ -85,7 +85,7 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
     (`block-variants`)
   - [x] a page per service or project, a projects collection and a projects block filtered by
     category (`collection-pages`)
-  - [ ] cards: image, title, text and link (`cards`)
+  - [x] cards: image, title, text and link (`cards`)
   - [ ] video, moved from the beta, and a hero slideshow for film and creative agencies
     (`video`, `hero-slideshow`)
   - [ ] PDFs to download (`documents`)

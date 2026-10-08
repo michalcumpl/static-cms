@@ -189,6 +189,30 @@ export interface ServiceItemNode {
   body: NodeArrayValue;
 }
 
+/** Cards with an image, a title, a text and a link each. */
+export interface CardsNode {
+  id: string;
+  type: "cards";
+  heading: TextValue;
+  /** `below`: the image, then the title and text; `over`: the title over the image. */
+  layout: "below" | "over";
+  /** 1–12 `card` nodes. */
+  items: NodeArrayValue;
+}
+
+export interface CardNode {
+  id: string;
+  type: "card";
+  /** Zero or one `image` node. */
+  image: NodeArrayValue;
+  title: TextValue;
+  text: TextValue;
+  /** A page, or a service or project with its own page, or "" for none. */
+  target_id: string;
+  /** An outside address, or "" for none. */
+  url: string;
+}
+
 /** Shows the site's projects, all of them or one category, up to `limit`. */
 export interface ProjectsNode extends CollectionBlock {
   type: "projects";
@@ -518,6 +542,8 @@ export type AnyNode =
   | ServicesNode
   | ServiceItemNode
   | ProjectsNode
+  | CardsNode
+  | CardNode
   | ProjectNode
   | ProjectCategoryNode
   | FactNode

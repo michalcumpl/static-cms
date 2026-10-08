@@ -114,6 +114,22 @@ export type BlockInput =
   | { type: "figures"; heading?: string; items: { value: string; label: string }[] }
   | { type: "steps"; heading: string; items: { title: string; text?: string }[] }
   | {
+      type: "cards";
+      heading?: string;
+      /** `below` (default): the image, then the title and text; `over`: the title over it. */
+      look?: "below" | "over";
+      items: {
+        image?: ImageInput;
+        title: string;
+        text?: string;
+        /** A page by its slug. */
+        page?: string;
+        /** A project or service, by the ID the builder returned. */
+        item?: string;
+        url?: string;
+      }[];
+    }
+  | {
       type: "projects";
       heading?: string;
       /** The projects to show, by the IDs the builder returned; all of them without it. */
@@ -194,6 +210,8 @@ export const blocks = {
     ({ type: "figures", ...b }) as BlockInput,
   steps: (b: Omit<Extract<BlockInput, { type: "steps" }>, "type">) =>
     ({ type: "steps", ...b }) as BlockInput,
+  cards: (b: Omit<Extract<BlockInput, { type: "cards" }>, "type">) =>
+    ({ type: "cards", ...b }) as BlockInput,
   projects: (
     heading = "",
     options: Omit<Extract<BlockInput, { type: "projects" }>, "type" | "heading"> = {},
@@ -489,6 +507,22 @@ export function siteBuilder(options: {
               items: list(
                 input.items.map((item) =>
                   add("figure", { value: text(item.value), label: text(item.label) }),
+                ),
+              ),
+            });
+          case "cards":
+            return add("cards", {
+              heading: text(input.heading),
+              layout: input.look ?? "below",
+              items: list(
+                input.items.map((item) =>
+                  add("card", {
+                    image: list(image(item.image)),
+                    title: text(item.title),
+                    text: text(item.text),
+                    target_id: item.page ? pageId(item.page) : (item.item ?? ""),
+                    url: item.url ?? "",
+                  }),
                 ),
               ),
             });

@@ -24,6 +24,7 @@ export const BLOCK_TYPES: readonly BlockType[] = [
   "figures",
   "steps",
   "projects",
+  "cards",
 ];
 
 /** Why a block can't go somewhere; the picker says it with `editor.unavailable.<reason>`. */
@@ -53,6 +54,7 @@ const ITEM_TYPES = new Set([
   "faq_item",
   "figure",
   "step",
+  "card",
 ]);
 
 /** The translator the names are made with: the interface language's `t`. */
@@ -60,7 +62,7 @@ type T = I18n["t"];
 
 /** The block or item types whose lists hold items with handles, by list property. */
 const ITEM_LISTS: Record<string, readonly string[]> = {
-  items: ["list", "services", "gallery", "logos", "testimonials", "figures", "steps"],
+  items: ["list", "services", "gallery", "logos", "testimonials", "figures", "steps", "cards"],
   people: ["team"],
 };
 

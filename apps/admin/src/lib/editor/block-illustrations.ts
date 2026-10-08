@@ -181,6 +181,16 @@ export const BLOCK_ILLUSTRATIONS: Record<BlockType, string> = {
         })
         .join(""),
   ),
+  // A heading, then three cards, each a photo with a title and two lines of text under it.
+  cards: svg(
+    heading() +
+      [0, 1, 2]
+        .map((i) => {
+          const x = 8 + i * 36;
+          return photo(x, 17, 32, 24) + bar(x, 45, 24, 4) + bar(x, 52, 32) + bar(x, 57, 22);
+        })
+        .join(""),
+  ),
   // A heading, then two rows of photo tiles, each with its name over the bottom of the photo.
   projects: svg(
     heading() +

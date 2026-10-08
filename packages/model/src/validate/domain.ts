@@ -101,6 +101,10 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
     checkItemPages(site, get, problems);
     for (const pageId of pageIds) {
       const page = get(pageId, "page");
+      if (page) checkCards(site, page, pageIds, get, problems);
+    }
+    for (const pageId of pageIds) {
+      const page = get(pageId, "page");
       if (page) checkCollectionBlocks(site, page, check, get, problems);
     }
     const nav = get(site.nav, "nav");
@@ -986,6 +990,8 @@ function checkPageBlocks(
       "call_to_action",
       "testimonials",
       "faq",
+      "projects",
+      "cards",
     ] as const) {
       const block = get(blockId, type);
       if (block && !isBlank(block.heading)) hasH2 = true;
@@ -1009,6 +1015,79 @@ function checkPageBlocks(
       }
     }
   });
+}
+
+/** The most cards a cards block shows (cards design decision 2). */
+const MAX_CARDS = 12;
+
+/** A page's cards blocks: their number, titles and links (cards design decision 2). */
+function checkCards(
+  site: NodeOfType<"site">,
+  page: NodeOfType<"page">,
+  pageIds: Set<string>,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const on = pageLabel(page);
+  // Items with their own page: those of a collection with a valid listing page.
+  const withPages = new Set<string>();
+  const listings = [
+    [site.services, site.services_page_id],
+    [site.projects, site.projects_page_id],
+  ] as const;
+  for (const [collection, listing] of listings) {
+    if (listing !== "" && listing !== site.home_page_id && pageIds.has(listing)) {
+      for (const id of collection.nodes) withPages.add(id);
+    }
+  }
+  for (const blockId of page.blocks.nodes) {
+    const block = get(blockId, "cards");
+    if (!block) continue;
+    const count = block.items.nodes.length;
+    if (count === 0) {
+      problems.error(
+        "empty-block",
+        block.id,
+        `The cards on ${on} need at least one card.`,
+        "items",
+      );
+    } else if (count > MAX_CARDS) {
+      problems.error(
+        "too-many-items",
+        block.id,
+        `The cards on ${on} can have at most ${MAX_CARDS} cards.`,
+        "items",
+      );
+    }
+    block.items.nodes.forEach((cardId, i) => {
+      const card = get(cardId, "card");
+      if (!card) return;
+      const label = `Card ${i + 1} on ${on}`;
+      if (isBlank(card.title)) {
+        problems.error("empty-title", card.id, `${label} needs a title.`, "title");
+      }
+      if (card.image.nodes.length > 1) {
+        problems.error("too-many-items", card.id, `${label} can have at most one image.`, "image");
+      }
+      if (card.target_id !== "" && card.url !== "") {
+        problems.error(
+          "invalid-value",
+          card.id,
+          `${label} links both to a page and to an address; keep one.`,
+          "url",
+        );
+      }
+      if (card.url !== "") checkHref(card.id, "url", card.url, problems);
+      if (card.target_id !== "" && !pageIds.has(card.target_id) && !withPages.has(card.target_id)) {
+        problems.warning(
+          "broken-card-link",
+          card.id,
+          `The link of card ${i + 1} on ${on} leads to something that no longer has a page; choose another target.`,
+          "target_id",
+        );
+      }
+    });
+  }
 }
 
 /** The call to action's heading and buttons (cta-and-testimonials decision 5). */

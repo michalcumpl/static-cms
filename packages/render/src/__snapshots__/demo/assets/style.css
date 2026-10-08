@@ -664,7 +664,104 @@ img {
   container-type: inline-size;
 }
 
+.cards {
+  container-type: inline-size;
+}
+
+.card-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.card-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.card-title {
+  margin: 0.75rem 0 0;
+  font-size: 1.2rem;
+}
+
+.card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.card-title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.card-title a:hover,
+.card-title a:focus-visible {
+  text-decoration: underline;
+}
+
+.card-text {
+  margin: 0.4rem 0 0;
+}
+
+.card-text a {
+  position: relative;
+  z-index: 1;
+}
+
+.cards-over .card-image,
+.cards-over .card-title {
+  grid-area: 1 / 1;
+}
+
+.cards-over .card-title {
+  align-self: end;
+  margin: 0;
+  padding: 2rem 1rem 0.75rem;
+  clip-path: inset(0 round 0 0 var(--radius) var(--radius));
+  background: linear-gradient(transparent, color-mix(in srgb, var(--color-text) 75%, transparent));
+  color: var(--color-background);
+}
+
+.cards-over .card-no-image .card-title {
+  padding: 2.5rem 1rem 1rem;
+  border-radius: var(--radius);
+  background: var(--color-secondary);
+  color: var(--color-text);
+}
+
+.cards-over .card-text {
+  grid-row: 2;
+}
+
 @container (min-width: 44rem) {
+  .card-columns-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card-columns-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .card-columns-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .projects-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

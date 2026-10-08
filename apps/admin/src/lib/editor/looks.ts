@@ -1,4 +1,10 @@
-import { GALLERY_IMAGE_FITS, HERO_LAYOUTS, SERVICES_LAYOUTS, TEAM_LAYOUTS } from "@webmio/model";
+import {
+  CARDS_LAYOUTS,
+  GALLERY_IMAGE_FITS,
+  HERO_LAYOUTS,
+  SERVICES_LAYOUTS,
+  TEAM_LAYOUTS,
+} from "@webmio/model";
 import type { Session } from "svedit";
 import { handleTargets, selectionPath } from "./handles";
 
@@ -8,6 +14,7 @@ export const LOOKS = {
   services: { property: "layout", values: SERVICES_LAYOUTS },
   team: { property: "layout", values: TEAM_LAYOUTS },
   gallery: { property: "image_fit", values: GALLERY_IMAGE_FITS },
+  cards: { property: "layout", values: CARDS_LAYOUTS },
 } as const;
 
 export type LookBlockType = keyof typeof LOOKS;

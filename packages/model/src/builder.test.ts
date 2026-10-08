@@ -105,6 +105,15 @@ function everything(lang: "cs" | "en") {
       ],
     }),
     blocks.projects(t("Práce", "Work"), { category: films, limit: 4 }),
+    blocks.cards({
+      heading: t("Projekty", "Projects"),
+      look: "over",
+      items: [
+        { image: image("tile.jpg"), title: t("Kontakt", "Contact"), page: "kontakt" },
+        { title: t("Závod", "The race"), text: "**1913**", item: "project_1" },
+        { title: "Web", url: "https://example.org" },
+      ],
+    }),
     blocks.callToAction({
       heading: t("Přihlaste se", "Sign up"),
       actions: [{ label: "Web", url: "https://example.org" }],
@@ -139,6 +148,7 @@ describe("siteBuilder", () => {
       "figures",
       "steps",
       "projects",
+      "cards",
     ]) {
       expect(types, type).toContain(type);
     }

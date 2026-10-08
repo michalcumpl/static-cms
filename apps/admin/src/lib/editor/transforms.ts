@@ -122,6 +122,41 @@ export function insertFigure(tr: Tr): boolean {
   return true;
 }
 
+/** The most cards a cards block holds (cards design decision 2). */
+export const MAX_CARDS = 12;
+
+function createCard(tr: Tr): string {
+  const id = tr.generate_id();
+  tr.create({
+    id,
+    type: "card",
+    image: list(),
+    title: text(),
+    text: text(),
+    target_id: "",
+    url: "",
+  });
+  return id;
+}
+
+/** An empty card (Enter and "Add item"); none past twelve. */
+export function insertCard(tr: Tr): boolean {
+  const at = insertionPoint(tr);
+  const count = at ? ((tr.get(at.path) as NodeList | undefined)?.nodes.length ?? 0) : 0;
+  if (count >= MAX_CARDS) return false;
+  insertAndFocus(tr, createCard(tr), "title");
+  return true;
+}
+
+/** Cards: an empty heading, text under the photo, three empty cards, the caret in the first title. */
+export function insertCards(tr: Tr): boolean {
+  const items = [createCard(tr), createCard(tr), createCard(tr)];
+  const block = tr.generate_id();
+  tr.create({ id: block, type: "cards", heading: text(), layout: "below", items: list(items) });
+  insertAndFocus(tr, block, "items", 0, "title");
+  return true;
+}
+
 /** An empty fact of a project (Enter in a fact's value). */
 export function insertFact(tr: Tr): boolean {
   const id = tr.generate_id();
@@ -358,7 +393,8 @@ export type BlockType =
   | "faq"
   | "figures"
   | "steps"
-  | "projects";
+  | "projects"
+  | "cards";
 
 export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   hero: insertHero,
@@ -376,6 +412,7 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   figures: insertFigures,
   steps: insertSteps,
   projects: insertProjects,
+  cards: insertCards,
 };
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
@@ -398,6 +435,7 @@ export function insertableBlocks(blocks: { type: string }[], index: number): Blo
     "figures",
     "steps",
     "projects",
+    "cards",
   ];
   return heroAllowed ? ["hero", ...others] : others;
 }
@@ -489,6 +527,30 @@ export function removeImage(tr: Tr, ownerId: string): boolean {
 export function setImageSide(tr: Tr, blockId: string, side: "left" | "right"): boolean {
   tr.set([blockId, "image_side"], side);
   return true;
+}
+
+/** Where a card links: a page, a project or service with its own page, an address, or nowhere. */
+export type CardLink = { page: string } | { item: string } | { address: string } | null;
+
+/**
+ * Sets a card's link (cards design decision 4). Refused addresses leave the card unchanged and
+ * return why.
+ */
+export function setCardLink(
+  tr: Tr,
+  cardId: string,
+  link: CardLink,
+): LinkAddressCheck | { ok: true } {
+  if (link && "address" in link) {
+    const check = checkLinkAddress(link.address);
+    if (!check.ok) return check;
+    tr.set([cardId, "target_id"], "");
+    tr.set([cardId, "url"], check.href);
+    return check;
+  }
+  tr.set([cardId, "target_id"], link ? ("page" in link ? link.page : link.item) : "");
+  tr.set([cardId, "url"], "");
+  return { ok: true };
 }
 
 /** Where a logo links: a page of the site, an address, or nowhere. */

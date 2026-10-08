@@ -115,3 +115,13 @@ gets its three sections as tiles linking to Work.
 ## Migration Plan
 
 None: new node types only.
+
+## Changes made while building
+
+- **The title's shade in the `over` look is rounded with `clip-path`**, since the stylesheet may
+  only take radii from the theme as a whole value (`border-radius: var(--radius)`).
+- **The Card panel's selects** are found by role in the tests; their labels repeat the radio
+  choices' words.
+- **Card limits** live in `cardLimit` (`structure.ts`), which the handle menu uses for the
+  disabled Duplicate and Delete entries and their reasons.
+- **The picker test** counts sixteen blocks now (cards after projects).

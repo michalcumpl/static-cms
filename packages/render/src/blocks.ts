@@ -38,6 +38,8 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderSteps(block, ctx);
     case "projects":
       return renderProjects(block, ctx);
+    case "cards":
+      return renderCards(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -357,8 +359,8 @@ function renderFaq(block: NodeOfType<"faq">, ctx: RenderContext): Html {
 }
 
 /**
- * How many figures share a row on wider screens: all of them up to four, else three, so six
- * make two even rows instead of five and one (phones always show two).
+ * How many figures (or cards) share a row on wider screens: all of them up to four, else three,
+ * so six make two even rows instead of five and one.
  */
 export function figureColumns(count: number): number {
   return count <= 4 ? Math.max(count, 1) : 3;
@@ -379,6 +381,46 @@ function renderFigures(block: NodeOfType<"figures">, ctx: RenderContext): Html {
   return html`<section class="block figures">
       <div class="container">${blockHeading(block.heading, ctx)}
         <ul class="figure-list figure-columns-${columns}">${items}
+        </ul>
+      </div>
+    </section>`;
+}
+
+/**
+ * Cards in rows by their number, each with its image, its title one level below the block's
+ * heading and its text; a link on the title covers the whole card (cards design decision 3).
+ */
+function renderCards(block: NodeOfType<"cards">, ctx: RenderContext): Html {
+  const titled = !isEmpty(block.heading);
+  const columns = figureColumns(block.items.nodes.length);
+  const items = ctx.children(block.items).map((card) => {
+    if (card.type !== "card") return false;
+    const image = imageOf(card, ctx);
+    const href =
+      card.url !== ""
+        ? ctx.href(card.url)
+        : card.target_id !== "" && ctx.routes.has(card.target_id)
+          ? ctx.pageUrl(card.target_id)
+          : undefined;
+    const title = href
+      ? html`<a href="${href}">${renderText(card.title, ctx)}</a>`
+      : renderText(card.title, ctx);
+    return html`
+          <li class="card${image ? "" : " card-no-image"}">${
+            image &&
+            html`
+            ${renderImage(image, ctx, { lazy: true, sizes: IMAGE_SIZES.card, className: "card-image" })}`
+          }
+            ${titled ? html`<h3 class="card-title">${title}</h3>` : html`<h2 class="card-title">${title}</h2>`}${
+              !isEmpty(card.text) &&
+              html`
+            <p class="card-text">${renderText(card.text, ctx)}</p>`
+            }
+          </li>`;
+  });
+  return html`<section class="block cards cards-${block.layout}">
+      <div class="container">${blockHeading(block.heading, ctx)}
+        <ul class="card-list card-columns-${columns}">${items}
         </ul>
       </div>
     </section>`;
@@ -475,6 +517,8 @@ export const IMAGE_SIZES = {
   textWithImage: "(min-width: 48rem) 50vw, 100vw",
   /** Three columns from 48rem, two below. */
   gallery: "(min-width: 48rem) 33vw, 50vw",
+  /** A card: up to four columns from 44rem, one below. */
+  card: "(min-width: 44rem) 33vw, 100vw",
   /** A project tile: three columns from 48rem, two from 30rem, one below. */
   projectTile: "(min-width: 48rem) 33vw, (min-width: 30rem) 50vw, 100vw",
   /** A project page's cover spans the content (collection-pages). */

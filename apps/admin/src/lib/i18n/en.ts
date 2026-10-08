@@ -753,6 +753,10 @@ export const en = {
       noLabel: "Enter a label for the menu.",
     },
     blocks: {
+      cards: {
+        name: "Cards",
+        description: "A photo, a title, a few lines and a link, several in a row",
+      },
       projects: {
         name: "Projects",
         description: "Your work as photo tiles, all of it or one category",
@@ -788,6 +792,7 @@ export const en = {
       steps: { name: "Steps", description: "How it works, step by step" },
     },
     items: {
+      card: "Card",
       list_item: "List item",
       service_item: "Service",
       gallery_item: "Photo",
@@ -834,7 +839,19 @@ export const en = {
       all: "All",
       edit: "Edit projects",
     },
+    cardPanel: {
+      title: "Card",
+      link: "Link",
+      noLink: "No link",
+      page: "A page of the site",
+      item: "A project or service",
+      itemLabel: "Project or service",
+      noItems: "No project or service has its own page yet.",
+      address: "An address",
+      broken: "Its link leads to something that no longer has a page; choose another one.",
+    },
     look: {
+      cards: { below: "Text under the photo", over: "Title over the photo" },
       legend: "Look",
       hero: { beside: "Beside the text", cover: "Full photo" },
       services: { cards: "Cards", list: "List", accordion: "Accordion" },
@@ -870,6 +887,8 @@ export const en = {
       },
     },
     unavailable: {
+      lastCard: "A cards block needs at least one card",
+      maxCards: "A cards block holds at most twelve cards",
       heroTop: "The hero stays at the top of the page",
       oneHero: "A page has only one hero",
       onlyTop: "Only at the top of a page without a hero",
