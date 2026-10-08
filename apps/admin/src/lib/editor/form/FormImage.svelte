@@ -1,7 +1,8 @@
 <script lang="ts">
 import { getI18n } from "$lib/i18n";
 import Button from "$lib/ui/Button.svelte";
-import { startsDecorative } from "../image-slots";
+import FocalPoint from "../FocalPoint.svelte";
+import { shapeOf, startsDecorative } from "../image-slots";
 import { getEditor } from "../state.svelte";
 import {
   imagePropertyOf,
@@ -9,6 +10,7 @@ import {
   setImage,
   setImageAlt,
   setImageDecorative,
+  swapImage,
 } from "../transforms";
 import { getFormLists, listFieldId } from "./lists";
 
@@ -34,6 +36,8 @@ const image = $derived.by(() => {
         width: number;
         alt: string;
         decorative: boolean;
+        focus_x: number;
+        focus_y: number;
       });
 });
 const id = $derived(listFieldId(form.section, ownerId, "image"));
@@ -44,6 +48,17 @@ async function choose() {
   if (!chosen || !owner) return;
   const tr = editor.session.tr;
   setImage(tr, ownerId, chosen, { decorative: startsDecorative(owner.type) });
+  editor.session.apply(tr);
+}
+
+/** Crops or turns the image into a new one here, keeping its description. */
+async function crop() {
+  if (!image || !owner) return;
+  const imageId = image.id;
+  const edited = await editor.openCrop(image.src, shapeOf(owner.type));
+  if (!edited) return;
+  const tr = editor.session.tr;
+  swapImage(tr, imageId, edited);
   editor.session.apply(tr);
 }
 
@@ -80,17 +95,25 @@ function setDecorative(event: Event & { currentTarget: HTMLInputElement }) {
   <span class="label" id="{id}-label">{label}</span>
   <div class="row">
     {#if image}
-      <img src={editor.paths.image(image.src, image.width, "thumbnail")} alt="" />
+      <img
+        src={editor.paths.image(image.src, image.width, "thumbnail")}
+        alt=""
+        style:object-position={`${image.focus_x}% ${image.focus_y}%`}
+      />
     {/if}
     <div class="buttons">
       <Button size="sm" {id} onclick={choose} disabled={locked}>
         {image ? i18n.t("editor.image.change") : i18n.t("editor.image.choose")}
       </Button>
       {#if image}
+        <Button size="sm" onclick={crop} disabled={locked}>{i18n.t("editor.imagePanel.crop")}</Button>
         <Button size="sm" kind="quiet" onclick={remove} disabled={locked}>{i18n.t("editor.image.remove")}</Button>
       {/if}
     </div>
   </div>
+  {#if image && !locked}
+    <FocalPoint {editor} imageId={image.id} />
+  {/if}
   {#if image}
     <label class="check">
       <input type="checkbox" checked={image.decorative} onchange={setDecorative} disabled={locked} />

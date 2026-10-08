@@ -16,10 +16,13 @@ type TextValue = { content: string; marks: Mark[]; annotations: [] };
 type Mark = { start_offset: number; end_offset: number; node_id: string };
 
 /** An image by its file name until it is loaded into a library (`src`), with its description. */
-export type ImageInput = { src: string; width?: number; height?: number } & (
-  | { alt: string; decorative?: false }
-  | { decorative: true; alt?: string }
-);
+export type ImageInput = {
+  src: string;
+  width?: number;
+  height?: number;
+  /** The focal point in percent from the left and the top; the centre when left out. */
+  focus?: { x: number; y: number };
+} & ({ alt: string; decorative?: false } | { decorative: true; alt?: string });
 
 /** A button or menu entry: a page of the site by its slug, or an outside address. */
 export type LinkInput = { label: string } & ({ page: string } | { url: string });
@@ -427,6 +430,8 @@ export function siteBuilder(options: {
                 decorative: input.decorative === true,
                 width: input.width ?? 0,
                 height: input.height ?? 0,
+                focus_x: input.focus?.x ?? 50,
+                focus_y: input.focus?.y ?? 50,
               }),
             ]
           : [];
@@ -827,7 +832,7 @@ export function siteBuilder(options: {
       nodes[siteId] = {
         id: siteId,
         type: "site",
-        schema_version: 11,
+        schema_version: 12,
         name: options.name,
         lang: options.lang,
         base_url: options.baseUrl ?? "",

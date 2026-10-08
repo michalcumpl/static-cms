@@ -105,6 +105,8 @@ describe("logo", () => {
       src: "pekarna-7c1e",
       width: 600,
       height: 200,
+      focus_x: 50,
+      focus_y: 50,
     });
     expect(site(s).header_show_name).toBe(true);
     s.undo();

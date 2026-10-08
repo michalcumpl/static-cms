@@ -31,6 +31,8 @@ function site() {
     decorative: true,
     width: 400,
     height: 400,
+    focus_x: 50,
+    focus_y: 50,
   };
   nodes.t_jana = {
     id: "t_jana",

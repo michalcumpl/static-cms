@@ -1,8 +1,10 @@
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import { inCzech, thrownBy, useTestProject } from "$lib/server/test-project";
+import { isForeignApiWrite } from "../../../hooks.server";
 import { GET as getLibrary, POST as postMedia } from "./[project]/media/+server";
 import { DELETE as deleteMedia, GET as getFile } from "./[project]/media/[name]/+server";
+import { GET as getEditInfo, POST as postEdit } from "./[project]/media/[name]/edit/+server";
 
 type LibraryEvent = Parameters<typeof postMedia>[0];
 type FileEvent = Parameters<typeof getFile>[0];
@@ -43,6 +45,18 @@ function remove(key: string, user: User | null = project().owner) {
     }) as unknown as FileEvent,
   );
 }
+
+function editOf(key: string, edit: unknown, user: User | null = project().owner) {
+  name = key;
+  return postEdit(
+    project().event(`${base()}/${key}/edit`, user ?? undefined, {
+      method: "POST",
+      body: JSON.stringify(edit),
+      headers: { "content-type": "application/json" },
+    }) as unknown as Parameters<typeof postEdit>[0],
+  );
+}
+const square = { turn: 0, crop: { x: 300, y: 0, width: 900, height: 900 } };
 
 describe("POST /api/projects/[project]/media", () => {
   it("refuses a file that isn't an image in the person's language", async () => {
@@ -182,5 +196,88 @@ describe("DELETE /api/projects/[project]/media/[key]", () => {
     expect(await thrownBy(() => remove("hero.png", project().outsider))).toMatchObject({
       status: 404,
     });
+  });
+});
+
+describe("POST /api/projects/[project]/media/[key]/edit", () => {
+  it("answers 201 with the crop and its source, and 200 for the same crop again", async () => {
+    const created = await (await upload(await jpeg(1200, 900), "pult.jpg")).json();
+    const first = await editOf(created.key, square);
+    expect(first.status).toBe(201);
+    const crop = await first.json();
+    expect(crop).toMatchObject({
+      width: 900,
+      height: 900,
+      originalName: "pult.jpg",
+      source: { key: created.key, width: 1200, height: 900, ...square },
+    });
+    const again = await editOf(created.key, square);
+    expect(again.status).toBe(200);
+    expect((await again.json()).key).toBe(crop.key);
+    const items = await (await library()).json();
+    expect(items[0]).toMatchObject({ key: crop.key, source: { key: created.key } });
+  });
+
+  it("answers 400 with the reason, in the person's language", async () => {
+    const created = await (await upload(await jpeg(1000, 800), "pult.jpg")).json();
+    const outside = { turn: 0, crop: { x: 500, y: 0, width: 600, height: 400 } };
+    const response = await editOf(created.key, outside);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ message: "The crop must lie within the picture." });
+    name = created.key;
+    const event = project().event(`${base()}/${created.key}/edit`, project().owner, {
+      method: "POST",
+      body: JSON.stringify(outside),
+    });
+    const czech = await postEdit(inCzech(event) as unknown as Parameters<typeof postEdit>[0]);
+    expect((await czech.json()).message).toBe("Výřez musí ležet uvnitř obrázku.");
+    expect(await thrownBy(() => editOf(created.key, { turn: 0 }))).toMatchObject({ status: 400 });
+  });
+
+  it("answers 404 for an unknown image", async () => {
+    const response = await editOf("nic-12345678", square);
+    expect(response.status).toBe(404);
+  });
+
+  it("describes an image for the crop dialog: an edit with its source's size, even removed", async () => {
+    const created = await (await upload(await jpeg(1200, 900), "pult.jpg")).json();
+    const crop = await (await editOf(created.key, square)).json();
+    await remove(created.key);
+    await remove(crop.key);
+    const info = (key: string, user: User | null = project().owner) => {
+      name = key;
+      return getEditInfo(
+        project().event(`${base()}/${key}/edit`, user ?? undefined) as unknown as Parameters<
+          typeof getEditInfo
+        >[0],
+      );
+    };
+    expect(await (await info(crop.key)).json()).toEqual({
+      key: crop.key,
+      width: 900,
+      height: 900,
+      originalName: "pult.jpg",
+      source: { key: created.key, width: 1200, height: 900, ...square },
+    });
+    expect((await (await info(created.key)).json()).source).toBeUndefined();
+    expect(await thrownBy(() => info("nic-12345678"))).toMatchObject({ status: 404 });
+    expect(await thrownBy(() => info(crop.key, project().outsider))).toMatchObject({
+      status: 404,
+    });
+  });
+
+  it("is only for members, and refuses cross-site requests", async () => {
+    expect(await thrownBy(() => editOf("hero.png", square, null))).toMatchObject({
+      status: 401,
+    });
+    expect(await thrownBy(() => editOf("hero.png", square, project().outsider))).toMatchObject({
+      status: 404,
+    });
+    const url = new URL(`https://admin.example.cz${base()}/hero.png/edit`);
+    const foreign = new Request(url, {
+      method: "POST",
+      headers: { origin: "https://evil.example" },
+    });
+    expect(isForeignApiWrite(foreign, url)).toBe(true);
   });
 });

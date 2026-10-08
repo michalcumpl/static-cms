@@ -15,8 +15,9 @@ import {
   slugify,
 } from "@webmio/model";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
-import sharp, { type Metadata } from "sharp";
+import sharp, { type Metadata, type Sharp } from "sharp";
 import { type Said, said } from "$lib/i18n";
+import { editProblem, type ImageEdit, isIdentity, turnedSize } from "$lib/image-edit";
 import type { Db } from "./db/index";
 import { media, projects, siteDocuments, versions } from "./db/schema";
 import { mediaRoot } from "./import-working-copy";
@@ -77,6 +78,8 @@ export interface MediaItem {
   width: number;
   height: number;
   createdAt: Date;
+  /** For an image made by editing another: that image, its size, and the edit relative to it. */
+  source?: { key: string; width: number; height: number } & ImageEdit;
 }
 
 export type UploadResult =
@@ -107,9 +110,16 @@ function writeAtomically(path: string, bytes: Uint8Array): void {
   renameSync(temporary, path);
 }
 
-function toItem(row: typeof media.$inferSelect): MediaItem {
-  const { key, originalName, width, height, createdAt } = row;
-  return { key, originalName, width, height, createdAt };
+type MediaRow = typeof media.$inferSelect;
+
+/** A row as a library item; an edited image's source row gives the source's size. */
+function toItem(row: MediaRow, source?: Pick<MediaRow, "width" | "height">): MediaItem {
+  const { key, originalName, width, height, createdAt, sourceKey, edit } = row;
+  const item: MediaItem = { key, originalName, width, height, createdAt };
+  if (sourceKey && edit && source) {
+    item.source = { key: sourceKey, width: source.width, height: source.height, ...edit };
+  }
+  return item;
 }
 
 interface Inspected {
@@ -146,10 +156,20 @@ async function inspect(
   };
 }
 
+/** Encodes an image as an original: in its own format, without metadata. */
+function encodeOriginal(image: Sharp, format: Format): Promise<Buffer> {
+  return format === "jpeg"
+    ? image.jpeg({ quality: ORIGINAL_QUALITY }).toBuffer()
+    : format === "png"
+      ? image.png().toBuffer()
+      : image.webp({ quality: ORIGINAL_QUALITY }).toBuffer();
+}
+
 /**
  * Stores a decoded image as a metadata-free original and its WebP variants. `rotate()` applies
  * the EXIF orientation to the pixels; sharp's output then carries no metadata at all (EXIF,
- * GPS, XMP, IPTC) and is converted to sRGB.
+ * GPS, XMP, IPTC) and is converted to sRGB. With `asOriginal`, the bytes are already an
+ * original (an edit's) and are stored as they are.
  */
 async function storeImage(
   bytes: Uint8Array,
@@ -157,19 +177,15 @@ async function storeImage(
   image: Inspected,
   projectId: string,
   root: string,
+  asOriginal = false,
 ): Promise<void> {
   const upright = sharp(bytes, { limitInputPixels: MAX_PIXELS, failOn: "error" }).rotate();
   const folder = projectFolder(projectId, root);
   const originals = originalsFolder(projectId, root);
   mkdirSync(originals, { recursive: true });
 
-  const original =
-    image.format === "jpeg"
-      ? upright.clone().jpeg({ quality: ORIGINAL_QUALITY })
-      : image.format === "png"
-        ? upright.clone().png()
-        : upright.clone().webp({ quality: ORIGINAL_QUALITY });
-  writeAtomically(join(originals, `${key}.${EXTENSIONS[image.format]}`), await original.toBuffer());
+  const original = asOriginal ? bytes : await encodeOriginal(upright.clone(), image.format);
+  writeAtomically(join(originals, `${key}.${EXTENSIONS[image.format]}`), original);
 
   for (const width of imageVariants(image.width)) {
     const variant = await upright
@@ -223,15 +239,7 @@ export function uploadImage(
       .from(media)
       .where(and(eq(media.projectId, projectId), eq(media.sha256, sha256)))
       .get();
-    if (existing) {
-      if (existing.removedAt) {
-        db.update(media)
-          .set({ removedAt: null })
-          .where(and(eq(media.projectId, projectId), eq(media.key, existing.key)))
-          .run();
-      }
-      return { ok: true, created: false, media: toItem(existing) };
-    }
+    if (existing) return { ok: true, created: false, media: restored(db, existing) };
 
     const inspected = await inspect(bytes);
     if (!inspected.ok) return inspected;
@@ -252,19 +260,139 @@ export function uploadImage(
     };
     // Files first, row last: a crash never leaves a listed image without its files.
     db.insert(media).values(row).run();
-    return { ok: true, created: true, media: toItem({ ...row, removedAt: null }) };
+    return {
+      ok: true,
+      created: true,
+      media: toItem({ ...row, removedAt: null, sourceKey: null, edit: null }),
+    };
+  });
+}
+
+export type EditResult =
+  | { ok: true; created: boolean; media: MediaItem }
+  | { ok: false; status: 400 | 404; message: Said };
+
+const EDIT_PROBLEMS = {
+  invalid: "server.media.editInvalid",
+  outside: "server.media.cropOutside",
+  tooSmall: "server.media.cropTooSmall",
+} as const;
+
+function mediaRow(db: Db, projectId: string, key: string) {
+  return db
+    .select()
+    .from(media)
+    .where(and(eq(media.projectId, projectId), eq(media.key, key)))
+    .get();
+}
+
+/** Returns a row as a library item, bringing it back into the library if it was removed. */
+function restored(db: Db, row: MediaRow): MediaItem {
+  if (row.removedAt) {
+    db.update(media)
+      .set({ removedAt: null })
+      .where(and(eq(media.projectId, row.projectId), eq(media.key, row.key)))
+      .run();
+  }
+  return mediaItem(db, row.projectId, row.key) as MediaItem;
+}
+
+/**
+ * Makes a new image from a library image by turning it and cutting it (image-cropping design
+ * decision 1). An edited image is edited from its source, so the edit is relative to the
+ * source, and an image is never cut from a cut. The result is stored like an upload; an edit
+ * the library already holds returns that image, and an edit that changes nothing the source.
+ */
+export function editImage(
+  db: Db,
+  projectId: string,
+  userId: string | null,
+  key: string,
+  edit: ImageEdit,
+  root = mediaRoot(),
+): Promise<EditResult> {
+  return serially(async (): Promise<EditResult> => {
+    const row = mediaRow(db, projectId, key);
+    if (!row) return { ok: false, status: 404, message: said("server.media.noSuchImage") };
+    const source = row.sourceKey ? mediaRow(db, projectId, row.sourceKey) : row;
+    if (!source) return { ok: false, status: 404, message: said("server.media.noSource") };
+
+    const problem = editProblem(edit, source.width, source.height);
+    if (problem) return { ok: false, status: 400, message: said(EDIT_PROBLEMS[problem]) };
+    if (isIdentity(edit, source.width, source.height)) {
+      return { ok: true, created: false, media: restored(db, source) };
+    }
+    const bytes = derivedSource(projectId, source.key, root);
+    if (!bytes) return { ok: false, status: 404, message: said("server.media.noSource") };
+
+    // Without an original the largest variant stands in, which may be smaller than the image.
+    const decoded = sharp(bytes, { limitInputPixels: MAX_PIXELS, failOn: "error" });
+    const { width = source.width } = await decoded.metadata();
+    const scale = width / source.width;
+    const [turnedWidth, turnedHeight] = turnedSize(
+      Math.round(source.width * scale),
+      Math.round(source.height * scale),
+      edit.turn,
+    );
+    const left = Math.min(Math.round(edit.crop.x * scale), turnedWidth - 1);
+    const top = Math.min(Math.round(edit.crop.y * scale), turnedHeight - 1);
+    const region = {
+      left,
+      top,
+      width: Math.max(1, Math.min(Math.round(edit.crop.width * scale), turnedWidth - left)),
+      height: Math.max(1, Math.min(Math.round(edit.crop.height * scale), turnedHeight - top)),
+    };
+    const encoded = await encodeOriginal(decoded.rotate(edit.turn).extract(region), source.format);
+    const sha256 = createHash("sha256").update(encoded).digest("hex");
+    const existing = db
+      .select()
+      .from(media)
+      .where(and(eq(media.projectId, projectId), eq(media.sha256, sha256)))
+      .get();
+    if (existing) return { ok: true, created: false, media: restored(db, existing) };
+
+    const newRow = {
+      projectId,
+      key: newKey(db, projectId, source.originalName, sha256),
+      sha256,
+      originalName: source.originalName,
+      format: source.format,
+      width: region.width,
+      height: region.height,
+      bytes: encoded.byteLength,
+      createdAt: new Date(),
+      createdBy: userId,
+      sourceKey: source.key,
+      edit,
+    };
+    const image = { format: source.format, width: region.width, height: region.height };
+    await storeImage(encoded, newRow.key, image, projectId, root, true);
+    // Files first, row last, as for uploads.
+    db.insert(media).values(newRow).run();
+    return { ok: true, created: true, media: toItem({ ...newRow, removedAt: null }, source) };
   });
 }
 
 /** A project's library: images not removed from it, newest first. */
 export function listLibrary(db: Db, projectId: string): MediaItem[] {
-  return db
+  const rows = db
     .select()
     .from(media)
-    .where(and(eq(media.projectId, projectId), isNull(media.removedAt)))
+    .where(eq(media.projectId, projectId))
     .orderBy(desc(media.createdAt), desc(media.key))
-    .all()
-    .map(toItem);
+    .all();
+  // Sources may have been removed from the library; their sizes are still needed.
+  const byKey = new Map(rows.map((row) => [row.key, row]));
+  return rows
+    .filter((row) => !row.removedAt)
+    .map((row) => toItem(row, row.sourceKey ? byKey.get(row.sourceKey) : undefined));
+}
+
+/** One image of a project, removed from the library or not, or undefined when unknown. */
+export function mediaItem(db: Db, projectId: string, key: string): MediaItem | undefined {
+  const row = mediaRow(db, projectId, key);
+  if (!row) return undefined;
+  return toItem(row, row.sourceKey ? mediaRow(db, projectId, row.sourceKey) : undefined);
 }
 
 /**
@@ -487,7 +615,8 @@ function imageSources(document: unknown): string[] {
 
 /**
  * Deletes the files and records of images removed from the library that no stored version
- * of any of their project's documents references (media design.md decision 8). Images still
+ * of any of their project's documents references (media design.md decision 8), unless an
+ * image it keeps was made by editing them (image-cropping design decision 6). Images still
  * in the library are never touched. With `dryRun`, only reports what it would delete.
  */
 export function cleanupMedia(
@@ -514,9 +643,22 @@ export function cleanupMedia(
     return keys;
   };
 
+  const id = (row: { projectId: string; key: string }) => `${row.projectId}/${row.key}`;
+  const doomed = new Map(
+    removed.filter((row) => !referencedIn(row.projectId).has(row.key)).map((r) => [id(r), r]),
+  );
+  // An image's source stays while the image does, so it can be edited again.
+  const edited = db.select().from(media).where(isNotNull(media.sourceKey)).all();
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const row of edited) {
+      const source = `${row.projectId}/${row.sourceKey}`;
+      if (!doomed.has(id(row)) && doomed.delete(source)) changed = true;
+    }
+  }
+
   const deleted: { projectId: string; key: string }[] = [];
-  for (const row of removed) {
-    if (referencedIn(row.projectId).has(row.key)) continue;
+  for (const row of doomed.values()) {
     deleted.push({ projectId: row.projectId, key: row.key });
     if (options.dryRun) continue;
     const folder = projectFolder(row.projectId, root);

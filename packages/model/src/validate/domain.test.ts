@@ -55,6 +55,12 @@ describe("validateSite: site rules", () => {
     expect(validateSite(loadFixture("demo-site-v5.json")).valid).toBe(false);
   });
 
+  it("rejects schema version 11, which must be upgraded first", () => {
+    expect(errors(loadFixture("demo-site-v11.json")).map((p) => p.code)).toContain(
+      "unsupported-version",
+    );
+  });
+
   it("reports two pages with the same translation key, naming both", () => {
     const { doc, nodes } = editableDemoSite();
     nodes.page_contact.translation_key = "page_home";
@@ -281,6 +287,34 @@ describe("validateSite: site rules", () => {
         nodeId: "image_hero",
         property: "width",
       }),
+    ]);
+  });
+
+  it("accepts a focal point in the upper third", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.image_hero.focus_x = 40;
+    nodes.image_hero.focus_y = 30;
+    expect(validateSite(doc).problems).toEqual([]);
+  });
+
+  it("refuses a focal point outside the image", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.image_hero.focus_x = 120;
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({
+        code: "invalid-focal-point",
+        category: "site",
+        nodeId: "image_hero",
+        property: "focus_x",
+      }),
+    ]);
+  });
+
+  it("refuses a focal point that isn't a whole number", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.image_hero.focus_y = 12.5;
+    expect(errors(doc)).toEqual([
+      expect.objectContaining({ code: "invalid-value", nodeId: "image_hero" }),
     ]);
   });
 

@@ -15,6 +15,8 @@ function notFound(lang = "cs", options: RenderOptions = {}) {
     decorative: false,
     width: 512,
     height: 512,
+    focus_x: 50,
+    focus_y: 50,
   };
   nodes.site_1.favicon = { nodes: ["image_logo"], marks: [], annotations: [] };
   const result = renderSite(doc, options);

@@ -15,6 +15,8 @@ function addImage(nodes: LooseNodes, id: string, src: string) {
     decorative: false,
     width: 2000,
     height: 1500,
+    focus_x: 50,
+    focus_y: 50,
   };
   return id;
 }

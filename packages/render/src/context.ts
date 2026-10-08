@@ -56,10 +56,26 @@ export class RenderContext {
   /** The scripts any page of the site needs, for the export. */
   readonly siteScripts = new Set<SiteScript>();
 
+  /** The off-centre focal points of the page being rendered's images, as `[x, y]` by class. */
+  readonly pageFocalPoints = new Map<string, [number, number]>();
+
+  /** Forgets what the previous page needed, before rendering the next one. */
+  startPage(): void {
+    this.pageScripts.clear();
+    this.pageFocalPoints.clear();
+  }
+
   /** Notes that the page being rendered needs a script. */
   useScript(name: SiteScript): void {
     this.pageScripts.add(name);
     this.siteScripts.add(name);
+  }
+
+  /** Notes an image's focal point for the page's `<style>`; returns its class (`focus-40-30`). */
+  useFocalPoint(x: number, y: number): string {
+    const name = `focus-${x}-${y}`;
+    this.pageFocalPoints.set(name, [x, y]);
+    return name;
   }
   /** The items that have pages, services first, each in collection order. */
   readonly itemPages: ItemPage[] = [];

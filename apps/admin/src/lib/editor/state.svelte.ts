@@ -211,6 +211,13 @@ export class EditorState {
   openLibrary: (current?: string) => Promise<ChosenImage | undefined> = async () => undefined;
   /** Opens the media library to choose several images; resolves with none when closed. */
   openLibraryMany: () => Promise<ChosenImage[]> = async () => [];
+  /**
+   * Opens the crop dialog on an image (image-cropping design decision 5), with the frame's
+   * shape locked to `shape` (width / height) when given. Resolves with the edited image, now in
+   * the library, or undefined when cancelled.
+   */
+  openCrop: (key: string, shape?: number) => Promise<ChosenImage | undefined> = async () =>
+    undefined;
 
   #drafts = new Set<() => void>();
 

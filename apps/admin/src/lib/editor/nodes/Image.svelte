@@ -16,7 +16,8 @@ const CLASS_BY_OWNER: Record<string, string> = {
 const ownerType = $derived((svedit.session.get(path.slice(0, -2)) as { type?: string })?.type);
 </script>
 
-<!-- Selecting the image opens the Image panel: alt text, and replacing or removing it. -->
+<!-- Selecting the image opens the Image panel: alt text, replacing, cropping, the focal point.
+     The focal point frames it as the site does, where the stylesheet cuts it to a shape. -->
 <Node {path} class="image-node">
   <CustomProperty path={[...path, "src"]}>
     <div contenteditable="false">
@@ -26,6 +27,9 @@ const ownerType = $derived((svedit.session.get(path.slice(0, -2)) as { type?: st
         alt={image.decorative ? "" : image.alt}
         width={image.width || undefined}
         height={image.height || undefined}
+        style:object-position={image.focus_x === 50 && image.focus_y === 50
+          ? undefined
+          : `${image.focus_x}% ${image.focus_y}%`}
       />
     </div>
   </CustomProperty>

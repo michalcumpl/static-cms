@@ -10,7 +10,7 @@ import { renderText } from "./text.js";
 
 export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
   const { site } = ctx;
-  ctx.pageScripts.clear();
+  ctx.startPage();
   const isHome = ctx.homeId === page.id;
   const title = isHome ? site.name : `${page.title} – ${site.name}`;
   const own = page.seo_description.trim() !== "" ? page.seo_description : site.description;
@@ -90,14 +90,16 @@ export function renderDocument(
   // Several navigation landmarks each need their own name.
   const social = socialLinks(ctx);
   const labelMenu = ctx.multilingual || social !== false;
+  // Before the head is written: the logo is an image too.
+  const brand = siteBrand(ctx);
   return html`<!doctype html>
 <html lang="${site.lang}">
-  <head>${head}
+  <head>${head}${focalPointStyle(ctx)}
   </head>
   <body>
     <header class="site-header">
       <div class="container">
-        <a class="site-name" href="${ctx.pageUrl(ctx.homeId)}">${siteBrand(ctx)}</a>
+        <a class="site-name" href="${ctx.pageUrl(ctx.homeId)}">${brand}</a>
         <nav class="site-nav"${labelMenu && html` aria-label="${ctx.strings.menuLabel}"`}>
           <ul>${ctx.menuItems().map((item) =>
             item.type === "menu_group"
@@ -129,6 +131,17 @@ export function renderDocument(
   </body>
 </html>
 `;
+}
+
+/** The rules for the page's off-centre focal points, or nothing when it has none. */
+function focalPointStyle(ctx: RenderContext): Html | false {
+  if (ctx.pageFocalPoints.size === 0) return false;
+  const rules = [...ctx.pageFocalPoints]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, [x, y]]) => `.${name}{object-position:${x}% ${y}%}`)
+    .join("");
+  return html`
+    <style>${rules}</style>`;
 }
 
 /** A link of the menu, marked when it leads to the page being rendered. */

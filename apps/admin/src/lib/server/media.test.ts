@@ -1,17 +1,19 @@
-import { copyFileSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { ne } from "drizzle-orm";
 import sharp from "sharp";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { type Db, openDatabase } from "./db/index";
-import { users, workspaces } from "./db/schema";
+import { users, versions, workspaces } from "./db/schema";
 import { demoSite } from "./demo";
 import { newId } from "./ids";
 import {
   bodySizeWarning,
   cleanupMedia,
+  editImage,
   listLibrary,
   mediaFile,
   registerAllLegacyMedia,
@@ -255,6 +257,178 @@ describe("library", () => {
   });
 });
 
+describe("editImage", () => {
+  const edit = (
+    key: string,
+    turn: 0 | 90 | 180 | 270,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ) => editImage(db, projectId, userId, key, { turn, crop: { x, y, width: w, height: h } }, root);
+
+  async function uploaded(name: string, bytes: Uint8Array): Promise<string> {
+    const result = await upload(name, bytes);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
+    return result.media.key;
+  }
+
+  /** A picture whose left half is red and right half blue. */
+  async function halves(width: number, height: number): Promise<Uint8Array> {
+    const half = await sharp({
+      create: { width: width / 2, height, channels: 3, background: "#0000ff" },
+    })
+      .png()
+      .toBuffer();
+    return new Uint8Array(
+      await sharp({ create: { width, height, channels: 3, background: "#ff0000" } })
+        .composite([{ input: half, left: width / 2, top: 0 }])
+        .png()
+        .toBuffer(),
+    );
+  }
+
+  /** The colour at a point of an image's stored original, as `[r, g, b]`. */
+  async function pixel(key: string, x: number, y: number): Promise<number[]> {
+    const file = readdirSync(join(root, projectId, "originals")).find((n) =>
+      n.startsWith(`${key}.`),
+    );
+    const { data } = await sharp(readFileSync(join(root, projectId, "originals", file ?? "")))
+      .extract({ left: x, top: y, width: 1, height: 1 })
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return [...data];
+  }
+
+  it("Crop a photo: a new image, the source unchanged", async () => {
+    const key = await uploaded("pult.jpg", await image(1600, 1200));
+    const result = await edit(key, 0, 400, 0, 1200, 1200);
+    expect(result).toMatchObject({ ok: true, created: true });
+    if (!result.ok) return;
+    expect(result.media.key).toMatch(/^pult-[0-9a-f]{8}$/);
+    expect(result.media.key).not.toBe(key);
+    expect(result.media).toMatchObject({
+      width: 1200,
+      height: 1200,
+      originalName: "pult.jpg",
+      source: { key, turn: 0, crop: { x: 400, y: 0, width: 1200, height: 1200 } },
+    });
+    expect(listLibrary(db, projectId).map((m) => m.key)).toEqual([result.media.key, key]);
+    expect(listLibrary(db, projectId)[1]).toMatchObject({ width: 1600, height: 1200 });
+    expect(listLibrary(db, projectId)[1]?.source).toBeUndefined();
+    expect(await mediaFile(projectId, `${result.media.key}-1200.webp`, root)).toBeDefined();
+  });
+
+  it("Turn a sideways scan: a quarter turn clockwise", async () => {
+    const key = await uploaded("sken.png", await halves(300, 200));
+    const result = await edit(key, 90, 0, 0, 200, 300);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
+    expect(result.media).toMatchObject({ width: 200, height: 300 });
+    // The left half (red) is now on top.
+    expect(await pixel(result.media.key, 100, 10)).toEqual([255, 0, 0]);
+    expect(await pixel(result.media.key, 100, 290)).toEqual([0, 0, 255]);
+  });
+
+  it("cuts the turned picture, not the source", async () => {
+    const key = await uploaded("sken.png", await halves(300, 200));
+    const result = await edit(key, 270, 0, 150, 200, 150);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
+    // Turned left, the right half (blue) is on top; the bottom half of that is red.
+    expect(result.media).toMatchObject({ width: 200, height: 150 });
+    expect(await pixel(result.media.key, 100, 75)).toEqual([255, 0, 0]);
+  });
+
+  it("Edit an edited image: from the source, and the whole picture is the source", async () => {
+    const key = await uploaded("pult.jpg", await image(1600, 1200));
+    const crop = await edit(key, 0, 0, 0, 500, 500);
+    if (!crop.ok) throw new Error(JSON.stringify(crop.message));
+    const wider = await edit(crop.media.key, 0, 0, 0, 1000, 800);
+    if (!wider.ok) throw new Error(JSON.stringify(wider.message));
+    expect(wider.media).toMatchObject({ width: 1000, height: 800, source: { key } });
+    const whole = await edit(crop.media.key, 0, 0, 0, 1600, 1200);
+    expect(whole).toMatchObject({ ok: true, created: false, media: { key } });
+  });
+
+  it("Same edit twice: one image", async () => {
+    const key = await uploaded("pult.jpg", await image(800, 600));
+    const first = await edit(key, 0, 100, 100, 300, 300);
+    const second = await edit(key, 0, 100, 100, 300, 300);
+    if (!first.ok || !second.ok) throw new Error("refused");
+    expect(second).toMatchObject({ created: false });
+    expect(second.media.key).toBe(first.media.key);
+    expect(listLibrary(db, projectId)).toHaveLength(2);
+  });
+
+  it("brings a removed crop back when it is made again", async () => {
+    const key = await uploaded("pult.jpg", await image(800, 600));
+    const first = await edit(key, 0, 100, 100, 300, 300);
+    if (!first.ok) throw new Error("refused");
+    removeFromLibrary(db, projectId, first.media.key);
+    await edit(key, 0, 100, 100, 300, 300);
+    expect(listLibrary(db, projectId).map((m) => m.key)).toContain(first.media.key);
+  });
+
+  it("Crop outside the picture, too small, or not whole pixels: refused, nothing stored", async () => {
+    const key = await uploaded("pult.jpg", await image(1000, 800));
+    const before = storedFiles().length;
+    expect(await edit(key, 0, 500, 0, 600, 400)).toEqual({
+      ok: false,
+      status: 400,
+      message: expect.objectContaining({ key: "server.media.cropOutside" }),
+    });
+    expect(await edit(key, 0, 0, 0, 40, 400)).toMatchObject({
+      status: 400,
+      message: { key: "server.media.cropTooSmall" },
+    });
+    expect(await edit(key, 0, 0.5, 0, 400, 400)).toMatchObject({
+      message: { key: "server.media.editInvalid" },
+    });
+    expect(await edit(key, 45 as 0, 0, 0, 400, 400)).toMatchObject({
+      message: { key: "server.media.editInvalid" },
+    });
+    // Turned, the 1000 × 800 picture is 800 wide.
+    expect(await edit(key, 90, 0, 0, 1000, 800)).toMatchObject({
+      message: { key: "server.media.cropOutside" },
+    });
+    expect(storedFiles()).toHaveLength(before);
+    expect(listLibrary(db, projectId)).toHaveLength(1);
+  });
+
+  it("refuses an unknown image", async () => {
+    expect(await edit("nic-12345678", 0, 0, 0, 100, 100)).toMatchObject({
+      ok: false,
+      status: 404,
+    });
+  });
+
+  it("cuts from the largest variant when the original is missing", async () => {
+    const key = await uploaded("velky.jpg", await image(3000, 2000));
+    rmSync(join(root, projectId, "originals", `${key}.jpg`));
+    const result = await edit(key, 0, 1500, 0, 1500, 2000);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
+    // The 2400-pixel variant stands in: the crop is scaled to it.
+    expect(result.media).toMatchObject({ width: 1200, height: 1600, source: { key } });
+  });
+
+  it("stores the crop of a phone photo without EXIF or GPS", async () => {
+    const photo = await sharp({
+      create: { width: 1200, height: 900, channels: 3, background: "#789" },
+    })
+      .jpeg()
+      .withExif({ IFD3: { GPSLatitudeRef: "N", GPSLatitude: "50/1 1/1 0/1" } })
+      .toBuffer();
+    const key = await uploaded("telefon.jpg", new Uint8Array(photo));
+    const result = await edit(key, 90, 0, 0, 600, 600);
+    if (!result.ok) throw new Error(JSON.stringify(result.message));
+    for (const file of storedFiles()) {
+      const metadata = await sharp(readFileSync(file)).metadata();
+      expect(metadata.exif, file).toBeUndefined();
+      expect(readFileSync(file).includes("GPS"), file).toBe(false);
+    }
+  });
+});
+
 describe("mediaFile", () => {
   it("serves only variant files, never originals or other names", async () => {
     const result = await upload("pult.jpg", await image(500, 500));
@@ -381,6 +555,37 @@ describe("cleanupMedia", () => {
     expect(await mediaFile(projectId, `${kept.media.key}-600.webp`, root)).toBeDefined();
     expect(listLibrary(db, projectId).map((m) => m.key)).toEqual([kept.media.key]);
     expect(cleanupMedia(db, { root })).toEqual([]);
+  });
+
+  it("Source of a kept crop: kept with the crop, deleted with it", async () => {
+    const group = await upload("skupina.jpg", await image(800, 600, "jpeg", "#444"));
+    if (!group.ok) throw new Error("upload failed");
+    const crop = await editImage(
+      db,
+      projectId,
+      userId,
+      group.media.key,
+      { turn: 0, crop: { x: 0, y: 0, width: 400, height: 400 } },
+      root,
+    );
+    if (!crop.ok) throw new Error("edit failed");
+    saveWithHeroImage(crop.media.key, 400);
+    removeFromLibrary(db, projectId, group.media.key);
+    expect(cleanupMedia(db, { root })).toEqual([]);
+    expect(await mediaFile(projectId, `${group.media.key}-800.webp`, root)).toBeDefined();
+
+    // Once the crop goes too, so does its source.
+    saveWithHeroImage("hero.png", 320);
+    const site = readSite(db, projectId);
+    if (!site) throw new Error("no site");
+    // Older versions used the crop; forget them, as if they had never been saved.
+    db.delete(versions).where(ne(versions.id, site.versionId)).run();
+    removeFromLibrary(db, projectId, crop.media.key);
+    expect(
+      cleanupMedia(db, { root })
+        .map((d) => d.key)
+        .sort(),
+    ).toEqual([crop.media.key, group.media.key].sort());
   });
 
   it("deletes a removed favicon's icon and share files with it, and keeps a used image's", async () => {

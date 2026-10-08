@@ -74,6 +74,8 @@ describe("usedMediaFiles", () => {
       decorative: false,
       width: 2000,
       height: 2000,
+      focus_x: 50,
+      focus_y: 50,
     });
     const list = (ids: string[]) => ({ nodes: ids, marks: [], annotations: [] });
     nodes.image_logo = image("image_logo", "logo-1a2b");
@@ -102,6 +104,8 @@ describe("usedMediaFiles", () => {
       decorative: false,
       width: 800,
       height: 800,
+      focus_x: 50,
+      focus_y: 50,
     });
     nodes.image_logo = image("image_logo", "logo-1a2b");
     nodes.image_pult = image("image_pult", "pult-3f9a");

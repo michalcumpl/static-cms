@@ -5,6 +5,7 @@ import { goto } from "$app/navigation";
 import BlockHandles from "$lib/editor/BlockHandles.svelte";
 import BlockPanel from "$lib/editor/BlockPanel.svelte";
 import ButtonPanel from "$lib/editor/ButtonPanel.svelte";
+import CropDialog from "$lib/editor/CropDialog.svelte";
 import { canvasCss, canvasTheme } from "$lib/editor/canvas-css";
 import { selectionLabel } from "$lib/editor/handles";
 import ImagePanel from "$lib/editor/ImagePanel.svelte";
@@ -246,6 +247,7 @@ const statusText = $derived(saveStatusText(editor, i18n.t));
 <!-- Focus left the canvas for the dialog; give it back, or Svedit restores a stale selection. -->
 <LinkDialog {editor} bind:this={linkDialog} onclose={() => canvas?.focus_canvas()} />
 <MediaLibrary {editor} bind:this={media.ref} />
+<CropDialog {editor} bind:this={media.cropRef} />
 
 {@render children()}
 

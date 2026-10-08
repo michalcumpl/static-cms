@@ -57,6 +57,8 @@ describe("exportSiteLanguages", () => {
         decorative: false,
         width: 320,
         height: 180,
+        focus_x: 50,
+        focus_y: 50,
       };
       nodes.site_1.favicon = { nodes: ["logo"], marks: [], annotations: [] };
       nodes.site_1.share_image = { nodes: ["logo"], marks: [], annotations: [] };

@@ -37,6 +37,8 @@ function site() {
     decorative: true,
     width: 600,
     height: 600,
+    focus_x: 50,
+    focus_y: 50,
   };
   nodes.t_jana = {
     id: "t_jana",
@@ -118,13 +120,30 @@ describe("testimonials", () => {
   });
 });
 
+describe("focal points", () => {
+  it("are styled only on the page that shows them", () => {
+    const { doc, nodes } = site();
+    nodes.photo_jana = { ...nodes.photo_jana, focus_x: 40, focus_y: 30 };
+    const result = renderSite(doc);
+    if (!result.ok) throw new Error("invalid");
+    const pages = result.site.pages.map((p) => [p.path, p.html.includes("<style>")]);
+    expect(pages).toEqual(pages.map(([path]) => [path, path === "kontakt/index.html"]));
+    expect(result.site.notFound).not.toContain("<style>");
+  });
+});
+
 describe("a page with both blocks", () => {
-  it("passes html-validate", async () => {
+  it("passes html-validate, with a photo framed off-centre", async () => {
     const validator = new HtmlValidate({
       extends: ["html-validate:recommended"],
       rules: { "doctype-style": "off" },
     });
-    const report = await validator.validateString(contactPage(site().doc));
+    const { doc, nodes } = site();
+    nodes.photo_jana = { ...nodes.photo_jana, focus_x: 40, focus_y: 30 };
+    const page = contactPage(doc);
+    expect(page).toContain("<style>.focus-40-30{object-position:40% 30%}</style>\n  </head>");
+    expect(page).toMatch(/<img class="testimonial-photo focus-40-30"/);
+    const report = await validator.validateString(page);
     const messages = report.results.flatMap((r) =>
       r.messages.map((m) => `${m.line}:${m.column} ${m.ruleId}: ${m.message}`),
     );

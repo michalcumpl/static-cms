@@ -5,7 +5,17 @@ import { validateSite } from "./index.js";
 const list = (nodes: string[]) => ({ nodes, marks: [], annotations: [] });
 
 function addImage(nodes: LooseNodes, id: string, width = 1200, height = 800, alt = "Pult") {
-  nodes[id] = { id, type: "image", src: `${id}-1a2b`, alt, decorative: false, width, height };
+  nodes[id] = {
+    id,
+    type: "image",
+    src: `${id}-1a2b`,
+    alt,
+    decorative: false,
+    width,
+    height,
+    focus_x: 50,
+    focus_y: 50,
+  };
   return id;
 }
 

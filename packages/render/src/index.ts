@@ -129,7 +129,7 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
     });
   }
   const css = siteCss(ctx.node(ctx.site.theme, "theme"));
-  ctx.pageScripts.clear();
+  ctx.startPage();
   const notFound = renderNotFound(ctx).value;
   const sources = { video: VIDEO_SCRIPT, slideshow: SLIDESHOW_SCRIPT, menu: MENU_SCRIPT };
   const scripts = Object.fromEntries(

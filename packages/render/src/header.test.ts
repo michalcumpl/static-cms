@@ -24,6 +24,8 @@ function addLogo(nodes: LooseNodes, width: number, height: number) {
     decorative: false,
     width,
     height,
+    focus_x: 50,
+    focus_y: 50,
   };
   nodes.site_1.logo.nodes = ["brand"];
 }

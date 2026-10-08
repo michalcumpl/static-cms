@@ -2,6 +2,7 @@ import { Command, define_keymap, KeyMapper } from "svedit";
 import { setContext } from "svelte";
 import { beforeNavigate, goto } from "$app/navigation";
 import { getI18n, type I18n } from "$lib/i18n";
+import type CropDialog from "./CropDialog.svelte";
 import type MediaLibrary from "./MediaLibrary.svelte";
 import type { EditorState } from "./state.svelte";
 
@@ -131,11 +132,15 @@ export function saveStatusText(editor: EditorState, t: I18n["t"]): string {
 }
 
 /**
- * Connects the editor to a `<MediaLibrary bind:this={media.ref} {editor} />` in the screen.
+ * Connects the editor to a `<MediaLibrary bind:this={media.ref} {editor} />` in the screen,
+ * and to the crop dialog beside it.
  * `restoreFocus` gives focus back to where the person was working once the dialog closes.
  */
 export function useMediaLibrary(editor: EditorState, restoreFocus: () => void = () => {}) {
   let library: MediaLibrary | undefined = $state();
+  let crop: CropDialog | undefined = $state();
+  // The browser gives focus back to whatever opened the crop dialog, such as the library.
+  editor.openCrop = async (key, shape) => crop?.open(key, shape);
   editor.openLibrary = async (current) => {
     const chosen = await library?.open(current);
     restoreFocus();
@@ -152,6 +157,13 @@ export function useMediaLibrary(editor: EditorState, restoreFocus: () => void = 
     },
     set ref(value: MediaLibrary | undefined) {
       library = value;
+    },
+    /** The `<CropDialog bind:this={media.cropRef} {editor} />` beside the library. */
+    get cropRef() {
+      return crop;
+    },
+    set cropRef(value: CropDialog | undefined) {
+      crop = value;
     },
   };
 }

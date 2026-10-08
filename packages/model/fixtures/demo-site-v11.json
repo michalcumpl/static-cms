@@ -49,9 +49,7 @@
       "alt": "Bochníky kváskového chleba na dřevěném pultu",
       "decorative": false,
       "width": 320,
-      "height": 180,
-      "focus_x": 50,
-      "focus_y": 50
+      "height": 180
     },
     "cta_order": {
       "id": "cta_order",
@@ -449,7 +447,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 12,
+      "schema_version": 11,
       "name": "Pekárna U Lípy",
       "lang": "cs",
       "base_url": "https://pekarna-ulipy.example",

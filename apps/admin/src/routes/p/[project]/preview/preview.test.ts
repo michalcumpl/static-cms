@@ -99,6 +99,8 @@ describe("/p/[project]/preview/[...path]", () => {
         decorative: false,
         width: 320,
         height: 180,
+        focus_x: 50,
+        focus_y: 50,
       });
       doc.nodes.image_logo = image("image_logo");
       doc.nodes.image_share = { ...image("image_share"), alt: "Pult" };

@@ -51,8 +51,22 @@ const COLLECTION_OF = { services: "services", team: "team", testimonials: "testi
  * An upgraded document as version 7 had it: the business's one location folded back into the
  * business, and no location choice on blocks.
  */
+/** An upgraded document as version 11 had it: images without a focal point. */
+function asVersion11(doc: { nodes: LooseNodes }): { nodes: LooseNodes } {
+  const nodes: LooseNodes = { ...doc.nodes };
+  for (const [id, node] of Object.entries(nodes)) {
+    if (node.type === "image") {
+      const { focus_x: _x, focus_y: _y, ...image } = node;
+      nodes[id] = image;
+    }
+  }
+  nodes.site_1 = { ...nodes.site_1, schema_version: 11 };
+  return { ...doc, nodes };
+}
+
 /** An upgraded document as version 10 had it: heroes without slides. */
-function asVersion10(doc: { nodes: LooseNodes }): { nodes: LooseNodes } {
+function asVersion10(upgraded: { nodes: LooseNodes }): { nodes: LooseNodes } {
+  const doc = asVersion11(upgraded);
   const nodes: LooseNodes = { ...doc.nodes };
   for (const [id, node] of Object.entries(nodes)) {
     if (node.type === "hero") {
@@ -469,7 +483,7 @@ describe("upgrading version-7 documents", () => {
     const before = structuredClone(v7);
     const result = migrateSite(v7) as { nodes: LooseNodes };
     expect(v7).toEqual(before);
-    expect(result.nodes.site_1.schema_version).toBe(11);
+    expect(result.nodes.site_1.schema_version).toBe(12);
     expect(result.nodes.business_1).toMatchObject({
       business_type: "Bakery",
       locations: { nodes: ["location_1"] },
@@ -519,7 +533,7 @@ describe("upgrading version-8 documents (block-variants)", () => {
     const before = structuredClone(v8);
     const result = migrateSite(v8) as { nodes: LooseNodes };
     expect(v8).toEqual(before);
-    expect(result.nodes.site_1.schema_version).toBe(11);
+    expect(result.nodes.site_1.schema_version).toBe(12);
     expect(result.nodes.hero_1.layout).toBe("beside");
     expect(result.nodes.services_1.layout).toBe("cards");
     expect(result.nodes.gallery_1.image_fit).toBe("fill");
@@ -534,7 +548,7 @@ describe("upgrading version-9 documents (collection-pages)", () => {
     const result = migrateSite(v9) as { nodes: LooseNodes };
     expect(v9).toEqual(before);
     expect(result.nodes.site_1).toMatchObject({
-      schema_version: 11,
+      schema_version: 12,
       projects: { nodes: [] },
       project_categories: { nodes: [] },
       services_page_id: "",
@@ -552,8 +566,23 @@ describe("upgrading version-10 documents (hero-slideshow)", () => {
     const before = structuredClone(v10);
     const result = migrateSite(v10) as { nodes: LooseNodes };
     expect(v10).toEqual(before);
-    expect(result.nodes.site_1.schema_version).toBe(11);
+    expect(result.nodes.site_1.schema_version).toBe(12);
     expect(result.nodes.hero_1.slides).toEqual({ nodes: [], marks: [], annotations: [] });
+    expect(validateSite(result).problems).toEqual([]);
+    expect(result).toEqual(loadDemoSite());
+  });
+});
+
+describe("upgrading version-11 documents (image-cropping)", () => {
+  it("Upgrade the bakery: every image gets a centred focal point", () => {
+    const v11 = loadFixture("demo-site-v11.json") as { nodes: LooseNodes };
+    const before = structuredClone(v11);
+    const result = migrateSite(v11) as { nodes: LooseNodes };
+    expect(v11).toEqual(before);
+    expect(result.nodes.site_1.schema_version).toBe(12);
+    const images = Object.values(result.nodes).filter((n) => n.type === "image");
+    expect(images.length).toBeGreaterThan(0);
+    for (const image of images) expect(image).toMatchObject({ focus_x: 50, focus_y: 50 });
     expect(validateSite(result).problems).toEqual([]);
     expect(result).toEqual(loadDemoSite());
   });

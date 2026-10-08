@@ -22,8 +22,9 @@ business control panel work; templates, our own hosting and the beta are next. S
   everywhere it belongs: home page highlights, the services page, its own page, the structured
   data.
 - **Editing on the page itself:** text, links and images are edited where they appear, and
-  business blocks are added, moved and duplicated with handles. Every change can be undone,
-  and every save is a version you can preview and restore.
+  business blocks are added, moved and duplicated with handles. Photos are cropped and turned
+  in the editor, and framed on a focal point. Every change can be undone, and every save is a
+  version you can preview and restore.
 - **18 business blocks** with their looks: hero (beside, full photo or slideshow), text, text
   with image, services (cards, list or accordion), projects and project pages, team, gallery,
   partner logos, cards, videos, key figures, steps, testimonials, questions, call to action,
@@ -41,7 +42,8 @@ business control panel work; templates, our own hosting and the beta are next. S
   and everything works without it.
 - Accessibility checked by the site's validation (heading order, image descriptions, colour
   contrast) and by `html-validate` in the tests.
-- Responsive WebP images with `srcset`, lazy-loaded below the first screen.
+- Responsive WebP images with `srcset`, lazy-loaded below the first screen, and framed on the
+  focal point the owner chose wherever a block cuts them to a shape.
 - SEO built in: metadata, Open Graph, sitemap, `robots.txt` (with switches for AI crawlers),
   JSON-LD for the business, its locations and services.
 - Privacy by default: no cookies and no third-party scripts. Videos load from YouTube or Vimeo
@@ -55,7 +57,7 @@ business control panel work; templates, our own hosting and the beta are next. S
 | Language and tooling | TypeScript throughout; a pnpm workspace with Turborepo; Biome for linting and formatting |
 | Admin | SvelteKit (Svelte 5) full-stack with `adapter-node`; [Svedit](https://github.com/michael/svedit) for editing on the page |
 | Data | SQLite (better-sqlite3) with Drizzle ORM; one JSON site document per language, versioned on every save; Litestream for backups |
-| Images | sharp on the server (type checks, metadata stripped, a WebP width ladder); HEIC converted in the browser |
+| Images | sharp on the server (type checks, metadata stripped, a WebP width ladder, crops and turns as new images); HEIC converted in the browser |
 | Sign-in and email | magic links sent over SMTP (Nodemailer); invite-only |
 | Publishing | static export to a file tree or ZIP (fflate); Netlify's API today, our own S3 and CloudFront hosting planned |
 | Quality | Vitest unit tests, Playwright end-to-end tests, `html-validate` on rendered pages, GitHub Actions CI |

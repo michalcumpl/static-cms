@@ -6,7 +6,17 @@ import { type RenderOptions, renderSite } from "./index.js";
 const list = (nodes: string[]) => ({ nodes, marks: [], annotations: [] });
 
 function addImage(nodes: LooseNodes, id: string, src: string, alt = "") {
-  nodes[id] = { id, type: "image", src, alt, decorative: false, width: 1600, height: 1200 };
+  nodes[id] = {
+    id,
+    type: "image",
+    src,
+    alt,
+    decorative: false,
+    width: 1600,
+    height: 1200,
+    focus_x: 50,
+    focus_y: 50,
+  };
   return id;
 }
 

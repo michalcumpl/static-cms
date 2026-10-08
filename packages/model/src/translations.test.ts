@@ -24,6 +24,8 @@ function addCenik(nodes: LooseNodes, inMenu = true) {
     decorative: false,
     width: 320,
     height: 180,
+    focus_x: 50,
+    focus_y: 50,
   };
   nodes.twi_cenik = {
     id: "twi_cenik",

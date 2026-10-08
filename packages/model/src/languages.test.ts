@@ -12,6 +12,8 @@ const image = (id: string, src: string, alt = "") => ({
   decorative: false,
   width: 1200,
   height: 1200,
+  focus_x: 50,
+  focus_y: 50,
 });
 
 /** A Czech primary and an English copy of it (same node IDs), each editable. */

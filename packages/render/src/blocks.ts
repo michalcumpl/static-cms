@@ -779,7 +779,13 @@ export function renderImage(
   const srcset = imageVariants(image.width)
     .map((w) => `${file(w)} ${w}w`)
     .join(", ");
-  return html`<img${options.className && html` class="${options.className}"`} src="${file(srcVariant(image.width) ?? image.width)}" srcset="${srcset}" sizes="${options.sizes}" alt="${alt}" width="${image.width}" height="${image.height}"${options.lazy && html` loading="lazy"`}>`;
+  // Where the stylesheet cuts the image to a shape, the cut keeps the focal point in view. The
+  // page's <style> holds the rule, as pages carry no style attributes (image-cropping decision 4).
+  const centred = image.focus_x === 50 && image.focus_y === 50;
+  const className = [options.className, !centred && ctx.useFocalPoint(image.focus_x, image.focus_y)]
+    .filter(Boolean)
+    .join(" ");
+  return html`<img${className && html` class="${className}"`} src="${file(srcVariant(image.width) ?? image.width)}" srcset="${srcset}" sizes="${options.sizes}" alt="${alt}" width="${image.width}" height="${image.height}"${options.lazy && html` loading="lazy"`}>`;
 }
 
 /** A `page_link` or `external_link` node as an `<a>`. */

@@ -23,7 +23,13 @@ const image = $derived.by(() => {
   )?.nodes[0];
   return id === undefined
     ? undefined
-    : (svedit.session.get(id) as { src: string; width: number; alt: string });
+    : (svedit.session.get(id) as {
+        src: string;
+        width: number;
+        alt: string;
+        focus_x: number;
+        focus_y: number;
+      });
 });
 const FIRST_TEXT: Record<CollectionName, string> = {
   services: "name",
@@ -54,7 +60,7 @@ function focusEditable() {
       </div>
     {:else if collection === "team"}
       <div class="person">
-        {#if image}<img class="portrait" src={editor.paths.image(image.src, image.width)} alt="" />{/if}
+        {#if image}<img class="portrait" src={editor.paths.image(image.src, image.width)} alt="" style:object-position={`${image.focus_x}% ${image.focus_y}%`} />{/if}
         <h3 class="person-name">{textOf("name")}</h3>
         {#if textOf("role")}<p class="person-role">{textOf("role")}</p>{/if}
       </div>

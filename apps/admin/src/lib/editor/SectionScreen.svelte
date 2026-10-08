@@ -9,6 +9,7 @@ import Button from "$lib/ui/Button.svelte";
 import Dialog from "$lib/ui/Dialog.svelte";
 import Notice from "$lib/ui/Notice.svelte";
 import BusinessSettings from "./BusinessSettings.svelte";
+import CropDialog from "./CropDialog.svelte";
 import { deleteItem, pagesShowing } from "./collections";
 import { setFormLists } from "./form/lists";
 import LinkDialog from "./LinkDialog.svelte";
@@ -241,6 +242,7 @@ onMount(() => {
 </div>
 
 <MediaLibrary {editor} bind:this={media.ref} />
+<CropDialog {editor} bind:this={media.cropRef} />
 <!-- Focus left the form for the dialog; give it back, or Svedit restores a stale selection. -->
 {#if lists}<LinkDialog {editor} bind:this={linkDialog} onclose={() => form?.focus_canvas()} />{/if}
 <Dialog

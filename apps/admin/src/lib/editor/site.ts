@@ -1,5 +1,5 @@
 import type { Document, Session, Transaction } from "svedit";
-import { type ChosenImage, createImage, list } from "./transforms";
+import { type ChosenImage, createImage, list, setImageFocus } from "./transforms";
 
 // Site settings and share images (seo-and-metadata design.md decision 8). Each operation is one
 // transaction, so each is one undo step; typing into a text field batches into one step.
@@ -96,6 +96,7 @@ export function changeSlotImage(
     tr.set([current.id, "width"], image.width);
     tr.set([current.id, "height"], image.height);
     tr.set([current.id, "alt"], "");
+    setImageFocus(tr, current.id, 50, 50);
   } else {
     tr.set([ownerId, slot], list([createImage(tr, image)]));
   }

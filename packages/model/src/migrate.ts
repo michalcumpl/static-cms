@@ -14,7 +14,8 @@ type RawDoc = { document_id: string; nodes: Record<string, RawNode> };
  * (all, or the items they chose), and adds the FAQ collection and social profiles, empty;
  * version 8 moves the business's contact details and opening hours into its one location, and
  * lets contact and opening hours blocks show all locations; version 9 stores each block's look;
- * version 10 adds projects and item pages, none to begin with; version 11 gives heroes slides.
+ * version 10 adds projects and item pages, none to begin with; version 11 gives heroes slides;
+ * version 12 gives every image a centred focal point.
  * Anything that isn't a site of an older version is returned unchanged, for validation to
  * judge. The input is not modified.
  */
@@ -31,6 +32,7 @@ export function migrateSite(doc: unknown): unknown {
   if (siteOf(current)?.schema_version === 8) current = toVersion9(current);
   if (siteOf(current)?.schema_version === 9) current = toVersion10(current);
   if (siteOf(current)?.schema_version === 10) current = toVersion11(current);
+  if (siteOf(current)?.schema_version === 11) current = toVersion12(current);
   return current;
 }
 
@@ -362,6 +364,19 @@ function toVersion11<T extends RawDoc>(doc: T): T {
     }
   }
   upgraded[doc.document_id] = { ...site, schema_version: 11 };
+  return { ...doc, nodes: upgraded };
+}
+
+/** Version 12 (image-cropping): every image gets a centred focal point. */
+function toVersion12<T extends RawDoc>(doc: T): T {
+  const site = siteOf(doc) as RawNode;
+  const upgraded: Record<string, RawNode> = { ...doc.nodes };
+  for (const [id, node] of Object.entries(doc.nodes)) {
+    if (isObject(node) && node.type === "image") {
+      upgraded[id] = { ...(node as RawNode), focus_x: 50, focus_y: 50 };
+    }
+  }
+  upgraded[doc.document_id] = { ...site, schema_version: 12 };
   return { ...doc, nodes: upgraded };
 }
 

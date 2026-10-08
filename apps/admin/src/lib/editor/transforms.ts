@@ -622,6 +622,7 @@ export function setImage(
     if (current.src !== image.key) {
       tr.set([existing, "alt"], "");
       tr.set([existing, "decorative"], decorative);
+      setImageFocus(tr, existing, 50, 50);
     }
     tr.set([existing, "src"], image.key);
     tr.set([existing, "width"], image.width);
@@ -644,8 +645,29 @@ export function createImage(tr: Tr, image: ChosenImage, decorative = false): str
     decorative,
     width: image.width,
     height: image.height,
+    focus_x: 50,
+    focus_y: 50,
   });
   return id;
+}
+
+/**
+ * Puts an edit of an image (a crop or turn) in its place (image-cropping design decision 5): it
+ * shows the same picture, so it keeps the description and decorative flag, but the focal point
+ * starts at the centre again, as the old point may be outside the crop.
+ */
+export function swapImage(tr: Tr, imageId: string, image: ChosenImage): void {
+  tr.set([imageId, "src"], image.key);
+  tr.set([imageId, "width"], image.width);
+  tr.set([imageId, "height"], image.height);
+  setImageFocus(tr, imageId, 50, 50);
+}
+
+/** Sets an image's focal point, in whole percent from the left and the top, within 0–100. */
+export function setImageFocus(tr: Tr, imageId: string, x: number, y: number): void {
+  const clamp = (v: number) => Math.min(100, Math.max(0, Math.round(v)));
+  tr.set([imageId, "focus_x"], clamp(x));
+  tr.set([imageId, "focus_y"], clamp(y));
 }
 
 /** Takes the image out of its owner; undo brings it back with its alt text. */

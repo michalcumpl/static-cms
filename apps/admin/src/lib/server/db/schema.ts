@@ -9,6 +9,7 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
+import type { ImageEdit } from "../../image-edit";
 
 const createdAt = () => integer("created_at", { mode: "timestamp_ms" }).notNull();
 
@@ -147,6 +148,8 @@ export const versions = sqliteTable(
 /**
  * A project's uploaded images (media design.md decision 3). `key` is the media key documents
  * use as an image's `src`; `removedAt` hides an image from the library without deleting files.
+ * An image made by editing another names that image in `sourceKey` and keeps the turn and crop
+ * in `edit` (image-cropping design decision 2); both are null for uploads.
  */
 export const media = sqliteTable(
   "media",
@@ -164,6 +167,8 @@ export const media = sqliteTable(
     createdAt: createdAt(),
     createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
     removedAt: integer("removed_at", { mode: "timestamp_ms" }),
+    sourceKey: text("source_key"),
+    edit: text("edit", { mode: "json" }).$type<ImageEdit>(),
   },
   (t) => [
     primaryKey({ columns: [t.projectId, t.key] }),

@@ -86,7 +86,7 @@ test("Add a person with a portrait", async ({ page }) => {
     .click();
   await library(page).getByRole("option").first().click();
   await library(page).getByRole("button", { name: "Use this image" }).click();
-  await expect(jana.locator("img")).toBeVisible();
+  await expect(jana.locator("img").first()).toBeVisible();
   await jana.getByLabel(/Decorative/).uncheck();
   await jana.getByLabel(/Description/).click();
   await page.keyboard.type("Jana u pecee");
@@ -112,7 +112,7 @@ test("Duplicate a person", async ({ page }) => {
     .click();
   const copy = item(page, "Person 2: Jana Nováková");
   await expect(copy.getByRole("textbox", { name: "Role (optional)" })).toHaveText("Pekařka");
-  await expect(copy.locator("img")).toBeVisible();
+  await expect(copy.locator("img").first()).toBeVisible();
   await saveSettings(page);
 
   const doc = stored();
@@ -129,7 +129,7 @@ test("remove a portrait, and undo it", async ({ page }) => {
   await jana.getByRole("button", { name: "Remove" }).click();
   await expect(jana.locator("img")).toHaveCount(0);
   await page.getByRole("button", { name: "Undo" }).click();
-  await expect(jana.locator("img")).toBeVisible();
+  await expect(jana.locator("img").first()).toBeVisible();
 });
 
 test("add a testimonial", async ({ page }) => {

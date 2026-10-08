@@ -64,6 +64,7 @@ describe("problem categories", () => {
       "decorative-with-alt": true,
       "invalid-media-key": true,
       "missing-image-size": true,
+      "invalid-focal-point": true,
       "missing-image": true,
       "empty-name": true,
       "empty-block": true,

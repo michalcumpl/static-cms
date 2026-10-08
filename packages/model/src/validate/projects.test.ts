@@ -34,6 +34,8 @@ function project(nodes: LooseNodes, n: number, category = "category_vystavy"): s
     decorative: false,
     width: 1200,
     height: 800,
+    focus_x: 50,
+    focus_y: 50,
   };
   nodes[id] = {
     id,

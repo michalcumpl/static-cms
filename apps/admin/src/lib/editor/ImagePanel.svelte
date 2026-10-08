@@ -1,14 +1,24 @@
 <script lang="ts">
 import { getI18n } from "$lib/i18n";
+import FocalPoint from "./FocalPoint.svelte";
 import {
   chooseImage,
+  galleryFitOf,
+  hasFocalPoint,
   IMAGE_ALT_FIELD,
   OPTIONAL_IMAGE_OWNERS,
   ownerOfSelectedImage,
   removeImageFrom,
+  shapeOf,
 } from "./image-slots";
 import type { EditorState } from "./state.svelte";
-import { setImageAlt, setImageDecorative, setImageSide, setLogoLink } from "./transforms";
+import {
+  setImageAlt,
+  setImageDecorative,
+  setImageSide,
+  setLogoLink,
+  swapImage,
+} from "./transforms";
 
 let { editor }: { editor: EditorState } = $props();
 const i18n = getI18n();
@@ -73,6 +83,24 @@ function applyLink(kind: "none" | "page" | "address") {
   if (!unchanged) editor.session.apply(tr);
 }
 
+// Collection items outside the primary language only describe their image (shared, read-only).
+const canChange = $derived(
+  !!owner && !(editor.sharedReadOnly && COLLECTION_ITEM_TYPES.includes(owner.type)),
+);
+
+/** Crops or turns the image into a new one in this place, keeping its description. */
+async function crop() {
+  if (!image || !owner) return;
+  const fit =
+    owner.type === "gallery_item" ? galleryFitOf(editor.session.doc as never, owner.id) : undefined;
+  const imageId = image.id;
+  const edited = await editor.openCrop(image.src, shapeOf(owner.type, fit));
+  if (!edited) return;
+  const tr = editor.session.tr;
+  swapImage(tr, imageId, edited);
+  editor.session.apply(tr);
+}
+
 function onAltInput(event: Event & { currentTarget: HTMLTextAreaElement }) {
   if (!image) return;
   const tr = editor.session.tr;
@@ -93,13 +121,17 @@ function onDecorativeChange(event: Event & { currentTarget: HTMLInputElement }) 
   <section class="panel" aria-labelledby="image-panel-title">
     <h2 id="image-panel-title">{i18n.t("editor.imagePanel.title")}</h2>
     <p class="file">{image.src}</p>
-    {#if owner && !(editor.sharedReadOnly && COLLECTION_ITEM_TYPES.includes(owner.type))}
+    {#if owner && canChange}
       <div class="actions">
         <button type="button" onclick={() => owner && chooseImage(editor, owner.id)}>{i18n.t("editor.imagePanel.replace")}</button>
+        <button type="button" onclick={crop}>{i18n.t("editor.imagePanel.crop")}</button>
         {#if OPTIONAL_IMAGE_OWNERS.includes(owner.type)}
           <button type="button" onclick={() => owner && removeImageFrom(editor, owner.id)}>{i18n.t("editor.imagePanel.remove")}</button>
         {/if}
       </div>
+    {/if}
+    {#if owner && canChange && hasFocalPoint(owner.type)}
+      <FocalPoint {editor} imageId={image.id} />
     {/if}
     {#if owner?.type === "text_with_image"}
       <fieldset class="side">

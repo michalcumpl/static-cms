@@ -1,8 +1,9 @@
 <script lang="ts">
 import { getI18n } from "$lib/i18n";
+import { shapeOf } from "./image-slots";
 import { type ImageSlot, setSlotImage, setSlotImageAlt, slotImage } from "./site";
 import type { EditorState } from "./state.svelte";
-import type { ChosenImage } from "./transforms";
+import { type ChosenImage, swapImage } from "./transforms";
 
 // One image of the site or a page outside its blocks: the favicon, a share image or the logo
 // (seo-and-metadata design.md decision 8).
@@ -43,6 +44,17 @@ async function choose() {
   const chosen = await editor.openLibrary(image?.src);
   if (chosen) set(chosen);
 }
+
+/** A share image is cut to 1200 × 630; cropping chooses that cut (image-cropping decision 5). */
+async function crop() {
+  if (!image) return;
+  const imageId = image.id;
+  const edited = await editor.openCrop(image.src, shapeOf(slot));
+  if (!edited) return;
+  const tr = editor.session.tr;
+  swapImage(tr, imageId, edited);
+  editor.session.apply(tr);
+}
 </script>
 
 <div class="image-setting">
@@ -66,6 +78,11 @@ async function choose() {
     >
       {image ? i18n.t("editor.image.change") : i18n.t("editor.image.choose")}
     </button>
+    {#if image && slot === "share_image"}
+      <button type="button" aria-describedby="{fieldId}-label" disabled={locked} onclick={crop}>
+        {i18n.t("editor.imagePanel.crop")}
+      </button>
+    {/if}
     {#if image}
       <button
         type="button"

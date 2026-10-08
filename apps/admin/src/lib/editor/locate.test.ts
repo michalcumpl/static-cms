@@ -152,6 +152,8 @@ describe("settingsTarget", () => {
       decorative: false,
       width: 100,
       height: 100,
+      focus_x: 50,
+      focus_y: 50,
     });
     const list = (ids: string[]) => ({ nodes: ids, marks: [], annotations: [] });
     Object.assign(d.nodes, {

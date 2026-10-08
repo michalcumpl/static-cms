@@ -21,6 +21,46 @@ export const OPTIONAL_IMAGE_OWNERS: readonly string[] = [
 
 type Doc = Parameters<typeof locateNode>[0];
 
+/** Node types whose images the site always shows whole, so they have no focal point. */
+const WHOLE_IMAGE_OWNERS: readonly string[] = ["logo_item", "site"];
+
+/** Whether the site may cut this owner's image, so that a focal point matters. */
+export function hasFocalPoint(ownerType: string): boolean {
+  return !WHOLE_IMAGE_OWNERS.includes(ownerType);
+}
+
+/**
+ * The shape (width / height) the site cuts an owner's image to, or undefined where it shows
+ * the image in its own shape (image-cropping design decision 5). `image_fit` is the gallery's
+ * look, for a gallery's photo.
+ */
+export function shapeOf(ownerType: string, galleryFit?: string): number | undefined {
+  switch (ownerType) {
+    case "gallery_item":
+      return galleryFit === "whole" ? undefined : 4 / 3;
+    case "card":
+      return 4 / 3;
+    case "project":
+      return 16 / 10;
+    case "person":
+    case "testimonial":
+      return 1;
+    case "share_image":
+      return 1200 / 630;
+    default:
+      return undefined;
+  }
+}
+
+/** The look of the gallery holding a gallery photo, for its shape. */
+export function galleryFitOf(doc: Doc, itemId: string): string | undefined {
+  for (const node of Object.values(doc.nodes)) {
+    const items = node.items as { nodes: string[] } | undefined;
+    if (node.type === "gallery" && items?.nodes.includes(itemId)) return node.image_fit as string;
+  }
+  return undefined;
+}
+
 /** Portraits and testimonial photos sit next to the person's name, which describes them. */
 export function startsDecorative(ownerType: string): boolean {
   // A video's poster sits under its play link, which its title names.

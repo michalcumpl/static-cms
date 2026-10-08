@@ -30,7 +30,7 @@ const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const MIN_SHARE_WIDTH = 600;
 /** The largest icon made from a favicon that phones show on their home screens. */
 const MIN_FAVICON_SIZE = 180;
-export const SCHEMA_VERSION = 11;
+export const SCHEMA_VERSION = 12;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -1500,6 +1500,17 @@ function checkImage(
       "This image's size is unknown; choose it again from the media library.",
       image.width > 0 ? "height" : "width",
     );
+  }
+  for (const property of ["focus_x", "focus_y"] as const) {
+    const position = image[property];
+    if (!(position >= 0 && position <= 100)) {
+      problems.error(
+        "invalid-focal-point",
+        image.id,
+        `${anImage} has a focal point outside the image; set it again in the Image panel.`,
+        property,
+      );
+    }
   }
   if (!MEDIA_KEY.test(image.src)) {
     problems.error(

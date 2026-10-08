@@ -18,6 +18,8 @@ function site(): { doc: unknown; nodes: LooseNodes } {
     decorative: false,
     width: 600,
     height: 600,
+    focus_x: 50,
+    focus_y: 50,
   };
   nodes.person_jana = {
     id: "person_jana",

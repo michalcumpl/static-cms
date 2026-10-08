@@ -41,6 +41,17 @@ describe("openDatabase", () => {
     expect(columns).toEqual(["project_id", "sha256"]);
   });
 
+  it("gives media rows an optional source and edit", () => {
+    const db = openDatabase(":memory:");
+    const columns = db
+      .all<{ name: string; notnull: number }>(sql`pragma table_info('media')`)
+      .filter((c) => c.name === "source_key" || c.name === "edit");
+    expect(columns).toEqual([
+      expect.objectContaining({ name: "source_key", notnull: 0 }),
+      expect.objectContaining({ name: "edit", notnull: 0 }),
+    ]);
+  });
+
   it("enforces foreign keys", () => {
     const db = openDatabase(":memory:");
     let error: unknown;

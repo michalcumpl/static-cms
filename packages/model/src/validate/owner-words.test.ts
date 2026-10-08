@@ -67,6 +67,8 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
     decorative: false,
     width: 300,
     height: 200,
+    focus_x: 50,
+    focus_y: 50,
   };
   nodes.page_home.share_image = { nodes: ["image_share"], marks: [], annotations: [] };
   nodes.image_favicon = {
@@ -77,6 +79,8 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
     decorative: false,
     width: 32,
     height: 32,
+    focus_x: 50,
+    focus_y: 50,
   };
   nodes.site_1.favicon = { nodes: ["image_favicon"], marks: [], annotations: [] };
   nodes.location_1.phone = "321 123";

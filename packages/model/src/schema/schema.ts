@@ -71,7 +71,7 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 11 },
+      schema_version: { type: "integer", min: 1, default: 12 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
@@ -592,6 +592,9 @@ export const siteSchema = {
       decorative: { type: "boolean", default: false },
       width: { type: "integer", min: 0, default: 0 },
       height: { type: "integer", min: 0, default: 0 },
+      /** The focal point of this use, in percent from the left and the top; 50, 50 is the centre. */
+      focus_x: { type: "integer", default: 50 },
+      focus_y: { type: "integer", default: 50 },
     },
   },
   strong: { kind: "mark", properties: {} },

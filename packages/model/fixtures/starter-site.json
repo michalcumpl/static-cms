@@ -111,7 +111,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 11,
+      "schema_version": 12,
       "name": "Můj web",
       "lang": "cs",
       "base_url": "",

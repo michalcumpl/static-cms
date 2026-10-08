@@ -397,6 +397,9 @@ export interface ImageNode {
   /** Intrinsic size in pixels, 0 when unknown. */
   width: number;
   height: number;
+  /** The focal point of this use: 0–100 percent from the left and from the top. */
+  focus_x: number;
+  focus_y: number;
 }
 
 export interface StrongNode {

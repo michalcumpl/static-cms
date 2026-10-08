@@ -98,6 +98,15 @@ function choose() {
   if (chosen.length > 0) finish(chosen);
 }
 
+/** Crops or turns an image into a new one, which joins the library first and selected. */
+async function edit(key: string) {
+  const edited = await editor.openCrop(key);
+  if (!edited) return;
+  const image = { originalName: edited.originalName ?? "", ...edited };
+  images = [image, ...images.filter((i) => i.key !== image.key)];
+  selection = multiple ? [...selection.filter((k) => k !== image.key), image.key] : [image.key];
+}
+
 async function remove(key: string) {
   const response = await fetch(editor.paths.media(key), { method: "DELETE" });
   if (response.ok || response.status === 404) {
@@ -294,6 +303,9 @@ const thumbnail = (image: LibraryImage) => editor.paths.image(image.key, image.w
         onclick={() => selected && remove(selected)}
       >
         {i18n.t("editor.media.removeFromLibrary")}
+      </button>
+      <button type="button" disabled={selection.length !== 1} onclick={() => selected && edit(selected)}>
+        {i18n.t("editor.media.edit")}
       </button>
       <span class="spacer"></span>
       <button type="button" onclick={() => finish([])}>{i18n.t("common.cancel")}</button>

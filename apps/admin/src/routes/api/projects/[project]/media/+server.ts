@@ -5,7 +5,10 @@ import { getDb } from "$lib/server/app";
 import { listLibrary, MAX_UPLOAD_BYTES, uploadImage } from "$lib/server/media";
 import type { RequestHandler } from "./$types";
 
-/** The project's library: `[{ key, originalName, width, height, createdAt }]`, newest first. */
+/**
+ * The project's library: `[{ key, originalName, width, height, createdAt, source? }]`, newest
+ * first; `source` is `{ key, turn, crop }` for an image made by editing another.
+ */
 export const GET: RequestHandler = (event) => {
   requireMember(event, event.params.project, { api: true });
   return json(listLibrary(getDb(), event.params.project));

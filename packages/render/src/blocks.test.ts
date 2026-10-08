@@ -82,6 +82,18 @@ describe("renderImage", () => {
     );
   });
 
+  it("Portrait framed on the face: an off-centre focal point as a class", () => {
+    const framed = { ...image, focus_x: 40, focus_y: 30 };
+    const out = renderImage(framed, ctx, { lazy: true, sizes: "100vw", className: "portrait" });
+    expect(out.value).toMatch(/^<img class="portrait focus-40-30" src=/);
+    expect(out.value).not.toContain("style=");
+    expect([...ctx.pageFocalPoints]).toContainEqual(["focus-40-30", [40, 30]]);
+  });
+
+  it("Centred image: no focal point class", () => {
+    expect(renderImage(image, ctx, { lazy: true, sizes: "100vw" }).value).toMatch(/^<img src=/);
+  });
+
   it("renders decorative images with empty alt", () => {
     const decorative = { ...image, decorative: true, alt: "" };
     expect(renderImage(decorative, ctx, { lazy: false, sizes: "100vw" }).value).toContain(
