@@ -74,7 +74,7 @@ The owner SHALL be able to turn selected text into a link to a page of the site,
 - **THEN** the link is not created and the dialog explains which addresses are allowed
 
 ### Requirement: Block structure
-The owner SHALL be able to insert, delete, duplicate and reorder the blocks of a page. A block SHALL be inserted at a place the owner chose on the canvas: between two blocks, above the first, after the last, above or below a given block, or on an empty page. The left column SHALL NOT offer inserting blocks. Inserting SHALL offer hero, rich text, services, text with image, gallery, team, partner logos, contact, opening hours, call to action, testimonials, questions, key figures, steps, projects, cards and videos blocks, each created with placeholder content. A hero SHALL only be offered when inserting at the top of a page that has no hero, and no block SHALL be offered above an existing hero. A new text with image block SHALL start without an image; a new gallery, team or logos block SHALL start without items and offer to add them. A new contact block SHALL start with every switch on, and a new contact or opening hours block SHALL start with a placeholder heading. A new call to action SHALL start with a placeholder heading, an empty text and one button to the home page labelled "Tlačítko". A new testimonials block SHALL start with a placeholder heading and one empty testimonial. A new key figures block SHALL start with an empty heading and three empty figures; a new steps block with a placeholder heading and three empty steps. A new projects block SHALL show every project of every category. A new cards block SHALL start with an empty heading, the look `below`, and three cards with empty titles and no images or links. A new videos block SHALL start with an empty heading and one video with an empty address and title.
+The owner SHALL be able to insert, delete, duplicate and reorder the blocks of a page. A block SHALL be inserted at a place the owner chose on the canvas: between two blocks, above the first, after the last, above or below a given block, or on an empty page. The left column SHALL NOT offer inserting blocks. Inserting SHALL offer hero, rich text, services, text with image, gallery, team, partner logos, contact, opening hours, call to action, testimonials, questions, key figures, steps, projects, cards, videos and jobs blocks, each created with placeholder content. A hero SHALL only be offered when inserting at the top of a page that has no hero, and no block SHALL be offered above an existing hero. A new text with image block SHALL start without an image; a new gallery, team or logos block SHALL start without items and offer to add them. A new contact block SHALL start with every switch on, and a new contact or opening hours block SHALL start with a placeholder heading. A new call to action SHALL start with a placeholder heading, an empty text and one button to the home page labelled "Tlačítko". A new testimonials block SHALL start with a placeholder heading and one empty testimonial. A new key figures block SHALL start with an empty heading and three empty figures; a new steps block with a placeholder heading and three empty steps. A new projects block SHALL show every project of every category. A new cards block SHALL start with an empty heading, the look `below`, and three cards with empty titles and no images or links. A new videos block SHALL start with an empty heading and one video with an empty address and title. A new jobs block SHALL start with a placeholder heading, an empty note and one job with an empty title and no description or contact.
 
 Duplicating a block SHALL insert a copy right after it, with everything it contains (texts with their marks, items, images with their descriptions, buttons and their targets) under new node IDs, and select the copy. It SHALL be one undoable step. A hero SHALL NOT be duplicated.
 
@@ -130,6 +130,10 @@ Duplicating a block SHALL insert a copy right after it, with everything it conta
 #### Scenario: Insert cards
 - **WHEN** the owner inserts a cards block after the hero
 - **THEN** a block with three empty cards appears, each with an "Add image" button, with the caret in the first card's title
+
+#### Scenario: Insert jobs
+- **WHEN** the owner inserts a jobs block after the hero
+- **THEN** a block with a heading and one empty job appears, with the caret in the job's title
 
 ### Requirement: Item structure
 The owner SHALL be able to insert, delete, duplicate and reorder list items, gallery items, logo items, figures and steps within their list, and service items, people, testimonials and FAQ items within the collection blocks that show them (see "Items in collection blocks"). Duplicating an item SHALL insert a copy right after it, with its texts, marks and image, under new node IDs, select the copy, and be one undoable step.
@@ -916,3 +920,18 @@ While a slide is selected or holds the caret, a Slide panel SHALL offer its link
 #### Scenario: Ninth slide
 - **WHEN** a slideshow has eight slides
 - **THEN** adding or duplicating a slide is disabled with the reason that a slideshow holds at most eight slides
+
+### Requirement: Jobs in the editor
+The canvas SHALL show a jobs block with every job's title, summary and description editable in place, the description always open. Jobs SHALL be added, moved, duplicated and deleted with the item handles, at most twelve; a job's description SHALL be edited like a text block's (paragraphs, subheadings, lists). Selecting a job SHALL show a Job panel with its contact's name, email and phone; an email or phone that isn't valid SHALL be refused with the reason, keeping the last valid value. The "no openings" note SHALL be edited in place on the canvas: under the jobs, marked as shown only when there are no openings, and in place of the list when the block has no jobs. Every change SHALL be one undoable step.
+
+#### Scenario: Add a job ad
+- **WHEN** the owner adds a job after "Zámečník/svářeč", types "Projektant/konstruktér", a summary and a description with a subheading and a list, and in the Job panel enters the email `pavel.boruvka@scenografie.cz`
+- **THEN** the preview shows the job with its summary, a "Full description" to open, and the email as a link
+
+#### Scenario: Thirteenth job
+- **WHEN** a jobs block holds twelve jobs
+- **THEN** the handle's Duplicate and Add are disabled with the reason "A jobs block holds at most twelve jobs"
+
+#### Scenario: Last job removed
+- **WHEN** the owner deletes the only job of a block whose note is "Momentálně nikoho nehledáme."
+- **THEN** the canvas and the preview show the note in place of the list

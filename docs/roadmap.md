@@ -282,11 +282,11 @@ of the seven launch templates (Education, Law, Financial advisory, Investment ma
 Short-term rentals, Exhibitions, Creative production); the others can land during the beta. The remaining templates
 come after launch.
 
-**Next steps** (2026-10-07): `project-deletion`, the cleanup and `example-sites` are done; next is
-`image-cropping`; of the blocks the examples lack (`layouts.md`), `figures-and-steps` and
-`block-variants` are done, and Scénografie and Punk Film added `collection-pages`, `cards`,
-`video` and `hero-slideshow` before launch (2026-10-08); layouts become part of the model with
-`template-system`.
+**Next steps** (2026-10-08): `project-deletion`, the cleanup and `example-sites` are done; of
+the blocks the examples lack (`layouts.md`), `figures-and-steps` and `block-variants` are done,
+and Scénografie and Punk Film added `collection-pages`, `cards`, `video` and `hero-slideshow`
+before launch, and `menu-groups` and `jobs` ahead of the beta. Next is `image-cropping`; layouts
+become part of the model with `template-system`, and `own-hosting` (D) can start in parallel.
 
 **Planned changes**, in order. A → B → C build on each other's data model and must go in
 sequence. D doesn't depend on them and can run in parallel; it's the longest pole before the
@@ -321,7 +321,7 @@ beta.
 | 9e | C | `booking` | the owner's booking service (Lodgify and others): a booking button, and its availability calendar where the service allows embedding | during the beta |
 | 9f | C | `newsletter` | a signup form passing addresses to the owner's email service | during the beta |
 | 9g | C | [`menu-groups`](../openspec/changes/archive/2026-10-08-menu-groups/) | menu items grouped under a heading ("Projects": TV and film, Events, Exhibitions, Interiors) as a dropdown; About and Contact stay beside it, so no secondary menu | done |
-| 9h | C | `jobs` | job openings: a list of positions, each with what the job is and whom to write to | done |
+| 9h | C | [`jobs`](../openspec/changes/archive/2026-10-08-jobs/) | job openings: a list of positions, each with what the job is and whom to write to | done |
 | 9i | C | `design-touches` | a heavy display font (such as Montserrat) for headings; a darker shade offered when a brand colour fails the contrast check | during the beta |
 | 10 | C | `template-switching` | choose, preview with your own content, publish | |
 | 11 | D | `own-hosting` | S3 + CloudFront, `<site>.webmio.site`, atomic deploys, rollback | |

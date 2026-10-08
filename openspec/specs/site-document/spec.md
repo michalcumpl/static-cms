@@ -150,6 +150,7 @@ Pages SHALL support exactly these block types:
 - `projects`: shows the site's projects (see "Collection blocks" and "Projects block").
 - `cards`: an optional heading, a look, and an ordered list of one to twelve cards (see "Cards").
 - `videos`: an optional heading and an ordered list of one to twelve videos (see "Videos").
+- `jobs`: an optional heading, a "no openings" note, and an ordered list of up to twelve jobs (see "Jobs").
 
 #### Scenario: Block content with marks
 - **WHEN** a `rich_text` paragraph has text `Call us today` with a bold mark on offsets 0–7
@@ -185,6 +186,10 @@ Pages SHALL support exactly these block types:
 
 #### Scenario: Videos block
 - **WHEN** a page has a `videos` block with one video, with a YouTube address and a title
+- **THEN** the document is valid
+
+#### Scenario: Jobs block
+- **WHEN** a page has a `jobs` block with the heading "Volné pozice" and two jobs with titles
 - **THEN** the document is valid
 
 ### Requirement: Hero placement
@@ -921,3 +926,30 @@ A version-10 document SHALL be upgradable to version 11 without changing what it
 #### Scenario: Upgrade the bakery
 - **WHEN** the version-10 demo site is upgraded
 - **THEN** its hero has no slides, the schema version is 11, and every page renders exactly as before
+
+### Requirement: Jobs
+A `jobs` block SHALL hold an optional heading (one line), a "no openings" note (text with bold, italic and link marks, may be empty) and an ordered list of zero to twelve `job` items. A job SHALL have:
+- a title (one line), required;
+- a summary (one line, may be empty);
+- a description: an ordered list of paragraphs, subheadings and bulleted lists (text with bold, italic and link marks), may be empty;
+- a contact: a name (one line), an email and a phone, each may be empty.
+
+Validation SHALL report a job without a title (`empty-title`, error), a contact email or phone that breaks the business details' rules (`invalid-email`, `invalid-phone`, errors), more than twelve jobs (`too-many-items`, error), and a block with no jobs and an empty note (`no-jobs`, warning: the block isn't shown).
+
+#### Scenario: Two job ads
+- **WHEN** a jobs block holds "Zámečník/svářeč" with a summary, a description with two subheadings and lists, and the contact "Matěj Palouš", `+420777294579`; and "Projektant/konstruktér" with the contact email `pavel.boruvka@scenografie.cz`
+- **THEN** the document is valid with no problems
+
+#### Scenario: Job without a title
+- **WHEN** a job's title is empty
+- **THEN** validation reports `empty-title` naming the job ("Job 2 on "Kontakty" needs a title.")
+
+#### Scenario: Not an email
+- **WHEN** a job's contact email is `pavel.boruvka`
+- **THEN** validation reports `invalid-email`
+
+#### Scenario: No openings
+- **WHEN** a jobs block has no jobs and the note "Momentálně nikoho nehledáme."
+- **THEN** the document is valid with no problems
+- **WHEN** the note is empty too
+- **THEN** validation reports a `no-jobs` warning, and the document stays valid
