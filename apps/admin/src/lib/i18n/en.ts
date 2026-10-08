@@ -854,6 +854,8 @@ export const en = {
       broken: "Its link leads to something that no longer has a page; choose another one.",
     },
     videoPanel: {
+      useThumbnail: "Use the picture from {provider}",
+      noThumbnail: "The picture from YouTube or Vimeo couldn't be added.",
       title: "Video",
       address: "Address on YouTube or Vimeo",
       notVideo: "Paste the address of a video on YouTube or Vimeo.",
@@ -992,6 +994,7 @@ export const en = {
     notFoundText: "The page doesn't exist, or you don't have access to it.",
     backHome: "Back to projects",
     media: {
+      noThumbnail: "YouTube or Vimeo has no picture for this video.",
       accepted: "Only JPEG, PNG and WebP images can be uploaded.",
       animated: "Animated images can't be used.",
       megapixels: "Images can be at most 40 megapixels.",

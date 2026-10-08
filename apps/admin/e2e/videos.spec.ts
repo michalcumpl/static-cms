@@ -23,12 +23,23 @@ async function insertVideos(page: Page) {
 }
 
 async function addFilm(page: Page) {
+  // The thumbnail comes from YouTube through our server; here, a library image stands in.
+  const [image] = (await (await page.request.get(paths().library)).json()) as {
+    key: string;
+    width: number;
+    height: number;
+  }[];
+  await page.route(/\/media\/video-thumbnail$/, (route) =>
+    route.fulfill({ status: 201, json: { ...image, originalName: "youtube-wNdrFte2T4w.jpg" } }),
+  );
   await insertVideos(page);
   await page.keyboard.type("Medvídku, vypravuj!");
   const address = videoPanel(page).getByLabel("Address on YouTube or Vimeo");
   await address.fill("https://youtu.be/wNdrFte2T4w");
   await address.press("Enter");
   await expect(videoPanel(page).getByRole("status")).toContainText("YouTube video wNdrFte2T4w");
+  // The video gets the provider's picture as its poster.
+  await expect(videos(page).first().locator("img")).toBeVisible();
   await toolbar(page).getByRole("button", { name: "Save", exact: true }).click();
   await expect(toolbar(page).getByRole("status").first()).toHaveText("Saved");
 }
@@ -50,6 +61,7 @@ test("Add a film", async ({ page }) => {
     '<a class="video-play" href="https://www.youtube.com/watch?v=wNdrFte2T4w">',
   );
   expect(contact).toContain("Přehrát: Medvídku, vypravuj!");
+  expect(contact).toMatch(/<img class="video-poster" [^>]*alt=""/);
 });
 
 test("Not a video address", async ({ page }) => {

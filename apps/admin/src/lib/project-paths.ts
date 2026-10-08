@@ -43,6 +43,8 @@ export interface ProjectPaths {
   restoreVersion(versionId: string): string;
   /** GET the library, POST an upload. */
   library: string;
+  /** POST a video address: its thumbnail from YouTube or Vimeo joins the library. */
+  videoThumbnail: string;
   media(name: string): string;
   /** An image's variant for showing it: `display` (up to 1600 px) or `thumbnail` (smallest). */
   image(key: string, width: number, use?: "display" | "thumbnail"): string;
@@ -87,6 +89,7 @@ export function projectPaths(projectId: string, lang?: string): ProjectPaths {
     versions: `/api/projects/${projectId}/versions${query}`,
     restoreVersion: (versionId) => `/api/projects/${projectId}/versions/${versionId}/restore`,
     library: `/api/projects/${projectId}/media`,
+    videoThumbnail: `/api/projects/${projectId}/media/video-thumbnail`,
     publish: `/api/projects/${projectId}/publish`,
     publishes: `/api/projects/${projectId}/publishes`,
     restore: (publishId) => `/api/projects/${projectId}/publishes/${publishId}/restore`,

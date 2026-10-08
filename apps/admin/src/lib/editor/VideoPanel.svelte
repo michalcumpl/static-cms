@@ -3,7 +3,7 @@ import { videoEmbed } from "@webmio/model";
 import { getI18n } from "$lib/i18n";
 import { handleTargets, selectionPath } from "./handles";
 import type { EditorState } from "./state.svelte";
-import { setVideoUrl } from "./transforms";
+import { type ChosenImage, setImage, setVideoUrl } from "./transforms";
 
 // The address of the video that is selected or holds the caret (video design decision 4):
 // applied when it is a YouTube or Vimeo video, refused otherwise.
@@ -15,7 +15,7 @@ const video = $derived.by(() => {
   const path = selectionPath(editor.session);
   const item = path ? handleTargets(editor.session, path).item : undefined;
   return item?.type === "video"
-    ? (editor.session.get(item.id) as { id: string; url: string })
+    ? (editor.session.get(item.id) as { id: string; url: string; poster: { nodes: string[] } })
     : undefined;
 });
 const embed = $derived(video ? videoEmbed(video.url) : undefined);
@@ -26,6 +26,37 @@ $effect.pre(() => {
   error = "";
 });
 
+let fetching = $state(false);
+
+/**
+ * Asks our server for the video's thumbnail from YouTube or Vimeo, which joins the library, and
+ * makes it the poster; visitors then load it from the site, not from the provider.
+ */
+async function useThumbnail(videoId: string, url: string) {
+  fetching = true;
+  try {
+    const response = await fetch(editor.paths.videoThumbnail, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    const body = (await response.json()) as ChosenImage & { message?: string };
+    if (!response.ok) {
+      error = body.message ?? i18n.t("editor.videoPanel.noThumbnail");
+      return;
+    }
+    const current = editor.session.get(videoId) as { poster?: { nodes: string[] } } | undefined;
+    if (!current || (current.poster?.nodes.length ?? 0) > 0) return;
+    const tr = editor.session.tr;
+    setImage(tr, videoId, body, { decorative: true });
+    editor.session.apply(tr);
+  } catch {
+    error = i18n.t("editor.videoPanel.noThumbnail");
+  } finally {
+    fetching = false;
+  }
+}
+
 function apply() {
   if (!video || draft.trim() === video.url) return;
   const tr = editor.session.tr;
@@ -35,6 +66,8 @@ function apply() {
   }
   error = "";
   editor.session.apply(tr);
+  // A new video gets its picture from the provider as its poster.
+  if (video.poster.nodes.length === 0) void useThumbnail(video.id, draft.trim());
 }
 </script>
 
@@ -58,6 +91,12 @@ function apply() {
         {i18n.t("editor.videoPanel.recognised", { provider: PROVIDERS[embed.provider], id: embed.id })} ·
         <a href={embed.watchUrl} target="_blank" rel="noopener">{i18n.t("editor.videoPanel.open", { provider: PROVIDERS[embed.provider] })}</a>
       </p>
+      {#if video.poster.nodes.length === 0}
+        {@const current = video}
+        <button type="button" class="thumbnail" disabled={fetching} onclick={() => useThumbnail(current.id, current.url)}>
+          {i18n.t("editor.videoPanel.useThumbnail", { provider: PROVIDERS[embed.provider] })}
+        </button>
+      {/if}
     {:else}
       <p class="hint">{i18n.t("editor.videoPanel.missing")}</p>
     {/if}
@@ -83,6 +122,10 @@ function apply() {
     flex-direction: column;
     gap: 0.25rem;
     font-size: 0.9rem;
+  }
+
+  .thumbnail {
+    margin-top: 0.5rem;
   }
 
   .hint,

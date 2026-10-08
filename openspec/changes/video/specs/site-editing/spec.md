@@ -5,9 +5,11 @@ On the canvas a `videos` block SHALL show its videos as the published page shows
 
 While a video is selected or holds the caret, a Video panel SHALL offer its address: typed or pasted, applied when it is a YouTube or Vimeo video address, with a message when it isn't ("Paste the address of a video on YouTube or Vimeo"). The panel SHALL say which provider and video it recognised, and link to the video on the provider's site. Each change SHALL be one undoable step.
 
+When a recognised address is applied to a video without a poster, the editor SHALL add the provider's picture of the video as its poster: fetched by the server from YouTube or Vimeo, without the black bars of YouTube's smaller pictures, stored in the media library like an upload, and marked decorative, since the title names the video. For a video without a poster the panel SHALL also offer "Use the picture from YouTube" (or Vimeo). Visitors SHALL load the poster from the site, never from the provider.
+
 #### Scenario: Add a film
 - **WHEN** the owner inserts a videos block, types the title "Medvídku, vypravuj!" and pastes `https://youtu.be/wNdrFte2T4w` in the Video panel
-- **THEN** the panel says it is a YouTube video, the canvas shows the title with the play symbol, and the preview shows the play link
+- **THEN** the panel says it is a YouTube video, the video gets the film's picture from YouTube as its poster, and the preview shows the play link with that poster, loaded from the site
 
 #### Scenario: Not a video address
 - **WHEN** the owner pastes `https://www.youtube.com/@anideti` in the Video panel

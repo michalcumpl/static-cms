@@ -870,6 +870,8 @@ export const cs: Messages = {
       broken: "Odkaz vede na něco, co už nemá stránku; vyberte jiný.",
     },
     videoPanel: {
+      useThumbnail: "Použít obrázek z {provider}",
+      noThumbnail: "Obrázek z YouTube ani Vimea se nepodařilo přidat.",
       title: "Video",
       address: "Adresa na YouTube nebo Vimeu",
       notVideo: "Vložte adresu videa na YouTube nebo Vimeu.",
@@ -1011,6 +1013,7 @@ export const cs: Messages = {
     notFoundText: "Stránka neexistuje, nebo k ní nemáte přístup.",
     backHome: "Zpět na projekty",
     media: {
+      noThumbnail: "YouTube ani Vimeo k tomuto videu obrázek nemá.",
       accepted: "Nahrát jde jen obrázky JPEG, PNG a WebP.",
       animated: "Animované obrázky použít nejde.",
       megapixels: "Obrázky mohou mít nejvýš 40 megapixelů.",

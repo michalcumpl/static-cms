@@ -138,3 +138,11 @@ a player at the next publish.
 - **The caption and "Plays from YouTube"** stack instead of sharing a line.
 - **The preview** serves `.js` files (`text/javascript`).
 - **The picker test** counts seventeen blocks.
+- **Posters from the provider's picture** (asked for after trying the block): a video showed only
+  its title until a poster was chosen. When a recognised address is applied to a video without
+  a poster, the Video panel asks our server (`POST …/media/video-thumbnail`) for the video's
+  picture: YouTube's `maxresdefault`, else `hqdefault` with its black bars trimmed (sharp);
+  Vimeo's from its oEmbed answer. Only the providers' image hosts are fetched, with a timeout and
+  a size cap. The picture joins the library like an upload and becomes the decorative poster; a
+  button offers the same for existing videos. Visitors still never contact the provider. Posters
+  chosen by hand also start decorative.

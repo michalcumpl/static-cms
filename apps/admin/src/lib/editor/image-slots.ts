@@ -23,7 +23,8 @@ type Doc = Parameters<typeof locateNode>[0];
 
 /** Portraits and testimonial photos sit next to the person's name, which describes them. */
 export function startsDecorative(ownerType: string): boolean {
-  return ownerType === "person" || ownerType === "testimonial";
+  // A video's poster sits under its play link, which its title names.
+  return ownerType === "person" || ownerType === "testimonial" || ownerType === "video";
 }
 
 /**

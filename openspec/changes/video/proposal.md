@@ -35,7 +35,8 @@ when a visitor asks for it (`docs/layouts.md`, item 8; `docs/roadmap.md`, row 6h
 No document format change: only new node types.
 
 Not in this change: other providers, self-hosted video files, background video in the hero
-(with `hero-slideshow`), playlists, and fetching titles or thumbnails from the providers.
+(with `hero-slideshow`), playlists, and fetching titles from the providers. (Their pictures are fetched once by our server, to
+become posters in the media library.)
 
 ## Capabilities
 
