@@ -111,6 +111,8 @@ Blocks SHALL render in document order as semantic HTML:
 - `call_to_action` as a `<section>` with its heading, its text when present, and its buttons as links in one paragraph. The first button has the class `button`, and the second the classes `button` and `button-secondary`.
 - `testimonials` as a `<section>` with an optional heading and a `<ul>` of the testimonials it shows. Each is a `<figure>` holding a `<blockquote>` with the quote and a `<figcaption>` with the photo (when present, decorative or described), the name and the detail (when present).
 - `faq` as a `<section>` with an optional heading and one `<details>` element per question it shows. Each has a `<summary>` with the question and the answer's paragraphs after it. The questions start closed, and opening them needs no JavaScript.
+- `figures` as a `<section>` with an optional heading and a `<ul>` of figures, each with its value and its label in separate elements, so templates can show the value large.
+- `steps` as a `<section>` with its heading and an `<ol>` of steps, each with its title as an `<h3>` and its text as a paragraph when present. The numbers come from the list's order.
 
 Each block's root element SHALL carry a class naming its block type, for styling. Optional texts that are empty SHALL NOT produce empty elements. A collection block that shows no items SHALL render nothing.
 
@@ -516,3 +518,18 @@ A location with nothing to show for the block (a contact block's shown parts all
 #### Scenario: A single location, as before
 - **WHEN** rendering a contact block with all locations, for a business with one location
 - **THEN** the block's HTML is the same as for the business details of format 7
+
+### Requirement: Key figures and steps layout
+The site's stylesheet SHALL show figures as large values in the theme's primary colour with their labels beneath: up to four figures in one row, five or six in rows of three, and two per row where the block is narrow (a phone, or the editor's phone width), and steps as a numbered sequence whose numbers are drawn from the list's order in the primary colour. Both SHALL pass the site's HTML validation and contrast rules like other blocks.
+
+#### Scenario: Figures on a phone
+- **WHEN** a figures block with four figures is shown 375 pixels wide
+- **THEN** the figures show two per row, each value above its label
+
+#### Scenario: Six figures
+- **WHEN** a figures block with six figures is shown on a wide screen
+- **THEN** they form two rows of three
+
+#### Scenario: Steps markup
+- **WHEN** a steps block "Jak to funguje" has three steps
+- **THEN** it renders an `<h2>` "Jak to funguje" and an `<ol>` with three items, each with an `<h3>` title

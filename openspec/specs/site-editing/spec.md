@@ -74,7 +74,7 @@ The owner SHALL be able to turn selected text into a link to a page of the site,
 - **THEN** the link is not created and the dialog explains which addresses are allowed
 
 ### Requirement: Block structure
-The owner SHALL be able to insert, delete, duplicate and reorder the blocks of a page. A block SHALL be inserted at a place the owner chose on the canvas: between two blocks, above the first, after the last, above or below a given block, or on an empty page. The left column SHALL NOT offer inserting blocks. Inserting SHALL offer hero, rich text, services, text with image, gallery, team, partner logos, contact, opening hours, call to action and testimonials blocks, each created with placeholder content. A hero SHALL only be offered when inserting at the top of a page that has no hero, and no block SHALL be offered above an existing hero. A new text with image block SHALL start without an image; a new gallery, team or logos block SHALL start without items and offer to add them. A new contact block SHALL start with every switch on, and a new contact or opening hours block SHALL start with a placeholder heading. A new call to action SHALL start with a placeholder heading, an empty text and one button to the home page labelled "Tlačítko". A new testimonials block SHALL start with a placeholder heading and one empty testimonial.
+The owner SHALL be able to insert, delete, duplicate and reorder the blocks of a page. A block SHALL be inserted at a place the owner chose on the canvas: between two blocks, above the first, after the last, above or below a given block, or on an empty page. The left column SHALL NOT offer inserting blocks. Inserting SHALL offer hero, rich text, services, text with image, gallery, team, partner logos, contact, opening hours, call to action, testimonials, questions, key figures and steps blocks, each created with placeholder content. A hero SHALL only be offered when inserting at the top of a page that has no hero, and no block SHALL be offered above an existing hero. A new text with image block SHALL start without an image; a new gallery, team or logos block SHALL start without items and offer to add them. A new contact block SHALL start with every switch on, and a new contact or opening hours block SHALL start with a placeholder heading. A new call to action SHALL start with a placeholder heading, an empty text and one button to the home page labelled "Tlačítko". A new testimonials block SHALL start with a placeholder heading and one empty testimonial. A new key figures block SHALL start with an empty heading and three empty figures; a new steps block with a placeholder heading and three empty steps.
 
 Duplicating a block SHALL insert a copy right after it, with everything it contains (texts with their marks, items, images with their descriptions, buttons and their targets) under new node IDs, and select the copy. It SHALL be one undoable step. A hero SHALL NOT be duplicated.
 
@@ -123,8 +123,12 @@ Duplicating a block SHALL insert a copy right after it, with everything it conta
 - **WHEN** the hero is selected
 - **THEN** duplicating it is not available
 
+#### Scenario: Insert key figures
+- **WHEN** the owner inserts a key figures block after the hero
+- **THEN** a block with three empty figures appears, with the caret in the first figure's value
+
 ### Requirement: Item structure
-The owner SHALL be able to insert, delete, duplicate and reorder list items, gallery items and logo items within their list, and service items, people, testimonials and FAQ items within the collection blocks that show them (see "Items in collection blocks"). Duplicating an item SHALL insert a copy right after it, with its texts, marks and image, under new node IDs, select the copy, and be one undoable step.
+The owner SHALL be able to insert, delete, duplicate and reorder list items, gallery items, logo items, figures and steps within their list, and service items, people, testimonials and FAQ items within the collection blocks that show them (see "Items in collection blocks"). Duplicating an item SHALL insert a copy right after it, with its texts, marks and image, under new node IDs, select the copy, and be one undoable step.
 
 #### Scenario: Add a service
 - **WHEN** the owner adds a service item after the last one in a block showing all services
@@ -137,6 +141,10 @@ The owner SHALL be able to insert, delete, duplicate and reorder list items, gal
 #### Scenario: Duplicate a person
 - **WHEN** the owner duplicates a person "Jana Nováková" with a portrait
 - **THEN** a second person "Jana Nováková" with the same portrait image (media key and description) appears right after her
+
+#### Scenario: Add a step
+- **WHEN** the caret is at the end of the second step's title and the owner adds an item
+- **THEN** an empty step appears as the third, the steps after it move down, and their numbers follow
 
 ### Requirement: Image description
 For every image, the owner SHALL be able to edit the alt text and mark the image as decorative, except for logos, whose name is their description. Marking an image decorative SHALL clear the alt text. When an image has just been placed and has neither alt text nor the decorative flag, the Image panel SHALL ask for a description. A portrait added to a person SHALL start as decorative, since the person's name is next to it.
@@ -591,7 +599,7 @@ The navigation, image slots, buttons, the page title, and the hero's fixed parts
 - **THEN** no handle is shown
 
 ### Requirement: Selection named in the toolbar
-While a block or an item is selected as a whole, the toolbar SHALL say what is selected, in words owners use: the block's name ("Services block", "Gallery block", "Call to action block"), or the item's name and position in its list ("Photo 3 of 6", "Service 2 of 3", "Person 1 of 4", "Logo 2 of 5", "Testimonial 1 of 2", "List item 4 of 4"). Nothing SHALL be said for a text selection or the caret. The toolbar's Delete button SHALL say in its description that Escape selects the paragraph, item or block around the caret.
+While a block or an item is selected as a whole, the toolbar SHALL say what is selected, in words owners use: the block's name ("Services block", "Gallery block", "Call to action block"), or the item's name and position in its list ("Photo 3 of 6", "Service 2 of 3", "Person 1 of 4", "Logo 2 of 5", "Testimonial 1 of 2", "Figure 2 of 4", "Step 1 of 3", "List item 4 of 4"). Nothing SHALL be said for a text selection or the caret. The toolbar's Delete button SHALL say in its description that Escape selects the paragraph, item or block around the caret.
 
 #### Scenario: Photo selected
 - **WHEN** the owner selects the third photo of a six-photo gallery with its handle

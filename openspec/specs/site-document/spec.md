@@ -128,6 +128,8 @@ Pages SHALL support exactly these block types:
 - `call_to_action`: a heading, an optional text, and an ordered list of one or two buttons, each a link to a page of the site or an external link.
 - `testimonials`: shows the site's testimonials (see "Collection blocks").
 - `faq`: shows the site's FAQs (see "Collection blocks").
+- `figures`: an optional heading and an ordered list of one to six figures, each a short value and a label (see "Key figures and steps contents").
+- `steps`: a heading and an ordered list of steps, each a title and an optional text that supports bold, italic and link marks.
 
 #### Scenario: Block content with marks
 - **WHEN** a `rich_text` paragraph has text `Call us today` with a bold mark on offsets 0–7
@@ -647,3 +649,30 @@ A version-7 document SHALL be upgradable to version 8 without changing what its 
 #### Scenario: Upgrade the bakery
 - **WHEN** a version-7 document whose business is at "Lipová 12", "Kolín", phone `+420321123456`, open Monday to Friday 06:00–17:00, is upgraded
 - **THEN** the business has one location with those details and hours, the business node has no address of its own, and every page renders exactly as before the upgrade
+
+### Requirement: Key figures and steps contents
+- A `figure` SHALL have a non-empty value and a non-empty label. A value longer than 24 characters SHALL be reported as a warning, since figures are meant to be read at a glance.
+- A `figures` block SHALL hold at most six figures; a block without figures SHALL be reported as a warning.
+- A `steps` block SHALL have a non-empty heading, since its steps' titles are the headings under it. Each `step` SHALL have a non-empty title; its text is optional. A block without steps SHALL be reported as a warning.
+
+Messages SHALL name the page and the item's position, as other block messages do ("Figure 2 on "Úvod" needs its label.").
+
+#### Scenario: Valid figures and steps
+- **WHEN** the home page has a figures block with three figures, each with a value and a label, and a steps block with a heading and three steps with titles
+- **THEN** the document is valid
+
+#### Scenario: Figure without a label
+- **WHEN** the second figure on "Úvod" has the value "40+" and an empty label
+- **THEN** validation reports an empty-label error for figure 2 that names "Úvod"
+
+#### Scenario: Seven figures
+- **WHEN** a figures block has seven figures
+- **THEN** validation reports a too-many-items error
+
+#### Scenario: Long value
+- **WHEN** a figure's value is "více než tři sta milionů korun českých"
+- **THEN** validation reports a long-figure warning, and the document stays valid
+
+#### Scenario: Steps without a heading
+- **WHEN** the steps block on "Služby" has an empty heading
+- **THEN** validation reports an empty-heading error that names "Služby"
