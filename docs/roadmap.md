@@ -320,7 +320,7 @@ beta.
 | 9d | C | `timetable` | a table block for timetables and seasonal prices | during the beta |
 | 9e | C | `booking` | the owner's booking service (Lodgify and others): a booking button, and its availability calendar where the service allows embedding | during the beta |
 | 9f | C | `newsletter` | a signup form passing addresses to the owner's email service | during the beta |
-| 9g | C | `menu-groups` | menu items grouped under a heading ("Projects": TV and film, Events, Exhibitions, Interiors) as a dropdown; About and Contact stay beside it, so no secondary menu | done |
+| 9g | C | [`menu-groups`](../openspec/changes/archive/2026-10-08-menu-groups/) | menu items grouped under a heading ("Projects": TV and film, Events, Exhibitions, Interiors) as a dropdown; About and Contact stay beside it, so no secondary menu | done |
 | 9h | C | `jobs` | job openings: a list of positions, each with what the job is and whom to write to | during the beta |
 | 9i | C | `design-touches` | a heavy display font (such as Montserrat) for headings; a darker shade offered when a brand colour fails the contrast check | during the beta |
 | 10 | C | `template-switching` | choose, preview with your own content, publish | |
