@@ -806,7 +806,7 @@ Blocks showing chosen items SHALL remain editable: the owner can choose, order a
 
 ### Requirement: Choosing a block's look
 When a hero, services, team or gallery block is selected, or the caret is in it, the block panel SHALL offer its look as named choices:
-- **Hero:** "Beside the text" or "Full photo";
+- **Hero:** "Beside the text", "Full photo" or "Slideshow";
 - **Services:** "Cards", "List" or "Accordion";
 - **Team:** "Cards" or "List";
 - **Gallery:** "Fill the tiles" or "Whole images".
@@ -824,6 +824,10 @@ Choosing SHALL change the block on the canvas at once, as one undoable step. A f
 #### Scenario: Full photo without a photo
 - **WHEN** the owner chooses "Full photo" for a hero without an image
 - **THEN** the panel says the hero needs a photo, and the canvas still shows the text
+
+#### Scenario: Make the hero a slideshow
+- **WHEN** the owner chooses "Slideshow" for a hero without slides
+- **THEN** the hero gets two empty slides, the canvas shows them side by side, and one undo brings back the previous look without slides
 
 ### Requirement: Projects block in the editor
 The block picker SHALL offer a Projects block ("Projects": "Your work as photo tiles, all of it or one category"). On the canvas a `projects` block SHALL show its tiles as the published page will, and SHALL behave as "Items in collection blocks" and "Collection block mode" describe for the other collection blocks, with "All projects" and "Chosen projects", and "New project" when adding. A tile's name SHALL be editable in place and its cover SHALL use the usual image slot; the project's other fields SHALL be edited in What you offer, which the block panel links to ("Edit projects").
@@ -879,3 +883,20 @@ When a recognised address is applied to a video without a poster, the editor SHA
 #### Scenario: Not a video address
 - **WHEN** the owner pastes `https://www.youtube.com/@anideti` in the Video panel
 - **THEN** the panel says to paste the address of a video, and the video's address is unchanged
+
+### Requirement: Slides in the editor
+While a hero's look is `slideshow`, the canvas SHALL show its slides side by side, without moving, each with its image in the usual image slot and its title editable in place; the hero's heading, text and button stay editable under them. Slides SHALL be added (Enter at the end of a title, or the item handle's Add), moved, duplicated and deleted as cards are, each as one undoable step, keeping at most eight; choosing "Slideshow" for a hero without slides SHALL add two empty slides in the same step.
+
+While a slide is selected or holds the caret, a Slide panel SHALL offer its link with the Card panel's choices: no link, a page, a project or service with its own page, or an address; and its clip: the address of a Vimeo MP4 file, applied when it is one, with a message when it isn't ("Paste the address of an MP4 file on Vimeo"), and a note that the clip loads from Vimeo when the page opens.
+
+#### Scenario: Link a slide to a project
+- **WHEN** the owner gives slide 1 a photo and the title "Poslední závod", and links it to the project "Poslední závod" in the Slide panel
+- **THEN** the preview's first slide shows the photo with the title as a link to the project's page
+
+#### Scenario: Add a clip
+- **WHEN** the owner pastes a `player.vimeo.com/progressive_redirect/…/file.mp4` address as slide 1's clip and saves
+- **THEN** the preview's first slide holds a muted video with that address, over the photo
+
+#### Scenario: Ninth slide
+- **WHEN** a slideshow has eight slides
+- **THEN** adding or duplicating a slide is disabled with the reason that a slideshow holds at most eight slides

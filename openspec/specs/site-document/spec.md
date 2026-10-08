@@ -45,7 +45,7 @@ Every node reference SHALL point to an existing node of an allowed type. All nod
 
 ### Requirement: Site node
 The root node SHALL be of type `site`. It SHALL carry:
-- the schema version (`10`);
+- the schema version (`11`);
 - the site name;
 - a language tag (for example `cs`);
 - an optional base URL;
@@ -74,7 +74,7 @@ The home page ID SHALL name a page in the site's list of pages. The position of 
 - **THEN** validation reports a missing-home error
 
 #### Scenario: Unsupported schema version
-- **WHEN** a document has schema version 9
+- **WHEN** a document has schema version 10
 - **THEN** validation reports an unsupported-schema-version error
 
 #### Scenario: Two favicons
@@ -117,7 +117,7 @@ The navigation SHALL be an ordered list of navigation items. Each item SHALL hav
 
 ### Requirement: Content blocks
 Pages SHALL support exactly these block types:
-- `hero`: a heading, optional supporting text, an optional image, and an optional call-to-action (label and link).
+- `hero`: a heading, optional supporting text, an optional image, an optional call-to-action (label and link), and an ordered list of slides (see "Hero slides").
 - `rich_text`: an ordered list of paragraphs, subheadings (level 2 or 3) and bulleted lists. Text supports bold, italic and link marks.
 - `services`: shows the site's services (see "Collection blocks").
 - `text_with_image`: an optional heading, an ordered list of paragraphs and bulleted lists (text supports bold, italic and link marks), an optional image, and the side the image is on (`left` or `right`, default `right`).
@@ -692,7 +692,7 @@ Messages SHALL name the page and the item's position, as other block messages do
 
 ### Requirement: Block variants
 Four blocks SHALL carry a choice of how they look, with today's look as the default:
-- a `hero` block's `layout`: `beside` (the text next to the image) or `cover` (the image fills the block, the text over it);
+- a `hero` block's `layout`: `beside` (the text next to the image), `cover` (the image fills the block, the text over it) or `slideshow` (its slides, one at a time; see "Hero slides");
 - a `services` block's `layout`: `cards`, `list` or `accordion`;
 - a `team` block's `layout`: `cards` or `list` (without portraits);
 - a `gallery` block's `image_fit`: `fill` (images cropped to one shape) or `whole` (each image shown complete).
@@ -866,3 +866,42 @@ A project's video address that isn't a YouTube or Vimeo video SHALL be reported 
 #### Scenario: Trailer somewhere else
 - **WHEN** a project's video address is `https://www.csfd.cz/film/123/`
 - **THEN** validation reports a warning that the project's page shows the video as a link, and the document stays valid
+
+### Requirement: Hero slides
+A `hero` block SHALL have an ordered list of slides, empty by default. A slide SHALL have at most one image, a title (one line, no formatting), a clip address, empty or the `https` address of an MP4 file on Vimeo (`player.vimeo.com/progressive_redirect/…`, `player.vimeo.com/external/…mp4` or `*.vimeocdn.com/…mp4`), and at most one link target: a page of the site, a service or project with its own page, or an outside address, checked as a card's link is (see "Cards").
+
+While the hero's look is `slideshow`, these cases SHALL be reported, naming the page and the slide's position ("Slide 2 on Úvod"):
+- fewer than two slides, as a warning: the hero then shows as `cover` with its own image (or as `beside` without one);
+- more than eight slides, as an error;
+- a slide without an image, or without a title, as an error;
+- a link that leads nowhere, as a warning, and an unsafe address, as an error;
+- a clip address that isn't a Vimeo MP4 file, as an error.
+
+In the other looks the slides SHALL be kept and not checked, so switching back and forth loses nothing.
+
+#### Scenario: Latest work
+- **WHEN** the home page's hero has the look `slideshow` and six slides, each with a described image, a title and a link to a project with its own page
+- **THEN** the document is valid
+
+#### Scenario: One slide
+- **WHEN** a hero in the `slideshow` look has one slide
+- **THEN** validation reports a warning that the slideshow needs at least two slides and shows as a full photo, and the document stays valid
+
+#### Scenario: Slide without a photo
+- **WHEN** slide 3 of the slideshow on "Úvod" has no image
+- **THEN** validation reports a missing-image error for slide 3 on "Úvod"
+
+#### Scenario: Clip that isn't a Vimeo file
+- **WHEN** slide 2 on "Úvod" has the clip address `https://www.youtube.com/watch?v=wNdrFte2T4w`
+- **THEN** validation reports an unsupported-clip error for slide 2 on "Úvod"
+
+#### Scenario: Slides kept in another look
+- **WHEN** a hero with two slides, one without a title, has the look `cover`
+- **THEN** no problem is reported about its slides
+
+### Requirement: Upgrading version-10 documents
+A version-10 document SHALL be upgradable to version 11 without changing what its pages show. The upgrade SHALL give every `hero` an empty list of slides and set the schema version to 11. Stored documents SHALL be upgraded when read and stored at their next save, as for earlier versions.
+
+#### Scenario: Upgrade the bakery
+- **WHEN** the version-10 demo site is upgraded
+- **THEN** its hero has no slides, the schema version is 11, and every page renders exactly as before

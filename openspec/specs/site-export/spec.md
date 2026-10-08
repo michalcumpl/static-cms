@@ -13,6 +13,7 @@ Export SHALL produce a file tree in which:
 - the not-found page is `404.html`;
 - the stylesheet is `assets/style.css`;
 - when a page shows a video (a videos block, or a project page with a YouTube or Vimeo video), the video script is `assets/video.js`;
+- when a page's hero is a slideshow, the slideshow script is `assets/slideshow.js`;
 - `robots.txt` is at the root;
 - every image variant and share file used by the site is under `assets/images/`;
 - every font file and font licence the theme needs is under `assets/fonts/`;
@@ -35,6 +36,10 @@ The home page SHALL NOT also be written under its slug. Export SHALL accept the 
 #### Scenario: Video script only when needed
 - **WHEN** exporting a site without videos, and then the same site with a videos block on one page
 - **THEN** the first tree has no `assets/video.js`, and the second has it once
+
+#### Scenario: Slideshow script only when needed
+- **WHEN** exporting a site whose home page hero is a slideshow
+- **THEN** the tree has `assets/slideshow.js` once, and no `assets/video.js` unless a page shows a video
 
 ### Requirement: Media files
 The caller SHALL supply the bytes of every media file the document uses (see "Media files used by a document" in site-rendering), keyed by file name. Export SHALL place them in the tree:
