@@ -60,7 +60,7 @@ Export SHALL include no other media, and SHALL fail with an error naming the mis
 - **THEN** the tree contains `assets/images/pult-3f9a-share.jpg` and no WebP variants of that image
 
 ### Requirement: Sitemap
-Export SHALL accept the same optional site address as rendering. The site's base URL SHALL be that site address when given, otherwise the document's base URL. When the site has a base URL, export SHALL include a `sitemap.xml` listing the absolute URL of every page, with the home page at the base URL. The not-found page SHALL NOT be listed. When the site has no base URL, export SHALL omit `sitemap.xml` and report a warning saying that the sitemap, page addresses in link previews and share images were left out.
+Export SHALL accept the same optional site address as rendering. The site's base URL SHALL be that site address when given, otherwise the document's base URL. When the site has a base URL, export SHALL include a `sitemap.xml` listing the absolute URL of every page, item pages of services and projects included, with the home page at the base URL. The not-found page SHALL NOT be listed. When the site has no base URL, export SHALL omit `sitemap.xml` and report a warning saying that the sitemap, page addresses in link previews and share images were left out.
 
 #### Scenario: Sitemap with base URL
 - **WHEN** exporting a site with base URL `https://anideti.cz` and pages home and `kontakt`
@@ -77,6 +77,10 @@ Export SHALL accept the same optional site address as rendering. The site's base
 #### Scenario: Site address given to export
 - **WHEN** exporting a site whose document has no base URL, with site address `https://sc-p1.netlify.app`
 - **THEN** `sitemap.xml` lists `https://sc-p1.netlify.app/` and the pages' canonical links use that address
+
+#### Scenario: Project pages in the sitemap
+- **WHEN** the site with base URL `https://punkfilm.cz` has the projects' listing page "Work" and two projects with the addresses `the-last-race` and `mustang`
+- **THEN** `sitemap.xml` lists `https://punkfilm.cz/work/the-last-race/` and `https://punkfilm.cz/work/mustang/`, and the export holds `work/the-last-race/index.html` and `work/mustang/index.html`
 
 ### Requirement: Invalid documents are not exported
 Export SHALL refuse a document that fails validation and SHALL return the validation errors.
