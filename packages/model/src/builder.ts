@@ -124,6 +124,20 @@ export type BlockInput =
   | { type: "figures"; heading?: string; items: { value: string; label: string }[] }
   | { type: "steps"; heading: string; items: { title: string; text?: string }[] }
   | {
+      type: "jobs";
+      heading?: string;
+      /** Shown when there are no jobs. */
+      note?: string;
+      items: {
+        title: string;
+        summary?: string;
+        /** Paragraphs, `## ` subheadings and `- ` lists, as a text block's. */
+        body?: string;
+        /** The phone in international form, like `+420777294579`. */
+        contact?: { name?: string; email?: string; phone?: string };
+      }[];
+    }
+  | {
       type: "videos";
       heading?: string;
       items: { url: string; title: string; caption?: string; poster?: ImageInput }[];
@@ -225,6 +239,8 @@ export const blocks = {
     ({ type: "figures", ...b }) as BlockInput,
   steps: (b: Omit<Extract<BlockInput, { type: "steps" }>, "type">) =>
     ({ type: "steps", ...b }) as BlockInput,
+  jobs: (b: Omit<Extract<BlockInput, { type: "jobs" }>, "type">) =>
+    ({ type: "jobs", ...b }) as BlockInput,
   videos: (b: Omit<Extract<BlockInput, { type: "videos" }>, "type">) =>
     ({ type: "videos", ...b }) as BlockInput,
   cards: (b: Omit<Extract<BlockInput, { type: "cards" }>, "type">) =>
@@ -545,6 +561,23 @@ export function siteBuilder(options: {
               items: list(
                 input.items.map((item) =>
                   add("figure", { value: text(item.value), label: text(item.label) }),
+                ),
+              ),
+            });
+          case "jobs":
+            return add("jobs", {
+              heading: text(input.heading),
+              empty_note: text(input.note),
+              items: list(
+                input.items.map((item) =>
+                  add("job", {
+                    title: text(item.title),
+                    summary: text(item.summary),
+                    body: list(body(item.body ?? "", true)),
+                    contact_name: text(item.contact?.name),
+                    contact_email: item.contact?.email ?? "",
+                    contact_phone: item.contact?.phone ?? "",
+                  }),
                 ),
               ),
             });

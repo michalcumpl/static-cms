@@ -129,6 +129,19 @@ function everything(lang: "cs" | "en") {
         { title: "Web", url: "https://example.org" },
       ],
     }),
+    blocks.jobs({
+      heading: t("Volné pozice", "Jobs"),
+      note: t("Teď nikoho nehledáme.", "We aren't hiring right now."),
+      items: [
+        {
+          title: t("Lektor/ka", "Teacher"),
+          summary: t("Na kroužky animace.", "For the animation clubs."),
+          body: t("## Co nabízíme\n\n- přátelský tým", "## We offer\n\n- a friendly team"),
+          contact: { name: "Jana", email: "jana@example.org", phone: "+420777294579" },
+        },
+        { title: t("Produkční", "Producer") },
+      ],
+    }),
     blocks.callToAction({
       heading: t("Přihlaste se", "Sign up"),
       actions: [{ label: "Web", url: "https://example.org" }],
@@ -167,6 +180,7 @@ describe("siteBuilder", () => {
       "cards",
       "videos",
       "menu_group",
+      "jobs",
     ]) {
       expect(types, type).toContain(type);
     }

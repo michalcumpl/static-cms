@@ -26,6 +26,7 @@ export const BLOCK_TYPES: readonly BlockType[] = [
   "projects",
   "cards",
   "videos",
+  "jobs",
 ];
 
 /** Why a block can't go somewhere; the picker says it with `editor.unavailable.<reason>`. */
@@ -58,6 +59,7 @@ const ITEM_TYPES = new Set([
   "card",
   "video",
   "slide",
+  "job",
 ]);
 
 /** The translator the names are made with: the interface language's `t`. */
@@ -75,6 +77,7 @@ const ITEM_LISTS: Record<string, readonly string[]> = {
     "steps",
     "cards",
     "videos",
+    "jobs",
   ],
   people: ["team"],
   slides: ["hero"],

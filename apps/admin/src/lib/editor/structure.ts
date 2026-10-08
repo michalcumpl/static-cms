@@ -17,6 +17,7 @@ import {
   insertableBlocks,
   insertCard,
   insertFigure,
+  insertJob,
   insertListItem,
   insertSlide,
   insertStep,
@@ -138,7 +139,7 @@ export function duplicateSelectedNode(session: Session): boolean {
 /** Whether a node may be duplicated: anything but a hero, and no card past twelve. */
 export function canDuplicate(session: Session, id: string): boolean {
   const type = (session.get(id) as { type?: string } | undefined)?.type;
-  if (type === "card" || type === "video" || type === "slide") {
+  if (type === "card" || type === "video" || type === "slide" || type === "job") {
     return itemLimit(session, id) !== "maxCards";
   }
   return type !== "hero";
@@ -167,6 +168,8 @@ export function itemLimit(session: Session, itemId: string): "lastCard" | "maxCa
 const ITEM_LIMITS: Record<string, { property: string; min: number; max: number }> = {
   cards: { property: "items", min: 1, max: MAX_CARDS },
   videos: { property: "items", min: 1, max: MAX_CARDS },
+  // A jobs block may have none: its note shows instead (jobs design decision 1).
+  jobs: { property: "items", min: 0, max: MAX_CARDS },
   // A slideshow with fewer than two slides warns instead (hero-slideshow decision 2).
   hero: { property: "slides", min: 0, max: MAX_SLIDES },
 };
@@ -229,7 +232,7 @@ export function insertBlockAt(
 }
 
 /** The item lists "Add item" fills, by the type of the node holding them. */
-const ITEM_OWNERS = ["list", "figures", "steps", "cards", "videos"];
+const ITEM_OWNERS = ["list", "figures", "steps", "cards", "videos", "jobs"];
 
 /**
  * The item list the selection is in (a bulleted list's items, a key figures or steps block's
@@ -256,7 +259,7 @@ export function itemInsertionPoint(
     // A key figures block holds at most six.
     if (owner.type === "figures" && (owner.items?.nodes.length ?? 0) >= MAX_FIGURES) return;
     if (
-      (owner.type === "cards" || owner.type === "videos") &&
+      (owner.type === "cards" || owner.type === "videos" || owner.type === "jobs") &&
       (owner.items?.nodes.length ?? 0) >= MAX_CARDS
     ) {
       return;
@@ -321,6 +324,7 @@ export function insertItem(session: Session): boolean {
   else if (at.owner === "steps") insertStep(tr);
   else if (at.owner === "cards") insertCard(tr);
   else if (at.owner === "videos") insertVideo(tr);
+  else if (at.owner === "jobs") insertJob(tr);
   else if (at.owner === "hero") insertSlide(tr);
   else insertListItem(tr);
   session.apply(tr);

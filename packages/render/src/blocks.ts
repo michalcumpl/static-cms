@@ -1,6 +1,12 @@
 import type { AnyNode, NodeOfType } from "@webmio/model";
 import { imageFile, imageVariants, slideClip, srcVariant, videoEmbed } from "@webmio/model";
-import { contactDetails, type LocationInfo, locationsBody, openingHoursTable } from "./business.js";
+import {
+  contactDetails,
+  formatPhone,
+  type LocationInfo,
+  locationsBody,
+  openingHoursTable,
+} from "./business.js";
 import type { RenderContext } from "./context.js";
 import { type Html, html } from "./html.js";
 import { renderProjects } from "./items.js";
@@ -42,6 +48,8 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderCards(block, ctx);
     case "videos":
       return renderVideos(block, ctx);
+    case "jobs":
+      return renderJobs(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -500,6 +508,77 @@ function renderCards(block: NodeOfType<"cards">, ctx: RenderContext): Html {
         </ul>
       </div>
     </section>`;
+}
+
+/**
+ * Job ads (jobs design decision 2): the title, summary and contact always shown, the
+ * description folded; the note in place of the list when there are no jobs.
+ */
+function renderJobs(block: NodeOfType<"jobs">, ctx: RenderContext): Html {
+  const jobs = ctx.children(block.items).filter((job) => job.type === "job");
+  if (jobs.length === 0 && isEmpty(block.empty_note)) return html``;
+  const titled = !isEmpty(block.heading);
+  const { strings } = ctx;
+  const items = jobs.map((job) => {
+    const title = renderText(job.title, ctx);
+    const contact = [
+      !isEmpty(job.contact_name) && renderText(job.contact_name, ctx),
+      job.contact_email !== "" &&
+        html`<a href="mailto:${job.contact_email}">${job.contact_email}</a>`,
+      job.contact_phone !== "" &&
+        // Non-breaking spaces keep the number on one line, as in the contact block.
+        html`<a href="tel:${job.contact_phone}">${formatPhone(job.contact_phone).replaceAll(" ", "\u00a0")}</a>`,
+    ].filter((part): part is Html => part !== false);
+    return html`
+          <li class="job">
+            ${titled ? html`<h3 class="job-title">${title}</h3>` : html`<h2 class="job-title">${title}</h2>`}${
+              !isEmpty(job.summary) &&
+              html`
+            <p class="job-summary">${renderText(job.summary, ctx)}</p>`
+            }${
+              hasDescription(job, ctx) &&
+              html`
+            <details class="job-details">
+              <summary>${strings.jobDetails}</summary>${ctx
+                .children(job.body)
+                .map((child) => renderJobBodyChild(child, ctx, titled ? 4 : 3))}
+            </details>`
+            }${
+              contact.length > 0 &&
+              html`
+            <p class="job-contact">${strings.jobContact}: ${contact.map((part, i) => (i === 0 ? part : html`, ${part}`))}</p>`
+            }
+          </li>`;
+  });
+  const list =
+    jobs.length > 0
+      ? html`
+        <ul class="job-list">${items}
+        </ul>`
+      : html`
+        <p class="jobs-note">${renderText(block.empty_note, ctx)}</p>`;
+  return html`<section class="block jobs">
+      <div class="container">${blockHeading(block.heading, ctx)}${list}
+      </div>
+    </section>`;
+}
+
+/** Whether a job has a description: anything but blank paragraphs (a new job starts with one). */
+function hasDescription(job: NodeOfType<"job">, ctx: RenderContext): boolean {
+  return ctx
+    .children(job.body)
+    .some((child) => child.type !== "paragraph" || !isEmpty(child.content));
+}
+
+/** A job's description: its subheadings one level below the job's title, whatever their level. */
+function renderJobBodyChild(child: AnyNode, ctx: RenderContext, level: 3 | 4): Html {
+  if (child.type !== "subheading") return renderBodyChild(child, ctx);
+  const content = renderText(child.content, ctx);
+  return level === 4
+    ? html`
+              <h4>${content}</h4>`
+    : html`
+              <h3>${content}</h3>`;
 }
 
 /** Videos in columns by their number, each played only when the visitor asks. */

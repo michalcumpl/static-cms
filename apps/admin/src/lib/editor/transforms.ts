@@ -1,6 +1,6 @@
 import { slideClip, videoEmbed } from "@webmio/model";
 import { siteStrings } from "@webmio/render";
-import type { Transaction } from "svedit";
+import type { DocumentPath, Transaction } from "svedit";
 import { checkLinkAddress, type LinkAddressCheck } from "./links";
 
 type Tr = Transaction;
@@ -260,6 +260,61 @@ export function insertSteps(tr: Tr): boolean {
   return true;
 }
 
+/** An empty job: a title to fill, and one empty paragraph to start its description in. */
+function createJob(tr: Tr): string {
+  const paragraph = tr.generate_id();
+  tr.create({ id: paragraph, type: "paragraph", content: text() });
+  const id = tr.generate_id();
+  tr.create({
+    id,
+    type: "job",
+    title: text(),
+    summary: text(),
+    body: list([paragraph]),
+    contact_name: text(),
+    contact_email: "",
+    contact_phone: "",
+  });
+  return id;
+}
+
+/** An empty job (Enter and "Add item"); none past twelve. */
+export function insertJob(tr: Tr): boolean {
+  const at = insertionPoint(tr);
+  const count = at ? ((tr.get(at.path) as NodeList | undefined)?.nodes.length ?? 0) : 0;
+  if (count >= MAX_CARDS) return false;
+  insertAndFocus(tr, createJob(tr), "title");
+  return true;
+}
+
+/** Jobs: the heading in the site's language, no note, one empty job with the caret in its title. */
+export function insertJobs(tr: Tr): boolean {
+  const block = tr.generate_id();
+  tr.create({
+    id: block,
+    type: "jobs",
+    heading: text(stringsOf(tr).jobsHeading),
+    empty_note: text(),
+    items: list([createJob(tr)]),
+  });
+  insertAndFocus(tr, block, "items", 0, "title");
+  return true;
+}
+
+/** Gives a job without a description an empty paragraph, with the caret in it. */
+export function addJobDescription(tr: Tr, jobPath: DocumentPath): boolean {
+  const paragraph = tr.generate_id();
+  tr.create({ id: paragraph, type: "paragraph", content: text() });
+  tr.set([...jobPath, "body"], list([paragraph]));
+  tr.set_selection({
+    type: "text",
+    path: [...jobPath, "body", 0, "content"],
+    anchor_offset: 0,
+    focus_offset: 0,
+  });
+  return true;
+}
+
 /** Creates a text block with a placeholder subheading and an empty paragraph; returns its ID. */
 export function createRichText(tr: Tr): string {
   const heading = tr.generate_id();
@@ -467,7 +522,8 @@ export type BlockType =
   | "steps"
   | "projects"
   | "cards"
-  | "videos";
+  | "videos"
+  | "jobs";
 
 export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   hero: insertHero,
@@ -487,6 +543,7 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   projects: insertProjects,
   cards: insertCards,
   videos: insertVideos,
+  jobs: insertJobs,
 };
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
@@ -511,6 +568,7 @@ export function insertableBlocks(blocks: { type: string }[], index: number): Blo
     "projects",
     "cards",
     "videos",
+    "jobs",
   ];
   return heroAllowed ? ["hero", ...others] : others;
 }

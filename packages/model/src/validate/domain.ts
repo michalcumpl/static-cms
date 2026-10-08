@@ -105,6 +105,7 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
       if (page) {
         checkCards(site, page, pageIds, get, problems);
         checkVideos(page, get, problems);
+        checkJobs(page, get, problems);
       }
     }
     for (const pageId of pageIds) {
@@ -1021,6 +1022,7 @@ function checkPageBlocks(
       "projects",
       "cards",
       "videos",
+      "jobs",
     ] as const) {
       const block = get(blockId, type);
       if (block && !isBlank(block.heading)) hasH2 = true;
@@ -1110,6 +1112,65 @@ function checkCards(
 }
 
 /** A page's videos blocks: their number, titles and addresses (video design decision 2). */
+/** Job openings: titles, contacts, at most twelve, and something to show (jobs decision 1). */
+function checkJobs(
+  page: NodeOfType<"page">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const on = pageLabel(page);
+  for (const blockId of page.blocks.nodes) {
+    const block = get(blockId, "jobs");
+    if (!block) continue;
+    const count = block.items.nodes.length;
+    if (count === 0 && isBlank(block.empty_note)) {
+      problems.warning(
+        "no-jobs",
+        block.id,
+        `The jobs on ${on} have no openings and no note for when there are none, so they aren't shown.`,
+        "empty_note",
+      );
+    } else if (count > MAX_CARDS) {
+      problems.error(
+        "too-many-items",
+        block.id,
+        `The jobs on ${on} can have at most ${MAX_CARDS} jobs.`,
+        "items",
+      );
+    }
+    block.items.nodes.forEach((jobId, i) => {
+      const job = get(jobId, "job");
+      if (!job) return;
+      const label = `Job ${i + 1} on ${on}`;
+      if (isBlank(job.title)) {
+        problems.error("empty-title", job.id, `${label} needs a title.`, "title");
+      }
+      if (job.contact_email !== "" && !EMAIL.test(job.contact_email)) {
+        problems.error(
+          "invalid-email",
+          job.id,
+          `${label}: "${job.contact_email}" is not an email address.`,
+          "contact_email",
+        );
+      }
+      if (job.contact_phone !== "" && !PHONE.test(job.contact_phone)) {
+        problems.error(
+          "invalid-phone",
+          job.id,
+          `${label}: the phone number "${job.contact_phone}" must be in international form, like +420 321 123 456.`,
+          "contact_phone",
+        );
+      }
+      for (const childId of job.body.nodes) {
+        const sub = get(childId, "subheading");
+        if (sub && isBlank(sub.content)) {
+          problems.error("empty-heading", sub.id, "Subheadings must not be empty.", "content");
+        }
+      }
+    });
+  }
+}
+
 function checkVideos(
   page: NodeOfType<"page">,
   get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,

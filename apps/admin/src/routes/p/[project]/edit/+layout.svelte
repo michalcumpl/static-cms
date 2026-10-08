@@ -8,6 +8,7 @@ import ButtonPanel from "$lib/editor/ButtonPanel.svelte";
 import { canvasCss, canvasTheme } from "$lib/editor/canvas-css";
 import { selectionLabel } from "$lib/editor/handles";
 import ImagePanel from "$lib/editor/ImagePanel.svelte";
+import JobPanel from "$lib/editor/JobPanel.svelte";
 import LanguageSwitcher from "$lib/editor/LanguageSwitcher.svelte";
 import LinkDialog from "$lib/editor/LinkDialog.svelte";
 import LinkPanel from "$lib/editor/LinkPanel.svelte";
@@ -237,6 +238,7 @@ const statusText = $derived(saveStatusText(editor, i18n.t));
     <BlockPanel {editor} focusCanvas={() => canvas?.focus_canvas()} />
     <LinkPanel {editor} />
     <VideoPanel {editor} />
+    <JobPanel {editor} />
     <ImagePanel {editor} />
   </aside>
 </div>

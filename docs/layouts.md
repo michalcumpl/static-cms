@@ -111,8 +111,9 @@ Film added 15–20 and the second video. Today's stand-in is in brackets.
     dropdown in the menu row, and the pages outside groups stay beside it, so no second menu.
 19. **Billing address and bank details** (2: Punk Film's headquarters apart from its office,
     Scénografie's bank account and data box) [a text block]. With `business-details`.
-20. **Job openings** (2: Mareš's career page, Scénografie's open positions) [text]. Planned
-    as `jobs`.
+20. **Job openings** (2: Mareš's career page, Scénografie's open positions) [text]: **done**,
+    the jobs block (`jobs`): title, summary and contact shown, the full description folded, and a
+    note for when there are no openings.
 
 ## Design notes
 

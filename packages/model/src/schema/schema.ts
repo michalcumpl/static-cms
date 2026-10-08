@@ -186,6 +186,7 @@ export const siteSchema = {
           "projects",
           "cards",
           "videos",
+          "jobs",
         ],
         default_node_type: "rich_text",
       },
@@ -499,6 +500,32 @@ export const siteSchema = {
       title: { type: "text", allow_newlines: false },
       caption: { type: "text", allow_newlines: false },
       poster: { type: "node_array", node_types: ["image"] },
+    },
+  },
+  /** Job openings (jobs design decision 1): the note shows when there are no jobs. */
+  jobs: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      empty_note: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
+      items: { type: "node_array", node_types: ["job"], default_node_type: "job" },
+    },
+  },
+  job: {
+    kind: "block",
+    properties: {
+      title: { type: "text", allow_newlines: false },
+      summary: { type: "text", allow_newlines: false },
+      body: {
+        type: "node_array",
+        node_types: ["paragraph", "subheading", "list"],
+        default_node_type: "paragraph",
+      },
+      contact_name: { type: "text", allow_newlines: false },
+      /** An email address, or "". */
+      contact_email: { type: "string" },
+      /** A phone number in international form (`+420777294579`), or "". */
+      contact_phone: { type: "string" },
     },
   },
   /** Points a collection block at one item of its collection, by the item's node ID. */

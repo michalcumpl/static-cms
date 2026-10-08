@@ -258,6 +258,28 @@ export interface VideoNode {
   poster: NodeArrayValue;
 }
 
+/** Job openings; `empty_note` shows when there are none. */
+export interface JobsNode {
+  id: string;
+  type: "jobs";
+  heading: TextValue;
+  empty_note: TextValue;
+  /** 0–12 `job` nodes. */
+  items: NodeArrayValue;
+}
+
+export interface JobNode {
+  id: string;
+  type: "job";
+  title: TextValue;
+  summary: TextValue;
+  /** `paragraph`, `subheading` and `list` nodes. */
+  body: NodeArrayValue;
+  contact_name: TextValue;
+  contact_email: string;
+  contact_phone: string;
+}
+
 /** Shows the site's projects, all of them or one category, up to `limit`. */
 export interface ProjectsNode extends CollectionBlock {
   type: "projects";
@@ -591,6 +613,8 @@ export type AnyNode =
   | ProjectsNode
   | CardsNode
   | VideosNode
+  | JobsNode
+  | JobNode
   | VideoNode
   | CardNode
   | ProjectNode

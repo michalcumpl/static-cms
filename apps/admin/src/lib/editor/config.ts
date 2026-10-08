@@ -22,6 +22,8 @@ import Gallery from "./nodes/Gallery.svelte";
 import GalleryItem from "./nodes/GalleryItem.svelte";
 import Hero from "./nodes/Hero.svelte";
 import Image from "./nodes/Image.svelte";
+import Job from "./nodes/Job.svelte";
+import Jobs from "./nodes/Jobs.svelte";
 import List from "./nodes/List.svelte";
 import ListItem from "./nodes/ListItem.svelte";
 import LogoItem from "./nodes/LogoItem.svelte";
@@ -57,6 +59,7 @@ import {
   insertFact,
   insertFaqItem,
   insertFigure,
+  insertJob,
   insertListItem,
   insertParagraph,
   insertPerson,
@@ -109,6 +112,8 @@ export const nodeComponents: Record<string, Component<any>> = {
   slide: Slide,
   videos: Videos,
   video: Video,
+  jobs: Jobs,
+  job: Job,
   image: Image,
   strong: MarkStrong,
   emphasis: MarkEmphasis,
@@ -155,6 +160,7 @@ export function createConfig(view: EditorView = "canvas") {
       fact: insertFact,
       card: insertCard,
       video: insertVideo,
+      job: insertJob,
       slide: insertSlide,
       step: insertStep,
       rich_text: insertRichText,

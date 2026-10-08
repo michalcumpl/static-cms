@@ -725,6 +725,12 @@ export const en = {
     },
     canvas: {
       videoTitle: "Title of the video",
+      jobTitle: "Job title",
+      jobSummary: "One line about the job (optional)",
+      addJobDescription: "Add a description",
+      jobContact: "Contact: {contact}",
+      jobsNoteLabel: "Shown when there are no openings:",
+      jobsNote: "Shown when there are no openings, e.g. “Send us your CV any time”",
       headingOptional: "Heading (optional)",
       heading: "Heading",
       shortTextOptional: "Short text (optional)",
@@ -768,6 +774,7 @@ export const en = {
     },
     blocks: {
       videos: { name: "Videos", description: "YouTube or Vimeo videos that play when clicked" },
+      jobs: { name: "Jobs", description: "Your job openings, with whom to contact" },
       cards: {
         name: "Cards",
         description: "A photo, a title, a few lines and a link, several in a row",
@@ -809,6 +816,7 @@ export const en = {
     items: {
       slide: "Slide",
       video: "Video",
+      job: "Job",
       card: "Card",
       list_item: "List item",
       service_item: "Service",
@@ -871,6 +879,15 @@ export const en = {
       address: "An address",
       broken: "Its link leads to something that no longer has a page; choose another one.",
     },
+    jobPanel: {
+      title: "Job",
+      hint: "Whom applicants write to or call; all optional.",
+      name: "Contact person",
+      email: "Email",
+      phone: "Phone",
+      notEmail: "Enter an email address, like jana@example.com.",
+      notPhone: "Enter a phone number, like +420 777 123 456.",
+    },
     videoPanel: {
       useThumbnail: "Use the picture from {provider}",
       noThumbnail: "The picture from YouTube or Vimeo couldn't be added.",
@@ -921,6 +938,7 @@ export const en = {
       maxSlides: "A slideshow holds at most eight slides",
       lastVideo: "A videos block needs at least one video",
       maxVideos: "A videos block holds at most twelve videos",
+      maxJobs: "A jobs block holds at most twelve jobs",
       lastCard: "A cards block needs at least one card",
       maxCards: "A cards block holds at most twelve cards",
       heroTop: "The hero stays at the top of the page",

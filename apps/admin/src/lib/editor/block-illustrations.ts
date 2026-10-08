@@ -189,6 +189,22 @@ export const BLOCK_ILLUSTRATIONS: Record<BlockType, string> = {
       `<path d="M57 33 L65 38 L57 43 Z" fill="#fff"/>` +
       bar(8, 64, 48),
   ),
+  // A heading, then two job boxes, each a title, a line of text and an open-description marker.
+  jobs: svg(
+    heading() +
+      [0, 1]
+        .map((i) => {
+          const y = 16 + i * 26;
+          return (
+            `<rect x="8.5" y="${y + 0.5}" width="103" height="22" rx="2" fill="none" stroke="${S}"/>` +
+            bar(14, y + 5, [44, 36][i] as number, 4) +
+            bar(14, y + 12, [76, 64][i] as number) +
+            `<path d="M14 ${y + 16} l3 2 l-3 2 Z" fill="${P}"/>` +
+            bar(19, y + 16.5, 24, 3, P)
+          );
+        })
+        .join(""),
+  ),
   // A heading, then three cards, each a photo with a title and two lines of text under it.
   cards: svg(
     heading() +

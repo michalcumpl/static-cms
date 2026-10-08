@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Jobs in the editor
-The canvas SHALL show a jobs block with every job's title, summary and description editable in place, the description always open. Jobs SHALL be added, moved, duplicated and deleted with the item handles, at most twelve; a job's description SHALL be edited like a text block's (paragraphs, subheadings, lists). Selecting a job SHALL show a Job panel with its contact's name, email and phone; an email or phone that isn't valid SHALL be refused with the reason, keeping the last valid value. The block's panel SHALL edit the "no openings" note, and the canvas SHALL show the note in place of the list when the block has no jobs. Every change SHALL be one undoable step.
+The canvas SHALL show a jobs block with every job's title, summary and description editable in place, the description always open. Jobs SHALL be added, moved, duplicated and deleted with the item handles, at most twelve; a job's description SHALL be edited like a text block's (paragraphs, subheadings, lists). Selecting a job SHALL show a Job panel with its contact's name, email and phone; an email or phone that isn't valid SHALL be refused with the reason, keeping the last valid value. The "no openings" note SHALL be edited in place on the canvas: under the jobs, marked as shown only when there are no openings, and in place of the list when the block has no jobs. Every change SHALL be one undoable step.
 
 #### Scenario: Add a job ad
 - **WHEN** the owner adds a job after "Zámečník/svářeč", types "Projektant/konstruktér", a summary and a description with a subheading and a list, and in the Job panel enters the email `pavel.boruvka@scenografie.cz`

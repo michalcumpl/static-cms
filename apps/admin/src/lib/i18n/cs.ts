@@ -740,6 +740,12 @@ export const cs: Messages = {
     },
     canvas: {
       videoTitle: "Název videa",
+      jobTitle: "Název pozice",
+      jobSummary: "Jedna věta o pozici (nepovinné)",
+      addJobDescription: "Přidat popis",
+      jobContact: "Kontakt: {contact}",
+      jobsNoteLabel: "Zobrazí se, když nikoho nehledáte:",
+      jobsNote: "Zobrazí se, když nikoho nehledáte, např. „Životopis nám pošlete kdykoli“",
       headingOptional: "Nadpis (nepovinný)",
       heading: "Nadpis",
       shortTextOptional: "Krátký text (nepovinný)",
@@ -786,6 +792,7 @@ export const cs: Messages = {
         name: "Videa",
         description: "Videa z YouTube nebo Vimea, která se spustí po kliknutí",
       },
+      jobs: { name: "Volné pozice", description: "Nabídky práce a komu se ozvat" },
       cards: { name: "Karty", description: "Fotka, nadpis, pár řádků a odkaz, několik vedle sebe" },
       projects: {
         name: "Projekty",
@@ -824,6 +831,7 @@ export const cs: Messages = {
     items: {
       slide: "Snímek",
       video: "Video",
+      job: "Pozice",
       card: "Karta",
       list_item: "Položka seznamu",
       service_item: "Služba",
@@ -887,6 +895,15 @@ export const cs: Messages = {
       address: "Adresa",
       broken: "Odkaz vede na něco, co už nemá stránku; vyberte jiný.",
     },
+    jobPanel: {
+      title: "Pozice",
+      hint: "Komu uchazeči napíšou nebo zavolají; vše nepovinné.",
+      name: "Kontaktní osoba",
+      email: "E-mail",
+      phone: "Telefon",
+      notEmail: "Zadejte e-mailovou adresu, třeba jana@example.com.",
+      notPhone: "Zadejte telefonní číslo, třeba +420 777 123 456.",
+    },
     videoPanel: {
       useThumbnail: "Použít obrázek z {provider}",
       noThumbnail: "Obrázek z YouTube ani Vimea se nepodařilo přidat.",
@@ -937,6 +954,7 @@ export const cs: Messages = {
       maxSlides: "Prezentace má nejvýš osm snímků",
       lastVideo: "Blok videí potřebuje alespoň jedno video",
       maxVideos: "Blok videí má nejvýš dvanáct videí",
+      maxJobs: "Blok volných pozic má nejvýš dvanáct pozic",
       lastCard: "Blok karet potřebuje alespoň jednu kartu",
       maxCards: "Blok karet má nejvýš dvanáct karet",
       heroTop: "Úvodní blok zůstává nahoře na stránce",

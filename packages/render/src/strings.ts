@@ -36,6 +36,10 @@ export interface SiteStrings {
   nextSlide: string;
   /** A slide's button, with `{n}`: "Snímek 2". */
   showSlide: string;
+  /** A job's folded description, its contact line's label, and a new jobs block's heading. */
+  jobDetails: string;
+  jobContact: string;
+  jobsHeading: string;
 }
 
 const STRINGS: Record<string, SiteStrings> = {
@@ -62,6 +66,9 @@ const STRINGS: Record<string, SiteStrings> = {
     previousSlide: "Předchozí snímek",
     nextSlide: "Další snímek",
     showSlide: "Snímek {n}",
+    jobDetails: "Celý popis",
+    jobContact: "Kontakt",
+    jobsHeading: "Volné pozice",
   },
   sk: {
     notFoundHeading: "Stránka sa nenašla",
@@ -86,6 +93,9 @@ const STRINGS: Record<string, SiteStrings> = {
     previousSlide: "Predchádzajúca snímka",
     nextSlide: "Ďalšia snímka",
     showSlide: "Snímka {n}",
+    jobDetails: "Celý popis",
+    jobContact: "Kontakt",
+    jobsHeading: "Voľné pozície",
   },
   de: {
     notFoundHeading: "Seite nicht gefunden",
@@ -111,6 +121,9 @@ const STRINGS: Record<string, SiteStrings> = {
     previousSlide: "Vorheriges Bild",
     nextSlide: "Nächstes Bild",
     showSlide: "Bild {n}",
+    jobDetails: "Vollständige Beschreibung",
+    jobContact: "Kontakt",
+    jobsHeading: "Offene Stellen",
   },
   pl: {
     notFoundHeading: "Nie znaleziono strony",
@@ -135,6 +148,9 @@ const STRINGS: Record<string, SiteStrings> = {
     previousSlide: "Poprzedni slajd",
     nextSlide: "Następny slajd",
     showSlide: "Slajd {n}",
+    jobDetails: "Pełny opis",
+    jobContact: "Kontakt",
+    jobsHeading: "Oferty pracy",
   },
   en: {
     notFoundHeading: "Page not found",
@@ -159,6 +175,9 @@ const STRINGS: Record<string, SiteStrings> = {
     previousSlide: "Previous slide",
     nextSlide: "Next slide",
     showSlide: "Slide {n}",
+    jobDetails: "Full description",
+    jobContact: "Contact",
+    jobsHeading: "Jobs",
   },
 };
 

@@ -912,6 +912,42 @@ img {
   margin: 0.5rem 0 0;
 }
 
+.job-list {
+  display: grid;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.job {
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--radius);
+}
+
+.job-title {
+  margin: 0;
+}
+
+.job-summary {
+  margin: 0.4rem 0 0;
+}
+
+.job-details {
+  margin-top: 0.75rem;
+}
+
+.job-details summary {
+  cursor: pointer;
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.job-contact {
+  margin: 0.75rem 0 0;
+}
+
 .figure-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

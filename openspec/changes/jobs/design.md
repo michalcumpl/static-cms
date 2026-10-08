@@ -92,7 +92,7 @@ job   title: text (one line), summary: text (one line),
   the reason "A jobs block holds at most twelve jobs". The body's own blocks are not items.
 - **Job panel:** `JobPanel.svelte` for a selected job: name, email, phone; email and phone
   checked and the phone normalised as in the business form, refused values not stored (as
-  `VideoPanel`'s address). The jobs block's panel gets the note field.
+  `VideoPanel`'s address). The note is edited on the canvas (see "Changes made while building").
 
 ### 4. Builder and examples
 
@@ -111,3 +111,17 @@ two positions (titles only) before its offer text.
 ## Migration Plan
 
 None: new node types only; existing documents are unchanged.
+
+## Changes made while building
+
+- **The note is edited on the canvas, not in the block's panel:** it may hold bold and links,
+  which a plain panel field would drop. With jobs it shows under them, muted and labelled
+  "Shown when there are no openings"; without, in the list's place, as on the page.
+- **A new job starts with one empty paragraph** to write its description in; the renderer
+  treats a description of blank paragraphs as none (no "Full description"). A job whose
+  paragraphs were all deleted shows "Add a description" on the canvas.
+- **Phone numbers keep non-breaking spaces**, as the contact block's do (html-validate's rule
+  for telephone numbers).
+- **The phone typed in the Job panel is normalised for the main location's country**
+  (`normalizePhone`), and the email checked with the model's rule, before storing.
+- **`jobsHeading`** joined the site strings for the new block's heading.

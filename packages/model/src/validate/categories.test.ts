@@ -87,6 +87,7 @@ describe("problem categories", () => {
       "invalid-country": true,
       "invalid-hours": true,
       "nothing-to-show": true,
+      "no-jobs": true,
       "empty-quote": true,
       "duplicate-translation-key": true,
       "empty-question": true,

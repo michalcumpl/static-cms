@@ -7,6 +7,8 @@ const typesFromTs: Record<NodeType, true> = {
   site: true,
   theme: true,
   nav: true,
+  jobs: true,
+  job: true,
   menu_group: true,
   page_link: true,
   external_link: true,
