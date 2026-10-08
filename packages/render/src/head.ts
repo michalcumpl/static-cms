@@ -71,7 +71,9 @@ export function renderHead(ctx: RenderContext, options: HeadOptions): Html {
     lines.push(html`<meta name="description" content="${options.description}">`);
   }
   lines.push(html`<link rel="stylesheet" href="${ctx.url("assets/style.css")}">`);
-  for (const name of ["video", "slideshow"] as const) {
+  // Every page has the menu, so every page of a site with menu groups needs their script.
+  if (ctx.menuItems().some((item) => item.type === "menu_group")) ctx.useScript("menu");
+  for (const name of ["menu", "video", "slideshow"] as const) {
     if (ctx.pageScripts.has(name)) {
       lines.push(html`<script src="${ctx.url(`assets/${name}.js`)}" defer></script>`);
     }

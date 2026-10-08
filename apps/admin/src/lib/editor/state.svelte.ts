@@ -4,6 +4,7 @@ import { getContext, onDestroy, setContext } from "svelte";
 import type { ProjectPaths } from "../project-paths";
 import { type BlockView, pageCollections, provideCanvasContext } from "./collections";
 import { createConfig, type EditorView } from "./config";
+import type { MenuPosition } from "./pages";
 import { editorSchema } from "./schema";
 import type { ChosenImage } from "./transforms";
 import type { EditorTranslations } from "./translations";
@@ -14,16 +15,27 @@ export interface EditorPage {
   /** Every page has one; the home page's is only used if it stops being home. */
   slug: string;
   isHome: boolean;
-  /** Position of the page's menu item in the navigation, if it has one. */
-  menuIndex: number | undefined;
+  /** Where the page's menu item is, in the menu or one of its groups, if it has one. */
+  menuPosition: MenuPosition | undefined;
   /** The page's editor URL: `/p/<project>/edit/<page-id>/`. */
   href: string;
 }
 
-/** An entry of the menu as the sidebar lists it: a page of the site or an external link. */
+/** A link of the menu as the sidebar lists it: a page of the site or an external link. */
+export type MenuLinkEntry =
+  | { kind: "page"; itemId: string; position: MenuPosition; page: EditorPage }
+  | { kind: "external"; itemId: string; position: MenuPosition; label: string; url: string };
+
+/** An entry of the menu: a link, or a group with its links. */
 export type MenuEntry =
-  | { kind: "page"; itemId: string; index: number; page: EditorPage }
-  | { kind: "external"; itemId: string; index: number; label: string; url: string };
+  | MenuLinkEntry
+  | {
+      kind: "group";
+      itemId: string;
+      position: MenuPosition;
+      label: string;
+      entries: MenuLinkEntry[];
+    };
 
 /** One of the project's languages, as the editor's language switcher lists it. */
 export interface EditorLanguageInfo {
@@ -72,7 +84,9 @@ export class EditorState {
   readonly pages: EditorPage[] = $derived.by(() => sitePages(this.session.doc, this.paths));
   readonly menu: MenuEntry[] = $derived.by(() => siteMenu(this.session.doc, this.pages));
   /** Pages without a menu item. */
-  readonly unlisted: EditorPage[] = $derived(this.pages.filter((p) => p.menuIndex === undefined));
+  readonly unlisted: EditorPage[] = $derived(
+    this.pages.filter((p) => p.menuPosition === undefined),
+  );
   width = $state<"desktop" | "mobile">("desktop");
   /** Which settings the details column shows: the current page's or the site's look. */
   settingsTab = $state<"page" | "design">("page");
@@ -267,15 +281,31 @@ function navItems(document: Document): string[] {
   return nav?.items?.nodes ?? [];
 }
 
+/** The items of the menu and of its groups, each with where it is. */
+function menuPlaces(document: Document): { itemId: string; position: MenuPosition }[] {
+  const nodes = document.nodes as SiteNodes;
+  return navItems(document).flatMap((itemId, index) => {
+    const item = nodes[itemId];
+    const inside =
+      item?.type === "menu_group"
+        ? (item.items as NodeList).nodes.map((id, i) => ({
+            itemId: id,
+            position: { group: itemId, index: i },
+          }))
+        : [];
+    return [{ itemId, position: { index } }, ...inside];
+  });
+}
+
 export function sitePages(document: Document, paths: ProjectPaths): EditorPage[] {
   const nodes = document.nodes as SiteNodes;
   const site = siteNode(document);
-  const menuIndex = new Map<string, number>();
-  navItems(document).forEach((itemId, index) => {
+  const menuPosition = new Map<string, MenuPosition>();
+  for (const { itemId, position } of menuPlaces(document)) {
     const item = nodes[itemId];
     const pageId = item?.type === "page_link" ? (item.page_id as string) : undefined;
-    if (pageId !== undefined && !menuIndex.has(pageId)) menuIndex.set(pageId, index);
-  });
+    if (pageId !== undefined && !menuPosition.has(pageId)) menuPosition.set(pageId, position);
+  }
   return (site?.pages.nodes ?? []).map((id) => {
     const page = nodes[id] as { title: string; slug: string } | undefined;
     return {
@@ -283,23 +313,35 @@ export function sitePages(document: Document, paths: ProjectPaths): EditorPage[]
       title: page?.title ?? id,
       slug: page?.slug ?? "",
       isHome: id === site?.home_page_id,
-      menuIndex: menuIndex.get(id),
+      menuPosition: menuPosition.get(id),
       href: paths.edit(id),
     };
   });
 }
 
-/** The menu in order. Items pointing at pages that no longer exist are left out. */
+/**
+ * The menu in order, groups with their links. Items pointing at pages that no longer exist are
+ * left out.
+ */
 export function siteMenu(document: Document, pages: EditorPage[]): MenuEntry[] {
   const nodes = document.nodes as SiteNodes;
-  return navItems(document).flatMap((itemId, index): MenuEntry[] => {
+  const link = (itemId: string, position: MenuPosition): MenuLinkEntry[] => {
     const item = nodes[itemId];
     if (item?.type === "external_link") {
       const label = (item.label as TextValue).content;
-      return [{ kind: "external", itemId, index, label, url: item.url as string }];
+      return [{ kind: "external", itemId, position, label, url: item.url as string }];
     }
     const page = pages.find((p) => p.id === item?.page_id);
-    return page ? [{ kind: "page", itemId, index, page }] : [];
+    return page ? [{ kind: "page", itemId, position, page }] : [];
+  };
+  return navItems(document).flatMap((itemId, index): MenuEntry[] => {
+    const item = nodes[itemId];
+    if (item?.type !== "menu_group") return link(itemId, { index });
+    const entries = (item.items as NodeList).nodes.flatMap((id, i) =>
+      link(id, { group: itemId, index: i }),
+    );
+    const label = (item.label as TextValue).content;
+    return [{ kind: "group", itemId, position: { index }, label, entries }];
   });
 }
 

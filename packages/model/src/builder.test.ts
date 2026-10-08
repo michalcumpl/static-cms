@@ -134,6 +134,7 @@ function everything(lang: "cs" | "en") {
       actions: [{ label: "Web", url: "https://example.org" }],
     }),
   ]);
+  site.menuGroup(t("Více", "More"), [{ label: "Web", url: "https://example.org" }]);
   site.page({ title: "Kontakt", slug: "kontakt", menu: t("Kontakt", "Contact") }, [
     blocks.contact({ heading: "Kontakt", location: main }),
     blocks.openingHours(t("Otevřeno", "Opening hours")),
@@ -165,6 +166,7 @@ describe("siteBuilder", () => {
       "projects",
       "cards",
       "videos",
+      "menu_group",
     ]) {
       expect(types, type).toContain(type);
     }
@@ -226,6 +228,35 @@ describe("siteBuilder", () => {
     const site = doc.nodes.site_1 as unknown as { home_page_id: string; nav: string };
     expect(site.home_page_id).toBe("page_1");
     const nav = doc.nodes[site.nav] as unknown as { items: { nodes: string[] } };
-    expect(nav.items.nodes).toHaveLength(2);
+    expect(nav.items.nodes.map((id) => doc.nodes[id]?.type)).toEqual([
+      "page_link",
+      "menu_group",
+      "page_link",
+    ]);
+  });
+
+  it("groups menu pages by slug, labelled as in the menu", () => {
+    const site = siteBuilder({ name: "Scénografie", lang: "cs", description: "Scénografie." });
+    site.location({ street: "Na Pankráci 1", city: "Praha" });
+    site.page({ title: "Úvod", slug: "uvod", menu: true }, []);
+    site.menuGroup("Projekty", ["eventy", "vystavy"]);
+    site.page({ title: "Eventy", slug: "eventy" }, []);
+    site.page({ title: "Výstavy", slug: "vystavy", menu: "Výstavy a veletrhy" }, []);
+    site.page({ title: "Kontakt", slug: "kontakt", menu: true }, []);
+    const doc = site.build();
+    const nodes = doc.nodes as unknown as Record<string, Record<string, unknown>>;
+    const group = Object.values(nodes).find((n) => n.type === "menu_group") as {
+      items: { nodes: string[] };
+    };
+    expect(
+      group.items.nodes.map((id) => (nodes[id] as { label: { content: string } }).label.content),
+    ).toEqual(["Eventy", "Výstavy a veletrhy"]);
+    const nav = nodes[(nodes.site_1 as { nav: string }).nav] as { items: { nodes: string[] } };
+    expect(nav.items.nodes.map((id) => nodes[id]?.type)).toEqual([
+      "page_link",
+      "menu_group",
+      "page_link",
+    ]);
+    expect(validateSite(doc).problems).toEqual([]);
   });
 });

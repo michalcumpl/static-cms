@@ -28,6 +28,7 @@ export type ProblemCode =
   | "duplicate-slug"
   | "missing-page"
   | "duplicate-menu-item"
+  | "empty-menu-group"
   | "hero-not-first"
   | "too-many-items"
   | "empty-heading"
@@ -122,6 +123,7 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "duplicate-slug": "site",
   "missing-page": "site",
   "duplicate-menu-item": "site",
+  "empty-menu-group": "site",
   "hero-not-first": "site",
   "too-many-items": "site",
   "empty-heading": "site",

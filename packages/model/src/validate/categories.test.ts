@@ -55,6 +55,7 @@ describe("problem categories", () => {
       "duplicate-slug": true,
       "missing-page": true,
       "duplicate-menu-item": true,
+      "empty-menu-group": true,
       "hero-not-first": true,
       "too-many-items": true,
       "empty-heading": true,

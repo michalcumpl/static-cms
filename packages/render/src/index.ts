@@ -3,6 +3,7 @@ import { isValidBaseUrl, problem, validateSite } from "@webmio/model";
 import { isValidBasePath, type PageRoute, RenderContext, type SiteLanguage } from "./context.js";
 import { siteCss } from "./css.js";
 import { renderItemPage } from "./items.js";
+import { MENU_SCRIPT } from "./menu-script.js";
 import { renderNotFound, renderPage } from "./page.js";
 import { SLIDESHOW_SCRIPT } from "./slideshow-script.js";
 import { VIDEO_SCRIPT } from "./video-script.js";
@@ -46,7 +47,7 @@ export interface RenderedSite {
   css: string;
   /** The page for addresses the site doesn't have, exported as `404.html`. */
   notFound: string;
-  /** The scripts pages need, by file name under `assets/` (`video.js`, `slideshow.js`). */
+  /** The scripts pages need, by file name under `assets/` (`menu.js`, `video.js`, `slideshow.js`). */
   scripts: Record<string, string>;
 }
 
@@ -130,7 +131,7 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
   const css = siteCss(ctx.node(ctx.site.theme, "theme"));
   ctx.pageScripts.clear();
   const notFound = renderNotFound(ctx).value;
-  const sources = { video: VIDEO_SCRIPT, slideshow: SLIDESHOW_SCRIPT };
+  const sources = { video: VIDEO_SCRIPT, slideshow: SLIDESHOW_SCRIPT, menu: MENU_SCRIPT };
   const scripts = Object.fromEntries(
     [...ctx.siteScripts].map((name) => [`${name}.js`, sources[name]]),
   );

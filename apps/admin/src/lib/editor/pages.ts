@@ -21,18 +21,64 @@ const pageOf = (doc: Document, id: string) => nodesOf(doc)[id] as unknown as Pag
 const navItems = (doc: Document) =>
   (nodesOf(doc)[siteOf(doc).nav] as unknown as { items: NodeList }).items;
 
+/**
+ * Where a menu item is: its index in the menu, or in a group's list when `group` (the group's
+ * ID) is set (menu-groups design decision 3).
+ */
+export interface MenuPosition {
+  group?: string;
+  index: number;
+}
+
+const isGroup = (doc: Document, id: string | undefined) =>
+  id !== undefined && nodesOf(doc)[id]?.type === "menu_group";
+
+/** The items of the menu, or of one of its groups. */
+function listOf(doc: Document, group?: string): string[] {
+  if (group === undefined) return navItems(doc).nodes;
+  const node = nodesOf(doc)[group] as unknown as { type: string; items: NodeList } | undefined;
+  return node?.type === "menu_group" ? node.items.nodes : [];
+}
+
+function setList(tr: Tr, doc: Document, group: string | undefined, nodes: string[]): void {
+  tr.set(group === undefined ? [siteOf(doc).nav, "items"] : [group, "items"], list(nodes));
+}
+
+/** The menu's groups, in order. */
+const groupsOf = (doc: Document) => navItems(doc).nodes.filter((id) => isGroup(doc, id));
+
 function slugsExcept(doc: Document, pageId?: string): string[] {
   return siteOf(doc).pages.nodes.flatMap((id) =>
     id === pageId ? [] : [pageOf(doc, id)?.slug ?? ""],
   );
 }
 
-/** The menu items that link to a page. */
-function menuItemsOf(doc: Document, pageId: string): string[] {
+/** The menu items that link to a page, in the menu or in its groups, with where they are. */
+function menuLinksOf(doc: Document, pageId: string): { id: string; group?: string }[] {
   const nodes = nodesOf(doc);
-  return navItems(doc).nodes.filter(
-    (id) => nodes[id]?.type === "page_link" && nodes[id]?.page_id === pageId,
-  );
+  const links = (group?: string) =>
+    listOf(doc, group)
+      .filter((id) => nodes[id]?.type === "page_link" && nodes[id]?.page_id === pageId)
+      .map((id) => ({ id, group }));
+  return [...links(), ...groupsOf(doc).flatMap(links)];
+}
+
+/** The IDs of the menu items that link to a page. */
+const menuItemsOf = (doc: Document, pageId: string) => menuLinksOf(doc, pageId).map((l) => l.id);
+
+/** Takes items out of the menu and its groups. */
+function removeFromMenu(tr: Tr, doc: Document, ids: ReadonlySet<string>): void {
+  for (const group of [undefined, ...groupsOf(doc)]) {
+    const items = listOf(doc, group);
+    if (items.some((id) => ids.has(id))) {
+      setList(
+        tr,
+        doc,
+        group,
+        items.filter((id) => !ids.has(id)),
+      );
+    }
+  }
 }
 
 function createMenuItem(tr: Tr, pageId: string, label: string): string {
@@ -92,11 +138,11 @@ export function duplicatePage(session: Session, pageId: string): string | undefi
   const pages = [...siteOf(doc).pages.nodes];
   pages.splice(pages.indexOf(pageId) + 1, 0, copyId);
   tr.set([doc.document_id, "pages"], list(pages));
-  const original = menuItemsOf(doc, pageId)[0];
+  const original = menuLinksOf(doc, pageId)[0];
   if (original) {
-    const items = [...navItems(doc).nodes];
-    items.splice(items.indexOf(original) + 1, 0, createMenuItem(tr, copyId, title));
-    setNavItems(tr, doc, items);
+    const items = [...listOf(doc, original.group)];
+    items.splice(items.indexOf(original.id) + 1, 0, createMenuItem(tr, copyId, title));
+    setList(tr, doc, original.group, items);
   }
   session.apply(tr);
   return copyId;
@@ -117,12 +163,7 @@ export function deletePage(session: Session, pageId: string): boolean {
   const doc = session.doc;
   if (!pageOf(doc, pageId) || cannotDelete(doc, pageId) !== undefined) return false;
   const tr = session.tr;
-  const own = new Set(menuItemsOf(doc, pageId));
-  setNavItems(
-    tr,
-    doc,
-    navItems(doc).nodes.filter((id) => !own.has(id)),
-  );
+  removeFromMenu(tr, doc, new Set(menuItemsOf(doc, pageId)));
   tr.set([doc.document_id, "pages"], list(siteOf(doc).pages.nodes.filter((id) => id !== pageId)));
   // A page listing services or projects takes their own pages with it (collection-pages).
   for (const property of ["services_page_id", "projects_page_id"] as const) {
@@ -215,32 +256,85 @@ export function setSeoDescription(session: Session, pageId: string, description:
   session.apply(session.tr.set([pageId, "seo_description"], description), { batch: true });
 }
 
-/** Adds a page to the end of the menu, labelled with its title, or removes it from the menu. */
-export function showInMenu(session: Session, pageId: string, show: boolean): void {
+/**
+ * Adds a page to the menu, labelled with its title, at `at` (by default the end of the menu), or
+ * removes it from the menu and its groups.
+ */
+export function showInMenu(
+  session: Session,
+  pageId: string,
+  show: boolean,
+  at?: MenuPosition,
+): void {
   const doc = session.doc;
   const page = pageOf(doc, pageId);
   const own = menuItemsOf(doc, pageId);
   if (!page || show === own.length > 0) return;
   const tr = session.tr;
   if (show) {
-    setNavItems(tr, doc, [...navItems(doc).nodes, createMenuItem(tr, pageId, page.title)]);
+    const group = isGroup(doc, at?.group) ? at?.group : undefined;
+    const items = [...listOf(doc, group)];
+    items.splice(at?.index ?? items.length, 0, createMenuItem(tr, pageId, page.title));
+    setList(tr, doc, group, items);
   } else {
-    setNavItems(
-      tr,
-      doc,
-      navItems(doc).nodes.filter((id) => !own.includes(id)),
-    );
+    removeFromMenu(tr, doc, new Set(own));
   }
   session.apply(tr);
 }
 
-/** Moves the menu item at `from` to position `to`. */
-export function moveMenuItem(session: Session, from: number, to: number): void {
+/**
+ * Moves a menu item: within the menu or a group, into a group, or out of it. `to.index` is
+ * counted after the item has left its place; past the end means at the end. Groups don't go
+ * into groups.
+ */
+export function moveMenuItem(session: Session, from: MenuPosition, to: MenuPosition): void {
+  const doc = session.doc;
+  if (to.group !== undefined && !isGroup(doc, to.group)) return;
+  const source = [...listOf(doc, from.group)];
+  const id = source[from.index];
+  if (id === undefined || (to.group !== undefined && isGroup(doc, id))) return;
+  const sameList = from.group === to.group;
+  source.splice(from.index, 1);
+  const target = sameList ? source : [...listOf(doc, to.group)];
+  // Past the end means at the end.
+  const at = Math.min(to.index, target.length);
+  if (at < 0 || (sameList && at === from.index)) return;
+  target.splice(at, 0, id);
+  const tr = session.tr;
+  // The new place first: Svedit deletes a node as soon as nothing refers to it.
+  setList(tr, doc, to.group, target);
+  if (!sameList) setList(tr, doc, from.group, source);
+  session.apply(tr);
+}
+
+/** Adds an empty group at the end of the menu; returns its ID, or undefined for no label. */
+export function addMenuGroup(session: Session, label: string): string | undefined {
+  const name = label.trim();
+  if (name === "") return undefined;
+  const doc = session.doc;
+  const tr = session.tr;
+  const id = tr.generate_id();
+  tr.create({ id, type: "menu_group", label: text(name), items: list([]) });
+  setNavItems(tr, doc, [...navItems(doc).nodes, id]);
+  session.apply(tr);
+  return id;
+}
+
+/** Renames a group; an empty label is refused (returns false). */
+export function renameMenuGroup(session: Session, groupId: string, label: string): boolean {
+  const name = label.trim();
+  if (name === "" || !isGroup(session.doc, groupId)) return false;
+  session.apply(session.tr.set([groupId, "label"], text(name)));
+  return true;
+}
+
+/** Removes a group, keeping its links in the menu where the group was. */
+export function removeMenuGroup(session: Session, groupId: string): void {
   const doc = session.doc;
   const items = [...navItems(doc).nodes];
-  if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) return;
-  const [moved] = items.splice(from, 1);
-  items.splice(to, 0, moved as string);
+  const index = items.indexOf(groupId);
+  if (index < 0 || !isGroup(doc, groupId)) return;
+  items.splice(index, 1, ...listOf(doc, groupId));
   const tr = session.tr;
   setNavItems(tr, doc, items);
   session.apply(tr);
@@ -282,16 +376,17 @@ export function setExternalLink(
   return check;
 }
 
-/** Removes the menu item at `index` (a page's item or an external link; pages stay). */
-export function removeMenuItem(session: Session, index: number): void {
+/** Removes the menu item at a position (a page's item or an external link; pages stay). */
+export function removeMenuItem(session: Session, at: MenuPosition): void {
   const doc = session.doc;
-  const items = navItems(doc).nodes;
-  if (index < 0 || index >= items.length) return;
+  const items = listOf(doc, at.group);
+  if (at.index < 0 || at.index >= items.length) return;
   const tr = session.tr;
-  setNavItems(
+  setList(
     tr,
     doc,
-    items.filter((_, i) => i !== index),
+    at.group,
+    items.filter((_, i) => i !== at.index),
   );
   session.apply(tr);
 }

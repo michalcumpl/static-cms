@@ -153,6 +153,22 @@ describe("exportSite", () => {
     expect(decode(files.get("index.html"))).toContain('<script src="/assets/slideshow.js" defer>');
   });
 
+  it("Menu script only with menu groups", () => {
+    expect(exported().files.has("assets/menu.js")).toBe(false);
+    const { doc, nodes } = editableDemoSite();
+    nodes.group_1 = {
+      id: "group_1",
+      type: "menu_group",
+      label: { content: "Více", marks: [], annotations: [] },
+      items: { nodes: ["nav_contact"], marks: [], annotations: [] },
+    };
+    nodes.nav_1.items.nodes = ["nav_home", "group_1"];
+    const { files } = exported(doc);
+    expect(decode(files.get("assets/menu.js"))).toContain("Escape");
+    expect(decode(files.get("index.html"))).toContain('<script src="/assets/menu.js" defer>');
+    expect(decode(files.get("404.html"))).toContain('<script src="/assets/menu.js" defer>');
+  });
+
   it("Video script only when needed", () => {
     expect(exported().files.has("assets/video.js")).toBe(false);
     const { doc, nodes } = editableDemoSite();

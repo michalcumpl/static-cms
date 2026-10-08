@@ -275,6 +275,8 @@ export function siteBuilder(options: {
   const faqs: { id: string; input: { question: string; answer: string } }[] = [];
   const pages: { id: string; input: PageInput; blocks: BlockInput[] }[] = [];
   const menuLinks: LinkInput[] = [];
+  /** Menu groups, each placed before the menu pages added after it. */
+  const menuGroups: { after: number; label: string; items: (string | LinkInput)[] }[] = [];
   let headerShowName = true;
 
   return {
@@ -349,6 +351,14 @@ export function siteBuilder(options: {
     /** An outside address in the menu, after the pages. */
     menuLink(link: LinkInput) {
       menuLinks.push(link);
+    },
+    /**
+     * A group of links in the menu, after the menu pages added so far: pages by slug or links.
+     * A page in a group is labelled by its `menu` label (or its title), and isn't also in the
+     * menu outside the group.
+     */
+    menuGroup(label: string, items: (string | LinkInput)[]) {
+      menuGroups.push({ after: pages.length, label, items });
     },
 
     build(): SiteDocument {
@@ -745,15 +755,34 @@ export function siteBuilder(options: {
           id,
         ),
       );
-      const menuItems = [
-        ...pages
-          .filter((p) => p.input.menu)
-          .map((p) =>
-            link({
-              label: typeof p.input.menu === "string" ? p.input.menu : p.input.title,
-              page: p.input.slug,
+      const menuLabel = (p: (typeof pages)[number]) =>
+        typeof p.input.menu === "string" ? p.input.menu : p.input.title;
+      const group = (input: (typeof menuGroups)[number]) =>
+        add("menu_group", {
+          label: text(input.label),
+          items: list(
+            input.items.map((item) => {
+              if (typeof item !== "string") return link(item);
+              const page = pages.find((p) => p.input.slug === item);
+              if (!page) throw new Error(`No page with the slug "${item}" for the menu group`);
+              return link({ label: menuLabel(page), page: item });
             }),
           ),
+        });
+      const grouped = new Set(
+        menuGroups.flatMap((g) => g.items.filter((i) => typeof i === "string")),
+      );
+      // Each group goes before the first menu page added after it.
+      const placed = new Set<(typeof menuGroups)[number]>();
+      const groupsBefore = (index: number) =>
+        menuGroups.filter((g) => g.after <= index && !placed.has(g) && placed.add(g));
+      const menuItems = [
+        ...pages.flatMap((p, i) =>
+          p.input.menu && !grouped.has(p.input.slug)
+            ? [...groupsBefore(i).map(group), link({ label: menuLabel(p), page: p.input.slug })]
+            : [],
+        ),
+        ...groupsBefore(pages.length).map(group),
         ...menuLinks.map(link),
       ];
       const nav = add("nav", { items: list(menuItems) });

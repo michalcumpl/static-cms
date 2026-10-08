@@ -176,7 +176,12 @@ export function copyPageInto(
   nodes[to.document_id] = site;
 
   const fromNav = from.nodes[siteOf(from).nav] as LooseNode & { items: List };
-  const inMenu = fromNav.items.nodes.some(
+  // The page's link may be in a group; the copy's goes at the end of the menu, outside groups.
+  const menuIds = fromNav.items.nodes.flatMap((id) => {
+    const item = from.nodes[id] as (LooseNode & { items?: List }) | undefined;
+    return item?.type === "menu_group" ? (item.items?.nodes ?? []) : [id];
+  });
+  const inMenu = menuIds.some(
     (id) => from.nodes[id]?.type === "page_link" && from.nodes[id]?.page_id === pageId,
   );
   const toNav = nodes[toSite.nav] as (LooseNode & { items: List }) | undefined;

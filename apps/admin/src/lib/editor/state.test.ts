@@ -35,7 +35,7 @@ describe("EditorState pages and menu", () => {
         title: "Úvod",
         slug: "uvod",
         isHome: true,
-        menuIndex: 0,
+        menuPosition: { index: 0 },
         href: "/p/p_test/edit/page_home/",
       },
       {
@@ -43,7 +43,7 @@ describe("EditorState pages and menu", () => {
         title: "Kontakt",
         slug: "kontakt",
         isHome: false,
-        menuIndex: 1,
+        menuPosition: { index: 1 },
         href: "/p/p_test/edit/page_contact/",
       },
     ]);
@@ -72,7 +72,7 @@ describe("EditorState pages and menu", () => {
       annotations: [],
     });
     session.apply(tr);
-    expect(state.menu.map((entry) => [entry.kind, entry.itemId, entry.index])).toEqual([
+    expect(state.menu.map((entry) => [entry.kind, entry.itemId, entry.position.index])).toEqual([
       ["page", "nav_contact", 0],
       ["external", "ext_fb", 1],
     ]);

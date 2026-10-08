@@ -20,6 +20,7 @@ const actions = (): PageMenuActions => ({
   confirmDelete: vi.fn(),
   duplicated: vi.fn(),
   editLink: vi.fn(),
+  renameGroup: vi.fn(),
 });
 
 const entries = (e: EditorState, page: EditorPage, a = actions()) => pageMenuEntries(e, page, t, a);
@@ -106,7 +107,7 @@ describe("the menu of a page that isn't in the menu", () => {
     const list = entries(e, page(e, id));
     expect(labels(list)).toEqual(["Rename", "Duplicate", "Show in menu", "Set as home", "Delete"]);
     named(list, "Show in menu").run();
-    expect(page(e, id).menuIndex).toBeDefined();
+    expect(page(e, id).menuPosition).toBeDefined();
   });
 });
 

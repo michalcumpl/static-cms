@@ -41,8 +41,9 @@ type AnySelection = {
 type NodeList = { nodes: string[]; marks: unknown[]; annotations: unknown[] };
 
 /**
- * Node lists whose structure the canvas keeps fixed: the navigation and the site's pages (the
- * sidebar manages them), images (the image slots do), and buttons (the button panel does).
+ * Node lists whose structure the canvas keeps fixed: the navigation, its groups and the site's
+ * pages (the sidebar manages them), images (the image slots do), and buttons (the button panel
+ * does).
  */
 export function isFixedList(session: Session, path: DocumentPath): boolean {
   const owner = session.get(path.slice(0, -1)) as { type?: string } | undefined;
@@ -59,7 +60,7 @@ export function isFixedListProperty(ownerType: string | undefined, property: unk
   ) {
     return true;
   }
-  return property === "items" && ownerType === "nav";
+  return property === "items" && (ownerType === "nav" || ownerType === "menu_group");
 }
 
 /** The selected single node (list path + index), unless it sits in a fixed list. */

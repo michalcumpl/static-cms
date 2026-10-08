@@ -128,3 +128,19 @@ O nás, Kontakty.
 
 None: the format is unchanged, and menus without groups render exactly as before (snapshot
 tests unchanged apart from the stylesheet).
+
+## Changes made while building
+
+- **The builder leaves grouped pages out of the top level:** a page listed in a group by slug
+  is not also a menu link outside it, so `menu: "label"` on a grouped page only sets its label;
+  a group goes before the first menu page added after it.
+- **The menu script is noted by the head**, not while rendering the header: the head is written
+  first. `RenderContext.menuItems()` leaves out groups without links for both.
+- **On the canvas, a group opens while the selection is inside it** (by the selection's path),
+  not on `:focus-within`: the canvas's editable root keeps the focus.
+- **Moving an item between lists sets the new list first:** Svedit deletes a node as soon as no
+  list refers to it.
+- **"Move to group" lists the groups by name** under a "Move to group" heading in the "⋯" menu
+  (`PopoverMenu` groups entries, it has no submenus); moving past a list's end puts the item at
+  the end.
+- **The language list's "in menu" mark** (`languagePages`) also counts links inside groups.

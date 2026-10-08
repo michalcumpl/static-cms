@@ -128,6 +128,18 @@ export const siteSchema = {
   nav: {
     kind: "block",
     properties: {
+      items: {
+        type: "node_array",
+        node_types: [...LINK_TYPES, "menu_group"],
+        default_node_type: "page_link",
+      },
+    },
+  },
+  /** Links under one label in the menu; one level deep, the label isn't a link. */
+  menu_group: {
+    kind: "block",
+    properties: {
+      label: { type: "text", allow_newlines: false },
       items: { type: "node_array", node_types: LINK_TYPES, default_node_type: "page_link" },
     },
   },

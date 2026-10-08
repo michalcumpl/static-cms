@@ -39,7 +39,7 @@ describe("canvasCss", () => {
     const now = canvasTheme(doc, before);
     expect(now).toMatchObject({ color_primary: "#8a4b1f", font_heading: "lora" });
     const css = canvasCss(now, ".site-canvas");
-    expect(css).not.toContain("display: none");
+    expect(css).not.toContain("body { display: none");
     expect(css).toContain("--color-primary: #8a4b1f;");
   });
 

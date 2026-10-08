@@ -88,7 +88,7 @@ $effect(() => editor.registerDraft(commitSlug));
     <label class="check">
       <input
         type="checkbox"
-        checked={page.menuIndex !== undefined}
+        checked={page.menuPosition !== undefined}
         onchange={(e) => showInMenu(editor.session, node.id, e.currentTarget.checked)}
       />
       {i18n.t("editor.page.showInMenu")}

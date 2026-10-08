@@ -123,6 +123,27 @@ describe("copyPageInto", () => {
     );
   });
 
+  it("Copy a page from a menu group: its link goes at the end of the menu, outside groups", () => {
+    const { cs, en } = languages();
+    cs.nodes.group_more = {
+      id: "group_more",
+      type: "menu_group",
+      label: text("Více"),
+      items: list(["nav_cenik"]),
+    };
+    cs.nodes.nav_1.items.nodes = ["nav_home", "nav_contact", "group_more"];
+    en.nodes.group_more = { ...cs.nodes.group_more, items: list([]) };
+    en.nodes.nav_1.items.nodes = ["nav_home", "group_more", "nav_contact"];
+    const result = copyPageInto(cs.doc, "page_cenik", en.doc, newId);
+    if (!result.ok) throw new Error(result.message);
+    const nodes = (result.document as { nodes: LooseNodes }).nodes;
+    expect(nodes[nodes.nav_1.items.nodes.at(-1)]).toMatchObject({
+      type: "page_link",
+      page_id: result.pageId,
+    });
+    expect(nodes.group_more.items.nodes).toEqual([]);
+  });
+
   it("points links at the target's counterparts", () => {
     const { cs, en } = languages();
     en.nodes.page_contact.id = "page_contact";

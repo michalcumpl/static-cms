@@ -242,7 +242,7 @@ describe("setPageSlug and setSeoDescription", () => {
 describe("menu", () => {
   it("reorders items", () => {
     const { session: s } = editor();
-    moveMenuItem(s, 1, 0);
+    moveMenuItem(s, { index: 1 }, { index: 0 });
     expect(menuLabels(s)).toEqual(["Kontakt", "Úvod"]);
     s.undo();
     expect(menuLabels(s)).toEqual(["Úvod", "Kontakt"]);
@@ -283,7 +283,7 @@ describe("menu", () => {
     setExternalLink(s, id, "Instagram", "https://instagram.com/pekarna");
     expect(node(s, id)).toMatchObject({ url: "https://instagram.com/pekarna" });
     expect(menuLabels(s)[2]).toBe("Instagram");
-    removeMenuItem(s, 2);
+    removeMenuItem(s, { index: 2 });
     expect(menuLabels(s)).toEqual(["Úvod", "Kontakt"]);
     expect(errors(s)).toEqual([]);
   });

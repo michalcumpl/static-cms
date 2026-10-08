@@ -107,7 +107,8 @@ Film added 15–20 and the second video. Today's stand-in is in brackets.
     look (`hero-slideshow`), a photo per slide, with an optional muted clip from a Vimeo MP4 link
     that plays while the slide shows.
 18. **Grouped menus** (1: Scénografie's "Projekty" with four pages, "Zakázková výroba" with
-    three, and a small top menu) [eight items in one row]. Planned as `menu-groups`.
+    three, and a small top menu) [eight items in one row]: **done**, `menu-groups`: a group is a
+    dropdown in the menu row, and the pages outside groups stay beside it, so no second menu.
 19. **Billing address and bank details** (2: Punk Film's headquarters apart from its office,
     Scénografie's bank account and data box) [a text block]. With `business-details`.
 20. **Job openings** (2: Mareš's career page, Scénografie's open positions) [text]. Planned

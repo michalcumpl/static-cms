@@ -209,6 +209,64 @@ img {
   text-decoration-thickness: 2px;
 }
 
+.menu-group {
+  position: relative;
+}
+
+.menu-group summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  list-style: none;
+  cursor: pointer;
+}
+
+.menu-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-group summary::after {
+  content: "";
+  width: 0.6em;
+  height: 0.4em;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transition: transform 0.2s;
+}
+
+.menu-group details[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.menu-group summary:hover,
+.menu-group:has([aria-current="page"]) summary {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+
+.site-nav .menu-group ul {
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0 0.5rem 1rem;
+  border-left: 2px solid var(--color-secondary);
+}
+
+@container (min-width: 44rem) {
+  .site-nav .menu-group ul {
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    left: -1rem;
+    min-width: 12rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-secondary);
+    border-radius: var(--radius);
+    background: var(--color-background);
+  }
+}
+
 .block {
   padding-block: 2rem;
 }

@@ -303,12 +303,14 @@ export function languagePages(db: Db, projectId: string, lang: string): PageEntr
     >;
   };
   const nav = doc.nodes[doc.nodes[doc.document_id]?.nav ?? ""];
-  const inMenu = new Set(
-    (nav?.items?.nodes ?? []).flatMap((id) => {
+  // Pages linked from the menu or from one of its groups.
+  const linked = (ids: string[]): string[] =>
+    ids.flatMap((id) => {
       const item = doc.nodes[id];
+      if (item?.type === "menu_group") return linked(item.items?.nodes ?? []);
       return item?.type === "page_link" && item.page_id ? [item.page_id] : [];
-    }),
-  );
+    });
+  const inMenu = new Set(linked(nav?.items?.nodes ?? []));
   return translationSummary(site.document).map((page) => ({
     ...page,
     inMenu: inMenu.has(page.pageId),

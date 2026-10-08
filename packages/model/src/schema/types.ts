@@ -85,6 +85,14 @@ export interface NavNode {
   items: NodeArrayValue;
 }
 
+/** Links under one label in the menu: `page_link` / `external_link` nodes, no groups. */
+export interface MenuGroupNode {
+  id: string;
+  type: "menu_group";
+  label: TextValue;
+  items: NodeArrayValue;
+}
+
 /** Link to a page of this site, by page node ID so it survives slug changes. */
 export interface PageLinkNode {
   id: string;
@@ -567,6 +575,7 @@ export type AnyNode =
   | SiteNode
   | ThemeNode
   | NavNode
+  | MenuGroupNode
   | PageLinkNode
   | ExternalLinkNode
   | PageNode

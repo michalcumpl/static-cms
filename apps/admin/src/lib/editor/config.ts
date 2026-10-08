@@ -29,6 +29,7 @@ import Logos from "./nodes/Logos.svelte";
 import MarkEmphasis from "./nodes/MarkEmphasis.svelte";
 import MarkLink from "./nodes/MarkLink.svelte";
 import MarkStrong from "./nodes/MarkStrong.svelte";
+import MenuGroup from "./nodes/MenuGroup.svelte";
 import Nav from "./nodes/Nav.svelte";
 import OpeningHours from "./nodes/OpeningHours.svelte";
 import Page from "./nodes/Page.svelte";
@@ -71,6 +72,7 @@ import {
 export const nodeComponents: Record<string, Component<any>> = {
   site: Site,
   nav: Nav,
+  menu_group: MenuGroup,
   page_link: PageLink,
   external_link: ExternalLink,
   page: Page,

@@ -1,4 +1,4 @@
-import type { NodeOfType } from "@webmio/model";
+import type { AnyNode, NodeOfType } from "@webmio/model";
 import { type CollectionBlockNode, isCollectionBlockType, socialKind } from "@webmio/model";
 import { renderBlock, renderImage, renderLink, siteLogoSizes } from "./blocks.js";
 import { footerBusiness } from "./business.js";
@@ -6,6 +6,7 @@ import type { RenderContext } from "./context.js";
 import { renderHead } from "./head.js";
 import { type Html, html, raw } from "./html.js";
 import { siteStrings } from "./strings.js";
+import { renderText } from "./text.js";
 
 export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
   const { site } = ctx;
@@ -86,7 +87,6 @@ export function renderDocument(
   translationKey?: string,
 ): Html {
   const { site } = ctx;
-  const nav = ctx.node(site.nav, "nav");
   // Several navigation landmarks each need their own name.
   const social = socialLinks(ctx);
   const labelMenu = ctx.multilingual || social !== false;
@@ -99,9 +99,21 @@ export function renderDocument(
       <div class="container">
         <a class="site-name" href="${ctx.pageUrl(ctx.homeId)}">${siteBrand(ctx)}</a>
         <nav class="site-nav"${labelMenu && html` aria-label="${ctx.strings.menuLabel}"`}>
-          <ul>${ctx.children(nav.items).map(
-            (item) => html`
-            <li>${renderLink(item, ctx, undefined, item.type === "page_link" && item.page_id === currentPageId)}</li>`,
+          <ul>${ctx.menuItems().map((item) =>
+            item.type === "menu_group"
+              ? html`
+            <li class="menu-group">
+              <details name="site-menu">
+                <summary>${renderText(item.label, ctx)}</summary>
+                <ul>${ctx.children(item.items).map(
+                  (link) => html`
+                  <li>${menuLink(link, ctx, currentPageId)}</li>`,
+                )}
+                </ul>
+              </details>
+            </li>`
+              : html`
+            <li>${menuLink(item, ctx, currentPageId)}</li>`,
           )}
           </ul>
         </nav>${languageSwitcher(ctx, translationKey)}
@@ -117,6 +129,16 @@ export function renderDocument(
   </body>
 </html>
 `;
+}
+
+/** A link of the menu, marked when it leads to the page being rendered. */
+function menuLink(link: AnyNode, ctx: RenderContext, currentPageId?: string): Html {
+  return renderLink(
+    link,
+    ctx,
+    undefined,
+    link.type === "page_link" && link.page_id === currentPageId,
+  );
 }
 
 /**

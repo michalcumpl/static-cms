@@ -194,6 +194,11 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
       problems.error("empty-link-label", link.id, `${linkLabel(link.id)} needs a label.`, "label");
     }
   }
+  for (const group of all("menu_group")) {
+    if (isBlank(group.label)) {
+      problems.error("empty-link-label", group.id, "A menu group needs a label.", "label");
+    }
+  }
 
   const business = site ? get(site.business, "business") : undefined;
   if (business) checkBusiness(business, get, problems);
@@ -940,14 +945,26 @@ function checkPageSlug(
   }
 }
 
-/** A page should be in the menu at most once. */
+/** A page should be in the menu at most once, inside groups or not; a group should hold links. */
 function checkMenu(
   nav: NodeOfType<"nav">,
   get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
   problems: Problems,
 ): void {
   const listed = new Set<string>();
-  for (const itemId of nav.items.nodes) {
+  const items = nav.items.nodes.flatMap((itemId) => {
+    const group = get(itemId, "menu_group");
+    if (!group) return [itemId];
+    if (group.items.nodes.length === 0) {
+      problems.warning(
+        "empty-menu-group",
+        group.id,
+        `The menu group "${group.label.content}" has no links, so it isn't shown.`,
+      );
+    }
+    return group.items.nodes;
+  });
+  for (const itemId of items) {
     const link = get(itemId, "page_link");
     if (!link) continue;
     if (listed.has(link.page_id)) {

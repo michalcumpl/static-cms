@@ -31,7 +31,7 @@ export interface SiteLanguage {
 }
 
 /** The site's scripts, each `assets/<name>.js`, loaded only by pages that need them. */
-export type SiteScript = "video" | "slideshow";
+export type SiteScript = "video" | "slideshow" | "menu";
 
 /** A service's or project's own page, under its listing page (collection-pages decision 2). */
 export interface ItemPage {
@@ -63,6 +63,14 @@ export class RenderContext {
   }
   /** The items that have pages, services first, each in collection order. */
   readonly itemPages: ItemPage[] = [];
+
+  /** The menu's items, without groups that have no links (they aren't shown). */
+  menuItems(): AnyNode[] {
+    const nav = this.node(this.site.nav, "nav");
+    return this.children(nav.items).filter(
+      (item) => item.type !== "menu_group" || item.items.nodes.length > 0,
+    );
+  }
   readonly nodes: Record<string, AnyNode>;
 
   /** The site's business details, resolved. */

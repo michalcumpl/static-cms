@@ -6,17 +6,25 @@ import Button from "$lib/ui/Button.svelte";
 import PopoverMenu, { type MenuEntry as MenuItem } from "$lib/ui/PopoverMenu.svelte";
 import DeletePageDialog from "./DeletePageDialog.svelte";
 import { pageFieldElementId } from "./locate";
-import { linkMenuEntries, type PageMenuActions, pageMenuEntries } from "./page-menu";
+import {
+  groupMenuEntries,
+  linkMenuEntries,
+  type PageMenuActions,
+  pageMenuEntries,
+} from "./page-menu";
 import {
   addExternalLink,
+  addMenuGroup,
   addPage,
+  type MenuPosition,
   moveMenuItem,
   removeMenuItem,
+  renameMenuGroup,
   setExternalLink,
   setPageTitle,
   showInMenu,
 } from "./pages";
-import type { EditorPage, EditorState, MenuEntry } from "./state.svelte";
+import type { EditorPage, EditorState, MenuEntry, MenuLinkEntry } from "./state.svelte";
 import { isUntranslated } from "./translations";
 
 let { editor, projectName }: { editor: EditorState; projectName: string } = $props();
@@ -72,9 +80,38 @@ function submitLink(event: SubmitEvent) {
 }
 
 function removeLink() {
-  const entry = editor.menu.find((e) => e.itemId === editingItem);
-  if (entry) removeMenuItem(editor.session, entry.index);
+  const entry = allEntries().find((e) => e.itemId === editingItem);
+  if (entry) removeMenuItem(editor.session, entry.position);
   linkDialog?.close();
+}
+
+/** The menu's entries with the links inside its groups. */
+const allEntries = () =>
+  editor.menu.flatMap((e): MenuEntry[] => (e.kind === "group" ? [e, ...e.entries] : [e]));
+
+// Adding or renaming a group of the menu.
+let groupDialog: HTMLDialogElement | undefined = $state();
+let renamingGroup = $state<Extract<MenuEntry, { kind: "group" }> | undefined>();
+let groupLabel = $state("");
+let groupError = $state("");
+
+function openGroupDialog(entry?: Extract<MenuEntry, { kind: "group" }>) {
+  renamingGroup = entry;
+  groupLabel = entry?.label ?? "";
+  groupError = "";
+  groupDialog?.showModal();
+}
+
+function submitGroup(event: SubmitEvent) {
+  event.preventDefault();
+  const done = renamingGroup
+    ? renameMenuGroup(editor.session, renamingGroup.itemId, groupLabel)
+    : addMenuGroup(editor.session, groupLabel) !== undefined;
+  if (!done) {
+    groupError = i18n.t("editor.left.groupLabelMissing");
+    return;
+  }
+  groupDialog?.close();
 }
 
 // The "⋯" menu of an entry (one open at a time), and the dialogs its actions open.
@@ -95,6 +132,7 @@ const menuActions: PageMenuActions = {
   confirmDelete: (page) => deleteDialog?.open(page),
   duplicated: (id) => void goto(editor.paths.edit(id)),
   editLink: (entry) => openLinkDialog(entry),
+  renameGroup: (entry) => openGroupDialog(entry),
 };
 
 function toggleMenu(key: string, name: string, entries: () => MenuItem[]) {
@@ -122,28 +160,50 @@ function submitRename(event: SubmitEvent) {
   renameDialog?.close();
 }
 
-// Dragging: menu entries reorder within the menu, and pages move between the two sections.
-type Dragged = { kind: "menu"; index: number } | { kind: "unlisted"; pageId: string };
+// Dragging: menu entries move within the menu and into and out of its groups, and pages move
+// between the two sections. Dropping on a group puts the entry at the end of it.
+type Dragged =
+  | { kind: "menu"; position: MenuPosition; isGroup: boolean }
+  | { kind: "unlisted"; pageId: string };
 let dragged: Dragged | undefined;
 
-function dropOnMenu(event: DragEvent, index?: number) {
+function dropOnMenu(event: DragEvent, at?: MenuPosition) {
   event.preventDefault();
   event.stopPropagation();
-  if (dragged?.kind === "menu" && index !== undefined) {
-    moveMenuItem(editor.session, dragged.index, index);
+  if (dragged?.kind === "menu" && at !== undefined) {
+    // A group stays in the menu: dropped inside a group, it takes that group's place.
+    const to =
+      dragged.isGroup && at.group !== undefined
+        ? (editor.menu.find((e) => e.itemId === at.group)?.position ?? at)
+        : at;
+    moveMenuItem(editor.session, dragged.position, to);
   } else if (dragged?.kind === "unlisted") {
-    showInMenu(editor.session, dragged.pageId, true);
+    showInMenu(editor.session, dragged.pageId, true, at);
   }
   dragged = undefined;
+}
+
+/** Dropping on a group's name: into the group, at its end. */
+function dropOnGroup(event: DragEvent, group: Extract<MenuEntry, { kind: "group" }>) {
+  if (dragged?.kind === "menu" && dragged.isGroup) dropOnMenu(event, group.position);
+  else dropOnMenu(event, { group: group.itemId, index: Number.MAX_SAFE_INTEGER });
 }
 
 function dropOnUnlisted(event: DragEvent) {
   event.preventDefault();
   if (dragged?.kind === "menu") {
-    const entry = editor.menu.find((e) => e.index === (dragged as { index: number }).index);
+    const from = dragged.position;
+    const entry = allEntries().find(
+      (e) => e.position.group === from.group && e.position.index === from.index,
+    );
     if (entry?.kind === "page") showInMenu(editor.session, entry.page.id, false);
   }
   dragged = undefined;
+}
+
+function startDrag(event: DragEvent, entry: MenuEntry) {
+  event.stopPropagation();
+  dragged = { kind: "menu", position: entry.position, isGroup: entry.kind === "group" };
 }
 
 const menuName = (entry: MenuEntry) => (entry.kind === "page" ? entry.page.title : entry.label);
@@ -177,6 +237,37 @@ function untranslated(page: EditorPage): boolean {
   </button>
 {/snippet}
 
+{#snippet linkEntry(entry: MenuLinkEntry)}
+  <li
+    draggable="true"
+    ondragstart={(e) => startDrag(e, entry)}
+    ondragover={(e) => e.preventDefault()}
+    ondrop={(e) => dropOnMenu(e, entry.position)}
+  >
+    <span class="name">
+      {#if entry.kind === "page"}
+        {@render pageLink(entry.page)}
+      {:else}
+        <button type="button" class="external" onclick={() => openLinkDialog(entry)}>
+          {entry.label} <span aria-hidden="true">↗</span>
+        </button>
+      {/if}
+    </span>
+    {#if entry.kind === "page"}
+      {@render moreButton(
+        entry.itemId,
+        menuName(entry),
+        () => pageMenuEntries(editor, entry.page, i18n.t, menuActions),
+        entry.page.id === editor.currentPageId,
+      )}
+    {:else}
+      {@render moreButton(entry.itemId, menuName(entry), () =>
+        linkMenuEntries(editor, entry, i18n.t, menuActions),
+      )}
+    {/if}
+  </li>
+{/snippet}
+
 {#snippet pageLink(page: EditorPage)}
   <a href={page.href} aria-current={page.id === editor.currentPageId ? "page" : undefined}>
     {page.title}
@@ -196,34 +287,29 @@ function untranslated(page: EditorPage): boolean {
       ondrop={(e) => dropOnMenu(e)}
     >
       {#each editor.menu as entry (entry.itemId)}
-        <li
-          draggable="true"
-          ondragstart={() => (dragged = { kind: "menu", index: entry.index })}
-          ondragover={(e) => e.preventDefault()}
-          ondrop={(e) => dropOnMenu(e, entry.index)}
-        >
-          <span class="name">
-            {#if entry.kind === "page"}
-              {@render pageLink(entry.page)}
-            {:else}
-              <button type="button" class="external" onclick={() => openLinkDialog(entry)}>
-                {entry.label} <span aria-hidden="true">↗</span>
-              </button>
-            {/if}
-          </span>
-          {#if entry.kind === "page"}
-            {@render moreButton(
-              entry.itemId,
-              menuName(entry),
-              () => pageMenuEntries(editor, entry.page, i18n.t, menuActions),
-              entry.page.id === editor.currentPageId,
+        {#if entry.kind === "group"}
+          <li
+            class="group"
+            draggable="true"
+            ondragstart={(e) => startDrag(e, entry)}
+            ondragover={(e) => e.preventDefault()}
+            ondrop={(e) => dropOnGroup(e, entry)}
+          >
+            <span class="name group-name">{entry.label}</span>
+            {@render moreButton(entry.itemId, entry.label, () =>
+              groupMenuEntries(editor, entry, i18n.t, menuActions),
             )}
-          {:else}
-            {@render moreButton(entry.itemId, menuName(entry), () =>
-              linkMenuEntries(editor, entry, i18n.t, menuActions),
-            )}
-          {/if}
-        </li>
+            <ol class="entries in-group">
+              {#each entry.entries as link (link.itemId)}
+                {@render linkEntry(link)}
+              {:else}
+                <li class="empty">{i18n.t("editor.left.groupEmpty")}</li>
+              {/each}
+            </ol>
+          </li>
+        {:else}
+          {@render linkEntry(entry)}
+        {/if}
       {:else}
         <li class="empty">{i18n.t("editor.left.menuEmpty")}</li>
       {/each}
@@ -256,6 +342,7 @@ function untranslated(page: EditorPage): boolean {
   <div class="add">
     <Button size="sm" onclick={openPageDialog}>{i18n.t("editor.left.addPage")}</Button>
     <Button size="sm" onclick={() => openLinkDialog()}>{i18n.t("editor.left.addLink")}</Button>
+    <Button size="sm" onclick={() => openGroupDialog()}>{i18n.t("editor.left.addGroup")}</Button>
   </div>
 </aside>
 
@@ -293,6 +380,26 @@ function untranslated(page: EditorPage): boolean {
     <div class="buttons">
       <Button onclick={() => pageDialog?.close()}>{i18n.t("common.cancel")}</Button>
       <Button type="submit" kind="primary">{i18n.t("editor.left.addPageButton")}</Button>
+    </div>
+  </form>
+</dialog>
+
+<dialog bind:this={groupDialog} aria-labelledby="menu-group-title" class="sidebar-dialog">
+  <form onsubmit={submitGroup}>
+    <h2 id="menu-group-title">
+      {renamingGroup
+        ? i18n.t("editor.left.renameGroupTitle", { label: renamingGroup.label })
+        : i18n.t("editor.left.addGroupTitle")}
+    </h2>
+    <label for="menu-group-label">{i18n.t("editor.left.label")}</label>
+    <input id="menu-group-label" type="text" bind:value={groupLabel} />
+    {#if !renamingGroup}<p class="hint">{i18n.t("editor.left.addGroupHint")}</p>{/if}
+    {#if groupError}<p class="error" role="alert">{groupError}</p>{/if}
+    <div class="buttons">
+      <Button onclick={() => groupDialog?.close()}>{i18n.t("common.cancel")}</Button>
+      <Button type="submit" kind="primary">
+        {renamingGroup ? i18n.t("editor.pageMenu.renameButton") : i18n.t("editor.left.addGroupButton")}
+      </Button>
     </div>
   </form>
 </dialog>
@@ -342,6 +449,27 @@ function untranslated(page: EditorPage): boolean {
 
   .entries li[draggable="true"] {
     cursor: grab;
+  }
+
+  .entries li.group {
+    flex-wrap: wrap;
+  }
+
+  .group-name {
+    font-weight: 600;
+  }
+
+  .in-group {
+    flex-basis: 100%;
+    margin: 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--ui-border);
+  }
+
+  .hint {
+    margin: 0;
+    color: var(--ui-muted);
+    font-size: 0.85rem;
   }
 
   .name {
