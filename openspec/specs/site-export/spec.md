@@ -12,6 +12,7 @@ Export SHALL produce a file tree in which:
 - every other page is `<slug>/index.html`;
 - the not-found page is `404.html`;
 - the stylesheet is `assets/style.css`;
+- when a page shows a video (a videos block, or a project page with a YouTube or Vimeo video), the video script is `assets/video.js`;
 - `robots.txt` is at the root;
 - every image variant and share file used by the site is under `assets/images/`;
 - every font file and font licence the theme needs is under `assets/fonts/`;
@@ -30,6 +31,10 @@ The home page SHALL NOT also be written under its slug. Export SHALL accept the 
 #### Scenario: Export for a subdirectory
 - **WHEN** exporting with base path `/web/`
 - **THEN** the file layout is unchanged and `index.html` links the stylesheet as `/web/assets/style.css`
+
+#### Scenario: Video script only when needed
+- **WHEN** exporting a site without videos, and then the same site with a videos block on one page
+- **THEN** the first tree has no `assets/video.js`, and the second has it once
 
 ### Requirement: Media files
 The caller SHALL supply the bytes of every media file the document uses (see "Media files used by a document" in site-rendering), keyed by file name. Export SHALL place them in the tree:

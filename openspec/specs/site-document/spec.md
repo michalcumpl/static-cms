@@ -133,6 +133,7 @@ Pages SHALL support exactly these block types:
 - `steps`: a heading and an ordered list of steps, each a title and an optional text that supports bold, italic and link marks.
 - `projects`: shows the site's projects (see "Collection blocks" and "Projects block").
 - `cards`: an optional heading, a look, and an ordered list of one to twelve cards (see "Cards").
+- `videos`: an optional heading and an ordered list of one to twelve videos (see "Videos").
 
 #### Scenario: Block content with marks
 - **WHEN** a `rich_text` paragraph has text `Call us today` with a bold mark on offsets 0–7
@@ -164,6 +165,10 @@ Pages SHALL support exactly these block types:
 
 #### Scenario: Cards block
 - **WHEN** a page has a `cards` block with three cards, each with a title, one with an image and a link to a page
+- **THEN** the document is valid
+
+#### Scenario: Videos block
+- **WHEN** a page has a `videos` block with one video, with a YouTube address and a title
 - **THEN** the document is valid
 
 ### Requirement: Hero placement
@@ -834,3 +839,30 @@ These cases SHALL be reported:
 #### Scenario: Thirteen cards
 - **WHEN** a cards block has thirteen cards
 - **THEN** validation reports a too-many-items error for that block
+
+### Requirement: Videos
+A `videos` block SHALL have an optional heading and an ordered list of one to twelve videos. A video SHALL have:
+- an address of a YouTube or Vimeo video: `https://www.youtube.com/watch?v=<id>`, `https://youtu.be/<id>`, `https://www.youtube.com/shorts/<id>`, `https://www.youtube.com/embed/<id>`, `https://vimeo.com/<id>` or `https://player.vimeo.com/video/<id>` (with or without `www.`, extra query parameters ignored);
+- a non-empty title (one line, no formatting), which names the video for people who can't see it;
+- an optional caption (one line);
+- at most one poster image.
+
+These cases SHALL be reported as errors naming the page and the video's position ("Video 2 on Filmy"): an empty address, an address that isn't a YouTube or Vimeo video, an empty title, no videos or more than twelve.
+
+A project's video address that isn't a YouTube or Vimeo video SHALL be reported as a warning, since its page shows it as a link instead of a player.
+
+#### Scenario: Films from YouTube
+- **WHEN** the page "Filmy" has a videos block with three videos, each with a `youtu.be` or `youtube.com/watch` address and a title, one with a poster
+- **THEN** the document is valid
+
+#### Scenario: Address that isn't a video
+- **WHEN** the second video on "Filmy" has the address `https://www.youtube.com/@anideti`
+- **THEN** validation reports an unsupported-video error for video 2 on "Filmy"
+
+#### Scenario: Video without a title
+- **WHEN** a video has a Vimeo address and an empty title
+- **THEN** validation reports an empty-title error for that video
+
+#### Scenario: Trailer somewhere else
+- **WHEN** a project's video address is `https://www.csfd.cz/film/123/`
+- **THEN** validation reports a warning that the project's page shows the video as a link, and the document stays valid
