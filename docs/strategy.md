@@ -1,8 +1,9 @@
 # Product strategy
 
-*Refreshed 2026-10-03; launch templates and layouts decided 2026-10-07; Exhibitions and Creative
-production examples chosen 2026-10-08. The roadmap that follows from it is in [`roadmap.md`](roadmap.md), open work
-in [`tasks.md`](tasks.md).*
+*Why we build Webmio and what it is. Refreshed 2026-10-03; launch templates and layouts decided
+2026-10-07; Exhibitions and Creative production examples chosen 2026-10-08. What we build and
+when, with each change's status: [`roadmap.md`](roadmap.md). Open questions:
+[`tasks.md`](tasks.md).*
 
 ## Webmio
 
@@ -19,7 +20,7 @@ Slogans to test:
   don't ship yet; keep it for when the AI features land)
 - *Tell us what your business is, and we'll keep the website running.* (the thesis as a line)
 
-Czech versions still to write; the Czech market comes first.
+Czech versions still to write (in [`tasks.md`](tasks.md)); the Czech market comes first.
 
 ## Where we sit
 
