@@ -23,8 +23,9 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
 - **Built:** the site document, validation, rendering and export; on-page editing with Svedit;
   pages and menus, media, SEO, theme, version history, languages; publishing to Netlify;
   business data as collections with locations; the business control panel; 18 block types with
-  their looks, from key figures to the hero slideshow; the seven example sites, loaded locally.
-- **Next:** `image-cropping`, then `guided-setup` and the rest of phase 4 (templates).
+  their looks, from key figures to the hero slideshow; the seven example sites, loaded locally;
+  cropping and turning images, and a focal point for each use of an image.
+- **Next:** `guided-setup` and the rest of phase 4 (templates).
   `own-hosting` (phase 5) doesn't depend on phases 3–4 and can start any time; it is the longest
   pole before the beta.
 - **Private beta** (phase 7) when phases 3–6 work with at least two launch templates.
@@ -71,7 +72,7 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
 | [`offer-and-about`](../openspec/changes/archive/2026-10-07-offer-and-about/) | What you offer and About you: list forms for services, questions, people, testimonials | Done |
 | [`project-deletion`](../openspec/changes/archive/2026-10-07-project-deletion/) | deleting a website (offline at once), restoring it, removing it for good | Done |
 | [`example-sites`](../openspec/changes/archive/2026-10-08-example-sites/) | `pnpm admin load-site`; the seven launch examples loaded locally | Done |
-| `image-cropping` | crop, focal point and rotation in the media library | Next |
+| [`image-cropping`](../openspec/changes/archive/2026-10-08-image-cropping/) | crop, focal point and rotation in the media library | Done |
 | `guided-setup` | the "Tell us about your business" wizard | Planned |
 | `site-import` | import a public website by its address (version 1, no AI), reviewed before publishing | Planned |
 
@@ -272,7 +273,8 @@ Invite-only, small and cheap, for friends.
 - **Editing:** bold, italic and links can't overlap (Svedit marks are exclusive); no drag and
   drop on the canvas; page actions (add, delete) only in the editor, not on the Pages page;
   validation (problem) messages are in English in both interface languages.
-- **Media:** no AVIF; no SVG logos; cropping comes with `image-cropping`.
+- **Media:** no AVIF; no SVG logos; no straightening or flipping; share files are still cut
+  from the centre, ignoring the focal point (cropping the share image to 1200:630 does it).
 - **Theme:** no custom font uploads; four colour roles.
 - **SEO:** later `llms.txt`, noindex per page, a focal point for share images.
 - **Business data:** no dated exceptions to opening hours (holidays); restoring an old version of
