@@ -17,6 +17,13 @@ production template it is the signature of the site (`docs/strategy.md`, "Templa
 - **Accessible by design:** the slides advance every six seconds, stop while the pointer or focus
   is on them, and never move for visitors who ask for reduced motion. There are pause and
   play, previous and next controls, and the slides are announced as "Slide 2 of 5".
+- **Short clips from Vimeo** (decided 2026-10-08): a slide can also have a clip, the address of
+  a Vimeo MP4 file (as Punk Film uses today). The clip plays muted and looping over the slide's
+  photo while that slide shows; it loads only for the visible slide, never without the script,
+  never under reduced motion or the visitor's data saver. **Trade-off, chosen knowingly:** a
+  visitor's browser then fetches the clip from Vimeo as the page opens, so these sites contact
+  Vimeo without a click, unlike the videos block; and Vimeo's direct MP4 links need a paid Vimeo
+  plan and can stop working (the photo then shows).
 - **Works without JavaScript:** the slides form a row that can be swiped or scrolled; a small
   script, `assets/slideshow.js`, only on pages with a slideshow, adds the movement and the
   controls. Only the first photo loads up front.
@@ -31,9 +38,8 @@ production template it is the signature of the site (`docs/strategy.md`, "Templa
 - **The builder** writes slides, and the local Punk Film example opens with its six latest
   projects.
 
-Not in this change: short muted video clips in slides (they would load YouTube or Vimeo on every
-visit; they wait for uploaded video files), transitions other than sliding, and slideshows
-outside the hero.
+Not in this change: clips uploaded to the media library or from YouTube, transitions other than
+sliding, and slideshows outside the hero.
 
 ## Capabilities
 

@@ -90,7 +90,8 @@ export type ProblemCode =
   | "unsupported-video"
   | "video-as-link"
   // Hero slideshow (hero-slideshow)
-  | "slideshow-too-short";
+  | "slideshow-too-short"
+  | "unsupported-clip";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -167,6 +168,7 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "unsupported-video": "site",
   "video-as-link": "site",
   "slideshow-too-short": "site",
+  "unsupported-clip": "site",
   "empty-answer": "site",
   "missing-item": "site",
   "wrong-collection": "site",

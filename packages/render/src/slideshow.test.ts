@@ -6,6 +6,8 @@ import { SLIDESHOW_SCRIPT } from "./slideshow-script.js";
 
 // The hero slideshow (hero-slideshow, site-rendering delta).
 
+const CLIP =
+  "https://player.vimeo.com/progressive_redirect/playback/1211966340/rendition/1080p/file.mp4?loc=external";
 const photo = (src: string, alt: string): ImageInput => ({ src, alt, width: 1920, height: 1080 });
 
 /** Punk Film in miniature: a slideshow of `count` projects on the home page. */
@@ -30,6 +32,8 @@ function site(count = 6): SiteDocument {
         image: photo(`s${i}.jpg`, `Still ${i + 1}`),
         title: `Project ${i + 1}`,
         item,
+        // The first slide plays a clip from Vimeo.
+        clip: i === 0 ? CLIP : undefined,
       })),
     }),
   ]);
@@ -68,6 +72,15 @@ describe("hero slideshow", () => {
     expect(scripts).toEqual({ "slideshow.js": SLIDESHOW_SCRIPT });
     // The script's words are in the region, in the site's language.
     expect(home).toContain("&quot;previous&quot;:&quot;Previous slide&quot;");
+  });
+
+  it("holds a slide's clip with its address only in data-src, hidden from assistive technology", () => {
+    const home = render(site(3)).page("index.html");
+    expect(home).toContain(
+      `<video class="slide-clip" muted playsinline preload="none" aria-hidden="true" data-src="${CLIP.replace("&", "&amp;")}"></video>`,
+    );
+    expect(home.match(/<video/g)).toHaveLength(1);
+    expect(home).not.toMatch(/ src="https:\/\/player\.vimeo/);
   });
 
   it("One slide left: shows as a full photo, with no script", () => {

@@ -18,7 +18,7 @@ import {
 import { slugify } from "../slug.js";
 import { graphemeLength } from "../text.js";
 import { CONTRAST_PAIRS, contrastRatio, MIN_CONTRAST, type ThemeColor } from "../themes.js";
-import { videoEmbed } from "../video.js";
+import { slideClip, videoEmbed } from "../video.js";
 import type { GenericCheck } from "./generic.js";
 import type { ProblemCode, Problems } from "./problems.js";
 
@@ -1228,6 +1228,14 @@ function checkSlides(
       problems.error("empty-title", slide.id, `${label} needs a title.`, "title");
     }
     checkItemLink(slide, `slide ${i + 1} on ${on}`, label, pageIds, withPages, problems);
+    if (slide.clip_url !== "" && !slideClip(slide.clip_url)) {
+      problems.error(
+        "unsupported-clip",
+        slide.id,
+        `${label} has a clip that isn't an MP4 file on Vimeo: "${slide.clip_url}".`,
+        "clip_url",
+      );
+    }
   });
 }
 

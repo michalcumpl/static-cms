@@ -1,5 +1,5 @@
 import type { AnyNode, NodeOfType } from "@webmio/model";
-import { imageFile, imageVariants, srcVariant, videoEmbed } from "@webmio/model";
+import { imageFile, imageVariants, slideClip, srcVariant, videoEmbed } from "@webmio/model";
 import { contactDetails, type LocationInfo, locationsBody, openingHoursTable } from "./business.js";
 import type { RenderContext } from "./context.js";
 import { type Html, html } from "./html.js";
@@ -135,6 +135,11 @@ function renderSlideshow(
             image?.type === "image" &&
             html`
             ${renderImage(image, ctx, { lazy: i > 0, sizes: IMAGE_SIZES.heroCover, className: "slide-image" })}`
+          }${
+            // A clip from Vimeo: its address only in data-src, so only the script loads it.
+            slideClip(slide.clip_url) &&
+            html`
+            <video class="slide-clip" muted playsinline preload="none" aria-hidden="true" data-src="${slide.clip_url}"></video>`
           }
             <p class="slide-title">${title}</p>
           </li>`;

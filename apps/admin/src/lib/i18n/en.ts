@@ -844,6 +844,9 @@ export const en = {
       edit: "Edit projects",
     },
     cardPanel: {
+      clip: "Clip (MP4 file on Vimeo, optional)",
+      notClip: "Paste the address of an MP4 file on Vimeo.",
+      clipNote: "The clip plays muted over the photo, loaded from Vimeo when the page opens.",
       slideTitle: "Slide",
       title: "Card",
       link: "Link",

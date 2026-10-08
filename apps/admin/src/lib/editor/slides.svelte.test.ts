@@ -4,7 +4,7 @@ import { demoSite } from "$lib/server/demo";
 import { setBlockLook } from "./looks";
 import { EditorState } from "./state.svelte";
 import { canDuplicate, duplicateSelectedNode, insertItem, itemLimit } from "./structure";
-import { setItemLink } from "./transforms";
+import { setItemLink, setSlideClip } from "./transforms";
 
 // Slides of the hero slideshow in the editor (hero-slideshow design decision 4).
 
@@ -78,5 +78,26 @@ describe("slides", () => {
     expect(get(id)).toMatchObject({ target_id: "page_contact", url: "" });
     session.undo();
     expect(get(id).target_id).toBe("");
+  });
+
+  it("sets a Vimeo MP4 clip as one step, refuses anything else, and clears it", () => {
+    const { session, get, slides } = setup();
+    setBlockLook(session, "hero_1", "layout", "slideshow");
+    const id = slides()[0] as string;
+    const set = (url: string) => {
+      const tr = session.tr;
+      const ok = setSlideClip(tr, id, url);
+      if (ok) session.apply(tr);
+      return ok;
+    };
+    const clip = "https://player.vimeo.com/external/647689930.hd.mp4?s=5b9ff86f";
+    expect(set(clip)).toBe(true);
+    expect(get(id).clip_url).toBe(clip);
+    expect(set("https://vimeo.com/697475416")).toBe(false);
+    expect(get(id).clip_url).toBe(clip);
+    expect(set("")).toBe(true);
+    expect(get(id).clip_url).toBe("");
+    session.undo();
+    expect(get(id).clip_url).toBe(clip);
   });
 });

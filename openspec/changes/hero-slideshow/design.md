@@ -122,6 +122,17 @@ Format 11 upgrade on read. Nothing changes until an owner chooses the slideshow.
 
 ## Changes made while building
 
+- **Clips from Vimeo** (decided 2026-10-08, after building the photo slideshow): `slide` gains
+  `clip_url` (`""` by default; format 11 isn't released, so no new format). `slideClip(url)` in
+  `@webmio/model` accepts `https` MP4 addresses on `player.vimeo.com` (`/progressive_redirect/…`,
+  `/external/…mp4`) and `*.vimeocdn.com`; anything else is an `unsupported-clip` error. The slide
+  renders `<video class="slide-clip" muted playsinline preload="none" aria-hidden="true"
+  data-src="…">` over its image (hidden until it plays, so the photo shows while it loads); the script sets `src` and plays only the current
+  slide's clip, pauses the others, and loads none under reduced motion or `saveData`. With a
+  clip, the slide advances on `ended` and
+  falls back to six seconds on `error`. The Slide panel gets a clip field with a note that the
+  clip loads from Vimeo when the page opens.
+
 - **The carousel is a labelled `<section>`**, not a `<div role="region">`: html-validate prefers
   the native element, and a labelled section is a region.
 - **The script ignores the scroll events of its own scrolling** until it reaches the slide it
@@ -131,6 +142,9 @@ Format 11 upgrade on read. Nothing changes until an owner chooses the slideshow.
   edited.
 - **`setCardLink` became `setItemLink`** and `CardPanel` became `LinkPanel`, titled "Card" or
   "Slide"; `itemLimit` reads a table of limits (cards and videos 1–12, slides 0–8).
+- **The slide's grid track is `minmax(0, 1fr)`** with `overflow: hidden`: otherwise the row grew
+  to the photo's own height past the 80vh cap and pushed the title under the controls (seen in
+  Punk Film's screenshot at 1280×800).
 - **The slide titles line up with the page's content**, and the hero's heading under the slides
   has room above it.
 - **The e2e drives the script on a fake clock** (`page.clock`), with `emulateMedia` for reduced

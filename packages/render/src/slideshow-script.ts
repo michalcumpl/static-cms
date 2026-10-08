@@ -14,6 +14,31 @@ export const SLIDESHOW_SCRIPT = `(function () {
     try { labels = JSON.parse(show.getAttribute("data-labels") || "{}"); } catch (e) {}
     var current = 0;
     var paused = reduce;
+    // Clips only for visitors who want motion and haven't asked to save data.
+    var saveData = navigator.connection && navigator.connection.saveData;
+    var clipsOn = !reduce && !saveData;
+    function clipOf(slide) {
+      var clip = slide.querySelector("video.slide-clip");
+      return clipsOn && clip && !clip.getAttribute("data-failed") ? clip : null;
+    }
+    function canMove() {
+      return !paused && !hovering && !focused && !document.hidden;
+    }
+    slides.forEach(function (slide) {
+      var clip = slide.querySelector("video.slide-clip");
+      if (!clip) return;
+      clip.addEventListener("playing", function () { clip.classList.add("playing"); });
+      clip.addEventListener("ended", function () {
+        if (slides[current] !== slide) return;
+        if (canMove()) go(current + 1);
+        else if (!paused) clip.play();
+      });
+      clip.addEventListener("error", function () {
+        clip.setAttribute("data-failed", "true");
+        clip.classList.remove("playing");
+        if (slides[current] === slide) schedule();
+      });
+    });
     var hovering = false;
     var focused = false;
     var controls = document.createElement("div");
@@ -49,6 +74,28 @@ export const SLIDESHOW_SCRIPT = `(function () {
       });
       toggle.setAttribute("aria-label", (paused ? labels.play : labels.pause) || "");
       toggle.firstChild.textContent = paused ? "\\u25b6" : "\\u275a\\u275a";
+      slides.forEach(function (slide, i) {
+        var clip = clipOf(slide);
+        if (!clip) return;
+        if (i === current && !paused) {
+          if (!clip.getAttribute("src")) clip.setAttribute("src", clip.getAttribute("data-src") || "");
+          var playing = clip.play();
+          if (playing && playing.catch) playing.catch(function () {});
+        } else {
+          clip.pause();
+        }
+      });
+      schedule();
+    }
+    // Slides without a clip move on after six seconds; a clip moves on when it ends.
+    var timer = null;
+    function schedule() {
+      clearTimeout(timer);
+      if (clipOf(slides[current])) return;
+      timer = setTimeout(function () {
+        if (canMove()) go(current + 1);
+        else schedule();
+      }, 6000);
     }
     // While the script scrolls to a slide, the scroll events it causes don't change the slide.
     var heading = -1;
@@ -83,9 +130,6 @@ export const SLIDESHOW_SCRIPT = `(function () {
     show.addEventListener("focusout", function (event) {
       if (!show.contains(event.relatedTarget)) focused = false;
     });
-    setInterval(function () {
-      if (!paused && !hovering && !focused && !document.hidden) go(current + 1);
-    }, 6000);
     update();
   });
 })();

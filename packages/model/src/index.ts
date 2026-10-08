@@ -94,4 +94,4 @@ export {
   type ValidationResult,
   validateSite,
 } from "./validate/index.js";
-export { type VideoEmbed, videoEmbed } from "./video.js";
+export { slideClip, type VideoEmbed, videoEmbed } from "./video.js";

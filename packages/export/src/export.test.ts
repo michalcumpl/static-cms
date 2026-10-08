@@ -136,6 +136,7 @@ describe("exportSite", () => {
         type: "slide",
         image: { nodes: [`${id}_img`], marks: [], annotations: [] },
         title: { content: id, marks: [], annotations: [] },
+        clip_url: "",
         target_id: "",
         url: "",
       };

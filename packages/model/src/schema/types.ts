@@ -136,6 +136,8 @@ export interface SlideNode {
   /** Zero or one `image` node. */
   image: NodeArrayValue;
   title: TextValue;
+  /** An `https` MP4 file on Vimeo played over the photo while the slide shows, or "". */
+  clip_url: string;
   /** A page, or a service or project with its own page, or "" for none. */
   target_id: string;
   /** An outside address, or "" for none. */

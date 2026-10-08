@@ -1,13 +1,14 @@
 ## ADDED Requirements
 
 ### Requirement: Hero slides
-A `hero` block SHALL have an ordered list of slides, empty by default. A slide SHALL have at most one image, a title (one line, no formatting), and at most one link target: a page of the site, a service or project with its own page, or an outside address, checked as a card's link is (see "Cards").
+A `hero` block SHALL have an ordered list of slides, empty by default. A slide SHALL have at most one image, a title (one line, no formatting), a clip address, empty or the `https` address of an MP4 file on Vimeo (`player.vimeo.com/progressive_redirect/…`, `player.vimeo.com/external/…mp4` or `*.vimeocdn.com/…mp4`), and at most one link target: a page of the site, a service or project with its own page, or an outside address, checked as a card's link is (see "Cards").
 
 While the hero's look is `slideshow`, these cases SHALL be reported, naming the page and the slide's position ("Slide 2 on Úvod"):
 - fewer than two slides, as a warning: the hero then shows as `cover` with its own image (or as `beside` without one);
 - more than eight slides, as an error;
 - a slide without an image, or without a title, as an error;
-- a link that leads nowhere, as a warning, and an unsafe address, as an error.
+- a link that leads nowhere, as a warning, and an unsafe address, as an error;
+- a clip address that isn't a Vimeo MP4 file, as an error.
 
 In the other looks the slides SHALL be kept and not checked, so switching back and forth loses nothing.
 
@@ -22,6 +23,10 @@ In the other looks the slides SHALL be kept and not checked, so switching back a
 #### Scenario: Slide without a photo
 - **WHEN** slide 3 of the slideshow on "Úvod" has no image
 - **THEN** validation reports a missing-image error for slide 3 on "Úvod"
+
+#### Scenario: Clip that isn't a Vimeo file
+- **WHEN** slide 2 on "Úvod" has the clip address `https://www.youtube.com/watch?v=wNdrFte2T4w`
+- **THEN** validation reports an unsupported-clip error for slide 2 on "Úvod"
 
 #### Scenario: Slides kept in another look
 - **WHEN** a hero with two slides, one without a title, has the look `cover`

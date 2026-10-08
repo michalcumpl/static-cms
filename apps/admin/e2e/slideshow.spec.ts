@@ -15,8 +15,11 @@ const handle = (page: Page, name: string) => page.getByRole("button", { name, ex
 const actions = (page: Page) => page.getByRole("menu", { name: / actions$/ });
 const look = (page: Page) => page.getByRole("group", { name: "Look" });
 
+const clip = (n: number) =>
+  `https://player.vimeo.com/progressive_redirect/playback/${n}/rendition/1080p/file.mp4`;
+
 /** The demo site with its hero a slideshow of `count` slides; projects listed on "Kontakt". */
-function storeSlideshow(count = 3): void {
+function storeSlideshow(count = 3, withClips = false): void {
   const doc = demoSite() as Doc;
   const { nodes } = doc;
   nodes.project_race = {
@@ -42,6 +45,7 @@ function storeSlideshow(count = 3): void {
       type: "slide",
       image: list([`slide_img_${i + 1}`]),
       title: text(`Snímek ${i + 1}`),
+      clip_url: withClips ? clip(i + 1) : "",
       target_id: "",
       url: "",
     };
@@ -94,6 +98,26 @@ test("Link a slide to a project", async ({ page }) => {
   );
 });
 
+test("Add a clip", async ({ page }) => {
+  storeSlideshow(2);
+  await openEditor(page);
+  await canvas(page).locator(".slide-title").first().click();
+  const panel = page.getByRole("region", { name: "Slide" });
+  const address = panel.getByLabel("Clip (MP4 file on Vimeo, optional)");
+  await address.fill("https://vimeo.com/697475416");
+  await address.press("Enter");
+  await expect(panel.getByRole("alert")).toHaveText("Paste the address of an MP4 file on Vimeo.");
+  await address.fill(clip(1211966340));
+  await address.press("Enter");
+  await expect(panel.getByText("loaded from Vimeo when the page opens")).toBeVisible();
+  await toolbar(page).getByRole("button", { name: "Save", exact: true }).click();
+  await expect(toolbar(page).getByRole("status").first()).toHaveText("Saved");
+  const home = await (await page.request.get(paths().preview)).text();
+  expect(home).toContain(
+    `<video class="slide-clip" muted playsinline preload="none" aria-hidden="true" data-src="${clip(1211966340)}">`,
+  );
+});
+
 test.describe("in a browser", () => {
   const current = (page: Page) =>
     page.locator(".slideshow-dot[aria-current='true']").getAttribute("aria-label");
@@ -139,5 +163,36 @@ test.describe("in a browser", () => {
     expect(await current(page)).toBe("Snímek 1");
     await page.getByRole("button", { name: "Další snímek" }).click();
     expect(await current(page)).toBe("Snímek 2");
+  });
+
+  /** Records the clips the page asks Vimeo for, answering with nothing (the test stays offline). */
+  async function recordClips(page: Page): Promise<string[]> {
+    const asked: string[] = [];
+    await page.route(/player\.vimeo\.com/, (route) => {
+      asked.push(route.request().url());
+      return route.fulfill({ status: 404, body: "" });
+    });
+    return asked;
+  }
+
+  test("Clips load only when shown", async ({ page }) => {
+    storeSlideshow(3, true);
+    const asked = await recordClips(page);
+    await page.goto(paths().preview);
+    await expect.poll(() => asked).toEqual([clip(1)]);
+    // The next slide's clip loads when that slide shows.
+    await page.getByRole("button", { name: "Další snímek" }).click();
+    await expect.poll(() => asked).toEqual([clip(1), clip(2)]);
+  });
+
+  test("Reduced motion: no clip is requested", async ({ page }) => {
+    storeSlideshow(3, true);
+    const asked = await recordClips(page);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(paths().preview);
+    await expect(page.getByRole("button", { name: "Přehrát" })).toBeVisible();
+    await page.getByRole("button", { name: "Další snímek" }).click();
+    await page.waitForTimeout(500);
+    expect(asked).toEqual([]);
   });
 });

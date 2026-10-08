@@ -1,4 +1,4 @@
-import { videoEmbed } from "@webmio/model";
+import { slideClip, videoEmbed } from "@webmio/model";
 import { siteStrings } from "@webmio/render";
 import type { Transaction } from "svedit";
 import { checkLinkAddress, type LinkAddressCheck } from "./links";
@@ -128,7 +128,15 @@ export const MAX_SLIDES = 8;
 
 export function createSlide(tr: Tr): string {
   const id = tr.generate_id();
-  tr.create({ id, type: "slide", image: list(), title: text(), target_id: "", url: "" });
+  tr.create({
+    id,
+    type: "slide",
+    image: list(),
+    title: text(),
+    clip_url: "",
+    target_id: "",
+    url: "",
+  });
   return id;
 }
 
@@ -138,6 +146,17 @@ export function insertSlide(tr: Tr): boolean {
   const count = at ? ((tr.get(at.path) as NodeList | undefined)?.nodes.length ?? 0) : 0;
   if (count >= MAX_SLIDES) return false;
   insertAndFocus(tr, createSlide(tr), "title");
+  return true;
+}
+
+/**
+ * Sets a slide's clip when it is an MP4 file on Vimeo, or clears it with ""; false, changing
+ * nothing, for anything else (hero-slideshow, "Changes made while building").
+ */
+export function setSlideClip(tr: Tr, slideId: string, url: string): boolean {
+  const clip = url.trim();
+  if (clip !== "" && !slideClip(clip)) return false;
+  tr.set([slideId, "clip_url"], clip);
   return true;
 }
 

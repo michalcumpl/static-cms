@@ -197,6 +197,8 @@ export const siteSchema = {
     properties: {
       image: { type: "node_array", node_types: ["image"] },
       title: { type: "text", allow_newlines: false },
+      /** An `https` MP4 file on Vimeo played over the photo while the slide shows, or "". */
+      clip_url: { type: "string" },
       /** A page, or a service or project with its own page, or "" for none. */
       target_id: { type: "string" },
       /** An outside address, or "" for none. */

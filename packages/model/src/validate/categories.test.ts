@@ -109,6 +109,7 @@ describe("problem categories", () => {
       "unsupported-video": true,
       "video-as-link": true,
       "slideshow-too-short": true,
+      "unsupported-clip": true,
     };
     for (const code of Object.keys(codes) as ProblemCode[]) {
       expect(["structure", "site"], code).toContain(problemCategory(code));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { videoEmbed } from "./video.js";
+import { slideClip, videoEmbed } from "./video.js";
 
 describe("videoEmbed", () => {
   it.each([
@@ -44,5 +44,26 @@ describe("videoEmbed", () => {
     "https://evil.com/youtube.com/watch?v=wNdrFte2T4w",
   ])("refuses %s", (url) => {
     expect(videoEmbed(url)).toBeUndefined();
+  });
+});
+
+describe("slideClip", () => {
+  it.each([
+    "https://player.vimeo.com/progressive_redirect/playback/1211966340/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=abc#t=1",
+    "https://player.vimeo.com/external/647689930.hd.mp4?s=5b9ff86f",
+    "https://vod-progressive.akamaized.vimeocdn.com/exp=1/video/1.mp4",
+  ])("accepts %s", (url) => {
+    expect(slideClip(url)).toBe(true);
+  });
+
+  it.each([
+    "",
+    "http://player.vimeo.com/external/647689930.hd.mp4",
+    "https://vimeo.com/697475416",
+    "https://player.vimeo.com/video/697475416",
+    "https://evil.example/player.vimeo.com/external/1.mp4",
+    "https://player.vimeo.com.evil.example/external/1.mp4",
+  ])("refuses %s", (url) => {
+    expect(slideClip(url)).toBe(false);
   });
 });

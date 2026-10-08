@@ -860,6 +860,9 @@ export const cs: Messages = {
       edit: "Upravit projekty",
     },
     cardPanel: {
+      clip: "Klip (soubor MP4 na Vimeu, nepovinný)",
+      notClip: "Vložte adresu souboru MP4 na Vimeu.",
+      clipNote: "Klip se přehrává bez zvuku přes fotku, načte se z Vimea při otevření stránky.",
       slideTitle: "Snímek",
       title: "Karta",
       link: "Odkaz",

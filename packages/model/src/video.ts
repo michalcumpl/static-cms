@@ -63,3 +63,26 @@ function vimeo(id: string): VideoEmbed {
     embedUrl: `https://player.vimeo.com/video/${id}?dnt=1&autoplay=1`,
   };
 }
+
+/**
+ * Whether an address is a clip a slide can play (hero-slideshow, "Changes made while building"):
+ * an `https` MP4 file on Vimeo, as its direct links give it.
+ */
+export function slideClip(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url.trim());
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "https:") return false;
+  const host = parsed.hostname;
+  const path = decodeURIComponent(parsed.pathname);
+  if (host === "player.vimeo.com") {
+    return (
+      (path.startsWith("/progressive_redirect/") && path.includes(".mp4")) ||
+      (path.startsWith("/external/") && path.endsWith(".mp4"))
+    );
+  }
+  return /(^|\.)vimeocdn\.com$/.test(host) && path.endsWith(".mp4");
+}

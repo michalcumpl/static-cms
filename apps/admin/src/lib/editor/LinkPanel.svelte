@@ -3,7 +3,7 @@ import { getI18n } from "$lib/i18n";
 import { handleTargets, selectionPath } from "./handles";
 import { ITEM_PAGE_COLLECTIONS, type ItemPageCollection } from "./item-pages";
 import type { EditorState } from "./state.svelte";
-import { setItemLink } from "./transforms";
+import { setItemLink, setSlideClip } from "./transforms";
 
 // The link of the card or slide that is selected or holds the caret (cards design decision 4;
 // hero-slideshow decision 4): none, a page, a project or service with its own page, or an
@@ -11,7 +11,13 @@ import { setItemLink } from "./transforms";
 let { editor }: { editor: EditorState } = $props();
 const i18n = getI18n();
 
-type Linked = { id: string; type: "card" | "slide"; target_id: string; url: string };
+type Linked = {
+  id: string;
+  type: "card" | "slide";
+  target_id: string;
+  url: string;
+  clip_url?: string;
+};
 const card = $derived.by(() => {
   const path = selectionPath(editor.session);
   const item = path ? handleTargets(editor.session, path).item : undefined;
@@ -54,6 +60,25 @@ const broken = $derived(
     !pageIds.includes(card.target_id) &&
     !items.some((i) => i.id === card.target_id),
 );
+
+// A slide's clip: an MP4 file on Vimeo, played over the photo while the slide shows.
+let clip = $state("");
+let clipError = $state("");
+$effect.pre(() => {
+  clip = card?.clip_url ?? "";
+  clipError = "";
+});
+
+function applyClip() {
+  if (!card || clip.trim() === (card.clip_url ?? "")) return;
+  const tr = editor.session.tr;
+  if (!setSlideClip(tr, card.id, clip)) {
+    clipError = i18n.t("editor.cardPanel.notClip");
+    return;
+  }
+  clipError = "";
+  editor.session.apply(tr);
+}
 
 function apply(next: typeof kind) {
   if (!card) return;
@@ -113,6 +138,23 @@ function apply(next: typeof kind) {
       {#if error}<p class="error" role="alert">{error}</p>{/if}
       {#if broken}<p class="error" role="status">{i18n.t("editor.cardPanel.broken")}</p>{/if}
     </fieldset>
+    {#if card.type === "slide"}
+      <label class="clip">
+        {i18n.t("editor.cardPanel.clip")}
+        <input
+          type="url"
+          data-i18n-ignore
+          bind:value={clip}
+          onchange={applyClip}
+          onkeydown={(e) => e.key === "Enter" && applyClip()}
+        />
+      </label>
+      {#if clipError}
+        <p class="error" role="alert">{clipError}</p>
+      {:else}
+        <p class="hint">{i18n.t("editor.cardPanel.clipNote")}</p>
+      {/if}
+    {/if}
   </section>
 {/if}
 
@@ -148,6 +190,14 @@ function apply(next: typeof kind) {
     display: flex;
     gap: 0.4rem;
     align-items: center;
+  }
+
+  .clip {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
   }
 
   .hint {

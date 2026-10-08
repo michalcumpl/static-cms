@@ -18,6 +18,7 @@ function site(count = 6, layout = "slideshow") {
       type: "slide",
       image: list([`slide_img_${i + 1}`]),
       title: text(`Projekt ${i + 1}`),
+      clip_url: "",
       target_id: "page_contact",
       url: "",
     };
@@ -54,6 +55,20 @@ describe("hero slides", () => {
     expect(problems(doc)).toEqual([
       { code: "missing-image", severity: "error", message: 'Slide 3 on "Úvod" needs a photo.' },
     ]);
+  });
+
+  it("Clip that isn't a Vimeo file", () => {
+    const { doc, nodes } = site();
+    nodes.slide_2.clip_url = "https://www.youtube.com/watch?v=wNdrFte2T4w";
+    expect(problems(doc)).toEqual([
+      expect.objectContaining({
+        code: "unsupported-clip",
+        message: expect.stringContaining('Slide 2 on "Úvod"'),
+      }),
+    ]);
+    nodes.slide_2.clip_url =
+      "https://player.vimeo.com/progressive_redirect/playback/1211966340/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external";
+    expect(problems(doc)).toEqual([]);
   });
 
   it("Slides kept in another look", () => {

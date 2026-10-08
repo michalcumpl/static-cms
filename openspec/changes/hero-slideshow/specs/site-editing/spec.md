@@ -3,11 +3,15 @@
 ### Requirement: Slides in the editor
 While a hero's look is `slideshow`, the canvas SHALL show its slides side by side, without moving, each with its image in the usual image slot and its title editable in place; the hero's heading, text and button stay editable under them. Slides SHALL be added (Enter at the end of a title, or the item handle's Add), moved, duplicated and deleted as cards are, each as one undoable step, keeping at most eight; choosing "Slideshow" for a hero without slides SHALL add two empty slides in the same step.
 
-While a slide is selected or holds the caret, a Slide panel SHALL offer its link with the Card panel's choices: no link, a page, a project or service with its own page, or an address.
+While a slide is selected or holds the caret, a Slide panel SHALL offer its link with the Card panel's choices: no link, a page, a project or service with its own page, or an address; and its clip: the address of a Vimeo MP4 file, applied when it is one, with a message when it isn't ("Paste the address of an MP4 file on Vimeo"), and a note that the clip loads from Vimeo when the page opens.
 
 #### Scenario: Link a slide to a project
 - **WHEN** the owner gives slide 1 a photo and the title "Poslední závod", and links it to the project "Poslední závod" in the Slide panel
 - **THEN** the preview's first slide shows the photo with the title as a link to the project's page
+
+#### Scenario: Add a clip
+- **WHEN** the owner pastes a `player.vimeo.com/progressive_redirect/…/file.mp4` address as slide 1's clip and saves
+- **THEN** the preview's first slide holds a muted video with that address, over the photo
 
 #### Scenario: Ninth slide
 - **WHEN** a slideshow has eight slides

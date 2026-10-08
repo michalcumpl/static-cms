@@ -76,7 +76,15 @@ export type BlockInput =
       /** `cover`: the image fills the hero (block-variants); `slideshow`: its slides. */
       layout?: "beside" | "cover" | "slideshow";
       /** The slides of the slideshow; links as a card's (hero-slideshow). */
-      slides?: { image?: ImageInput; title: string; page?: string; item?: string; url?: string }[];
+      slides?: {
+        image?: ImageInput;
+        title: string;
+        /** An MP4 file on Vimeo, played over the photo. */
+        clip?: string;
+        page?: string;
+        item?: string;
+        url?: string;
+      }[];
     }
   | { type: "rich_text"; body: string }
   | {
@@ -453,6 +461,7 @@ export function siteBuilder(options: {
                   add("slide", {
                     image: list(image(slide.image)),
                     title: text(slide.title),
+                    clip_url: slide.clip ?? "",
                     target_id: slide.page ? pageId(slide.page) : (slide.item ?? ""),
                     url: slide.url ?? "",
                   }),

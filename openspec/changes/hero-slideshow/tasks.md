@@ -38,3 +38,15 @@ site string to each site language. The type check and the untranslated-text test
 - [x] 4.2 Update `docs/layouts.md` (item 17 done), `docs/roadmap.md` (`hero-slideshow` done) and
   `docs/tasks.md`. Run the type check, unit tests, lint and the full Playwright suite; verify
   that all pass. Record any deviations in design.md under "Changes made while building".
+
+## 5. Clips from Vimeo (decided 2026-10-08)
+
+- [x] 5.1 `clip_url` on slides, `slideClip(url)` and the `unsupported-clip` error. Verify with unit
+  tests for every accepted form and "Clip that isn't a Vimeo file".
+- [x] 5.2 The clip in the slide's markup and in the script (load and play the current one only,
+  pause the others, none under reduced motion or data saver, advance on end). Verify with unit
+  tests of the markup and e2e "Clips load only when shown" and "Reduced motion" (no clip
+  requested), with the clip requests intercepted.
+- [x] 5.3 The clip field in the Slide panel, the builder's `clip`, and Punk Film's slides with
+  their clips (local only). Verify with unit tests, e2e "Add a clip", and a screenshot.
+
