@@ -61,9 +61,7 @@ const accountEntries = $derived<MenuEntry[]>([
 <header class="app-bar" class:compact>
   <div class="start">
     <a class="mark" href="/" aria-label={i18n.t("shell.home")}>
-      <span class="logo" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h13" /></svg>
-      </span>
+      <img class="logo" src="/webmio-mark.svg" alt="" width="28" height="28" />
       <span class="name">{i18n.t("common.productName")}</span>
     </a>
     {#if user && workspaces.length > 1}
@@ -156,13 +154,9 @@ const accountEntries = $derived<MenuEntry[]>([
   }
 
   .logo {
-    display: grid;
-    place-items: center;
+    display: block;
     width: 1.75rem;
     height: 1.75rem;
-    border-radius: 0.6rem;
-    background: var(--ui-button);
-    color: var(--ui-button-label);
   }
 
   .name {
