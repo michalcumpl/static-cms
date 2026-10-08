@@ -1,6 +1,7 @@
 # Product strategy
 
-*Refreshed 2026-10-03; launch templates and layouts decided 2026-10-07. The roadmap that follows from it is in [`roadmap.md`](roadmap.md), open work
+*Refreshed 2026-10-03; launch templates and layouts decided 2026-10-07; Exhibitions and Creative
+production examples chosen 2026-10-08. The roadmap that follows from it is in [`roadmap.md`](roadmap.md), open work
 in [`tasks.md`](tasks.md).*
 
 ## Webmio
@@ -75,7 +76,7 @@ SMBs"**, because that still sells the mental model of a CMS. We build the layer 
 
 ## Templates
 
-Six at launch, each proven on a real website migrated to Webmio as a presentation example (the
+Seven at launch, each proven on a real website migrated to Webmio as a presentation example (the
 designs needn't match the originals):
 
 | Template | For | Example |
@@ -85,11 +86,18 @@ designs needn't match the originals):
 | **Financial advisory** | mortgage brokers, independent advisers, accountants | [Mortgage Specialist](https://www.mortgagespecialist.cz/), an independent mortgage broker |
 | **Investment management** | investment funds, asset and wealth managers | [Fond 10X](https://fond10x.cz/en/), a private equity fund for qualified investors |
 | **Short-term rentals** | holiday cottages, chalets, apartments, guesthouses | [Roubenka Svitávka](https://roubenkasvitavka.cz/), a log cottage with garden chalets for groups |
-| **Exhibitions** | exhibitions, galleries, fairs | example to be chosen |
+| **Exhibitions** | exhibition and trade-fair builders, set and interior studios, galleries | [Scénografie](https://scenografie.cz/), a builder of exhibitions, TV and theatre sets, events and interiors |
+| **Creative production** | film and commercial producers, photo, video and design studios | [Punk Film](https://www.punkfilm.cz/), a Prague producer of commercials, feature films and TV series |
 
 After launch: **Local Services** (plumbers, electricians, cleaners, repairs), **Hospitality**
 (hotels, cafés, restaurants) and **Personal Professional** (therapists, coaches,
 photographers, freelancers).
+
+Exhibitions and Creative production are **portfolio-led**: the site is mostly projects (a cover
+image, a category, facts such as client, year and director, photos, for film a trailer), listed
+as tiles filtered by category, each with its own page. For film and creative agencies the
+**hero slideshow** of their latest work (stills or short clips, each linking to its project) is
+the signature of the site, so the Creative production template needs it.
 
 The examples are built in our own database, not committed: their texts, people and photos belong
 to their owners. The templates' automated checks run on fixture sites with invented content.
@@ -144,7 +152,7 @@ Wix around $17, GoDaddy around $10.
 | Area | In |
 | --- | --- |
 | Admin | Business, Services, Team, Testimonials, FAQs, Media, Website settings; deleting and restoring a website |
-| Templates | 6 (Education, Law, Financial advisory, Investment management, Short-term rentals, Exhibitions), mobile-first, layouts, template switching |
+| Templates | 7 (Education, Law, Financial advisory, Investment management, Short-term rentals, Exhibitions, Creative production), mobile-first, layouts, template switching |
 | Publishing | preview, static build, validation, deploy, rollback, custom domain, SSL |
 | Reliability | backups, version history, health checks |
 | Pricing | €79 / 1 899 Kč a year excl. VAT, one plan, free until the first publish |

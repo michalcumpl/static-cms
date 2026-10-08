@@ -56,7 +56,7 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
   Aniděti's Netlify site included), then flatten the migrations into one, keeping accounts and
   the workspace (copy the database first; check the schema matches).
 - [ ] **Example sites:** load the launch examples into our database (`example-sites`): Aniděti,
-  Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka Svitávka, and Exhibitions once chosen;
+  Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka Svitávka, Scénografie and Punk Film;
   content in `apps/admin/data/examples/`, not committed; their pages as the first layouts.
 - [ ] **Cropping and light editing of uploaded images:** crop to the shape a section needs,
   focal point, rotate. Done in the browser; the server keeps the original and derives variants.
@@ -72,22 +72,29 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
   renderer that reads collections plus template-scoped options. Owners place blocks in the
   editor; custom blocks made by customers are out (no free-form page builder).
 - [ ] **Launch templates:** *Education* (after-school activities, courses, tutors), *Law*,
-  *Financial advisory*, *Investment management*, *Short-term rentals* and *Exhibitions*, each
-  with a migrated example site (Aniděti, Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka
-  Svitávka; Exhibitions to be chosen). Local Services, Hospitality (hotels, cafés, restaurants)
+  *Financial advisory*, *Investment management*, *Short-term rentals*, *Exhibitions* and
+  *Creative production*, each with a migrated example site (Aniděti, Mareš Partners, Mortgage
+  Specialist, Fond 10X, Roubenka Svitávka, Scénografie, Punk Film). Local Services, Hospitality (hotels, cafés, restaurants)
   and Personal Professional after launch. Single- vs. multi-page and image/video hero vs.
   classic header are template variants, not extra templates.
-- [ ] **Choose the Exhibitions example site.**
+- [x] **Choose the Exhibitions example site:** Scénografie (and Punk Film for Creative
+  production).
 - [ ] **Blocks the examples lack** (`docs/layouts.md`), before the templates:
-  - [ ] key figures and steps (`figures-and-steps`)
-  - [ ] full-photo hero, compact team list, services as a list, gallery showing whole images
+  - [x] key figures and steps (`figures-and-steps`)
+  - [x] full-photo hero, compact team list, services as a list, gallery showing whole images
     (`block-variants`)
-  - [ ] a page per service, lists inside a service (`service-pages`)
+  - [ ] a page per service or project, a projects collection and a projects block filtered by
+    category (`collection-pages`)
+  - [ ] cards: image, title, text and link (`cards`)
+  - [ ] video, moved from the beta, and a hero slideshow for film and creative agencies
+    (`video`, `hero-slideshow`)
   - [ ] PDFs to download (`documents`)
-  - [ ] business types, company and regulatory details, check-in and check-out times
-    (`business-details`)
-- [ ] **During the beta:** reviews with a rating (`reviews`), video (`video`), timetables
-  (`timetable`), the owner's booking service (`booking`), newsletter signup (`newsletter`).
+  - [ ] business types, company and regulatory details, a separate billing address, check-in
+    and check-out times (`business-details`)
+- [ ] **During the beta:** reviews with a rating (`reviews`), timetables (`timetable`), the
+  owner's booking service (`booking`), newsletter signup (`newsletter`), grouped menus
+  (`menu-groups`), job openings (`jobs`), a display font and contrast suggestions
+  (`design-touches`).
 - [ ] **Layouts:** page recipes (ordered blocks, no styling) that make up a template's pages and
   are offered by "Add page" and the guided setup.
 - [ ] **Lighthouse 100** for generated sites: Lighthouse CI on every template and variant, with

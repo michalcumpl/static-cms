@@ -278,12 +278,14 @@ Still open: open sign-up (a switch, when billing exists) and Google sign-in.
 ## After the strategy refresh
 
 Milestones in order. A private beta for friends (F) starts as soon as A–E work with at least two
-of the six launch templates (Education, Law, Financial advisory, Investment management,
-Short-term rentals, Exhibitions); the others can land during the beta. The remaining templates
+of the seven launch templates (Education, Law, Financial advisory, Investment management,
+Short-term rentals, Exhibitions, Creative production); the others can land during the beta. The remaining templates
 come after launch.
 
 **Next steps** (2026-10-07): `project-deletion`, the cleanup and `example-sites` are done; next is
-`image-cropping`, and the blocks the examples lack (`layouts.md`) are to be planned; layouts become part of the model with
+`image-cropping`; of the blocks the examples lack (`layouts.md`), `figures-and-steps` and
+`block-variants` are done, and Scénografie and Punk Film added `collection-pages`, `cards`,
+`video` and `hero-slideshow` before launch (2026-10-08); layouts become part of the model with
 `template-system`.
 
 **Planned changes**, in order. A → B → C build on each other's data model and must go in
@@ -298,23 +300,29 @@ beta.
 | 4 | B | [`control-panel`](../openspec/changes/archive/2026-10-07-control-panel/) | the website home: a dashboard and the Business, Website and Publish sections, replacing the project tabs | done |
 | 4b | B | [`offer-and-about`](../openspec/changes/archive/2026-10-07-offer-and-about/) | What you offer (services, FAQs) and About you (team, testimonials): forms per item, with formatting | done |
 | 4c | B | [`project-deletion`](../openspec/changes/archive/2026-10-07-project-deletion/) | owners delete a website (typing its name; a published one goes offline), restore it or remove it for good | done |
-| 4d | B | [`example-sites`](../openspec/changes/archive/2026-10-08-example-sites/) | a command that loads a site document and its images into a new project; the launch examples (Aniděti, Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka Svitávka; Exhibitions once chosen) built with it in our own database, not committed. Before it: the old projects deleted, the database migrations flattened into one | done |
+| 4d | B | [`example-sites`](../openspec/changes/archive/2026-10-08-example-sites/) | a command that loads a site document and its images into a new project; the launch examples (Aniděti, Mareš Partners, Mortgage Specialist, Fond 10X, Roubenka Svitávka; Scénografie and Punk Film added 2026-10-08) built with it in our own database, not committed. Before it: the old projects deleted, the database migrations flattened into one | done |
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | next |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
 | 6b | C | [`figures-and-steps`](../openspec/changes/archive/2026-10-08-figures-and-steps/) | two blocks: **key figures** (3–6 numbers with a label, such as "300M CZK managed") and **steps** (numbered "how it works") | done |
 | 6c | C | [`block-variants`](../openspec/changes/archive/2026-10-08-block-variants/) | **full-photo hero** (text over the image), **compact team list** (name, role, contact; for teams without portraits), **services as a list or accordion** (many or long items), **gallery showing whole images** (screenshots, logos). A block setting now; templates set the defaults later | done |
-| 6d | C | `service-pages` | a page per service from the services collection (scope, price, a call to action), and lists inside a service's description | |
+| 6d | C | `collection-pages` | a page per item of a collection, for services (scope, price, a call to action; lists inside a description) and for a new **projects** collection (cover image, category, facts such as client, year, place, director and photographer, photos, a trailer); a **projects block** of tiles with the title over the image, filtered by category, with "show more" for long portfolios. Replaces `service-pages` | |
 | 6e | C | `documents` | PDFs in the media library next to images; a documents block and links to documents from texts | |
-| 6f | C | `business-details` | business types for education, legal, financial and lodging businesses; company ID and registration; a regulatory note in the footer (for example "supervised by the Czech National Bank"); check-in and check-out times for rentals | |
+| 6f | C | `business-details` | business types for education, legal, financial, lodging and production businesses; company ID and registration; a billing address or headquarters separate from the office; bank details; a regulatory note in the footer (for example "supervised by the Czech National Bank"); check-in and check-out times for rentals | |
+| 6g | C | `cards` | a block of cards: an image, a title, a short text and a link (to a page or a project). Category tiles on a home page, awards, "what we do" | |
+| 6h | C | `video` | YouTube and Vimeo videos, loaded only when clicked (no cookies before): a video block, and a trailer on a project. Moved before launch from the beta (was 9c) for Creative production | |
+| 6i | C | `hero-slideshow` | a hero that shows several slides (a still or a short muted clip, a title, a link to the project), for film and creative agencies: pause and next/previous controls, no movement with reduced motion, the first slide without JavaScript, only the first image loaded up front | |
 | 7 | C | `template-system` | the template contract, layouts (page recipes, also offered by "Add page"), homepage sections on or off, template versions | |
 | 7b | B | `site-import` | import a public website by its address (v1, no AI): pages, menu, redirects from the old addresses, business details, images, a guessed theme, texts as plain blocks, and a review before anything is published | |
 | 8 | C | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | |
-| 9 | C | `template-education`, `template-law`, `template-finance`, `template-investment`, `template-rentals`, `template-exhibitions` | the six launch templates, each checked against its example site; two before the beta | |
+| 9 | C | `template-education`, `template-law`, `template-finance`, `template-investment`, `template-rentals`, `template-exhibitions`, `template-creative` | the seven launch templates, each checked against its example site; two before the beta | |
 | 9b | C | `reviews` | reviews with a rating and its source ("4.9 on Google"), shown with the testimonials | during the beta |
-| 9c | C | `video` | YouTube and Vimeo videos, loaded only when clicked (no cookies before) | during the beta |
+| 9c | C | `video` | moved to 6h | |
 | 9d | C | `timetable` | a table block for timetables and seasonal prices | during the beta |
 | 9e | C | `booking` | the owner's booking service (Lodgify and others): a booking button, and its availability calendar where the service allows embedding | during the beta |
 | 9f | C | `newsletter` | a signup form passing addresses to the owner's email service | during the beta |
+| 9g | C | `menu-groups` | menu items grouped under a heading ("Projects": TV and film, Events, Exhibitions, Interiors) and a small secondary menu (About, Contact) | during the beta |
+| 9h | C | `jobs` | job openings: a list of positions, each with what the job is and whom to write to | during the beta |
+| 9i | C | `design-touches` | a heavy display font (such as Montserrat) for headings; a darker shade offered when a brand colour fails the contrast check | during the beta |
 | 10 | C | `template-switching` | choose, preview with your own content, publish | |
 | 11 | D | `own-hosting` | S3 + CloudFront, `<site>.webmio.site`, atomic deploys, rollback | |
 | 12 | D | `safe-publishing` | the publish pipeline: link check, deploy verification, previous version kept on failure | |
@@ -385,7 +393,7 @@ beta.
     The existing database keeps its data: its migration record is rewritten to the new
     migration, so accounts, the workspace and its Netlify connection stay. The database is
     copied before anything changes.
-- **Example sites: done** (`example-sites`, five of six; Exhibitions once chosen). What they taught is in [`layouts.md`](layouts.md) (page recipes and the blocks we lack) and [`import-mapping.md`](import-mapping.md) (rules for `site-import`). Details: `pnpm admin load-site <folder>` creates a project from a
+- **Example sites: done** (`example-sites`; Scénografie and Punk Film added 2026-10-08). What they taught is in [`layouts.md`](layouts.md) (page recipes and the blocks we lack) and [`import-mapping.md`](import-mapping.md) (rules for `site-import`). Details: `pnpm admin load-site <folder>` creates a project from a
   site document and a folder of images (later also the templates' fixture sites). The launch
   examples are migrated with it into our own database:
   - **Aniděti** (Czech, Education): the courses and prices as services, the two teachers as
@@ -398,7 +406,12 @@ beta.
     FAQs, the key figures, portfolio logos, contact.
   - **Roubenka Svitávka** (Czech, Short-term rentals): the cottage and the garden chalets,
     amenities, photo gallery, booking through their existing booking service, contact.
-  - **Exhibitions:** an example is still to be chosen; it is migrated the same way once it is.
+  - **Scénografie** (Czech, Exhibitions): the four project categories (TV and film, events,
+    exhibitions, interiors) with their projects, one project page (PETROF 160), the workshops,
+    capabilities and awards, the people by department.
+  - **Punk Film** (English, Creative production): commercials, film and TV, and other work, one
+    project page (The Last Race) with credits, trailer link and stills, services for
+    international productions, the people with portraits, client logos.
 
   Built with today's blocks and theme presets, close to the originals in spirit rather than
   copies. Their pages are written as page recipes, the first layouts. The content (documents
@@ -449,8 +462,9 @@ beta.
   architecture is a set of layouts, mostly shared ones (Contact, About, Services, FAQ) plus its
   own. The guided setup and "Add page" create pages from layouts; after that a page is the
   owner's.
-- **Six launch templates:** Education (after-school activities, courses, tutors), Law,
-  Financial advisory, Investment management, Short-term rentals and Exhibitions, each checked
+- **Seven launch templates:** Education (after-school activities, courses, tutors), Law,
+  Financial advisory, Investment management, Short-term rentals, Exhibitions and Creative
+  production, each checked
   against its migrated example site by hand and against fixture sites with invented content in
   CI. Local Services, Hospitality (hotels, cafés, restaurants) and Personal Professional follow
   after launch.
@@ -460,13 +474,16 @@ beta.
   - `figures-and-steps`: key figures and steps;
   - `block-variants`: the full-photo hero, a compact team list, services as a list or accordion,
     a gallery that shows whole images;
-  - `service-pages`: a page per service, and lists inside a service;
+  - `collection-pages`: a page per service or project, a projects collection and a projects
+    block filtered by category;
+  - `cards`: image, title, text and link;
+  - `video` (moved from the beta) and `hero-slideshow`, for Creative production;
   - `documents`: PDFs to download;
   - `business-details`: business types for structured data, company and regulatory details,
     check-in and check-out times.
 
-  During the beta: `reviews` (a rating with its source), `video` (click to load), `timetable`,
-  `booking` (the owner's booking service), `newsletter`. The contact form is `contact-form`
+  During the beta: `reviews` (a rating with its source), `timetable`, `booking` (the owner's
+  booking service), `newsletter`, `menu-groups`, `jobs` and `design-touches`. The contact form is `contact-form`
   (milestone E).
 - **Template switching:** choose → preview with your own content → publish; nothing rewritten.
   Pages and blocks the owner made in the editor are kept and restyled. Collections a template
