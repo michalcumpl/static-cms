@@ -58,7 +58,10 @@ describe("videos", () => {
       /<a class="video-play" href="https:\/\/www.youtube.com\/watch\?v=wNdrFte2T4w"><img class="video-poster" [^>]*alt=""[^>]*loading="lazy"><span class="video-label">Přehrát: Medvídku, vypravuj!<\/span><\/a>/,
     );
     expect(films).toContain('<span class="video-source">Přehraje se z YouTube</span>');
-    expect(films).toContain('<span class="video-caption">Příběh Doris Grozdanovičové</span>');
+    // The title shows under the poster too, then the caption.
+    expect(films).toContain(
+      '<figcaption><span class="video-name">Medvídku, vypravuj!</span><span class="video-caption">Příběh Doris Grozdanovičové</span>',
+    );
     expect(films).not.toContain("<iframe");
     // No provider address is fetched: none in any src or srcset.
     for (const m of films.matchAll(/(?:src|srcset)="([^"]*)"/g)) {
@@ -66,11 +69,12 @@ describe("videos", () => {
     }
   });
 
-  it("Several videos: columns by number, the title shown without a poster", () => {
+  it("Several videos: columns by number, each with its title under it", () => {
     const films = render(site(3)).page("index.html");
     expect(films).toContain('<ul class="video-list card-columns-3">');
     expect(films.match(/<a class="video-play"/g)).toHaveLength(3);
-    expect(films).toContain('<span class="video-title" aria-hidden="true">Viktoria</span>');
+    expect(films).toContain('<span class="video-name">Viktoria</span>');
+    expect(films.match(/<span class="video-name">/g)).toHaveLength(3);
     expect(films).toContain('<span class="video-source">Přehraje se z Vimeo</span>');
   });
 

@@ -473,6 +473,8 @@ export function videoFigure(
     sizes: string;
     /** False for a poster at the top of the page. */
     lazy?: boolean;
+    /** False when the page's heading already names the video (a project's trailer). */
+    showTitle?: boolean;
   },
 ): Html | undefined {
   const embed = videoEmbed(video.url);
@@ -483,16 +485,17 @@ export function videoFigure(
   return html`
             <figure class="video" data-embed="${embed.embedUrl}" data-title="${video.title}">
               <a class="video-play" href="${embed.watchUrl}">${
-                video.poster
-                  ? renderImage(video.poster, ctx, {
-                      lazy: video.lazy ?? true,
-                      sizes: video.sizes,
-                      className: "video-poster",
-                      alt: "",
-                    })
-                  : html`<span class="video-title" aria-hidden="true">${video.title}</span>`
+                video.poster &&
+                renderImage(video.poster, ctx, {
+                  lazy: video.lazy ?? true,
+                  sizes: video.sizes,
+                  className: "video-poster",
+                  alt: "",
+                })
               }<span class="video-label">${ctx.strings.play}: ${video.title}</span></a>
-              <figcaption>${video.caption && html`<span class="video-caption">${video.caption}</span>`}<span class="video-source">${source}</span></figcaption>
+              <figcaption>${
+                (video.showTitle ?? true) && html`<span class="video-name">${video.title}</span>`
+              }${video.caption && html`<span class="video-caption">${video.caption}</span>`}<span class="video-source">${source}</span></figcaption>
             </figure>`;
 }
 

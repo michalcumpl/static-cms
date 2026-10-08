@@ -710,11 +710,9 @@ img {
   object-fit: cover;
 }
 
-.video-title {
-  align-self: end;
-  padding: 1rem;
+.video-name {
   font-family: var(--font-heading);
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
 }
 

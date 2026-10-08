@@ -146,3 +146,6 @@ a player at the next publish.
   a size cap. The picture joins the library like an upload and becomes the decorative poster; a
   button offers the same for existing videos. Visitors still never contact the provider. Posters
   chosen by hand also start decorative.
+- **The title shows under every video** (above its caption), not only inside a poster-less frame:
+  with a poster it was only in the link's hidden name. A project's trailer leaves it out, since
+  the page's heading names it.

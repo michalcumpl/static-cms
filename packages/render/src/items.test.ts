@@ -173,6 +173,8 @@ describe("item pages", () => {
     );
     // The trailer takes the cover's place at the top, the cover as its poster, not lazy.
     expect(race).not.toContain("project-page-cover");
+    // The page's heading names the trailer; no title under it.
+    expect(race).not.toContain('class="video-name"');
     expect(race).toMatch(/<img class="video-poster" [^>]*height="1000">/);
     expect(race.indexOf('class="video"')).toBeLessThan(race.indexOf('class="project-facts"'));
     expect(await validate(race)).toEqual([]);

@@ -125,6 +125,7 @@ function projectPage(project: NodeOfType<"project">, back: Html, ctx: RenderCont
           poster: cover,
           sizes: IMAGE_SIZES.projectCover,
           lazy: false,
+          showTitle: false,
         });
   const body = ctx
     .children(project.body)

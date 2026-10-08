@@ -1,15 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: Videos rendering
-A `videos` block SHALL render as a `<section>` with its optional heading and a `<ul>` of videos in columns by their number (one fills the width). Each video SHALL be a `<figure>` holding a play link and, under it, its caption when it has one and a note saying where the video plays from ("Plays from YouTube", "Přehraje se z YouTube").
+A `videos` block SHALL render as a `<section>` with its optional heading and a `<ul>` of videos in columns by their number (one fills the width). Each video SHALL be a `<figure>` holding a play link and, under it, its title, its caption when it has one, and a note saying where the video plays from ("Plays from YouTube", "Přehraje se z YouTube").
 
-The play link SHALL point to the video's page on YouTube or Vimeo, be named "Play: <title>" in the site's language, and show the poster image (lazy-loaded, 16:9, sized for its column) or, without one, the title on the theme's secondary colour, with a play symbol in the theme's colours. Before the visitor activates it, the page SHALL make no request to YouTube, Vimeo or their content networks.
+The play link SHALL point to the video's page on YouTube or Vimeo, be named "Play: <title>" in the site's language, and show the poster image (lazy-loaded, 16:9, sized for its column) or, without one, the theme's secondary colour, with a play symbol in the theme's colours. Before the visitor activates it, the page SHALL make no request to YouTube, Vimeo or their content networks.
 
 When the visitor activates the play link and the video script runs, the figure SHALL replace the link with the provider's player in an `<iframe>` titled with the video's title: `https://www.youtube-nocookie.com/embed/<id>?autoplay=1` or `https://player.vimeo.com/video/<id>?dnt=1&autoplay=1`, allowed to play full screen. Without the script, activating the link SHALL open the video on the provider's site.
 
 #### Scenario: A film before play
 - **WHEN** a page shows a videos block with the YouTube video `wNdrFte2T4w` titled "Medvídku, vypravuj!" and a poster
-- **THEN** the page has a link to `https://www.youtube.com/watch?v=wNdrFte2T4w` named "Přehrát: Medvídku, vypravuj!" holding the poster, no `<iframe>`, and no address of YouTube in any `src` or `srcset`
+- **THEN** the page has a link to `https://www.youtube.com/watch?v=wNdrFte2T4w` named "Přehrát: Medvídku, vypravuj!" holding the poster, the title "Medvídku, vypravuj!" under it, no `<iframe>`, and no address of YouTube in any `src` or `srcset`
 
 #### Scenario: Press play
 - **WHEN** the visitor activates that link in a browser
@@ -42,7 +42,7 @@ When services or projects have a listing page, rendering SHALL produce a page fo
 - the menu marking its listing page as the current page;
 - a link back to its listing page, named after it.
 
-A **project page** SHALL show, in this order: the name, the category, the summary, the cover image (not lazy-loaded, sized for the full width), or in its place, when the project's video address is a YouTube or Vimeo video, the player of "Videos rendering" with the cover as its poster (not lazy-loaded) and the project's name as its title; then the facts as a description list, the text, the photos with their captions as a gallery, and, when the video address is anywhere else, a link "Watch the video" ("Přehrát video") to it. A **service page** SHALL show the name, the price, and the page text, or the description when the page text is empty.
+A **project page** SHALL show, in this order: the name, the category, the summary, the cover image (not lazy-loaded, sized for the full width), or in its place, when the project's video address is a YouTube or Vimeo video, the player of "Videos rendering" with the cover as its poster (not lazy-loaded) and the project's name as its title, not repeated under it; then the facts as a description list, the text, the photos with their captions as a gallery, and, when the video address is anywhere else, a link "Watch the video" ("Přehrát video") to it. A **service page** SHALL show the name, the price, and the page text, or the description when the page text is empty.
 
 Item pages SHALL pass the site's HTML validation, and their headings SHALL follow "Heading hierarchy".
 
