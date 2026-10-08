@@ -57,6 +57,7 @@ const ITEM_TYPES = new Set([
   "step",
   "card",
   "video",
+  "slide",
 ]);
 
 /** The translator the names are made with: the interface language's `t`. */
@@ -76,6 +77,7 @@ const ITEM_LISTS: Record<string, readonly string[]> = {
     "videos",
   ],
   people: ["team"],
+  slides: ["hero"],
 };
 
 /** One block or item a handle acts on: its place in its list, its node and its type. */

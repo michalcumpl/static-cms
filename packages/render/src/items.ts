@@ -76,7 +76,7 @@ export function renderProjects(block: NodeOfType<"projects">, ctx: RenderContext
 
 /** An item's own page: a project's or a service's, under its listing page. */
 export function renderItemPage(itemId: string, listingPageId: string, ctx: RenderContext): Html {
-  ctx.pageHasVideo = false;
+  ctx.pageScripts.clear();
   const node = ctx.nodes[itemId];
   const listing = ctx.node(listingPageId, "page");
   const back = html`

@@ -809,6 +809,7 @@ export const cs: Messages = {
       steps: { name: "Postup", description: "Jak to funguje, krok za krokem" },
     },
     items: {
+      slide: "Snímek",
       video: "Video",
       card: "Karta",
       list_item: "Položka seznamu",
@@ -859,6 +860,7 @@ export const cs: Messages = {
       edit: "Upravit projekty",
     },
     cardPanel: {
+      slideTitle: "Snímek",
       title: "Karta",
       link: "Odkaz",
       noLink: "Bez odkazu",
@@ -882,7 +884,7 @@ export const cs: Messages = {
     look: {
       cards: { below: "Text pod fotkou", over: "Nadpis přes fotku" },
       legend: "Vzhled",
-      hero: { beside: "Vedle textu", cover: "Fotka přes celý blok" },
+      hero: { beside: "Vedle textu", cover: "Fotka přes celý blok", slideshow: "Prezentace" },
       services: { cards: "Karty", list: "Seznam", accordion: "Rozbalovací seznam" },
       team: { cards: "Karty", list: "Seznam" },
       gallery: { fill: "Vyplnit dlaždice", whole: "Celé obrázky" },
@@ -916,6 +918,7 @@ export const cs: Messages = {
       },
     },
     unavailable: {
+      maxSlides: "Prezentace má nejvýš osm snímků",
       lastVideo: "Blok videí potřebuje alespoň jedno video",
       maxVideos: "Blok videí má nejvýš dvanáct videí",
       lastCard: "Blok karet potřebuje alespoň jednu kartu",

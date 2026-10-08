@@ -28,6 +28,14 @@ export interface SiteStrings {
   play: string;
   /** Where a video plays from, with `{provider}`: "Přehraje se z YouTube". */
   playsFrom: string;
+  /** A slide's position, with `{n}` and `{count}`: "2 z 5" (hero-slideshow). */
+  slideOf: string;
+  /** The slideshow's buttons; `play` names its play button too. */
+  pause: string;
+  previousSlide: string;
+  nextSlide: string;
+  /** A slide's button, with `{n}`: "Snímek 2". */
+  showSlide: string;
 }
 
 const STRINGS: Record<string, SiteStrings> = {
@@ -49,6 +57,11 @@ const STRINGS: Record<string, SiteStrings> = {
     moreAboutService: "Více o službě",
     play: "Přehrát",
     playsFrom: "Přehraje se z {provider}",
+    slideOf: "{n} z {count}",
+    pause: "Pozastavit",
+    previousSlide: "Předchozí snímek",
+    nextSlide: "Další snímek",
+    showSlide: "Snímek {n}",
   },
   sk: {
     notFoundHeading: "Stránka sa nenašla",
@@ -68,6 +81,11 @@ const STRINGS: Record<string, SiteStrings> = {
     moreAboutService: "Viac o službe",
     play: "Prehrať",
     playsFrom: "Prehrá sa z {provider}",
+    slideOf: "{n} z {count}",
+    pause: "Pozastaviť",
+    previousSlide: "Predchádzajúca snímka",
+    nextSlide: "Ďalšia snímka",
+    showSlide: "Snímka {n}",
   },
   de: {
     notFoundHeading: "Seite nicht gefunden",
@@ -88,6 +106,11 @@ const STRINGS: Record<string, SiteStrings> = {
     moreAboutService: "Mehr zu dieser Leistung",
     play: "Abspielen",
     playsFrom: "Wird von {provider} abgespielt",
+    slideOf: "{n} von {count}",
+    pause: "Anhalten",
+    previousSlide: "Vorheriges Bild",
+    nextSlide: "Nächstes Bild",
+    showSlide: "Bild {n}",
   },
   pl: {
     notFoundHeading: "Nie znaleziono strony",
@@ -107,6 +130,11 @@ const STRINGS: Record<string, SiteStrings> = {
     moreAboutService: "Więcej o usłudze",
     play: "Odtwórz",
     playsFrom: "Odtwarzane z {provider}",
+    slideOf: "{n} z {count}",
+    pause: "Wstrzymaj",
+    previousSlide: "Poprzedni slajd",
+    nextSlide: "Następny slajd",
+    showSlide: "Slajd {n}",
   },
   en: {
     notFoundHeading: "Page not found",
@@ -126,6 +154,11 @@ const STRINGS: Record<string, SiteStrings> = {
     moreAboutService: "More about this service",
     play: "Play",
     playsFrom: "Plays from {provider}",
+    slideOf: "{n} of {count}",
+    pause: "Pause",
+    previousSlide: "Previous slide",
+    nextSlide: "Next slide",
+    showSlide: "Slide {n}",
   },
 };
 

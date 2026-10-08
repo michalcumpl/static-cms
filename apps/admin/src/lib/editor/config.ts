@@ -41,6 +41,7 @@ import RichText from "./nodes/RichText.svelte";
 import ServiceItem from "./nodes/ServiceItem.svelte";
 import Services from "./nodes/Services.svelte";
 import Site from "./nodes/Site.svelte";
+import Slide from "./nodes/Slide.svelte";
 import Step from "./nodes/Step.svelte";
 import Steps from "./nodes/Steps.svelte";
 import Subheading from "./nodes/Subheading.svelte";
@@ -60,6 +61,7 @@ import {
   insertPerson,
   insertRichText,
   insertServiceItem,
+  insertSlide,
   insertStep,
   insertTestimonial,
   insertVideo,
@@ -102,6 +104,7 @@ export const nodeComponents: Record<string, Component<any>> = {
   project: ProjectTile,
   cards: Cards,
   card: Card,
+  slide: Slide,
   videos: Videos,
   video: Video,
   image: Image,
@@ -150,6 +153,7 @@ export function createConfig(view: EditorView = "canvas") {
       fact: insertFact,
       card: insertCard,
       video: insertVideo,
+      slide: insertSlide,
       step: insertStep,
       rich_text: insertRichText,
     },

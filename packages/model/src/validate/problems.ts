@@ -88,7 +88,9 @@ export type ProblemCode =
   | "broken-card-link"
   // Videos (video)
   | "unsupported-video"
-  | "video-as-link";
+  | "video-as-link"
+  // Hero slideshow (hero-slideshow)
+  | "slideshow-too-short";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -164,6 +166,7 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "broken-card-link": "site",
   "unsupported-video": "site",
   "video-as-link": "site",
+  "slideshow-too-short": "site",
   "empty-answer": "site",
   "missing-item": "site",
   "wrong-collection": "site",

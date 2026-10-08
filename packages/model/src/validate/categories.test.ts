@@ -108,6 +108,7 @@ describe("problem categories", () => {
       "broken-card-link": true,
       "unsupported-video": true,
       "video-as-link": true,
+      "slideshow-too-short": true,
     };
     for (const code of Object.keys(codes) as ProblemCode[]) {
       expect(["structure", "site"], code).toContain(problemCategory(code));

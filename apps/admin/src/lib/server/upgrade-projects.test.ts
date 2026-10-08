@@ -72,7 +72,7 @@ describe("upgradeProjects", () => {
     for (const lang of ["cs", "en"]) {
       const doc = stored(db, projectId, lang);
       // Upgraded through to the current format (8 since business-locations).
-      expect(doc.nodes.site_1.schema_version).toBe(10);
+      expect(doc.nodes.site_1.schema_version).toBe(11);
       expect(doc.nodes.site_1.services.nodes).toEqual([
         "service_bread",
         "service_rolls",

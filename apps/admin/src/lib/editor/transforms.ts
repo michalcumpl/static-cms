@@ -123,6 +123,24 @@ export function insertFigure(tr: Tr): boolean {
   return true;
 }
 
+/** The most slides a hero slideshow holds (hero-slideshow design decision 2). */
+export const MAX_SLIDES = 8;
+
+export function createSlide(tr: Tr): string {
+  const id = tr.generate_id();
+  tr.create({ id, type: "slide", image: list(), title: text(), target_id: "", url: "" });
+  return id;
+}
+
+/** An empty slide (Enter and "Add item"); none past eight. */
+export function insertSlide(tr: Tr): boolean {
+  const at = insertionPoint(tr);
+  const count = at ? ((tr.get(at.path) as NodeList | undefined)?.nodes.length ?? 0) : 0;
+  if (count >= MAX_SLIDES) return false;
+  insertAndFocus(tr, createSlide(tr), "title");
+  return true;
+}
+
 /** The most cards a cards block holds (cards design decision 2). */
 export const MAX_CARDS = 12;
 
@@ -290,6 +308,7 @@ export function insertHero(tr: Tr): boolean {
     image: list(),
     action: list(),
     layout: "beside",
+    slides: list(),
   });
   insertAndFocus(tr, block, "heading");
   return true;
@@ -568,16 +587,16 @@ export function setImageSide(tr: Tr, blockId: string, side: "left" | "right"): b
 }
 
 /** Where a card links: a page, a project or service with its own page, an address, or nowhere. */
-export type CardLink = { page: string } | { item: string } | { address: string } | null;
+export type ItemLink = { page: string } | { item: string } | { address: string } | null;
 
 /**
  * Sets a card's link (cards design decision 4). Refused addresses leave the card unchanged and
  * return why.
  */
-export function setCardLink(
+export function setItemLink(
   tr: Tr,
   cardId: string,
-  link: CardLink,
+  link: ItemLink,
 ): LinkAddressCheck | { ok: true } {
   if (link && "address" in link) {
     const check = checkLinkAddress(link.address);

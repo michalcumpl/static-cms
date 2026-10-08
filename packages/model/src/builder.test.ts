@@ -63,11 +63,15 @@ function everything(lang: "cs" | "en") {
   });
   site.page({ title: t("Úvod", "Home"), slug: t("uvod", "home"), menu: true }, [
     blocks.hero({
-      layout: "cover",
+      layout: "slideshow",
       heading: t("Animujeme", "We animate"),
       text: t("Už *deset* let.", "For *ten* years."),
       image: image("hero.jpg"),
       action: { label: t("Kontakt", "Contact"), page: "kontakt" },
+      slides: [
+        { image: image("s1.jpg"), title: t("Závod", "The race"), item: "project_1" },
+        { image: image("s2.jpg"), title: "Kontakt", page: "kontakt" },
+      ],
     }),
     blocks.text(
       t(
@@ -164,6 +168,15 @@ describe("siteBuilder", () => {
     ]) {
       expect(types, type).toContain(type);
     }
+  });
+
+  it("writes a slideshow hero with linked slides", () => {
+    const nodes = everything("cs").nodes as unknown as Record<string, Record<string, unknown>>;
+    expect(nodes.hero_1).toMatchObject({
+      layout: "slideshow",
+      slides: { nodes: ["slide_1", "slide_2"] },
+    });
+    expect(nodes.slide_1).toMatchObject({ target_id: "project_1", url: "" });
   });
 
   it("gives services and projects addresses made from their names, unique, once they have pages", () => {

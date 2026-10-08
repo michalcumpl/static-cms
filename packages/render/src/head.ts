@@ -71,8 +71,11 @@ export function renderHead(ctx: RenderContext, options: HeadOptions): Html {
     lines.push(html`<meta name="description" content="${options.description}">`);
   }
   lines.push(html`<link rel="stylesheet" href="${ctx.url("assets/style.css")}">`);
-  if (ctx.pageHasVideo)
-    lines.push(html`<script src="${ctx.url("assets/video.js")}" defer></script>`);
+  for (const name of ["video", "slideshow"] as const) {
+    if (ctx.pageScripts.has(name)) {
+      lines.push(html`<script src="${ctx.url(`assets/${name}.js`)}" defer></script>`);
+    }
+  }
   const canonical = page && ctx.canonicalUrl(page.id);
   if (canonical) lines.push(html`<link rel="canonical" href="${canonical}">`);
   if (page && ctx.multilingual) lines.push(...alternates(ctx, page.key));

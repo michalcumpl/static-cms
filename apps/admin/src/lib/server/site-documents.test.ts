@@ -219,14 +219,14 @@ describe("upgrading stored documents", () => {
     const site = readSite(db, projectId);
     if (!site) throw new Error("project has no document");
     const doc = site.document as Doc;
-    expect(doc.nodes.site_1).toMatchObject({ schema_version: 10, home_page_id: "page_home" });
+    expect(doc.nodes.site_1).toMatchObject({ schema_version: 11, home_page_id: "page_home" });
     expect(doc.nodes.page_home.slug).toBe("uvod");
     expect(site.problems).toEqual([]);
     expect(storedDoc(db, projectId)).toEqual(demoSiteV1());
     expect(readSite(db, projectId)?.version).toBe(site.version);
   });
 
-  it("returns a version-2 document upgraded to version 10", () => {
+  it("returns a version-2 document upgraded to version 11", () => {
     const db = openDatabase(":memory:");
     const { workspaceId } = setup(db);
     const v2 = JSON.parse(
@@ -236,7 +236,7 @@ describe("upgrading stored documents", () => {
     const site = readSite(db, projectId);
     if (!site) throw new Error("project has no document");
     const doc = site.document as Doc;
-    expect(doc.nodes.site_1).toMatchObject({ schema_version: 10, allow_ai_training: true });
+    expect(doc.nodes.site_1).toMatchObject({ schema_version: 11, allow_ai_training: true });
     expect(doc.nodes.page_contact.share_image.nodes).toEqual([]);
     expect(doc.nodes.theme_1.font_body).toBe("system-sans");
     expect(site.problems).toEqual([]);
@@ -252,7 +252,7 @@ describe("upgrading stored documents", () => {
     const result = saveSite(db, projectId, userId, doc, site.version);
     expect(result.ok).toBe(true);
     const stored = storedDoc(db, projectId);
-    expect(stored.nodes.site_1.schema_version).toBe(10);
+    expect(stored.nodes.site_1.schema_version).toBe(11);
     expect(stored.nodes.hero_1.heading.content).toBe("Nový chléb");
   });
 });

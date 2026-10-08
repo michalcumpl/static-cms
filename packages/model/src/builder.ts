@@ -73,8 +73,10 @@ export type BlockInput =
       text?: string;
       image?: ImageInput;
       action?: LinkInput;
-      /** `cover`: the image fills the hero (block-variants). */
-      layout?: "beside" | "cover";
+      /** `cover`: the image fills the hero (block-variants); `slideshow`: its slides. */
+      layout?: "beside" | "cover" | "slideshow";
+      /** The slides of the slideshow; links as a card's (hero-slideshow). */
+      slides?: { image?: ImageInput; title: string; page?: string; item?: string; url?: string }[];
     }
   | { type: "rich_text"; body: string }
   | {
@@ -446,6 +448,16 @@ export function siteBuilder(options: {
               image: list(image(input.image)),
               action: list(input.action ? [link(input.action)] : []),
               layout: input.layout ?? "beside",
+              slides: list(
+                (input.slides ?? []).map((slide) =>
+                  add("slide", {
+                    image: list(image(slide.image)),
+                    title: text(slide.title),
+                    target_id: slide.page ? pageId(slide.page) : (slide.item ?? ""),
+                    url: slide.url ?? "",
+                  }),
+                ),
+              ),
             });
           case "rich_text":
             return add("rich_text", { body: list(body(input.body, true)) });
@@ -744,7 +756,7 @@ export function siteBuilder(options: {
       nodes[siteId] = {
         id: siteId,
         type: "site",
-        schema_version: 10,
+        schema_version: 11,
         name: options.name,
         lang: options.lang,
         base_url: options.baseUrl ?? "",

@@ -51,8 +51,22 @@ const COLLECTION_OF = { services: "services", team: "team", testimonials: "testi
  * An upgraded document as version 7 had it: the business's one location folded back into the
  * business, and no location choice on blocks.
  */
+/** An upgraded document as version 10 had it: heroes without slides. */
+function asVersion10(doc: { nodes: LooseNodes }): { nodes: LooseNodes } {
+  const nodes: LooseNodes = { ...doc.nodes };
+  for (const [id, node] of Object.entries(nodes)) {
+    if (node.type === "hero") {
+      const { slides: _slides, ...hero } = node;
+      nodes[id] = hero;
+    }
+  }
+  nodes.site_1 = { ...nodes.site_1, schema_version: 10 };
+  return { ...doc, nodes };
+}
+
 /** An upgraded document as version 9 had it: no projects, no item pages. */
-function asVersion9(doc: { nodes: LooseNodes }): { nodes: LooseNodes } {
+function asVersion9(upgraded: { nodes: LooseNodes }): { nodes: LooseNodes } {
+  const doc = asVersion10(upgraded);
   const nodes: LooseNodes = { ...doc.nodes };
   for (const [id, node] of Object.entries(nodes)) {
     if (node.type === "service_item") {
@@ -455,7 +469,7 @@ describe("upgrading version-7 documents", () => {
     const before = structuredClone(v7);
     const result = migrateSite(v7) as { nodes: LooseNodes };
     expect(v7).toEqual(before);
-    expect(result.nodes.site_1.schema_version).toBe(10);
+    expect(result.nodes.site_1.schema_version).toBe(11);
     expect(result.nodes.business_1).toMatchObject({
       business_type: "Bakery",
       locations: { nodes: ["location_1"] },
@@ -505,7 +519,7 @@ describe("upgrading version-8 documents (block-variants)", () => {
     const before = structuredClone(v8);
     const result = migrateSite(v8) as { nodes: LooseNodes };
     expect(v8).toEqual(before);
-    expect(result.nodes.site_1.schema_version).toBe(10);
+    expect(result.nodes.site_1.schema_version).toBe(11);
     expect(result.nodes.hero_1.layout).toBe("beside");
     expect(result.nodes.services_1.layout).toBe("cards");
     expect(result.nodes.gallery_1.image_fit).toBe("fill");
@@ -520,13 +534,26 @@ describe("upgrading version-9 documents (collection-pages)", () => {
     const result = migrateSite(v9) as { nodes: LooseNodes };
     expect(v9).toEqual(before);
     expect(result.nodes.site_1).toMatchObject({
-      schema_version: 10,
+      schema_version: 11,
       projects: { nodes: [] },
       project_categories: { nodes: [] },
       services_page_id: "",
       projects_page_id: "",
     });
     expect(result.nodes.service_bread).toMatchObject({ slug: "", body: { nodes: [] } });
+    expect(validateSite(result).problems).toEqual([]);
+    expect(result).toEqual(loadDemoSite());
+  });
+});
+
+describe("upgrading version-10 documents (hero-slideshow)", () => {
+  it("Upgrade the bakery: heroes get an empty list of slides", () => {
+    const v10 = loadFixture("demo-site-v10.json") as { nodes: LooseNodes };
+    const before = structuredClone(v10);
+    const result = migrateSite(v10) as { nodes: LooseNodes };
+    expect(v10).toEqual(before);
+    expect(result.nodes.site_1.schema_version).toBe(11);
+    expect(result.nodes.hero_1.slides).toEqual({ nodes: [], marks: [], annotations: [] });
     expect(validateSite(result).problems).toEqual([]);
     expect(result).toEqual(loadDemoSite());
   });

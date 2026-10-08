@@ -40,7 +40,7 @@ export const BUSINESS_TYPES = [
 ] as const;
 
 /** How a block looks; the first value is the default (block-variants design decision 1). */
-export const HERO_LAYOUTS = ["beside", "cover"] as const;
+export const HERO_LAYOUTS = ["beside", "cover", "slideshow"] as const;
 export const SERVICES_LAYOUTS = ["cards", "list", "accordion"] as const;
 export const TEAM_LAYOUTS = ["cards", "list"] as const;
 export const GALLERY_IMAGE_FITS = ["fill", "whole"] as const;
@@ -71,7 +71,7 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 10 },
+      schema_version: { type: "integer", min: 1, default: 11 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
@@ -187,6 +187,20 @@ export const siteSchema = {
       image: { type: "node_array", node_types: ["image"] },
       action: { type: "node_array", node_types: LINK_TYPES },
       layout: { type: "string", values: HERO_LAYOUTS, default: "beside" },
+      /** The slides of the `slideshow` look (hero-slideshow design decision 1). */
+      slides: { type: "node_array", node_types: ["slide"], default_node_type: "slide" },
+    },
+  },
+  /** A slide of a hero slideshow: a photo, a title and a link, like a card's. */
+  slide: {
+    kind: "block",
+    properties: {
+      image: { type: "node_array", node_types: ["image"] },
+      title: { type: "text", allow_newlines: false },
+      /** A page, or a service or project with its own page, or "" for none. */
+      target_id: { type: "string" },
+      /** An outside address, or "" for none. */
+      url: { type: "string" },
     },
   },
   rich_text: {

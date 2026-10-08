@@ -12,7 +12,7 @@ import {
   insertItem,
   itemLimit,
 } from "./structure";
-import { setCardLink } from "./transforms";
+import { setItemLink } from "./transforms";
 
 // Cards in the editor (cards design decision 4).
 
@@ -106,9 +106,9 @@ describe("card links", () => {
   it("links to a page, an item and an address, one step each; refuses unsafe ones", () => {
     const { session, get, cards, errors } = setup();
     const id = cards()[0] as string;
-    const link = (target: Parameters<typeof setCardLink>[2]) => {
+    const link = (target: Parameters<typeof setItemLink>[2]) => {
       const tr = session.tr;
-      const result = setCardLink(tr, id, target);
+      const result = setItemLink(tr, id, target);
       if (result.ok) session.apply(tr);
       return result;
     };

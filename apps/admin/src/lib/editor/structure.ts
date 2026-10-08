@@ -18,10 +18,12 @@ import {
   insertCard,
   insertFigure,
   insertListItem,
+  insertSlide,
   insertStep,
   insertVideo,
   MAX_CARDS,
   MAX_FIGURES,
+  MAX_SLIDES,
 } from "./transforms";
 
 type NodeSelection = {
@@ -135,7 +137,9 @@ export function duplicateSelectedNode(session: Session): boolean {
 /** Whether a node may be duplicated: anything but a hero, and no card past twelve. */
 export function canDuplicate(session: Session, id: string): boolean {
   const type = (session.get(id) as { type?: string } | undefined)?.type;
-  if (type === "card" || type === "video") return itemLimit(session, id) !== "maxCards";
+  if (type === "card" || type === "video" || type === "slide") {
+    return itemLimit(session, id) !== "maxCards";
+  }
   return type !== "hero";
 }
 
@@ -144,16 +148,27 @@ export function canDuplicate(session: Session, id: string): boolean {
  * from where it sits in the document (cards design decision 4).
  */
 export function itemLimit(session: Session, itemId: string): "lastCard" | "maxCards" | undefined {
-  const block = Object.values(session.doc.nodes).find(
-    (node) =>
-      ["cards", "videos"].includes((node as { type?: string }).type ?? "") &&
-      ((node as { items?: NodeList }).items?.nodes ?? []).includes(itemId),
-  ) as { items: NodeList } | undefined;
-  const count = block?.items.nodes.length ?? 0;
-  if (count >= MAX_CARDS) return "maxCards";
-  if (count <= 1) return "lastCard";
+  for (const node of Object.values(session.doc.nodes) as {
+    type?: string;
+    [key: string]: unknown;
+  }[]) {
+    const limit = ITEM_LIMITS[node.type ?? ""];
+    const ids = (node[limit?.property ?? ""] as NodeList | undefined)?.nodes ?? [];
+    if (!limit || !ids.includes(itemId)) continue;
+    if (ids.length >= limit.max) return "maxCards";
+    if (ids.length <= limit.min) return "lastCard";
+    return undefined;
+  }
   return undefined;
 }
+
+/** The lists whose items have a smallest and largest number, by owner type. */
+const ITEM_LIMITS: Record<string, { property: string; min: number; max: number }> = {
+  cards: { property: "items", min: 1, max: MAX_CARDS },
+  videos: { property: "items", min: 1, max: MAX_CARDS },
+  // A slideshow with fewer than two slides warns instead (hero-slideshow decision 2).
+  hero: { property: "slides", min: 0, max: MAX_SLIDES },
+};
 
 /**
  * Deletes the selected block or item. A collection item is taken out of a block that shows chosen
@@ -229,11 +244,14 @@ export function itemInsertionPoint(
   // so they come from the library instead.
   for (let end = selection.path.length; end > 0; end--) {
     const path = selection.path.slice(0, end);
-    if (path.at(-1) !== "items") continue;
+    const property = path.at(-1);
+    if (property !== "items" && property !== "slides") continue;
     const owner = session.get(path.slice(0, -1)) as
-      | { type?: string; items?: { nodes: string[] } }
+      | { type?: string; items?: { nodes: string[] }; slides?: { nodes: string[] } }
       | undefined;
-    if (!owner?.type || !ITEM_OWNERS.includes(owner.type)) continue;
+    if (!owner?.type) continue;
+    if (property === "items" ? !ITEM_OWNERS.includes(owner.type) : owner.type !== "hero") continue;
+    if (property === "slides" && (owner.slides?.nodes.length ?? 0) >= MAX_SLIDES) return;
     // A key figures block holds at most six.
     if (owner.type === "figures" && (owner.items?.nodes.length ?? 0) >= MAX_FIGURES) return;
     if (
@@ -302,6 +320,7 @@ export function insertItem(session: Session): boolean {
   else if (at.owner === "steps") insertStep(tr);
   else if (at.owner === "cards") insertCard(tr);
   else if (at.owner === "videos") insertVideo(tr);
+  else if (at.owner === "hero") insertSlide(tr);
   else insertListItem(tr);
   session.apply(tr);
   return true;

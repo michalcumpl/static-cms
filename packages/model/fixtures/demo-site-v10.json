@@ -94,12 +94,7 @@
         "marks": [],
         "annotations": []
       },
-      "layout": "beside",
-      "slides": {
-        "nodes": [],
-        "marks": [],
-        "annotations": []
-      }
+      "layout": "beside"
     },
     "service_bread": {
       "id": "service_bread",
@@ -444,314 +439,10 @@
         "annotations": []
       }
     },
-    "para_twi": {
-      "id": "para_twi",
-      "type": "paragraph",
-      "content": {
-        "content": "Dárkový poukaz udělá radost každému malému umělci.",
-        "marks": [],
-        "annotations": []
-      }
-    },
-    "li_twi_1": {
-      "id": "li_twi_1",
-      "type": "list_item",
-      "content": {
-        "content": "Platí rok od koupě",
-        "marks": [],
-        "annotations": []
-      }
-    },
-    "li_twi_2": {
-      "id": "li_twi_2",
-      "type": "list_item",
-      "content": {
-        "content": "Na jakýkoli kroužek",
-        "marks": [],
-        "annotations": []
-      }
-    },
-    "list_twi": {
-      "id": "list_twi",
-      "type": "list",
-      "items": {
-        "nodes": ["li_twi_1", "li_twi_2"],
-        "marks": [],
-        "annotations": []
-      }
-    },
-    "image_voucher": {
-      "id": "image_voucher",
-      "type": "image",
-      "src": "hero.png",
-      "alt": "Dárkový poukaz ateliéru",
-      "decorative": false,
-      "width": 320,
-      "height": 180
-    },
-    "twi_voucher": {
-      "id": "twi_voucher",
-      "type": "text_with_image",
-      "heading": {
-        "content": "Dárkový poukaz",
-        "marks": [],
-        "annotations": []
-      },
-      "body": {
-        "nodes": ["para_twi", "list_twi"],
-        "marks": [],
-        "annotations": []
-      },
-      "image": {
-        "nodes": ["image_voucher"],
-        "marks": [],
-        "annotations": []
-      },
-      "image_side": "left"
-    },
-    "image_gallery_1": {
-      "id": "image_gallery_1",
-      "type": "image",
-      "src": "hero.png",
-      "alt": "Děti při práci 1",
-      "decorative": false,
-      "width": 320,
-      "height": 180
-    },
-    "gallery_item_1": {
-      "id": "gallery_item_1",
-      "type": "gallery_item",
-      "image": {
-        "nodes": ["image_gallery_1"],
-        "marks": [],
-        "annotations": []
-      },
-      "caption": {
-        "content": "Malování na plátno",
-        "marks": [],
-        "annotations": []
-      }
-    },
-    "image_gallery_2": {
-      "id": "image_gallery_2",
-      "type": "image",
-      "src": "hero.png",
-      "alt": "Děti při práci 2",
-      "decorative": false,
-      "width": 320,
-      "height": 180
-    },
-    "gallery_item_2": {
-      "id": "gallery_item_2",
-      "type": "gallery_item",
-      "image": {
-        "nodes": ["image_gallery_2"],
-        "marks": [],
-        "annotations": []
-      },
-      "caption": {
-        "content": "",
-        "marks": [],
-        "annotations": []
-      }
-    },
-    "image_gallery_3": {
-      "id": "image_gallery_3",
-      "type": "image",
-      "src": "hero.png",
-      "alt": "Děti při práci 3",
-      "decorative": false,
-      "width": 320,
-      "height": 180
-    },
-    "gallery_item_3": {
-      "id": "gallery_item_3",
-      "type": "gallery_item",
-      "image": {
-        "nodes": ["image_gallery_3"],
-        "marks": [],
-        "annotations": []
-      },
-      "caption": {
-        "content": "Keramická dílna",
-        "marks": [],
-        "annotations": []
-      }
-    },
-    "gallery_work": {
-      "id": "gallery_work",
-      "type": "gallery",
-      "heading": {
-        "content": "Jak pracujeme",
-        "marks": [],
-        "annotations": []
-      },
-      "items": {
-        "nodes": ["gallery_item_1", "gallery_item_2", "gallery_item_3"],
-        "marks": [],
-        "annotations": []
-      },
-      "image_fit": "fill"
-    },
-    "image_katerina": {
-      "id": "image_katerina",
-      "type": "image",
-      "src": "hero.png",
-      "alt": "",
-      "decorative": true,
-      "width": 320,
-      "height": 180
-    },
-    "person_katerina": {
-      "id": "person_katerina",
-      "type": "person",
-      "name": {
-        "content": "Kateřina",
-        "marks": [],
-        "annotations": []
-      },
-      "role": {
-        "content": "lektorka",
-        "marks": [],
-        "annotations": []
-      },
-      "text": {
-        "content": "Vede kroužky malování.",
-        "marks": [],
-        "annotations": []
-      },
-      "image": {
-        "nodes": ["image_katerina"],
-        "marks": [],
-        "annotations": []
-      }
-    },
-    "person_martina": {
-      "id": "person_martina",
-      "type": "person",
-      "name": {
-        "content": "Martina",
-        "marks": [],
-        "annotations": []
-      },
-      "role": {
-        "content": "",
-        "marks": [],
-        "annotations": []
-      },
-      "text": {
-        "content": "",
-        "marks": [],
-        "annotations": []
-      },
-      "image": {
-        "nodes": [],
-        "marks": [],
-        "annotations": []
-      }
-    },
-    "team_1": {
-      "id": "team_1",
-      "type": "team",
-      "heading": {
-        "content": "Kdo jsme",
-        "marks": [],
-        "annotations": []
-      },
-      "show": "all",
-      "chosen": {
-        "nodes": [],
-        "marks": [],
-        "annotations": []
-      },
-      "layout": "cards"
-    },
-    "image_logo_harmonie": {
-      "id": "image_logo_harmonie",
-      "type": "image",
-      "src": "hero.png",
-      "alt": "",
-      "decorative": false,
-      "width": 320,
-      "height": 180
-    },
-    "logo_harmonie": {
-      "id": "logo_harmonie",
-      "type": "logo_item",
-      "image": {
-        "nodes": ["image_logo_harmonie"],
-        "marks": [],
-        "annotations": []
-      },
-      "name": {
-        "content": "Nadace Harmonie",
-        "marks": [],
-        "annotations": []
-      },
-      "page_id": "",
-      "url": "https://harmonie.example"
-    },
-    "image_logo_p6": {
-      "id": "image_logo_p6",
-      "type": "image",
-      "src": "hero.png",
-      "alt": "",
-      "decorative": false,
-      "width": 320,
-      "height": 180
-    },
-    "logo_p6": {
-      "id": "logo_p6",
-      "type": "logo_item",
-      "image": {
-        "nodes": ["image_logo_p6"],
-        "marks": [],
-        "annotations": []
-      },
-      "name": {
-        "content": "Praha 6",
-        "marks": [],
-        "annotations": []
-      },
-      "page_id": "page_contact",
-      "url": ""
-    },
-    "logos_1": {
-      "id": "logos_1",
-      "type": "logos",
-      "heading": {
-        "content": "Podporují nás",
-        "marks": [],
-        "annotations": []
-      },
-      "items": {
-        "nodes": ["logo_harmonie", "logo_p6"],
-        "marks": [],
-        "annotations": []
-      }
-    },
-    "page_gallery": {
-      "id": "page_gallery",
-      "type": "page",
-      "title": "Galerie",
-      "slug": "galerie",
-      "seo_description": "Fotografie z pekárny U Lípy, náš tým a partneři.",
-      "translation_key": "page_gallery",
-      "share_image": {
-        "nodes": [],
-        "marks": [],
-        "annotations": []
-      },
-      "blocks": {
-        "nodes": ["twi_voucher", "gallery_work", "team_1", "logos_1"],
-        "marks": [],
-        "annotations": []
-      }
-    },
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 11,
+      "schema_version": 10,
       "name": "Pekárna U Lípy",
       "lang": "cs",
       "base_url": "https://pekarna-ulipy.example",
@@ -778,7 +469,7 @@
       "nav": "nav_1",
       "business": "business_1",
       "pages": {
-        "nodes": ["page_home", "page_contact", "page_gallery"],
+        "nodes": ["page_home", "page_contact"],
         "marks": [],
         "annotations": []
       },
@@ -789,7 +480,7 @@
         "annotations": []
       },
       "team": {
-        "nodes": ["person_katerina", "person_martina"],
+        "nodes": [],
         "marks": [],
         "annotations": []
       },

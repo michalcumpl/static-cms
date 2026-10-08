@@ -30,6 +30,9 @@ export interface SiteLanguage {
   home: string;
 }
 
+/** The site's scripts, each `assets/<name>.js`, loaded only by pages that need them. */
+export type SiteScript = "video" | "slideshow";
+
 /** A service's or project's own page, under its listing page (collection-pages decision 2). */
 export interface ItemPage {
   /** The item's node ID; also its route's key and, being shared, its translation key. */
@@ -48,10 +51,16 @@ export interface PageRoute {
 export class RenderContext {
   readonly site: SiteNode;
   readonly routes = new Map<string, PageRoute>();
-  /** Whether the page being rendered shows a video, so its head loads the video script. */
-  pageHasVideo = false;
-  /** Whether any page of the site shows a video, so the export writes the script. */
-  siteHasVideo = false;
+  /** The scripts the page being rendered needs (a video, a slideshow), for its head. */
+  readonly pageScripts = new Set<SiteScript>();
+  /** The scripts any page of the site needs, for the export. */
+  readonly siteScripts = new Set<SiteScript>();
+
+  /** Notes that the page being rendered needs a script. */
+  useScript(name: SiteScript): void {
+    this.pageScripts.add(name);
+    this.siteScripts.add(name);
+  }
   /** The items that have pages, services first, each in collection order. */
   readonly itemPages: ItemPage[] = [];
   readonly nodes: Record<string, AnyNode>;

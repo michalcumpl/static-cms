@@ -3,18 +3,21 @@ import { getI18n } from "$lib/i18n";
 import { handleTargets, selectionPath } from "./handles";
 import { ITEM_PAGE_COLLECTIONS, type ItemPageCollection } from "./item-pages";
 import type { EditorState } from "./state.svelte";
-import { setCardLink } from "./transforms";
+import { setItemLink } from "./transforms";
 
-// The link of the card that is selected or holds the caret (cards design decision 4): none, a
-// page, a project or service with its own page, or an address applied once it is valid.
+// The link of the card or slide that is selected or holds the caret (cards design decision 4;
+// hero-slideshow decision 4): none, a page, a project or service with its own page, or an
+// address applied once it is valid.
 let { editor }: { editor: EditorState } = $props();
 const i18n = getI18n();
 
-type Card = { id: string; target_id: string; url: string };
+type Linked = { id: string; type: "card" | "slide"; target_id: string; url: string };
 const card = $derived.by(() => {
   const path = selectionPath(editor.session);
   const item = path ? handleTargets(editor.session, path).item : undefined;
-  return item?.type === "card" ? (editor.session.get(item.id) as Card) : undefined;
+  return item?.type === "card" || item?.type === "slide"
+    ? (editor.session.get(item.id) as Linked)
+    : undefined;
 });
 
 /** The services and projects that have their own page, named for the list. */
@@ -55,7 +58,7 @@ const broken = $derived(
 function apply(next: typeof kind) {
   if (!card) return;
   const tr = editor.session.tr;
-  const result = setCardLink(
+  const result = setItemLink(
     tr,
     card.id,
     next === "none" ? null : next === "page" ? { page } : next === "item" ? { item } : { address },
@@ -73,7 +76,7 @@ function apply(next: typeof kind) {
 
 {#if card}
   <section class="panel" aria-labelledby="card-panel-title" data-history-keys>
-    <h2 id="card-panel-title">{i18n.t("editor.cardPanel.title")}</h2>
+    <h2 id="card-panel-title">{card.type === "slide" ? i18n.t("editor.cardPanel.slideTitle") : i18n.t("editor.cardPanel.title")}</h2>
     <fieldset>
       <legend>{i18n.t("editor.cardPanel.link")}</legend>
       <label class="check"><input type="radio" name="card-link" bind:group={kind} value="none" onchange={() => apply("none")} /> {i18n.t("editor.cardPanel.noLink")}</label>

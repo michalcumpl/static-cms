@@ -7,6 +7,7 @@ import {
 } from "@webmio/model";
 import type { Session } from "svedit";
 import { handleTargets, selectionPath } from "./handles";
+import { createSlide } from "./transforms";
 
 /** The block types with a choice of look, the property holding it and its values (block-variants). */
 export const LOOKS = {
@@ -57,5 +58,14 @@ export function setBlockLook(session: Session, blockId: string, property: string
   if (look.property !== property || !(look.values as readonly string[]).includes(value)) return;
   const tr = session.tr;
   tr.set([blockId, property], value);
+  // A hero becoming a slideshow starts with two empty slides (hero-slideshow decision 4).
+  const slides = (block as { slides?: { nodes: string[] } }).slides;
+  if (block.type === "hero" && value === "slideshow" && slides?.nodes.length === 0) {
+    tr.set([blockId, "slides"], {
+      nodes: [createSlide(tr), createSlide(tr)],
+      marks: [],
+      annotations: [],
+    });
+  }
   session.apply(tr);
 }

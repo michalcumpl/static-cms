@@ -44,7 +44,7 @@ function render(doc: SiteDocument) {
   const result = renderSite(doc);
   if (!result.ok) throw new Error(result.problems.map((p) => p.message).join("\n"));
   const page = (path: string) => result.site.pages.find((p) => p.path === path)?.html ?? "";
-  return { page, script: result.site.script };
+  return { page, script: result.site.scripts["video.js"] };
 }
 
 describe("videos", () => {

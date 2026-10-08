@@ -90,7 +90,9 @@ export function exportSite(
   files.push(["404.html", encoder.encode(rendered.site.notFound)]);
   files.push(["assets/style.css", encoder.encode(rendered.site.css)]);
   // The video script, only when a page shows a video (video design decision 3).
-  if (rendered.site.script) files.push(["assets/video.js", encoder.encode(rendered.site.script)]);
+  for (const [name, script] of Object.entries(rendered.site.scripts)) {
+    files.push([`assets/${name}`, encoder.encode(script)]);
+  }
 
   // The same files as usedMediaFiles(doc), walked per image to name the image when one is missing.
   const missing: Problem[] = [];

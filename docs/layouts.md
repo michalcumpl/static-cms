@@ -103,7 +103,8 @@ Film added 15–20 and the second video. Today's stand-in is in brackets.
 17. **Hero slideshow** (1, but the signature of film and creative agencies: Punk Film's home
     opens with its latest work, a still and title per slide linking to the project) [a
     full-photo hero with one still]. Needs pause and next/previous controls, no movement with
-    reduced motion, and only the first image loaded up front. Planned as `hero-slideshow`.
+    reduced motion, and only the first image loaded up front: **done**, the hero's "Slideshow"
+    look (`hero-slideshow`), photos for now; short clips wait for uploaded video.
 18. **Grouped menus** (1: Scénografie's "Projekty" with four pages, "Zakázková výroba" with
     three, and a small top menu) [eight items in one row]. Planned as `menu-groups`.
 19. **Billing address and bank details** (2: Punk Film's headquarters apart from its office,

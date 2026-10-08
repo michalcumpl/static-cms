@@ -30,7 +30,7 @@ const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const MIN_SHARE_WIDTH = 600;
 /** The largest icon made from a favicon that phones show on their home screens. */
 const MIN_FAVICON_SIZE = 180;
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -1029,6 +1029,21 @@ function checkPageBlocks(
   });
 }
 
+/** Items with their own page: those of a collection with a valid listing page. */
+function itemsWithPages(site: NodeOfType<"site">, pageIds: Set<string>): Set<string> {
+  const withPages = new Set<string>();
+  const listings = [
+    [site.services, site.services_page_id],
+    [site.projects, site.projects_page_id],
+  ] as const;
+  for (const [collection, listing] of listings) {
+    if (listing !== "" && listing !== site.home_page_id && pageIds.has(listing)) {
+      for (const id of collection.nodes) withPages.add(id);
+    }
+  }
+  return withPages;
+}
+
 /** The most cards a cards block shows (cards design decision 2). */
 const MAX_CARDS = 12;
 
@@ -1041,17 +1056,8 @@ function checkCards(
   problems: Problems,
 ): void {
   const on = pageLabel(page);
-  // Items with their own page: those of a collection with a valid listing page.
-  const withPages = new Set<string>();
-  const listings = [
-    [site.services, site.services_page_id],
-    [site.projects, site.projects_page_id],
-  ] as const;
-  for (const [collection, listing] of listings) {
-    if (listing !== "" && listing !== site.home_page_id && pageIds.has(listing)) {
-      for (const id of collection.nodes) withPages.add(id);
-    }
-  }
+  const withPages = itemsWithPages(site, pageIds);
+  checkSlides(page, pageIds, withPages, get, problems);
   for (const blockId of page.blocks.nodes) {
     const block = get(blockId, "cards");
     if (!block) continue;
@@ -1081,23 +1087,7 @@ function checkCards(
       if (card.image.nodes.length > 1) {
         problems.error("too-many-items", card.id, `${label} can have at most one image.`, "image");
       }
-      if (card.target_id !== "" && card.url !== "") {
-        problems.error(
-          "invalid-value",
-          card.id,
-          `${label} links both to a page and to an address; keep one.`,
-          "url",
-        );
-      }
-      if (card.url !== "") checkHref(card.id, "url", card.url, problems);
-      if (card.target_id !== "" && !pageIds.has(card.target_id) && !withPages.has(card.target_id)) {
-        problems.warning(
-          "broken-card-link",
-          card.id,
-          `The link of card ${i + 1} on ${on} leads to something that no longer has a page; choose another target.`,
-          "target_id",
-        );
-      }
+      checkItemLink(card, `card ${i + 1} on ${on}`, label, pageIds, withPages, problems);
     });
   }
 }
@@ -1160,6 +1150,85 @@ function checkVideos(
       }
     });
   }
+}
+
+/**
+ * A card's or slide's link (cards design decision 2): one target at most, a safe address, and a
+ * page, service or project that still has a page.
+ */
+function checkItemLink(
+  item: { id: string; target_id: string; url: string },
+  named: string,
+  label: string,
+  pageIds: Set<string>,
+  withPages: Set<string>,
+  problems: Problems,
+): void {
+  if (item.target_id !== "" && item.url !== "") {
+    problems.error(
+      "invalid-value",
+      item.id,
+      `${label} links both to a page and to an address; keep one.`,
+      "url",
+    );
+  }
+  if (item.url !== "") checkHref(item.id, "url", item.url, problems);
+  if (item.target_id !== "" && !pageIds.has(item.target_id) && !withPages.has(item.target_id)) {
+    problems.warning(
+      "broken-card-link",
+      item.id,
+      `The link of ${named} leads to something that no longer has a page; choose another target.`,
+      "target_id",
+    );
+  }
+}
+
+/** The most slides a hero slideshow shows (hero-slideshow design decision 2). */
+const MAX_SLIDES = 8;
+
+/** A slideshow hero's slides, checked only while the hero is a slideshow. */
+function checkSlides(
+  page: NodeOfType<"page">,
+  pageIds: Set<string>,
+  withPages: Set<string>,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const on = pageLabel(page);
+  const [first] = page.blocks.nodes;
+  const hero = first === undefined ? undefined : get(first, "hero");
+  if (!hero) return;
+  if (hero.layout !== "slideshow") return;
+  const count = hero.slides.nodes.length;
+  if (count < 2) {
+    problems.warning(
+      "slideshow-too-short",
+      hero.id,
+      `The slideshow on ${on} needs at least two slides; until then it shows as a full photo.`,
+      "slides",
+    );
+  } else if (count > MAX_SLIDES) {
+    problems.error(
+      "too-many-items",
+      hero.id,
+      `The slideshow on ${on} can have at most ${MAX_SLIDES} slides.`,
+      "slides",
+    );
+  }
+  hero.slides.nodes.forEach((slideId, i) => {
+    const slide = get(slideId, "slide");
+    if (!slide) return;
+    const label = `Slide ${i + 1} on ${on}`;
+    if (slide.image.nodes.length === 0) {
+      problems.error("missing-image", slide.id, `${label} needs a photo.`, "image");
+    } else if (slide.image.nodes.length > 1) {
+      problems.error("too-many-items", slide.id, `${label} can have at most one photo.`, "image");
+    }
+    if (isBlank(slide.title)) {
+      problems.error("empty-title", slide.id, `${label} needs a title.`, "title");
+    }
+    checkItemLink(slide, `slide ${i + 1} on ${on}`, label, pageIds, withPages, problems);
+  });
 }
 
 /** The call to action's heading and buttons (cta-and-testimonials decision 5). */

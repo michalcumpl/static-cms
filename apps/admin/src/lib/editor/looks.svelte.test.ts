@@ -33,7 +33,7 @@ describe("block looks", () => {
     expect(selectedLookBlock(session)).toMatchObject({
       id: "hero_1",
       property: "layout",
-      values: ["beside", "cover"],
+      values: ["beside", "cover", "slideshow"],
       value: "beside",
       missingImage: false,
     });

@@ -216,9 +216,10 @@ function collectionEntries(target: HandleTarget): MenuEntry[] {
 function menuEntries(kind: "block" | "item", target: HandleTarget): MenuEntry[] {
   if (kind === "item" && target.collection) return collectionEntries(target);
   const count = (session.get(target.listPath) as { nodes: string[] }).nodes.length;
-  // A cards block holds one to twelve cards.
-  const limit =
-    target.type === "card" || target.type === "video" ? itemLimit(session, target.id) : undefined;
+  // Cards and videos keep one to twelve items, a slideshow at most eight slides.
+  const limit = ["card", "video", "slide"].includes(target.type)
+    ? itemLimit(session, target.id)
+    : undefined;
   const after = (action: () => void) => () => {
     select(target);
     action();
@@ -243,7 +244,9 @@ function menuEntries(kind: "block" | "item", target: HandleTarget): MenuEntry[] 
           ? i18n.t(
               target.type === "video"
                 ? "editor.unavailable.maxVideos"
-                : "editor.unavailable.maxCards",
+                : target.type === "slide"
+                  ? "editor.unavailable.maxSlides"
+                  : "editor.unavailable.maxCards",
             )
           : undefined,
       run: after(() => duplicateSelectedNode(session)),

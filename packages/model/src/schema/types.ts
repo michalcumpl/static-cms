@@ -123,8 +123,23 @@ export interface HeroNode {
   image: NodeArrayValue;
   /** Zero or one `page_link` / `external_link` node: the call to action. */
   action: NodeArrayValue;
-  /** `beside`: the text next to the image; `cover`: the image fills the hero. */
-  layout: "beside" | "cover";
+  /** `beside`: the text next to the image; `cover`: the image fills the hero; `slideshow`: its slides. */
+  layout: "beside" | "cover" | "slideshow";
+  /** `slide` nodes, shown in the `slideshow` look. */
+  slides: NodeArrayValue;
+}
+
+/** A slide of a hero slideshow. */
+export interface SlideNode {
+  id: string;
+  type: "slide";
+  /** Zero or one `image` node. */
+  image: NodeArrayValue;
+  title: TextValue;
+  /** A page, or a service or project with its own page, or "" for none. */
+  target_id: string;
+  /** An outside address, or "" for none. */
+  url: string;
 }
 
 export interface RichTextNode {
@@ -554,6 +569,7 @@ export type AnyNode =
   | ExternalLinkNode
   | PageNode
   | HeroNode
+  | SlideNode
   | RichTextNode
   | ParagraphNode
   | SubheadingNode

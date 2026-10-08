@@ -235,6 +235,135 @@ img {
   border-radius: var(--radius);
 }
 
+.block.hero-slideshow {
+  padding-block: 0 2rem;
+}
+
+.hero-slideshow > .hero-inner {
+  padding-top: 2.5rem;
+}
+
+.slideshow {
+  position: relative;
+}
+
+.slides {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  list-style: none;
+  scrollbar-width: none;
+}
+
+.slide {
+  position: relative;
+  display: grid;
+  flex: 0 0 100%;
+  min-height: 26rem;
+  max-height: 80vh;
+  aspect-ratio: 16 / 9;
+  scroll-snap-align: start;
+  background: var(--color-text);
+}
+
+.slide-image,
+.slide-title {
+  grid-area: 1 / 1;
+}
+
+.slide-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.slide-title {
+  align-self: end;
+  margin: 0;
+  padding: 4rem max(1.5rem, calc((100% - var(--content-width)) / 2 + 1rem)) 4.5rem;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--color-text) 75%, transparent));
+  color: var(--color-background);
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.slide-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.slide-title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.slide-title a:hover,
+.slide-title a:focus-visible {
+  text-decoration: underline;
+}
+
+.slideshow-controls {
+  position: absolute;
+  z-index: 2;
+  bottom: 1rem;
+  left: 50%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+  transform: translateX(-50%);
+}
+
+.slideshow-controls button {
+  display: grid;
+  place-items: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--color-text) 55%, transparent);
+  color: var(--color-background);
+  font-size: 1.1rem;
+  cursor: pointer;
+  clip-path: circle(50%);
+}
+
+.slideshow-controls .slideshow-dot {
+  min-width: 1.5rem;
+  min-height: 2.75rem;
+  background: transparent;
+  clip-path: none;
+}
+
+.slideshow-dot span {
+  display: block;
+  width: 0.7rem;
+  height: 0.7rem;
+  background: var(--color-background);
+  opacity: 0.6;
+  clip-path: circle(50%);
+}
+
+.slideshow-dot[aria-current="true"] span {
+  background: var(--color-primary);
+  opacity: 1;
+}
+
+.slideshow-controls button:focus-visible {
+  outline: 3px solid var(--color-background);
+  outline-offset: -3px;
+}
+
+.slideshow-ready .slides {
+  overflow-x: hidden;
+}
+
 .block.hero-cover {
   display: grid;
   min-height: 26rem;

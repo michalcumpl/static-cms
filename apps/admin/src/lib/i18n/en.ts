@@ -794,6 +794,7 @@ export const en = {
       steps: { name: "Steps", description: "How it works, step by step" },
     },
     items: {
+      slide: "Slide",
       video: "Video",
       card: "Card",
       list_item: "List item",
@@ -843,6 +844,7 @@ export const en = {
       edit: "Edit projects",
     },
     cardPanel: {
+      slideTitle: "Slide",
       title: "Card",
       link: "Link",
       noLink: "No link",
@@ -866,7 +868,7 @@ export const en = {
     look: {
       cards: { below: "Text under the photo", over: "Title over the photo" },
       legend: "Look",
-      hero: { beside: "Beside the text", cover: "Full photo" },
+      hero: { beside: "Beside the text", cover: "Full photo", slideshow: "Slideshow" },
       services: { cards: "Cards", list: "List", accordion: "Accordion" },
       team: { cards: "Cards", list: "List" },
       gallery: { fill: "Fill the tiles", whole: "Whole images" },
@@ -900,6 +902,7 @@ export const en = {
       },
     },
     unavailable: {
+      maxSlides: "A slideshow holds at most eight slides",
       lastVideo: "A videos block needs at least one video",
       maxVideos: "A videos block holds at most twelve videos",
       lastCard: "A cards block needs at least one card",

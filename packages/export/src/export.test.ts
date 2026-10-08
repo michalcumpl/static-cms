@@ -128,6 +128,30 @@ describe("exportSite", () => {
     ]);
   });
 
+  it("Slideshow script only when needed", () => {
+    const { doc, nodes } = editableDemoSite();
+    const slides = ["slide_1", "slide_2"].map((id) => {
+      nodes[id] = {
+        id,
+        type: "slide",
+        image: { nodes: [`${id}_img`], marks: [], annotations: [] },
+        title: { content: id, marks: [], annotations: [] },
+        target_id: "",
+        url: "",
+      };
+      nodes[`${id}_img`] = { ...nodes.image_hero, id: `${id}_img` };
+      return id;
+    });
+    Object.assign(nodes.hero_1, {
+      layout: "slideshow",
+      slides: { nodes: slides, marks: [], annotations: [] },
+    });
+    const { files } = exported(doc);
+    expect(decode(files.get("assets/slideshow.js"))).toContain("prefers-reduced-motion");
+    expect(files.has("assets/video.js")).toBe(false);
+    expect(decode(files.get("index.html"))).toContain('<script src="/assets/slideshow.js" defer>');
+  });
+
   it("Video script only when needed", () => {
     expect(exported().files.has("assets/video.js")).toBe(false);
     const { doc, nodes } = editableDemoSite();

@@ -51,8 +51,13 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
 function renderHero(hero: NodeOfType<"hero">, ctx: RenderContext): Html {
   const [image] = ctx.children(hero.image);
   const [action] = ctx.children(hero.action);
+  // A slideshow needs two slides; with fewer it shows as a full photo (hero-slideshow).
+  const slides = ctx.children(hero.slides).filter((slide) => slide.type === "slide");
+  if (hero.layout === "slideshow" && slides.length >= 2) {
+    return renderSlideshow(hero, slides as NodeOfType<"slide">[], ctx);
+  }
   // A full-photo hero puts its image behind the text; without an image it is a usual hero.
-  if (hero.layout === "cover" && image?.type === "image") {
+  if ((hero.layout === "cover" || hero.layout === "slideshow") && image?.type === "image") {
     return html`<section class="block hero hero-cover">
       ${renderImage(image, ctx, { lazy: false, sizes: IMAGE_SIZES.heroCover, className: "hero-image" })}
       <div class="container hero-inner">
@@ -87,6 +92,70 @@ function renderHero(hero: NodeOfType<"hero">, ctx: RenderContext): Html {
           html`
         ${renderImage(image, ctx, { lazy: false, sizes: IMAGE_SIZES.hero, className: "hero-image" })}`
         }
+      </div>
+    </section>`;
+}
+
+/**
+ * The hero as a slideshow (hero-slideshow design decision 3): a carousel region of slides, each a
+ * photo with its title over it (a link when the slide has one), then the hero's heading, text and
+ * button. Without the slideshow script the slides form a row that can be scrolled.
+ */
+function renderSlideshow(
+  hero: NodeOfType<"hero">,
+  slides: NodeOfType<"slide">[],
+  ctx: RenderContext,
+): Html {
+  ctx.useScript("slideshow");
+  const [action] = ctx.children(hero.action);
+  const { strings } = ctx;
+  const labels = JSON.stringify({
+    play: strings.play,
+    pause: strings.pause,
+    previous: strings.previousSlide,
+    next: strings.nextSlide,
+    show: strings.showSlide,
+  });
+  const items = slides.map((slide, i) => {
+    const [image] = ctx.children(slide.image);
+    const href =
+      slide.url !== ""
+        ? ctx.href(slide.url)
+        : slide.target_id !== "" && ctx.routes.has(slide.target_id)
+          ? ctx.pageUrl(slide.target_id)
+          : undefined;
+    const title = href
+      ? html`<a href="${href}">${renderText(slide.title, ctx)}</a>`
+      : renderText(slide.title, ctx);
+    const position = strings.slideOf
+      .replace("{n}", String(i + 1))
+      .replace("{count}", String(slides.length));
+    return html`
+          <li class="slide" role="group" aria-roledescription="slide" aria-label="${position}">${
+            image?.type === "image" &&
+            html`
+            ${renderImage(image, ctx, { lazy: i > 0, sizes: IMAGE_SIZES.heroCover, className: "slide-image" })}`
+          }
+            <p class="slide-title">${title}</p>
+          </li>`;
+  });
+  return html`<section class="block hero hero-slideshow">
+      <section class="slideshow" aria-roledescription="carousel" aria-label="${hero.heading.content}" data-labels="${labels}">
+        <ul class="slides">${items}
+        </ul>
+      </section>
+      <div class="container hero-inner">
+        <div class="hero-content">
+          <h1>${renderText(hero.heading, ctx)}</h1>${
+            !isEmpty(hero.text) &&
+            html`
+          <p class="hero-text">${renderText(hero.text, ctx)}</p>`
+          }${
+            action &&
+            html`
+          <p class="hero-action">${renderLink(action, ctx, "button")}</p>`
+          }
+        </div>
       </div>
     </section>`;
 }
@@ -479,8 +548,7 @@ export function videoFigure(
 ): Html | undefined {
   const embed = videoEmbed(video.url);
   if (!embed) return undefined;
-  ctx.pageHasVideo = true;
-  ctx.siteHasVideo = true;
+  ctx.useScript("video");
   const source = ctx.strings.playsFrom.replace("{provider}", PROVIDER_NAMES[embed.provider]);
   return html`
             <figure class="video" data-embed="${embed.embedUrl}" data-title="${video.title}">

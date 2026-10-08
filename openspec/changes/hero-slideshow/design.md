@@ -119,3 +119,19 @@ pages), the heading under it.
 ## Migration Plan
 
 Format 11 upgrade on read. Nothing changes until an owner chooses the slideshow.
+
+## Changes made while building
+
+- **The carousel is a labelled `<section>`**, not a `<div role="region">`: html-validate prefers
+  the native element, and a labelled section is a region.
+- **The script ignores the scroll events of its own scrolling** until it reaches the slide it
+  was going to, and a visitor's swipe, wheel or pointer cancels that: otherwise a smooth scroll
+  that settled late put the slideshow back on an earlier slide (found by the e2e).
+- **On the canvas** the slide titles sit above the photo slots, so they can be clicked and
+  edited.
+- **`setCardLink` became `setItemLink`** and `CardPanel` became `LinkPanel`, titled "Card" or
+  "Slide"; `itemLimit` reads a table of limits (cards and videos 1–12, slides 0–8).
+- **The slide titles line up with the page's content**, and the hero's heading under the slides
+  has room above it.
+- **The e2e drives the script on a fake clock** (`page.clock`), with `emulateMedia` for reduced
+  motion.

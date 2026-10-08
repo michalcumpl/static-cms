@@ -11,6 +11,7 @@ const typesFromTs: Record<NodeType, true> = {
   external_link: true,
   page: true,
   hero: true,
+  slide: true,
   rich_text: true,
   paragraph: true,
   subheading: true,
