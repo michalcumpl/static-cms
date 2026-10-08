@@ -190,7 +190,7 @@ test("the picker shows each block as a card with a drawing, name and description
   await caretIn(page, "Co pečeme");
   await page.getByRole("button", { name: "+ Add block" }).last().click();
   const cards = picker(page).getByRole("menuitem");
-  await expect(cards).toHaveCount(16);
+  await expect(cards).toHaveCount(17);
   for (const card of await cards.all()) {
     await expect(card.locator(".illustration svg")).toBeVisible();
   }

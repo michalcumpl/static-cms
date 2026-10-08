@@ -1,3 +1,4 @@
+import { videoEmbed } from "@webmio/model";
 import { siteStrings } from "@webmio/render";
 import type { Transaction } from "svedit";
 import { checkLinkAddress, type LinkAddressCheck } from "./links";
@@ -154,6 +155,39 @@ export function insertCards(tr: Tr): boolean {
   const block = tr.generate_id();
   tr.create({ id: block, type: "cards", heading: text(), layout: "below", items: list(items) });
   insertAndFocus(tr, block, "items", 0, "title");
+  return true;
+}
+
+function createVideo(tr: Tr): string {
+  const id = tr.generate_id();
+  tr.create({ id, type: "video", url: "", title: text(), caption: text(), poster: list() });
+  return id;
+}
+
+/** An empty video (Enter and "Add item"); none past twelve. */
+export function insertVideo(tr: Tr): boolean {
+  const at = insertionPoint(tr);
+  const count = at ? ((tr.get(at.path) as NodeList | undefined)?.nodes.length ?? 0) : 0;
+  if (count >= MAX_CARDS) return false;
+  insertAndFocus(tr, createVideo(tr), "title");
+  return true;
+}
+
+/** Videos: an empty heading and one empty video, the caret in its title. */
+export function insertVideos(tr: Tr): boolean {
+  const block = tr.generate_id();
+  tr.create({ id: block, type: "videos", heading: text(), items: list([createVideo(tr)]) });
+  insertAndFocus(tr, block, "items", 0, "title");
+  return true;
+}
+
+/**
+ * Sets a video's address when it is a YouTube or Vimeo video (video design decision 4); false,
+ * changing nothing, for anything else.
+ */
+export function setVideoUrl(tr: Tr, videoId: string, url: string): boolean {
+  if (!videoEmbed(url)) return false;
+  tr.set([videoId, "url"], url.trim());
   return true;
 }
 
@@ -394,7 +428,8 @@ export type BlockType =
   | "figures"
   | "steps"
   | "projects"
-  | "cards";
+  | "cards"
+  | "videos";
 
 export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   hero: insertHero,
@@ -413,6 +448,7 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   steps: insertSteps,
   projects: insertProjects,
   cards: insertCards,
+  videos: insertVideos,
 };
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
@@ -436,6 +472,7 @@ export function insertableBlocks(blocks: { type: string }[], index: number): Blo
     "steps",
     "projects",
     "cards",
+    "videos",
   ];
   return heroAllowed ? ["hero", ...others] : others;
 }
@@ -454,8 +491,9 @@ export function setImageDecorative(tr: Tr, imageId: string, decorative: boolean)
 }
 
 /** The property holding an owner's 0..1 image: a project's cover, everyone else's image. */
-export function imagePropertyOf(ownerType: string | undefined): "image" | "cover" {
-  return ownerType === "project" ? "cover" : "image";
+export function imagePropertyOf(ownerType: string | undefined): "image" | "cover" | "poster" {
+  if (ownerType === "project") return "cover";
+  return ownerType === "video" ? "poster" : "image";
 }
 
 /** An image from the media library, as the document stores it. */

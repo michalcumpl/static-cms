@@ -86,8 +86,8 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
   - [x] a page per service or project, a projects collection and a projects block filtered by
     category (`collection-pages`)
   - [x] cards: image, title, text and link (`cards`)
-  - [ ] video, moved from the beta, and a hero slideshow for film and creative agencies
-    (`video`, `hero-slideshow`)
+  - [x] video, click to play (`video`)
+  - [ ] a hero slideshow for film and creative agencies (`hero-slideshow`)
   - [ ] PDFs to download (`documents`)
   - [ ] business types, company and regulatory details, a separate billing address, check-in
     and check-out times (`business-details`)

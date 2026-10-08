@@ -124,3 +124,17 @@ Punk Film's project pages get players from their stored addresses.
 
 None: new node types only. Project pages with YouTube or Vimeo addresses change from a button to
 a player at the next publish.
+
+## Changes made while building
+
+- **The trailer takes the cover's place** at the top of a project page (the cover as its poster,
+  not lazy) instead of coming after the photos: at the end it repeated the cover. The
+  site-rendering delta says so.
+- **The script is tested against a small fake DOM** in the unit test (the repository has no DOM
+  library), and in a real browser by the e2e "Press play", which also checks that no request goes
+  to YouTube before play (the player itself is intercepted, so the test stays offline).
+- **`cardLimit` became `itemLimit`** for cards and videos, with "Videos" reasons in the handle
+  menu.
+- **The caption and "Plays from YouTube"** stack instead of sharing a line.
+- **The preview** serves `.js` files (`text/javascript`).
+- **The picker test** counts seventeen blocks.

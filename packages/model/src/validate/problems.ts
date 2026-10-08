@@ -85,7 +85,10 @@ export type ProblemCode =
   | "missing-cover"
   | "invalid-listing-page"
   // Cards (cards)
-  | "broken-card-link";
+  | "broken-card-link"
+  // Videos (video)
+  | "unsupported-video"
+  | "video-as-link";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -159,6 +162,8 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "missing-cover": "site",
   "invalid-listing-page": "site",
   "broken-card-link": "site",
+  "unsupported-video": "site",
+  "video-as-link": "site",
   "empty-answer": "site",
   "missing-item": "site",
   "wrong-collection": "site",

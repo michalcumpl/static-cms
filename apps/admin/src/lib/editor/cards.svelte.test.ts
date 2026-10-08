@@ -6,11 +6,11 @@ import { setBlockLook } from "./looks";
 import { EditorState } from "./state.svelte";
 import {
   canDuplicate,
-  cardLimit,
   deleteSelectedNode,
   duplicateSelectedNode,
   insertBlockAt,
   insertItem,
+  itemLimit,
 } from "./structure";
 import { setCardLink } from "./transforms";
 
@@ -77,7 +77,7 @@ describe("cards block", () => {
     selectCard(0);
     expect(insertItem(session)).toBe(false);
     expect(canDuplicate(session, cards()[0] as string)).toBe(false);
-    expect(cardLimit(session, cards()[0] as string)).toBe("maxCards");
+    expect(itemLimit(session, cards()[0] as string)).toBe("maxCards");
   });
 
   it("Last card can't be deleted", () => {
@@ -87,7 +87,7 @@ describe("cards block", () => {
     selectCard(0);
     deleteSelectedNode(session);
     expect(cards()).toHaveLength(1);
-    expect(cardLimit(session, cards()[0] as string)).toBe("lastCard");
+    expect(itemLimit(session, cards()[0] as string)).toBe("lastCard");
     selectCard(0);
     expect(deleteSelectedNode(session)).toBe(false);
     expect(cards()).toHaveLength(1);

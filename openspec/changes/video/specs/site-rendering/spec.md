@@ -42,7 +42,7 @@ When services or projects have a listing page, rendering SHALL produce a page fo
 - the menu marking its listing page as the current page;
 - a link back to its listing page, named after it.
 
-A **project page** SHALL show, in this order: the name, the category, the summary, the cover image (not lazy-loaded, sized for the full width), the facts as a description list, the text, the photos with their captions as a gallery, and, when the project has a video address, its video: the player of "Videos rendering" with the cover as its poster and the project's name as its title when the address is a YouTube or Vimeo video, otherwise a link "Watch the video" ("Přehrát video") to it. A **service page** SHALL show the name, the price, and the page text, or the description when the page text is empty.
+A **project page** SHALL show, in this order: the name, the category, the summary, the cover image (not lazy-loaded, sized for the full width), or in its place, when the project's video address is a YouTube or Vimeo video, the player of "Videos rendering" with the cover as its poster (not lazy-loaded) and the project's name as its title; then the facts as a description list, the text, the photos with their captions as a gallery, and, when the video address is anywhere else, a link "Watch the video" ("Přehrát video") to it. A **service page** SHALL show the name, the price, and the page text, or the description when the page text is empty.
 
 Item pages SHALL pass the site's HTML validation, and their headings SHALL follow "Heading hierarchy".
 

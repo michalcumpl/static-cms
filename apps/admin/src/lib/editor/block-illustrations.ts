@@ -181,6 +181,14 @@ export const BLOCK_ILLUSTRATIONS: Record<BlockType, string> = {
         })
         .join(""),
   ),
+  // A heading, then a wide video frame with a play circle in the middle and a caption under it.
+  videos: svg(
+    heading() +
+      `<rect x="8" y="16" width="104" height="44" rx="2" fill="${S}"/>` +
+      `<circle cx="60" cy="38" r="9" fill="${P}"/>` +
+      `<path d="M57 33 L65 38 L57 43 Z" fill="#fff"/>` +
+      bar(8, 64, 48),
+  ),
   // A heading, then three cards, each a photo with a title and two lines of text under it.
   cards: svg(
     heading() +

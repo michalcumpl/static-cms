@@ -24,6 +24,10 @@ export interface SiteStrings {
   watchVideo: string;
   /** The link to a service's page inside an opened accordion row. */
   moreAboutService: string;
+  /** A video's play link, before its title: "Přehrát: Medvídku, vypravuj!". */
+  play: string;
+  /** Where a video plays from, with `{provider}`: "Přehraje se z YouTube". */
+  playsFrom: string;
 }
 
 const STRINGS: Record<string, SiteStrings> = {
@@ -43,6 +47,8 @@ const STRINGS: Record<string, SiteStrings> = {
     allProjects: "Všechny projekty",
     watchVideo: "Přehrát video",
     moreAboutService: "Více o službě",
+    play: "Přehrát",
+    playsFrom: "Přehraje se z {provider}",
   },
   sk: {
     notFoundHeading: "Stránka sa nenašla",
@@ -60,6 +66,8 @@ const STRINGS: Record<string, SiteStrings> = {
     allProjects: "Všetky projekty",
     watchVideo: "Prehrať video",
     moreAboutService: "Viac o službe",
+    play: "Prehrať",
+    playsFrom: "Prehrá sa z {provider}",
   },
   de: {
     notFoundHeading: "Seite nicht gefunden",
@@ -78,6 +86,8 @@ const STRINGS: Record<string, SiteStrings> = {
     allProjects: "Alle Projekte",
     watchVideo: "Video ansehen",
     moreAboutService: "Mehr zu dieser Leistung",
+    play: "Abspielen",
+    playsFrom: "Wird von {provider} abgespielt",
   },
   pl: {
     notFoundHeading: "Nie znaleziono strony",
@@ -95,6 +105,8 @@ const STRINGS: Record<string, SiteStrings> = {
     allProjects: "Wszystkie projekty",
     watchVideo: "Obejrzyj wideo",
     moreAboutService: "Więcej o usłudze",
+    play: "Odtwórz",
+    playsFrom: "Odtwarzane z {provider}",
   },
   en: {
     notFoundHeading: "Page not found",
@@ -112,6 +124,8 @@ const STRINGS: Record<string, SiteStrings> = {
     allProjects: "All projects",
     watchVideo: "Watch the video",
     moreAboutService: "More about this service",
+    play: "Play",
+    playsFrom: "Plays from {provider}",
   },
 };
 

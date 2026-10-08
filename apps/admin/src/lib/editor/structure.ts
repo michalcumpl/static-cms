@@ -19,6 +19,7 @@ import {
   insertFigure,
   insertListItem,
   insertStep,
+  insertVideo,
   MAX_CARDS,
   MAX_FIGURES,
 } from "./transforms";
@@ -134,7 +135,7 @@ export function duplicateSelectedNode(session: Session): boolean {
 /** Whether a node may be duplicated: anything but a hero, and no card past twelve. */
 export function canDuplicate(session: Session, id: string): boolean {
   const type = (session.get(id) as { type?: string } | undefined)?.type;
-  if (type === "card") return cardLimit(session, id) !== "maxCards";
+  if (type === "card" || type === "video") return itemLimit(session, id) !== "maxCards";
   return type !== "hero";
 }
 
@@ -142,11 +143,11 @@ export function canDuplicate(session: Session, id: string): boolean {
  * Why a card can't be deleted (the last one of its block) or added next to (twelve already),
  * from where it sits in the document (cards design decision 4).
  */
-export function cardLimit(session: Session, cardId: string): "lastCard" | "maxCards" | undefined {
+export function itemLimit(session: Session, itemId: string): "lastCard" | "maxCards" | undefined {
   const block = Object.values(session.doc.nodes).find(
     (node) =>
-      (node as { type?: string }).type === "cards" &&
-      ((node as { items?: NodeList }).items?.nodes ?? []).includes(cardId),
+      ["cards", "videos"].includes((node as { type?: string }).type ?? "") &&
+      ((node as { items?: NodeList }).items?.nodes ?? []).includes(itemId),
   ) as { items: NodeList } | undefined;
   const count = block?.items.nodes.length ?? 0;
   if (count >= MAX_CARDS) return "maxCards";
@@ -175,7 +176,12 @@ export function deleteSelectedNode(session: Session): boolean {
   // A cards block keeps at least one card.
   const id = (session.get(selected.path) as NodeList).nodes[selected.index];
   const node = id === undefined ? undefined : (session.get(id) as { type?: string });
-  if (node?.type === "card" && cardLimit(session, id as string) === "lastCard") return false;
+  if (
+    (node?.type === "card" || node?.type === "video") &&
+    itemLimit(session, id as string) === "lastCard"
+  ) {
+    return false;
+  }
   session.apply(session.tr.delete_selection());
   return true;
 }
@@ -207,7 +213,7 @@ export function insertBlockAt(
 }
 
 /** The item lists "Add item" fills, by the type of the node holding them. */
-const ITEM_OWNERS = ["list", "figures", "steps", "cards"];
+const ITEM_OWNERS = ["list", "figures", "steps", "cards", "videos"];
 
 /**
  * The item list the selection is in (a bulleted list's items, a key figures or steps block's
@@ -230,7 +236,12 @@ export function itemInsertionPoint(
     if (!owner?.type || !ITEM_OWNERS.includes(owner.type)) continue;
     // A key figures block holds at most six.
     if (owner.type === "figures" && (owner.items?.nodes.length ?? 0) >= MAX_FIGURES) return;
-    if (owner.type === "cards" && (owner.items?.nodes.length ?? 0) >= MAX_CARDS) return;
+    if (
+      (owner.type === "cards" || owner.type === "videos") &&
+      (owner.items?.nodes.length ?? 0) >= MAX_CARDS
+    ) {
+      return;
+    }
     const next = selection.path[end];
     if (typeof next === "number") return { path, index: next + 1, owner: owner.type };
     if (selection.type === "node") {
@@ -290,6 +301,7 @@ export function insertItem(session: Session): boolean {
   if (at.owner === "figures") insertFigure(tr);
   else if (at.owner === "steps") insertStep(tr);
   else if (at.owner === "cards") insertCard(tr);
+  else if (at.owner === "videos") insertVideo(tr);
   else insertListItem(tr);
   session.apply(tr);
   return true;

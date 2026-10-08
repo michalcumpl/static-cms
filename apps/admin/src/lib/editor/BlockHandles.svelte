@@ -22,10 +22,10 @@ import { revealNode } from "./reveal";
 import type { EditorState } from "./state.svelte";
 import {
   canDuplicate,
-  cardLimit,
   deleteSelectedNode,
   duplicateSelectedNode,
   insertBlockAt,
+  itemLimit,
   moveSelectedNode,
 } from "./structure";
 import type { BlockType } from "./transforms";
@@ -217,7 +217,8 @@ function menuEntries(kind: "block" | "item", target: HandleTarget): MenuEntry[] 
   if (kind === "item" && target.collection) return collectionEntries(target);
   const count = (session.get(target.listPath) as { nodes: string[] }).nodes.length;
   // A cards block holds one to twelve cards.
-  const limit = target.type === "card" ? cardLimit(session, target.id) : undefined;
+  const limit =
+    target.type === "card" || target.type === "video" ? itemLimit(session, target.id) : undefined;
   const after = (action: () => void) => () => {
     select(target);
     action();
@@ -237,13 +238,27 @@ function menuEntries(kind: "block" | "item", target: HandleTarget): MenuEntry[] 
     {
       label: i18n.t("editor.handles.duplicate"),
       disabled: !canDuplicate(session, target.id),
-      disabledReason: limit === "maxCards" ? i18n.t("editor.unavailable.maxCards") : undefined,
+      disabledReason:
+        limit === "maxCards"
+          ? i18n.t(
+              target.type === "video"
+                ? "editor.unavailable.maxVideos"
+                : "editor.unavailable.maxCards",
+            )
+          : undefined,
       run: after(() => duplicateSelectedNode(session)),
     },
     {
       label: i18n.t("editor.handles.delete"),
       disabled: limit === "lastCard",
-      disabledReason: limit === "lastCard" ? i18n.t("editor.unavailable.lastCard") : undefined,
+      disabledReason:
+        limit === "lastCard"
+          ? i18n.t(
+              target.type === "video"
+                ? "editor.unavailable.lastVideo"
+                : "editor.unavailable.lastCard",
+            )
+          : undefined,
       run: after(() => {
         deleteSelectedNode(session);
         session.selection = null as never;

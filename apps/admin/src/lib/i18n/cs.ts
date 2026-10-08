@@ -727,6 +727,7 @@ export const cs: Messages = {
         "Tuto fotku se nepodařilo převést. Vyexportujte ji jako JPEG a zkuste to znovu.",
     },
     canvas: {
+      videoTitle: "Název videa",
       headingOptional: "Nadpis (nepovinný)",
       heading: "Nadpis",
       shortTextOptional: "Krátký text (nepovinný)",
@@ -768,6 +769,10 @@ export const cs: Messages = {
       noLabel: "Zadejte popisek do menu.",
     },
     blocks: {
+      videos: {
+        name: "Videa",
+        description: "Videa z YouTube nebo Vimea, která se spustí po kliknutí",
+      },
       cards: { name: "Karty", description: "Fotka, nadpis, pár řádků a odkaz, několik vedle sebe" },
       projects: {
         name: "Projekty",
@@ -804,6 +809,7 @@ export const cs: Messages = {
       steps: { name: "Postup", description: "Jak to funguje, krok za krokem" },
     },
     items: {
+      video: "Video",
       card: "Karta",
       list_item: "Položka seznamu",
       service_item: "Služba",
@@ -863,6 +869,14 @@ export const cs: Messages = {
       address: "Adresa",
       broken: "Odkaz vede na něco, co už nemá stránku; vyberte jiný.",
     },
+    videoPanel: {
+      title: "Video",
+      address: "Adresa na YouTube nebo Vimeu",
+      notVideo: "Vložte adresu videa na YouTube nebo Vimeu.",
+      recognised: "Video {id} na {provider}",
+      open: "Otevřít na {provider}",
+      missing: "Zatím bez adresy.",
+    },
     look: {
       cards: { below: "Text pod fotkou", over: "Nadpis přes fotku" },
       legend: "Vzhled",
@@ -900,6 +914,8 @@ export const cs: Messages = {
       },
     },
     unavailable: {
+      lastVideo: "Blok videí potřebuje alespoň jedno video",
+      maxVideos: "Blok videí má nejvýš dvanáct videí",
       lastCard: "Blok karet potřebuje alespoň jednu kartu",
       maxCards: "Blok karet má nejvýš dvanáct karet",
       heroTop: "Úvodní blok zůstává nahoře na stránce",

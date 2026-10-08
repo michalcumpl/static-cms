@@ -128,6 +128,32 @@ describe("exportSite", () => {
     ]);
   });
 
+  it("Video script only when needed", () => {
+    expect(exported().files.has("assets/video.js")).toBe(false);
+    const { doc, nodes } = editableDemoSite();
+    nodes.video_1 = {
+      id: "video_1",
+      type: "video",
+      url: "https://youtu.be/wNdrFte2T4w",
+      title: { content: "Medvídku, vypravuj!", marks: [], annotations: [] },
+      caption: { content: "", marks: [], annotations: [] },
+      poster: { nodes: [], marks: [], annotations: [] },
+    };
+    nodes.videos_1 = {
+      id: "videos_1",
+      type: "videos",
+      heading: { content: "", marks: [], annotations: [] },
+      items: { nodes: ["video_1"], marks: [], annotations: [] },
+    };
+    nodes.page_contact.blocks.nodes.push("videos_1");
+    const { files } = exported(doc);
+    expect(decode(files.get("assets/video.js"))).toContain("youtube-nocookie");
+    expect(decode(files.get("kontakt/index.html"))).toContain(
+      '<script src="/assets/video.js" defer>',
+    );
+    expect(decode(files.get("index.html"))).not.toContain("<script src=");
+  });
+
   it("Project pages in the sitemap", () => {
     const { doc, nodes } = editableDemoSite();
     nodes.site_1.base_url = "https://punkfilm.cz";

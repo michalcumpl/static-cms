@@ -20,6 +20,8 @@ const typesFromTs: Record<NodeType, true> = {
   service_item: true,
   projects: true,
   cards: true,
+  videos: true,
+  video: true,
   card: true,
   project: true,
   project_category: true,

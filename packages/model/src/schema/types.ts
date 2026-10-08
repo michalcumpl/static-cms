@@ -213,6 +213,26 @@ export interface CardNode {
   url: string;
 }
 
+/** YouTube and Vimeo videos, played only when the visitor asks. */
+export interface VideosNode {
+  id: string;
+  type: "videos";
+  heading: TextValue;
+  /** 1–12 `video` nodes. */
+  items: NodeArrayValue;
+}
+
+export interface VideoNode {
+  id: string;
+  type: "video";
+  /** The address of a YouTube or Vimeo video. */
+  url: string;
+  title: TextValue;
+  caption: TextValue;
+  /** Zero or one `image` node. */
+  poster: NodeArrayValue;
+}
+
 /** Shows the site's projects, all of them or one category, up to `limit`. */
 export interface ProjectsNode extends CollectionBlock {
   type: "projects";
@@ -543,6 +563,8 @@ export type AnyNode =
   | ServiceItemNode
   | ProjectsNode
   | CardsNode
+  | VideosNode
+  | VideoNode
   | CardNode
   | ProjectNode
   | ProjectCategoryNode

@@ -48,6 +48,8 @@ import Team from "./nodes/Team.svelte";
 import Testimonial from "./nodes/Testimonial.svelte";
 import Testimonials from "./nodes/Testimonials.svelte";
 import TextWithImage from "./nodes/TextWithImage.svelte";
+import Video from "./nodes/Video.svelte";
+import Videos from "./nodes/Videos.svelte";
 import {
   insertCard,
   insertFact,
@@ -60,6 +62,7 @@ import {
   insertServiceItem,
   insertStep,
   insertTestimonial,
+  insertVideo,
 } from "./transforms";
 
 // biome-ignore lint/suspicious/noExplicitAny: node components take Svedit's path props.
@@ -99,6 +102,8 @@ export const nodeComponents: Record<string, Component<any>> = {
   project: ProjectTile,
   cards: Cards,
   card: Card,
+  videos: Videos,
+  video: Video,
   image: Image,
   strong: MarkStrong,
   emphasis: MarkEmphasis,
@@ -144,6 +149,7 @@ export function createConfig(view: EditorView = "canvas") {
       figure: insertFigure,
       fact: insertFact,
       card: insertCard,
+      video: insertVideo,
       step: insertStep,
       rich_text: insertRichText,
     },

@@ -78,7 +78,8 @@ Film added 15–20 and the second video. Today's stand-in is in brackets.
 7. **Reviews with a rating** (2: a Google rating, Roubenka) [testimonials; review
    screenshots in a gallery get cropped and are unreadable].
 8. **Video** (2, central to both: Aniděti's 20+ films on YouTube, Punk Film's trailer on every
-   project on Vimeo) [links]. Without cookies until clicked. Moved before launch.
+   project on Vimeo): **done**, the videos block and project trailers (`video`): nothing loads
+   from YouTube or Vimeo until the visitor presses play.
 9. **Timetable or table** (2: Aniděti's course schedule, Roubenka's seasonal prices) [lists].
 10. **Booking and availability** through the owner's booking service (1: Roubenka on Lodgify)
     [a button to the checkout].

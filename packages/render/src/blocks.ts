@@ -1,5 +1,5 @@
 import type { AnyNode, NodeOfType } from "@webmio/model";
-import { imageFile, imageVariants, srcVariant } from "@webmio/model";
+import { imageFile, imageVariants, srcVariant, videoEmbed } from "@webmio/model";
 import { contactDetails, type LocationInfo, locationsBody, openingHoursTable } from "./business.js";
 import type { RenderContext } from "./context.js";
 import { type Html, html } from "./html.js";
@@ -40,6 +40,8 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderProjects(block, ctx);
     case "cards":
       return renderCards(block, ctx);
+    case "videos":
+      return renderVideos(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -424,6 +426,74 @@ function renderCards(block: NodeOfType<"cards">, ctx: RenderContext): Html {
         </ul>
       </div>
     </section>`;
+}
+
+/** Videos in columns by their number, each played only when the visitor asks. */
+function renderVideos(block: NodeOfType<"videos">, ctx: RenderContext): Html {
+  const columns = figureColumns(block.items.nodes.length);
+  const items = ctx.children(block.items).map((video) => {
+    if (video.type !== "video") return false;
+    const [poster] = ctx.children(video.poster);
+    const figure = videoFigure(ctx, {
+      url: video.url,
+      title: video.title.content,
+      caption: isEmpty(video.caption) ? undefined : renderText(video.caption, ctx),
+      poster: poster?.type === "image" ? poster : undefined,
+      sizes: columns > 1 ? IMAGE_SIZES.card : IMAGE_SIZES.projectCover,
+    });
+    return (
+      figure &&
+      html`
+          <li>${figure}
+          </li>`
+    );
+  });
+  return html`<section class="block videos">
+      <div class="container">${blockHeading(block.heading, ctx)}
+        <ul class="video-list card-columns-${columns}">${items}
+        </ul>
+      </div>
+    </section>`;
+}
+
+const PROVIDER_NAMES = { youtube: "YouTube", vimeo: "Vimeo" } as const;
+
+/**
+ * A video before play: a link to its page on the provider's site showing the poster or the title,
+ * which the video script swaps for the player (video design decision 3). Undefined for an address
+ * that isn't a YouTube or Vimeo video. Marks the page as needing the script.
+ */
+export function videoFigure(
+  ctx: RenderContext,
+  video: {
+    url: string;
+    title: string;
+    caption?: Html;
+    poster?: NodeOfType<"image">;
+    sizes: string;
+    /** False for a poster at the top of the page. */
+    lazy?: boolean;
+  },
+): Html | undefined {
+  const embed = videoEmbed(video.url);
+  if (!embed) return undefined;
+  ctx.pageHasVideo = true;
+  ctx.siteHasVideo = true;
+  const source = ctx.strings.playsFrom.replace("{provider}", PROVIDER_NAMES[embed.provider]);
+  return html`
+            <figure class="video" data-embed="${embed.embedUrl}" data-title="${video.title}">
+              <a class="video-play" href="${embed.watchUrl}">${
+                video.poster
+                  ? renderImage(video.poster, ctx, {
+                      lazy: video.lazy ?? true,
+                      sizes: video.sizes,
+                      className: "video-poster",
+                      alt: "",
+                    })
+                  : html`<span class="video-title" aria-hidden="true">${video.title}</span>`
+              }<span class="video-label">${ctx.strings.play}: ${video.title}</span></a>
+              <figcaption>${video.caption && html`<span class="video-caption">${video.caption}</span>`}<span class="video-source">${source}</span></figcaption>
+            </figure>`;
 }
 
 /** An ordered list: the numbers come from the order (figures-and-steps design decision 1). */

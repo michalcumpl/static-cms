@@ -29,6 +29,7 @@ describe("block illustrations", () => {
         "steps",
         "team",
         "testimonials",
+        "videos",
       ].sort(),
     );
   });

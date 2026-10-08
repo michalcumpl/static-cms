@@ -1,6 +1,13 @@
 // Projects and the pages of services and projects (collection-pages design decisions 4 and 5).
 import type { NodeOfType } from "@webmio/model";
-import { blockHeading, galleryGrid, IMAGE_SIZES, renderBodyChild, renderImage } from "./blocks.js";
+import {
+  blockHeading,
+  galleryGrid,
+  IMAGE_SIZES,
+  renderBodyChild,
+  renderImage,
+  videoFigure,
+} from "./blocks.js";
 import type { RenderContext } from "./context.js";
 import { renderHead } from "./head.js";
 import { type Html, html } from "./html.js";
@@ -69,6 +76,7 @@ export function renderProjects(block: NodeOfType<"projects">, ctx: RenderContext
 
 /** An item's own page: a project's or a service's, under its listing page. */
 export function renderItemPage(itemId: string, listingPageId: string, ctx: RenderContext): Html {
+  ctx.pageHasVideo = false;
   const node = ctx.nodes[itemId];
   const listing = ctx.node(listingPageId, "page");
   const back = html`
@@ -107,6 +115,17 @@ function projectPage(project: NodeOfType<"project">, back: Html, ctx: RenderCont
         ]
       : [],
   );
+  // A YouTube or Vimeo trailer takes the cover's place at the top, the cover as its poster.
+  const trailer =
+    project.video_url === ""
+      ? undefined
+      : videoFigure(ctx, {
+          url: project.video_url,
+          title: project.name.content,
+          poster: cover,
+          sizes: IMAGE_SIZES.projectCover,
+          lazy: false,
+        });
   const body = ctx
     .children(project.body)
     .map((child) => indent(renderBodyChild(child, ctx), "      "));
@@ -122,8 +141,12 @@ function projectPage(project: NodeOfType<"project">, back: Html, ctx: RenderCont
             html`
           <p class="project-summary">${renderText(project.summary, ctx)}</p>`
           }${
-            cover &&
-            html`
+            trailer
+              ? html`
+          <div class="project-video">${indent(trailer, "  ")}
+          </div>`
+              : cover &&
+                html`
           ${renderImage(cover, ctx, { lazy: false, sizes: IMAGE_SIZES.projectCover, className: "project-page-cover" })}`
           }
           <div class="project-body">${
@@ -141,6 +164,7 @@ function projectPage(project: NodeOfType<"project">, back: Html, ctx: RenderCont
           </div>`
           }${
             project.video_url !== "" &&
+            !trailer &&
             html`
           <p class="project-video"><a class="button" href="${ctx.href(project.video_url)}">${ctx.strings.watchVideo}</a></p>`
           }

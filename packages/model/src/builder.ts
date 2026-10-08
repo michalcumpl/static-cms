@@ -114,6 +114,11 @@ export type BlockInput =
   | { type: "figures"; heading?: string; items: { value: string; label: string }[] }
   | { type: "steps"; heading: string; items: { title: string; text?: string }[] }
   | {
+      type: "videos";
+      heading?: string;
+      items: { url: string; title: string; caption?: string; poster?: ImageInput }[];
+    }
+  | {
       type: "cards";
       heading?: string;
       /** `below` (default): the image, then the title and text; `over`: the title over it. */
@@ -210,6 +215,8 @@ export const blocks = {
     ({ type: "figures", ...b }) as BlockInput,
   steps: (b: Omit<Extract<BlockInput, { type: "steps" }>, "type">) =>
     ({ type: "steps", ...b }) as BlockInput,
+  videos: (b: Omit<Extract<BlockInput, { type: "videos" }>, "type">) =>
+    ({ type: "videos", ...b }) as BlockInput,
   cards: (b: Omit<Extract<BlockInput, { type: "cards" }>, "type">) =>
     ({ type: "cards", ...b }) as BlockInput,
   projects: (
@@ -507,6 +514,20 @@ export function siteBuilder(options: {
               items: list(
                 input.items.map((item) =>
                   add("figure", { value: text(item.value), label: text(item.label) }),
+                ),
+              ),
+            });
+          case "videos":
+            return add("videos", {
+              heading: text(input.heading),
+              items: list(
+                input.items.map((item) =>
+                  add("video", {
+                    url: item.url,
+                    title: text(item.title),
+                    caption: text(item.caption),
+                    poster: list(image(item.poster)),
+                  }),
                 ),
               ),
             });

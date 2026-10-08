@@ -18,6 +18,7 @@ import {
 import { slugify } from "../slug.js";
 import { graphemeLength } from "../text.js";
 import { CONTRAST_PAIRS, contrastRatio, MIN_CONTRAST, type ThemeColor } from "../themes.js";
+import { videoEmbed } from "../video.js";
 import type { GenericCheck } from "./generic.js";
 import type { ProblemCode, Problems } from "./problems.js";
 
@@ -101,7 +102,10 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
     checkItemPages(site, get, problems);
     for (const pageId of pageIds) {
       const page = get(pageId, "page");
-      if (page) checkCards(site, page, pageIds, get, problems);
+      if (page) {
+        checkCards(site, page, pageIds, get, problems);
+        checkVideos(page, get, problems);
+      }
     }
     for (const pageId of pageIds) {
       const page = get(pageId, "page");
@@ -681,6 +685,13 @@ function checkProject(
       `${label}'s video address "${project.video_url}" must start with https://; ${home}.`,
       "video_url",
     );
+  } else if (project.video_url !== "" && !videoEmbed(project.video_url)) {
+    problems.warning(
+      "video-as-link",
+      project.id,
+      `${label}'s video isn't on YouTube or Vimeo, so its page links to it instead of playing it.`,
+      "video_url",
+    );
   }
 }
 
@@ -992,6 +1003,7 @@ function checkPageBlocks(
       "faq",
       "projects",
       "cards",
+      "videos",
     ] as const) {
       const block = get(blockId, type);
       if (block && !isBlank(block.heading)) hasH2 = true;
@@ -1084,6 +1096,66 @@ function checkCards(
           card.id,
           `The link of card ${i + 1} on ${on} leads to something that no longer has a page; choose another target.`,
           "target_id",
+        );
+      }
+    });
+  }
+}
+
+/** A page's videos blocks: their number, titles and addresses (video design decision 2). */
+function checkVideos(
+  page: NodeOfType<"page">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const on = pageLabel(page);
+  for (const blockId of page.blocks.nodes) {
+    const block = get(blockId, "videos");
+    if (!block) continue;
+    const count = block.items.nodes.length;
+    if (count === 0) {
+      problems.error(
+        "empty-block",
+        block.id,
+        `The videos on ${on} need at least one video.`,
+        "items",
+      );
+    } else if (count > MAX_CARDS) {
+      problems.error(
+        "too-many-items",
+        block.id,
+        `The videos on ${on} can have at most ${MAX_CARDS} videos.`,
+        "items",
+      );
+    }
+    block.items.nodes.forEach((videoId, i) => {
+      const video = get(videoId, "video");
+      if (!video) return;
+      const label = `Video ${i + 1} on ${on}`;
+      if (video.url.trim() === "") {
+        problems.error(
+          "unsupported-video",
+          video.id,
+          `${label} needs the address of a video on YouTube or Vimeo.`,
+          "url",
+        );
+      } else if (!videoEmbed(video.url)) {
+        problems.error(
+          "unsupported-video",
+          video.id,
+          `${label} has an address that isn't a video on YouTube or Vimeo: "${video.url}".`,
+          "url",
+        );
+      }
+      if (isBlank(video.title)) {
+        problems.error("empty-title", video.id, `${label} needs a title.`, "title");
+      }
+      if (video.poster.nodes.length > 1) {
+        problems.error(
+          "too-many-items",
+          video.id,
+          `${label} can have at most one poster.`,
+          "poster",
         );
       }
     });

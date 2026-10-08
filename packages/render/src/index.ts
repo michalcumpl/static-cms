@@ -4,6 +4,7 @@ import { isValidBasePath, type PageRoute, RenderContext, type SiteLanguage } fro
 import { siteCss } from "./css.js";
 import { renderItemPage } from "./items.js";
 import { renderNotFound, renderPage } from "./page.js";
+import { VIDEO_SCRIPT } from "./video-script.js";
 
 export { isValidBasePath, type SiteLanguage } from "./context.js";
 export { fontPreviewCss, type SiteCssOptions, siteCss } from "./css.js";
@@ -44,6 +45,8 @@ export interface RenderedSite {
   css: string;
   /** The page for addresses the site doesn't have, exported as `404.html`. */
   notFound: string;
+  /** Contents of `assets/video.js`, when a page shows a video. */
+  script?: string;
 }
 
 export type RenderResult =
@@ -124,8 +127,14 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
     });
   }
   const css = siteCss(ctx.node(ctx.site.theme, "theme"));
+  ctx.pageHasVideo = false;
   const notFound = renderNotFound(ctx).value;
-  return { ok: true, site: { pages, css, notFound }, warnings: validation.problems };
+  const script = ctx.siteHasVideo ? VIDEO_SCRIPT : undefined;
+  return {
+    ok: true,
+    site: { pages, css, notFound, ...(script ? { script } : {}) },
+    warnings: validation.problems,
+  };
 }
 
 export { figureColumns } from "./blocks.js";

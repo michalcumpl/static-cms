@@ -106,6 +106,8 @@ describe("problem categories", () => {
       "missing-cover": true,
       "invalid-listing-page": true,
       "broken-card-link": true,
+      "unsupported-video": true,
+      "video-as-link": true,
     };
     for (const code of Object.keys(codes) as ProblemCode[]) {
       expect(["structure", "site"], code).toContain(problemCategory(code));

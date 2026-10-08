@@ -80,6 +80,7 @@ describe("block insertion", () => {
     "steps",
     "projects",
     "cards",
+    "videos",
   ];
 
   it("offers the hero only at the top of a page without one, and nothing above a hero", () => {

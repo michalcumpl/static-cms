@@ -157,9 +157,12 @@ describe("item pages", () => {
       /<dl class="project-facts">[\s\S]*<dt>Director<\/dt>\s*<dd>Tomáš Hodan<\/dd>[\s\S]*<dt>DOP<\/dt>/,
     );
     expect(race.match(/<li>\s*<figure>/g)).toHaveLength(9);
+    // The Vimeo trailer plays on the page, with the cover as its poster, after a click.
     expect(race).toContain(
-      '<a class="button" href="https://vimeo.com/697475416">Watch the video</a>',
+      '<figure class="video" data-embed="https://player.vimeo.com/video/697475416?dnt=1&amp;autoplay=1" data-title="The Last Race">',
     );
+    expect(race).toContain('<a class="video-play" href="https://vimeo.com/697475416">');
+    expect(race).toContain('<script src="/assets/video.js" defer></script>');
     expect(race).toContain('<p class="back-link"><a href="/work/">Work</a></p>');
     expect(race).toContain('<a href="/work/" aria-current="page">Work</a>');
     expect(race).toContain("<title>The Last Race – Punk Film</title>");
@@ -168,8 +171,10 @@ describe("item pages", () => {
     expect(race).toContain(
       '<meta property="og:image" content="https://punkfilm.cz/assets/images/race.jpg-share.jpg">',
     );
-    // The cover isn't lazy: it's at the top of the page.
-    expect(race).toMatch(/<img class="project-page-cover" [^>]*sizes="[^"]+"[^>]*height="1000">/);
+    // The trailer takes the cover's place at the top, the cover as its poster, not lazy.
+    expect(race).not.toContain("project-page-cover");
+    expect(race).toMatch(/<img class="video-poster" [^>]*height="1000">/);
+    expect(race.indexOf('class="video"')).toBeLessThan(race.indexOf('class="project-facts"'));
     expect(await validate(race)).toEqual([]);
     await expect(race).toMatchFileSnapshot("__snapshots__/items/project.html");
   });

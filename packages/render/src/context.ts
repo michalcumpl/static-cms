@@ -48,6 +48,10 @@ export interface PageRoute {
 export class RenderContext {
   readonly site: SiteNode;
   readonly routes = new Map<string, PageRoute>();
+  /** Whether the page being rendered shows a video, so its head loads the video script. */
+  pageHasVideo = false;
+  /** Whether any page of the site shows a video, so the export writes the script. */
+  siteHasVideo = false;
   /** The items that have pages, services first, each in collection order. */
   readonly itemPages: ItemPage[] = [];
   readonly nodes: Record<string, AnyNode>;

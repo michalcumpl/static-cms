@@ -105,6 +105,17 @@ function everything(lang: "cs" | "en") {
       ],
     }),
     blocks.projects(t("Práce", "Work"), { category: films, limit: 4 }),
+    blocks.videos({
+      heading: t("Filmy", "Films"),
+      items: [
+        {
+          url: "https://youtu.be/wNdrFte2T4w",
+          title: t("Medvídku", "Teddy"),
+          poster: image("v.jpg"),
+        },
+        { url: "https://vimeo.com/697475416", title: "Trailer", caption: "2022" },
+      ],
+    }),
     blocks.cards({
       heading: t("Projekty", "Projects"),
       look: "over",
@@ -149,6 +160,7 @@ describe("siteBuilder", () => {
       "steps",
       "projects",
       "cards",
+      "videos",
     ]) {
       expect(types, type).toContain(type);
     }

@@ -61,6 +61,7 @@ function subjectOf(ctx: RenderContext, options: HeadOptions): Subject | undefine
  */
 export function renderHead(ctx: RenderContext, options: HeadOptions): Html {
   const page = subjectOf(ctx, options);
+  // The video script, only on pages that show a video (video design decision 3).
   const lines: Html[] = [
     html`<meta charset="utf-8">`,
     html`<meta name="viewport" content="width=device-width, initial-scale=1">`,
@@ -70,6 +71,8 @@ export function renderHead(ctx: RenderContext, options: HeadOptions): Html {
     lines.push(html`<meta name="description" content="${options.description}">`);
   }
   lines.push(html`<link rel="stylesheet" href="${ctx.url("assets/style.css")}">`);
+  if (ctx.pageHasVideo)
+    lines.push(html`<script src="${ctx.url("assets/video.js")}" defer></script>`);
   const canonical = page && ctx.canonicalUrl(page.id);
   if (canonical) lines.push(html`<link rel="canonical" href="${canonical}">`);
   if (page && ctx.multilingual) lines.push(...alternates(ctx, page.key));

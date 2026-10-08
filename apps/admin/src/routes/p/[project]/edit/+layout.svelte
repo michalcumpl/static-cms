@@ -24,6 +24,7 @@ import {
 import { EditorState, setEditor } from "$lib/editor/state.svelte";
 import { canInsertItem, insertItem, isFixedList } from "$lib/editor/structure";
 import ThemeSettings from "$lib/editor/ThemeSettings.svelte";
+import VideoPanel from "$lib/editor/VideoPanel.svelte";
 import { getI18n } from "$lib/i18n";
 import PublishButton from "$lib/PublishButton.svelte";
 import { projectPaths } from "$lib/project-paths";
@@ -235,6 +236,7 @@ const statusText = $derived(saveStatusText(editor, i18n.t));
     <ButtonPanel {editor} />
     <BlockPanel {editor} focusCanvas={() => canvas?.focus_canvas()} />
     <CardPanel {editor} />
+    <VideoPanel {editor} />
     <ImagePanel {editor} />
   </aside>
 </div>

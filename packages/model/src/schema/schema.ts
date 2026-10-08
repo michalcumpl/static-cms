@@ -173,6 +173,7 @@ export const siteSchema = {
           "steps",
           "projects",
           "cards",
+          "videos",
         ],
         default_node_type: "rich_text",
       },
@@ -452,6 +453,24 @@ export const siteSchema = {
       target_id: { type: "string" },
       /** An outside address, or "" for none. At most one of `target_id` and `url` is set. */
       url: { type: "string" },
+    },
+  },
+  /** YouTube and Vimeo videos, played only when the visitor asks (video design decision 1). */
+  videos: {
+    kind: "block",
+    properties: {
+      heading: { type: "text", allow_newlines: false },
+      items: { type: "node_array", node_types: ["video"], default_node_type: "video" },
+    },
+  },
+  video: {
+    kind: "block",
+    properties: {
+      /** The address of a YouTube or Vimeo video (`videoEmbed`). */
+      url: { type: "string" },
+      title: { type: "text", allow_newlines: false },
+      caption: { type: "text", allow_newlines: false },
+      poster: { type: "node_array", node_types: ["image"] },
     },
   },
   /** Points a collection block at one item of its collection, by the item's node ID. */

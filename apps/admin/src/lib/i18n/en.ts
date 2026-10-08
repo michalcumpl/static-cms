@@ -712,6 +712,7 @@ export const en = {
       conversionFailed: "This photo couldn't be converted. Export it as JPEG and try again.",
     },
     canvas: {
+      videoTitle: "Title of the video",
       headingOptional: "Heading (optional)",
       heading: "Heading",
       shortTextOptional: "Short text (optional)",
@@ -753,6 +754,7 @@ export const en = {
       noLabel: "Enter a label for the menu.",
     },
     blocks: {
+      videos: { name: "Videos", description: "YouTube or Vimeo videos that play when clicked" },
       cards: {
         name: "Cards",
         description: "A photo, a title, a few lines and a link, several in a row",
@@ -792,6 +794,7 @@ export const en = {
       steps: { name: "Steps", description: "How it works, step by step" },
     },
     items: {
+      video: "Video",
       card: "Card",
       list_item: "List item",
       service_item: "Service",
@@ -850,6 +853,14 @@ export const en = {
       address: "An address",
       broken: "Its link leads to something that no longer has a page; choose another one.",
     },
+    videoPanel: {
+      title: "Video",
+      address: "Address on YouTube or Vimeo",
+      notVideo: "Paste the address of a video on YouTube or Vimeo.",
+      recognised: "{provider} video {id}",
+      open: "Open on {provider}",
+      missing: "No address yet.",
+    },
     look: {
       cards: { below: "Text under the photo", over: "Title over the photo" },
       legend: "Look",
@@ -887,6 +898,8 @@ export const en = {
       },
     },
     unavailable: {
+      lastVideo: "A videos block needs at least one video",
+      maxVideos: "A videos block holds at most twelve videos",
       lastCard: "A cards block needs at least one card",
       maxCards: "A cards block holds at most twelve cards",
       heroTop: "The hero stays at the top of the page",
