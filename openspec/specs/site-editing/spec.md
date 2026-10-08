@@ -74,7 +74,7 @@ The owner SHALL be able to turn selected text into a link to a page of the site,
 - **THEN** the link is not created and the dialog explains which addresses are allowed
 
 ### Requirement: Block structure
-The owner SHALL be able to insert, delete, duplicate and reorder the blocks of a page. A block SHALL be inserted at a place the owner chose on the canvas: between two blocks, above the first, after the last, above or below a given block, or on an empty page. The left column SHALL NOT offer inserting blocks. Inserting SHALL offer hero, rich text, services, text with image, gallery, team, partner logos, contact, opening hours, call to action, testimonials, questions, key figures and steps blocks, each created with placeholder content. A hero SHALL only be offered when inserting at the top of a page that has no hero, and no block SHALL be offered above an existing hero. A new text with image block SHALL start without an image; a new gallery, team or logos block SHALL start without items and offer to add them. A new contact block SHALL start with every switch on, and a new contact or opening hours block SHALL start with a placeholder heading. A new call to action SHALL start with a placeholder heading, an empty text and one button to the home page labelled "Tlačítko". A new testimonials block SHALL start with a placeholder heading and one empty testimonial. A new key figures block SHALL start with an empty heading and three empty figures; a new steps block with a placeholder heading and three empty steps.
+The owner SHALL be able to insert, delete, duplicate and reorder the blocks of a page. A block SHALL be inserted at a place the owner chose on the canvas: between two blocks, above the first, after the last, above or below a given block, or on an empty page. The left column SHALL NOT offer inserting blocks. Inserting SHALL offer hero, rich text, services, text with image, gallery, team, partner logos, contact, opening hours, call to action, testimonials, questions, key figures, steps, projects and cards blocks, each created with placeholder content. A hero SHALL only be offered when inserting at the top of a page that has no hero, and no block SHALL be offered above an existing hero. A new text with image block SHALL start without an image; a new gallery, team or logos block SHALL start without items and offer to add them. A new contact block SHALL start with every switch on, and a new contact or opening hours block SHALL start with a placeholder heading. A new call to action SHALL start with a placeholder heading, an empty text and one button to the home page labelled "Tlačítko". A new testimonials block SHALL start with a placeholder heading and one empty testimonial. A new key figures block SHALL start with an empty heading and three empty figures; a new steps block with a placeholder heading and three empty steps. A new projects block SHALL show every project of every category. A new cards block SHALL start with an empty heading, the look `below`, and three cards with empty titles and no images or links.
 
 Duplicating a block SHALL insert a copy right after it, with everything it contains (texts with their marks, items, images with their descriptions, buttons and their targets) under new node IDs, and select the copy. It SHALL be one undoable step. A hero SHALL NOT be duplicated.
 
@@ -126,6 +126,10 @@ Duplicating a block SHALL insert a copy right after it, with everything it conta
 #### Scenario: Insert key figures
 - **WHEN** the owner inserts a key figures block after the hero
 - **THEN** a block with three empty figures appears, with the caret in the first figure's value
+
+#### Scenario: Insert cards
+- **WHEN** the owner inserts a cards block after the hero
+- **THEN** a block with three empty cards appears, each with an "Add image" button, with the caret in the first card's title
 
 ### Requirement: Item structure
 The owner SHALL be able to insert, delete, duplicate and reorder list items, gallery items, logo items, figures and steps within their list, and service items, people, testimonials and FAQ items within the collection blocks that show them (see "Items in collection blocks"). Duplicating an item SHALL insert a copy right after it, with its texts, marks and image, under new node IDs, select the copy, and be one undoable step.
@@ -841,3 +845,22 @@ Each choice SHALL be one undoable step, and the canvas SHALL show its result at 
 #### Scenario: New project from the canvas
 - **WHEN** the owner adds an item to a projects block showing all projects
 - **THEN** a new project with an empty name and no cover appears at the end of the block and of the collection, with the caret in its name
+
+### Requirement: Cards in the editor
+On the canvas a `cards` block SHALL show its cards as the published page will, in its look, with the titles and texts editable in place and each image in the usual image slot. Cards SHALL be added (Enter at the end of a card's text, or the item handle's Add), moved, duplicated and deleted as the items of other blocks are, each as one undoable step; a block SHALL keep at least one card and at most twelve, and the actions that would break that SHALL be disabled with the reason.
+
+The block panel of a selected cards block SHALL offer its look: "Text under the photo" or "Title over the photo", as one undoable step.
+
+While a card is selected or holds the caret, a Card panel SHALL offer its link: "No link", "A page of the site" (with the pages to choose from), "A project or service" (with the projects and services that have their own page), or "An address" (checked as in the link dialog, applied when it is valid). Each change SHALL be one undoable step. When the card links to something that no longer has a page, the panel SHALL say so.
+
+#### Scenario: Category tile
+- **WHEN** the owner adds an image to the first card, types "Výstavy" as its title, and links it to the page "Výstavy"
+- **THEN** the canvas shows the photo with "Výstavy", and the preview's card is a link to `/vystavy/`
+
+#### Scenario: Link to a project
+- **WHEN** the projects are listed on "Realizace" and the owner links a card to the project "PETROF 160"
+- **THEN** the preview's card links to `/realizace/petrof-160/`
+
+#### Scenario: Last card can't be deleted
+- **WHEN** a cards block has one card
+- **THEN** its Delete action is disabled with the reason that a cards block needs at least one card
