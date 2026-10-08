@@ -117,3 +117,21 @@ review screenshots as whole images. Then they are reloaded and screenshotted.
 
 Format 9 upgrade on read (decision 1). Nothing to run; pages look the same until an owner
 chooses a variant.
+
+## Changes made while building
+
+- **`setBlockLook`** lives in its own module, `lib/editor/looks.ts`, with `selectedLookBlock` (the
+  panel's view of the selected block) and the `LOOKS` table, instead of `structure.ts`.
+- **The shade** behind a full-photo hero's text is 72% of the text colour, not 62%: on the
+  examples' bright photos (Roubenka's sky, Aniděti's garden) 62% left the white text weak.
+- **The accordion row** keeps the browser's disclosure marker: the summary isn't a flex row; the
+  price floats to the right of the name instead.
+- **The hero image's rounded corners** apply only outside the full-photo look
+  (`.hero:not(.hero-cover) .hero-image`), since the stylesheet may not use literal radii to
+  remove them.
+- **The team list** on wide screens puts the name, role and text in fixed columns, so a person
+  without a role keeps their text in its column.
+- **The hint** reads "Add a photo to the hero; until then the text shows as usual.", matching the
+  warning: without a photo there is nothing for the text to be beside.
+- **On the canvas** a full-photo hero wraps its image slot in a `.hero-image` element, so the
+  site's grid places it behind the text.

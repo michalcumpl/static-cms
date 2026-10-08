@@ -55,7 +55,14 @@ function site(): { doc: unknown; nodes: LooseNodes } {
     ["testimonials_1", "testimonials"],
     ["faq_1", "faq"],
   ] as const) {
-    nodes[id] = { id, type, heading: text(""), show: "all", chosen: list([]) };
+    nodes[id] = {
+      id,
+      type,
+      heading: text(""),
+      show: "all",
+      chosen: list([]),
+      ...(type === "team" ? { layout: "cards" } : {}),
+    };
     nodes.page_contact.blocks.nodes.push(id);
   }
   return { doc, nodes };

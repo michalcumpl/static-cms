@@ -27,6 +27,7 @@ export function migrateSite(doc: unknown): unknown {
   if (siteOf(current)?.schema_version === 5) current = toVersion6(current);
   if (siteOf(current)?.schema_version === 6) current = toVersion7(current);
   if (siteOf(current)?.schema_version === 7) current = toVersion8(current);
+  if (siteOf(current)?.schema_version === 8) current = toVersion9(current);
   return current;
 }
 
@@ -300,6 +301,27 @@ function toVersion8<T extends RawDoc>(doc: T): T {
     }
   }
   upgraded[doc.document_id] = { ...site, schema_version: 8 };
+  return { ...doc, nodes: upgraded };
+}
+
+/**
+ * Version 9 gives the hero, services, team and gallery blocks their look, today's for all of
+ * them, so nothing changes (block-variants design decision 1).
+ */
+function toVersion9<T extends RawDoc>(doc: T): T {
+  const site = siteOf(doc) as RawNode;
+  const looks: Record<string, Record<string, string>> = {
+    hero: { layout: "beside" },
+    services: { layout: "cards" },
+    team: { layout: "cards" },
+    gallery: { image_fit: "fill" },
+  };
+  const upgraded: Record<string, RawNode> = { ...doc.nodes };
+  for (const [id, node] of Object.entries(doc.nodes)) {
+    const look = isObject(node) ? looks[String(node.type)] : undefined;
+    if (look) upgraded[id] = { ...(node as RawNode), ...look };
+  }
+  upgraded[doc.document_id] = { ...site, schema_version: 9 };
   return { ...doc, nodes: upgraded };
 }
 

@@ -782,6 +782,14 @@ export const en = {
       testimonials: "Testimonials",
       faqs: "Questions",
     },
+    look: {
+      legend: "Look",
+      hero: { beside: "Beside the text", cover: "Full photo" },
+      services: { cards: "Cards", list: "List", accordion: "Accordion" },
+      team: { cards: "Cards", list: "List" },
+      gallery: { fill: "Fill the tiles", whole: "Whole images" },
+      coverHint: "Add a photo to the hero; until then the text shows as usual.",
+    },
     collectionBlock: {
       show: "Show",
       all: {

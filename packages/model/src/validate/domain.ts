@@ -29,7 +29,7 @@ const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const MIN_SHARE_WIDTH = 600;
 /** The largest icon made from a favicon that phones show on their home screens. */
 const MIN_FAVICON_SIZE = 180;
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -856,6 +856,15 @@ function checkContentBlock(
   problems: Problems,
 ): void {
   const on = pageLabel(page);
+  const hero = get(blockId, "hero");
+  if (hero?.layout === "cover" && hero.image.nodes.length === 0) {
+    problems.warning(
+      "cover-without-image",
+      hero.id,
+      `The hero on ${on} is set to show a full photo but has none; until it has one, its text shows as usual.`,
+      "layout",
+    );
+  }
   const cta = get(blockId, "call_to_action");
   if (cta) {
     if (isBlank(cta.heading)) {

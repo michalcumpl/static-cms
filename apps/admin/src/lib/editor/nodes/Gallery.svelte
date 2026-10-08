@@ -12,11 +12,15 @@ import AddItemsButton from "./AddItemsButton.svelte";
 
 let { path }: { path: DocumentPath } = $props();
 const svedit = getContext<SveditContext>("svedit");
-const block = $derived(svedit.session.get(path) as { id: string });
+const block = $derived(svedit.session.get(path) as { id: string; image_fit: string });
 const i18n = getI18n();
 </script>
 
-<Node {path} tag="section" class="block gallery">
+<Node
+  {path}
+  tag="section"
+  class={block.image_fit === "whole" ? "block gallery gallery-whole" : "block gallery"}
+>
   <div class="container">
     <TextProperty tag="h2" path={[...path, "heading"]} placeholder={i18n.t("editor.canvas.headingOptional")} />
     <NodeArrayProperty tag="ul" class="gallery-grid" path={[...path, "items"]} />

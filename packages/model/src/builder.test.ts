@@ -42,6 +42,7 @@ function everything(lang: "cs" | "en") {
   });
   site.page({ title: t("Úvod", "Home"), slug: t("uvod", "home"), menu: true }, [
     blocks.hero({
+      layout: "cover",
       heading: t("Animujeme", "We animate"),
       text: t("Už *deset* let.", "For *ten* years."),
       image: image("hero.jpg"),
@@ -57,13 +58,15 @@ function everything(lang: "cs" | "en") {
     blocks.gallery({
       heading: t("Fotky", "Photos"),
       items: [{ image: image("g1.jpg"), caption: "1" }],
+      imageFit: "whole",
     }),
     blocks.logos({
       items: [{ image: image("cena.png"), name: "Cena", url: "https://example.org" }],
     }),
     blocks.services(t("Nabídka", "Offer")),
-    blocks.services(t("Doporučujeme", "Highlights"), [course]),
-    blocks.team(t("Lektorky", "Teachers")),
+    blocks.services(t("Doporučujeme", "Highlights"), [course], "accordion"),
+    blocks.services(t("Seznam", "List"), undefined, "list"),
+    blocks.team(t("Lektorky", "Teachers"), undefined, "list"),
     blocks.testimonials(t("Reference", "Testimonials")),
     blocks.faq(t("Otázky", "Questions")),
     blocks.figures({

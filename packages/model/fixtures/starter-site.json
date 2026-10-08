@@ -54,7 +54,8 @@
         "nodes": [],
         "marks": [],
         "annotations": []
-      }
+      },
+      "layout": "beside"
     },
     "sub_about": {
       "id": "sub_about",
@@ -105,7 +106,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 8,
+      "schema_version": 9,
       "name": "Můj web",
       "lang": "cs",
       "base_url": "",

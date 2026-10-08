@@ -175,7 +175,8 @@ function insertCollectionBlock(
     const members = (tr.get([siteId, collection]) as NodeList | undefined)?.nodes ?? [];
     if (members.length === 0 && first) tr.set([siteId, collection], list([first(tr)]));
     const block = tr.generate_id();
-    tr.create({ id: block, type, heading: text(heading), show: "all", chosen: list() });
+    const layout = type === "services" || type === "team" ? { layout: "cards" } : {};
+    tr.create({ id: block, type, heading: text(heading), show: "all", chosen: list(), ...layout });
     insertAndFocus(tr, block, "heading");
     return true;
   };
@@ -202,6 +203,7 @@ export function insertHero(tr: Tr): boolean {
     text: text(),
     image: list(),
     action: list(),
+    layout: "beside",
   });
   insertAndFocus(tr, block, "heading");
   return true;
@@ -228,7 +230,8 @@ export function insertTextWithImage(tr: Tr): boolean {
 function insertItemsBlock(type: "gallery" | "logos", items: "items") {
   return (tr: Tr): boolean => {
     const block = tr.generate_id();
-    tr.create({ id: block, type, heading: text("Nadpis"), [items]: list() });
+    const fit = type === "gallery" ? { image_fit: "fill" } : {};
+    tr.create({ id: block, type, heading: text("Nadpis"), [items]: list(), ...fit });
     insertAndFocus(tr, block, "heading");
     return true;
   };

@@ -115,6 +115,8 @@ export interface HeroNode {
   image: NodeArrayValue;
   /** Zero or one `page_link` / `external_link` node: the call to action. */
   action: NodeArrayValue;
+  /** `beside`: the text next to the image; `cover`: the image fills the hero. */
+  layout: "beside" | "cover";
 }
 
 export interface RichTextNode {
@@ -164,6 +166,7 @@ interface CollectionBlock {
 /** Shows the site's services. */
 export interface ServicesNode extends CollectionBlock {
   type: "services";
+  layout: "cards" | "list" | "accordion";
 }
 
 export interface ServiceItemNode {
@@ -190,6 +193,8 @@ export interface GalleryNode {
   type: "gallery";
   heading: TextValue;
   items: NodeArrayValue;
+  /** `fill`: images cropped to one shape; `whole`: each image shown complete. */
+  image_fit: "fill" | "whole";
 }
 
 export interface GalleryItemNode {
@@ -203,6 +208,8 @@ export interface GalleryItemNode {
 /** Shows the site's team. */
 export interface TeamNode extends CollectionBlock {
   type: "team";
+  /** `list`: compact rows without portraits. */
+  layout: "cards" | "list";
 }
 
 export interface PersonNode {

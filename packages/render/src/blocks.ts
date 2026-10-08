@@ -44,6 +44,25 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
 function renderHero(hero: NodeOfType<"hero">, ctx: RenderContext): Html {
   const [image] = ctx.children(hero.image);
   const [action] = ctx.children(hero.action);
+  // A full-photo hero puts its image behind the text; without an image it is a usual hero.
+  if (hero.layout === "cover" && image?.type === "image") {
+    return html`<section class="block hero hero-cover">
+      ${renderImage(image, ctx, { lazy: false, sizes: IMAGE_SIZES.heroCover, className: "hero-image" })}
+      <div class="container hero-inner">
+        <div class="hero-content">
+          <h1>${renderText(hero.heading, ctx)}</h1>${
+            !isEmpty(hero.text) &&
+            html`
+          <p class="hero-text">${renderText(hero.text, ctx)}</p>`
+          }${
+            action &&
+            html`
+          <p class="hero-action">${renderLink(action, ctx, "button")}</p>`
+          }
+        </div>
+      </div>
+    </section>`;
+  }
   return html`<section class="block hero">
       <div class="container hero-inner">
         <div class="hero-content">
@@ -150,7 +169,8 @@ function renderGallery(block: NodeOfType<"gallery">, ctx: RenderContext): Html {
             </figure>
           </li>`;
   });
-  return html`<section class="block gallery">
+  const whole = block.image_fit === "whole" ? " gallery-whole" : "";
+  return html`<section class="block gallery${whole}">
       <div class="container">${blockHeading(block.heading, ctx)}
         <ul class="gallery-grid">${items}
         </ul>
@@ -161,9 +181,11 @@ function renderGallery(block: NodeOfType<"gallery">, ctx: RenderContext): Html {
 function renderTeam(block: NodeOfType<"team">, ctx: RenderContext): Html {
   // Names sit one level below the block heading, so no heading level is skipped.
   const nameTag = isEmpty(block.heading) ? "h2" : "h3";
+  // A team list leaves portraits out, so they aren't downloaded either (block-variants).
+  const list = block.layout === "list";
   const people = ctx.items(block).map((person) => {
     if (person.type !== "person") return false;
-    const image = imageOf(person, ctx);
+    const image = list ? undefined : imageOf(person, ctx);
     const name = renderText(person.name, ctx);
     return html`
           <li class="person">${
@@ -182,7 +204,7 @@ function renderTeam(block: NodeOfType<"team">, ctx: RenderContext): Html {
             }
           </li>`;
   });
-  return html`<section class="block team">
+  return html`<section class="block team${list ? " team-as-list" : ""}">
       <div class="container">${blockHeading(block.heading, ctx)}
         <ul class="team-list">${people}
         </ul>
@@ -377,23 +399,42 @@ function renderSteps(block: NodeOfType<"steps">, ctx: RenderContext): Html {
 }
 
 function renderServices(block: NodeOfType<"services">, ctx: RenderContext): Html {
-  const items = ctx.items(block).map(
-    (item) =>
-      item.type === "service_item" &&
-      html`
+  const accordion = block.layout === "accordion";
+  const items = ctx.items(block).map((item) => {
+    if (item.type !== "service_item") return false;
+    const name = html`<p class="service-name">${renderText(item.name, ctx)}</p>`;
+    const price =
+      !isEmpty(item.price) && html`<p class="service-price">${renderText(item.price, ctx)}</p>`;
+    const description =
+      !isEmpty(item.description) &&
+      html`<p class="service-description">${renderText(item.description, ctx)}</p>`;
+    // An accordion opens a service to its description; without one it is a plain row.
+    if (accordion && description) {
+      return html`
           <li class="service">
-            <p class="service-name">${renderText(item.name, ctx)}</p>${
-              !isEmpty(item.description) &&
+            <details>
+              <summary><span class="service-name">${renderText(item.name, ctx)}</span>${
+                price && html`<span class="service-price">${renderText(item.price, ctx)}</span>`
+              }</summary>
+              ${description}
+            </details>
+          </li>`;
+    }
+    return html`
+          <li class="service">
+            ${name}${
+              description &&
               html`
-            <p class="service-description">${renderText(item.description, ctx)}</p>`
+            ${description}`
             }${
-              !isEmpty(item.price) &&
+              price &&
               html`
-            <p class="service-price">${renderText(item.price, ctx)}</p>`
+            ${price}`
             }
-          </li>`,
-  );
-  return html`<section class="block services">
+          </li>`;
+  });
+  const variant = block.layout === "cards" ? "" : ` services-as-${block.layout}`;
+  return html`<section class="block services${variant}">
       <div class="container">${
         !isEmpty(block.heading) &&
         html`
@@ -412,6 +453,8 @@ function renderServices(block: NodeOfType<"services">, ctx: RenderContext): Html
 export const IMAGE_SIZES = {
   /** The image column is 2/5 of the hero from a 48rem wide layout. */
   hero: "(min-width: 48rem) 40vw, 100vw",
+  /** A full-photo hero spans the window (block-variants). */
+  heroCover: "100vw",
   /** Half the width beside the text from 48rem. */
   textWithImage: "(min-width: 48rem) 50vw, 100vw",
   /** Three columns from 48rem, two below. */

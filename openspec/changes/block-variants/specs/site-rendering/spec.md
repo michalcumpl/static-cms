@@ -24,4 +24,4 @@ The default variants SHALL render exactly as before format 9. Every variant SHAL
 
 #### Scenario: Whole screenshots
 - **WHEN** a gallery with the image fit `whole` is rendered
-- **THEN** its grid carries the class `gallery-whole`, and the images keep their links to the largest variant
+- **THEN** the block carries the class `gallery-whole`, and the images keep their links to the largest variant

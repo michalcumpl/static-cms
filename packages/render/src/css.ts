@@ -231,8 +231,43 @@ img {
   font-size: 1.25rem;
 }
 
-.hero-image {
+.hero:not(.hero-cover) .hero-image {
   border-radius: var(--radius);
+}
+
+.block.hero-cover {
+  display: grid;
+  min-height: 26rem;
+  padding-block: 0;
+  background: var(--color-text);
+}
+
+.hero-cover > .hero-image,
+.hero-cover > .hero-inner {
+  grid-area: 1 / 1;
+}
+
+.hero-cover > .hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-cover > .hero-inner {
+  align-self: end;
+  padding-block: 2rem;
+}
+
+.hero-cover .hero-content {
+  max-width: 38rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-text) 72%, transparent);
+  color: var(--color-background);
+}
+
+.hero-cover .hero-content > :last-child {
+  margin-bottom: 0;
 }
 
 .button {
@@ -286,6 +321,48 @@ img {
   margin: 0;
 }
 
+.services-as-list .services-list,
+.services-as-accordion .services-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.services-as-list .service,
+.services-as-accordion .service {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1.5rem;
+  padding: 1rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-secondary);
+}
+
+.services-as-list .service-description,
+.services-as-accordion .service > .service-description {
+  flex-basis: 100%;
+  order: 1;
+  margin: 0;
+}
+
+.services-as-accordion details {
+  flex-basis: 100%;
+}
+
+.services-as-accordion summary {
+  cursor: pointer;
+}
+
+.services-as-accordion summary .service-price {
+  float: right;
+  margin-left: 1.5rem;
+}
+
+.services-as-accordion details .service-description {
+  margin: 0.5rem 0 0;
+}
+
 .twi-inner {
   display: grid;
   gap: 2rem;
@@ -326,6 +403,11 @@ img {
   border-radius: var(--radius);
 }
 
+.gallery-whole .gallery-grid img {
+  object-fit: contain;
+  background: var(--color-secondary);
+}
+
 .gallery-grid figcaption {
   margin-top: 0.4rem;
   font-size: 0.95rem;
@@ -341,6 +423,24 @@ img {
   min-width: 0;
   overflow-wrap: anywhere;
   text-align: center;
+}
+
+.team-as-list .team-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.team-as-list .person {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.25rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-secondary);
+  text-align: left;
+}
+
+.team-as-list .person > * {
+  margin: 0;
 }
 
 .portrait {
@@ -635,6 +735,25 @@ img {
 
   .hero-inner {
     grid-template-columns: 3fr 2fr;
+  }
+
+  .hero-cover > .hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 3rem;
+  }
+
+  .team-as-list .person {
+    grid-template-columns: 2fr 2fr 3fr;
+    align-items: baseline;
+    column-gap: 1.5rem;
+  }
+
+  .team-as-list .person-role {
+    grid-column: 2;
+  }
+
+  .team-as-list .person-text {
+    grid-column: 3;
   }
 
   .twi-inner {

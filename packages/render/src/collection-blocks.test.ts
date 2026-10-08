@@ -23,6 +23,7 @@ function site(chosen: string[] = ["service_bread"]): { doc: unknown; nodes: Loos
   nodes.services_all = {
     id: "services_all",
     type: "services",
+    layout: "cards",
     heading: text("Všechno, co pečeme"),
     show: "all",
     chosen: list([]),

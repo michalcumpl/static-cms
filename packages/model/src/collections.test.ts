@@ -33,6 +33,7 @@ function siteWith(serviceNames: string[], blocks: AnyNode[]): SiteDocument {
 const block = (show: "all" | "chosen", refs: string[] = []): ServicesNode => ({
   id: "services_block",
   type: "services",
+  layout: "cards",
   heading: text(""),
   show,
   chosen: list(refs.map((_, i) => `ref_${i + 1}`)),

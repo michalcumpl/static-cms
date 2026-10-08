@@ -66,7 +66,15 @@ export interface PageInput {
  * inline syntax: `**bold**`, `*italic*`, `[words](https://…)` and `[words](page:slug)`.
  */
 export type BlockInput =
-  | { type: "hero"; heading: string; text?: string; image?: ImageInput; action?: LinkInput }
+  | {
+      type: "hero";
+      heading: string;
+      text?: string;
+      image?: ImageInput;
+      action?: LinkInput;
+      /** `cover`: the image fills the hero (block-variants). */
+      layout?: "beside" | "cover";
+    }
   | { type: "rich_text"; body: string }
   | {
       type: "text_with_image";
@@ -75,7 +83,12 @@ export type BlockInput =
       image?: ImageInput;
       side?: "left" | "right";
     }
-  | { type: "gallery"; heading?: string; items: { image: ImageInput; caption?: string }[] }
+  | {
+      type: "gallery";
+      heading?: string;
+      items: { image: ImageInput; caption?: string }[];
+      imageFit?: "fill" | "whole";
+    }
   | {
       type: "logos";
       heading?: string;
@@ -86,6 +99,8 @@ export type BlockInput =
       heading?: string;
       /** The items to show, by the IDs the builder returned; all of them without it. */
       chosen?: string[];
+      /** Services: `cards`, `list` or `accordion`; team: `cards` or `list`. */
+      layout?: "cards" | "list" | "accordion";
     }
   | {
       type: "contact";
@@ -111,12 +126,17 @@ export const blocks = {
     ({ type: "gallery", ...b }) as BlockInput,
   logos: (b: Omit<Extract<BlockInput, { type: "logos" }>, "type">) =>
     ({ type: "logos", ...b }) as BlockInput,
-  services: (heading = "", chosen?: string[]): BlockInput => ({
-    type: "services",
+  services: (
+    heading = "",
+    chosen?: string[],
+    layout?: "cards" | "list" | "accordion",
+  ): BlockInput => ({ type: "services", heading, chosen, layout }),
+  team: (heading = "", chosen?: string[], layout?: "cards" | "list"): BlockInput => ({
+    type: "team",
     heading,
     chosen,
+    layout,
   }),
-  team: (heading = "", chosen?: string[]): BlockInput => ({ type: "team", heading, chosen }),
   testimonials: (heading = "", chosen?: string[]): BlockInput => ({
     type: "testimonials",
     heading,
@@ -323,11 +343,14 @@ export function siteBuilder(options: {
         type: "services" | "team" | "testimonials" | "faq",
         heading: string | undefined,
         chosen: string[] | undefined,
+        layout: string | undefined,
       ) =>
         add(type, {
           heading: text(heading),
           show: chosen ? "chosen" : "all",
           chosen: list((chosen ?? []).map((itemId) => add("item_ref", { item_id: itemId }))),
+          // Services and the team have a look (block-variants); cards unless chosen.
+          ...(type === "services" || type === "team" ? { layout: layout ?? "cards" } : {}),
         });
 
       const block = (input: BlockInput): string => {
@@ -338,6 +361,7 @@ export function siteBuilder(options: {
               text: text(input.text),
               image: list(image(input.image)),
               action: list(input.action ? [link(input.action)] : []),
+              layout: input.layout ?? "beside",
             });
           case "rich_text":
             return add("rich_text", { body: list(body(input.body, true)) });
@@ -359,6 +383,7 @@ export function siteBuilder(options: {
                   }),
                 ),
               ),
+              image_fit: input.imageFit ?? "fill",
             });
           case "logos":
             return add("logos", {
@@ -378,7 +403,7 @@ export function siteBuilder(options: {
           case "team":
           case "testimonials":
           case "faq":
-            return collectionBlock(input.type, input.heading, input.chosen);
+            return collectionBlock(input.type, input.heading, input.chosen, input.layout);
           case "contact":
             return add("contact", {
               heading: text(input.heading),
@@ -551,7 +576,7 @@ export function siteBuilder(options: {
       nodes[siteId] = {
         id: siteId,
         type: "site",
-        schema_version: 8,
+        schema_version: 9,
         name: options.name,
         lang: options.lang,
         base_url: options.baseUrl ?? "",

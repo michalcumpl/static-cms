@@ -37,6 +37,7 @@ function storeHighlights(): void {
   doc.nodes.services_all = {
     id: "services_all",
     type: "services",
+    layout: "cards",
     heading: text("Všechny služby"),
     show: "all",
     chosen: list([]),

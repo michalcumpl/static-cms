@@ -34,6 +34,7 @@ function setup(options: { page?: string; lang?: string } = {}) {
   doc.nodes.services_pick = {
     id: "services_pick",
     type: "services",
+    layout: "cards",
     heading: { content: "Doporučujeme", marks: [], annotations: [] },
     show: "chosen",
     chosen: { nodes: ["ref_bread", "ref_cakes"], marks: [], annotations: [] },

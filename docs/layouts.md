@@ -50,8 +50,8 @@ By how many of the five needed it. Today's stand-in is in brackets.
 
 1. **Key figures** (4: years in business, amounts arranged, assets under management, returns):
    **done**, the key figures block (`figures-and-steps`).
-2. **Full-photo hero** (4) [the split hero, text left and photo right]. A variant of the hero, or
-   a template's default.
+2. **Full-photo hero** (4): **done**, the hero's "Full photo" look (`block-variants`); templates
+   will choose it as their default.
 3. **Steps** (2: Mortgage's "how it works", Fond 10X's investment process): **done**, the steps
    block (`figures-and-steps`).
 4. **Service detail pages, or lists in a service** (2: Mareš's eight areas each with a scope list,
@@ -82,8 +82,11 @@ By how many of the five needed it. Today's stand-in is in brackets.
   logo, which passed the contrast checks; Roubenka a forest green with warm wood tones.
 - **Logos with the name in them** need the header to hide the site name (the builder sets it).
 - **Team without portraits** (Mareš, three of four at Fond 10X) looks sparse or uneven as centred
-  cards; a compact list (name, role, email) suits law and finance.
+  cards; a compact list (name, role, email) suits law and finance. **Done:** the team's "List"
+  look (`block-variants`).
 - **Services with many or long items** (Mareš) need a list or accordion layout instead of cards.
+  **Done:** the services' "List" and "Accordion" looks.
 - **Galleries crop** to one shape; screenshots and logos need a "show the whole image" option.
+  **Done:** the gallery's "Whole images" look.
 - **Addresses are shared** across languages, so an English page shows a Czech city name; fine for Czech
   addresses, worth a note in the editor.

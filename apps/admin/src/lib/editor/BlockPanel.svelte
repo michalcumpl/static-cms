@@ -1,5 +1,6 @@
 <script lang="ts">
 import { getI18n } from "$lib/i18n";
+import type { MessageKey } from "$lib/i18n/types";
 import {
   type ContactSwitch,
   locationsOf,
@@ -16,6 +17,7 @@ import {
   unchosenItems,
 } from "./collections";
 import { handleTargets, selectionPath } from "./handles";
+import { selectedLookBlock, setBlockLook } from "./looks";
 import type { EditorState } from "./state.svelte";
 
 // Options of the selected block: which of the business details a contact block shows, and what
@@ -39,6 +41,8 @@ const choices = $derived(
   collectionBlock?.mode === "chosen" ? unchosenItems(editor.session.doc, collectionBlock) : [],
 );
 let picked = $state("");
+// A hero's, services', team's or gallery's look (block-variants).
+const lookBlock = $derived(selectedLookBlock(editor.session));
 
 /** How an item is named in the list of items to add: its first text. */
 function itemLabel(id: string): string {
@@ -58,10 +62,41 @@ function addPicked() {
 }
 </script>
 
+{#snippet look()}
+  {#if lookBlock}
+    {@const current = lookBlock}
+    <fieldset class="look">
+      <legend>{i18n.t("editor.look.legend")}</legend>
+      {#each current.values as value (value)}
+        <label class="check">
+          <input
+            type="radio"
+            name="block-look"
+            checked={current.value === value}
+            onchange={() => setBlockLook(editor.session, current.id, current.property, value)}
+          />
+          {i18n.t(`editor.look.${current.type}.${value}` as MessageKey)}
+        </label>
+      {/each}
+    </fieldset>
+    {#if current.missingImage}
+      <p class="hint">{i18n.t("editor.look.coverHint")}</p>
+    {/if}
+  {/if}
+{/snippet}
+
+{#if lookBlock && !collectionBlock}
+  <section class="panel" aria-labelledby="look-panel-title" data-history-keys>
+    <h2 id="look-panel-title">{i18n.t(`editor.blocks.${lookBlock.type}.name`)}</h2>
+    {@render look()}
+  </section>
+{/if}
+
 {#if collectionBlock}
   {@const name = collectionBlock.collection}
   <section class="panel" aria-labelledby="collection-panel-title" data-history-keys>
     <h2 id="collection-panel-title">{i18n.t(`editor.blocks.${collectionBlock.type}.name`)}</h2>
+    {@render look()}
     <fieldset>
       <legend>{i18n.t("editor.collectionBlock.show")}</legend>
       {#each ["all", "chosen"] as const as mode (mode)}
@@ -169,6 +204,16 @@ function addPicked() {
   legend {
     font-size: 0.9rem;
     margin-bottom: 0.25rem;
+  }
+
+  .look {
+    margin-bottom: 0.75rem;
+  }
+
+  .hint {
+    margin: 0 0 0.75rem;
+    font-size: 0.85rem;
+    color: var(--ui-muted);
   }
 
   .add-existing {

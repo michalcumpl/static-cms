@@ -39,6 +39,12 @@ export const BUSINESS_TYPES = [
   "SportsActivityLocation",
 ] as const;
 
+/** How a block looks; the first value is the default (block-variants design decision 1). */
+export const HERO_LAYOUTS = ["beside", "cover"] as const;
+export const SERVICES_LAYOUTS = ["cards", "list", "accordion"] as const;
+export const TEAM_LAYOUTS = ["cards", "list"] as const;
+export const GALLERY_IMAGE_FITS = ["fill", "whole"] as const;
+
 /** What a collection block shows: its whole collection, or the items it chose. */
 export const COLLECTION_SHOW = ["all", "chosen"] as const;
 
@@ -64,7 +70,7 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 8 },
+      schema_version: { type: "integer", min: 1, default: 9 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
@@ -166,6 +172,7 @@ export const siteSchema = {
       text: { type: "text", mark_types: ["strong", "emphasis"], allow_newlines: false },
       image: { type: "node_array", node_types: ["image"] },
       action: { type: "node_array", node_types: LINK_TYPES },
+      layout: { type: "string", values: HERO_LAYOUTS, default: "beside" },
     },
   },
   rich_text: {
@@ -203,7 +210,13 @@ export const siteSchema = {
       content: { type: "text", mark_types: INLINE_MARKS, allow_newlines: false },
     },
   },
-  services: { kind: "block", properties: COLLECTION_BLOCK },
+  services: {
+    kind: "block",
+    properties: {
+      ...COLLECTION_BLOCK,
+      layout: { type: "string", values: SERVICES_LAYOUTS, default: "cards" },
+    },
+  },
   service_item: {
     kind: "block",
     properties: {
@@ -230,6 +243,7 @@ export const siteSchema = {
     properties: {
       heading: { type: "text", allow_newlines: false },
       items: { type: "node_array", node_types: ["gallery_item"] },
+      image_fit: { type: "string", values: GALLERY_IMAGE_FITS, default: "fill" },
     },
   },
   gallery_item: {
@@ -239,7 +253,13 @@ export const siteSchema = {
       caption: { type: "text", allow_newlines: false },
     },
   },
-  team: { kind: "block", properties: COLLECTION_BLOCK },
+  team: {
+    kind: "block",
+    properties: {
+      ...COLLECTION_BLOCK,
+      layout: { type: "string", values: TEAM_LAYOUTS, default: "cards" },
+    },
+  },
   person: {
     kind: "block",
     properties: {

@@ -51,7 +51,24 @@ const COLLECTION_OF = { services: "services", team: "team", testimonials: "testi
  * An upgraded document as version 7 had it: the business's one location folded back into the
  * business, and no location choice on blocks.
  */
-function asVersion7(doc: { nodes: LooseNodes }): { nodes: LooseNodes } {
+/** An upgraded document as version 8 had it: no look on the hero, services, team or gallery. */
+function asVersion8(doc: { nodes: LooseNodes }): { nodes: LooseNodes } {
+  const nodes: LooseNodes = { ...doc.nodes };
+  for (const [id, node] of Object.entries(nodes)) {
+    if (["hero", "services", "team"].includes(node.type)) {
+      const { layout: _layout, ...block } = node;
+      nodes[id] = block;
+    } else if (node.type === "gallery") {
+      const { image_fit: _fit, ...block } = node;
+      nodes[id] = block;
+    }
+  }
+  nodes.site_1 = { ...nodes.site_1, schema_version: 8 };
+  return { ...doc, nodes };
+}
+
+function asVersion7(upgraded: { nodes: LooseNodes }): { nodes: LooseNodes } {
+  const doc = asVersion8(upgraded);
   const nodes: LooseNodes = { ...doc.nodes };
   const businessId = nodes.site_1.business;
   const { locations, ...business } = nodes[businessId];
@@ -417,7 +434,7 @@ describe("upgrading version-7 documents", () => {
     const before = structuredClone(v7);
     const result = migrateSite(v7) as { nodes: LooseNodes };
     expect(v7).toEqual(before);
-    expect(result.nodes.site_1.schema_version).toBe(8);
+    expect(result.nodes.site_1.schema_version).toBe(9);
     expect(result.nodes.business_1).toMatchObject({
       business_type: "Bakery",
       locations: { nodes: ["location_1"] },
@@ -452,5 +469,25 @@ describe("upgrading version-7 documents", () => {
     v7.nodes.location_1 = { ...v7.nodes.hero_1, id: "location_1" };
     const result = migrateSite(v7) as { nodes: LooseNodes };
     expect(result.nodes.business_1.locations.nodes).toEqual(["location_1_2"]);
+  });
+});
+
+describe("upgrading version-8 documents (block-variants)", () => {
+  it("Upgrade the bakery: today's looks on every hero, services, team and gallery", () => {
+    const v8 = loadFixture("demo-site-v8.json") as { nodes: LooseNodes };
+    v8.nodes.gallery_1 = {
+      id: "gallery_1",
+      type: "gallery",
+      heading: { content: "", marks: [], annotations: [] },
+      items: { nodes: [], marks: [], annotations: [] },
+    };
+    const before = structuredClone(v8);
+    const result = migrateSite(v8) as { nodes: LooseNodes };
+    expect(v8).toEqual(before);
+    expect(result.nodes.site_1.schema_version).toBe(9);
+    expect(result.nodes.hero_1.layout).toBe("beside");
+    expect(result.nodes.services_1.layout).toBe("cards");
+    expect(result.nodes.gallery_1.image_fit).toBe("fill");
+    expect(migrateSite(loadFixture("demo-site-v8.json"))).toEqual(loadDemoSite());
   });
 });

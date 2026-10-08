@@ -43,6 +43,7 @@ describe("duplicateSelectedNode", () => {
     const [original, copy] = [blocks[1], blocks[2]];
     expect(get(copy)).toMatchObject({
       type: "services",
+      layout: "cards",
       heading: get(original).heading,
       show: "all",
     });

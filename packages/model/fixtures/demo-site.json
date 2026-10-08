@@ -93,7 +93,8 @@
         "nodes": ["cta_order"],
         "marks": [],
         "annotations": []
-      }
+      },
+      "layout": "beside"
     },
     "service_bread": {
       "id": "service_bread",
@@ -175,7 +176,8 @@
         "nodes": [],
         "marks": [],
         "annotations": []
-      }
+      },
+      "layout": "cards"
     },
     "sub_about": {
       "id": "sub_about",
@@ -422,7 +424,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 8,
+      "schema_version": 9,
       "name": "Pekárna U Lípy",
       "lang": "cs",
       "base_url": "https://pekarna-ulipy.example",

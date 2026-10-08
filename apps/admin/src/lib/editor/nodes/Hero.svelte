@@ -9,9 +9,14 @@ let { path }: { path: DocumentPath } = $props();
 const svedit = getContext<SveditContext>("svedit");
 const hero = $derived(svedit.session.get(path));
 const i18n = getI18n();
+// Like the page, a full-photo hero needs its photo; until then it shows beside the text.
+const cover = $derived(hero.layout === "cover" && hero.image.nodes.length > 0);
 </script>
 
-<Node {path} tag="section" class="block hero">
+<Node {path} tag="section" class={cover ? "block hero hero-cover" : "block hero"}>
+  {#if cover}
+    <div class="hero-image cover-photo"><ImageSlot {path} /></div>
+  {/if}
   <div class="container hero-inner">
     <div class="hero-content">
       <TextProperty tag="h1" path={[...path, "heading"]} placeholder={i18n.t("editor.canvas.heading")} />
@@ -20,6 +25,19 @@ const i18n = getI18n();
         <p class="hero-action"><Child path={[...path, "action", 0]} /></p>
       {/if}
     </div>
-    <ImageSlot {path} />
+    {#if !cover}
+      <ImageSlot {path} />
+    {/if}
   </div>
 </Node>
+
+<style>
+  .cover-photo :global(:is(.image-node, div, img)) {
+    height: 100%;
+  }
+
+  .cover-photo :global(img) {
+    width: 100%;
+    object-fit: cover;
+  }
+</style>

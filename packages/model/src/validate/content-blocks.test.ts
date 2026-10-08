@@ -255,3 +255,33 @@ describe("key figures and steps (figures-and-steps)", () => {
     );
   });
 });
+
+describe("block variants (block-variants)", () => {
+  it("Full-photo hero", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.hero_1.layout = "cover";
+    expect(validateSite(doc).problems.filter((p) => p.code === "cover-without-image")).toEqual([]);
+  });
+
+  it("Full-photo hero without a photo", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.hero_1.layout = "cover";
+    nodes.hero_1.image = list([]);
+    const problems = validateSite(doc).problems;
+    expect(problems.find((p) => p.code === "cover-without-image")).toMatchObject({
+      nodeId: "hero_1",
+      severity: "warning",
+    });
+    expect(problems.filter((p) => p.severity === "error")).toEqual([]);
+  });
+
+  it("Unknown layout", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.services_1.layout = "grid";
+    expect(validateSite(doc).problems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "invalid-value", nodeId: "services_1", severity: "error" }),
+      ]),
+    );
+  });
+});

@@ -798,6 +798,14 @@ export const cs: Messages = {
       testimonials: "Reference",
       faqs: "Otázky",
     },
+    look: {
+      legend: "Vzhled",
+      hero: { beside: "Vedle textu", cover: "Fotka přes celý blok" },
+      services: { cards: "Karty", list: "Seznam", accordion: "Rozbalovací seznam" },
+      team: { cards: "Karty", list: "Seznam" },
+      gallery: { fill: "Vyplnit dlaždice", whole: "Celé obrázky" },
+      coverHint: "Přidejte do úvodního bloku fotku; do té doby se text zobrazuje jako obvykle.",
+    },
     collectionBlock: {
       show: "Zobrazit",
       all: {

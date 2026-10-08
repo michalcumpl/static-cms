@@ -77,7 +77,9 @@ export type ProblemCode =
   | "empty-value"
   | "empty-label"
   | "long-figure"
-  | "empty-title";
+  | "empty-title"
+  // Block variants (block-variants)
+  | "cover-without-image";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -146,6 +148,7 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "empty-label": "site",
   "long-figure": "site",
   "empty-title": "site",
+  "cover-without-image": "site",
   "empty-answer": "site",
   "missing-item": "site",
   "wrong-collection": "site",
