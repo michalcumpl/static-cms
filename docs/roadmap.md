@@ -302,7 +302,7 @@ beta.
 | 5 | B | `image-cropping` | crop, focal point and rotation in the media library | next |
 | 6 | B | `guided-setup` | the "Tell us about your business" wizard | |
 | 6b | C | [`figures-and-steps`](../openspec/changes/archive/2026-10-08-figures-and-steps/) | two blocks: **key figures** (3–6 numbers with a label, such as "300M CZK managed") and **steps** (numbered "how it works") | done |
-| 6c | C | `block-variants` | **full-photo hero** (text over the image), **compact team list** (name, role, contact; for teams without portraits), **services as a list or accordion** (many or long items), **gallery showing whole images** (screenshots, logos). A block setting now; templates set the defaults later | done |
+| 6c | C | [`block-variants`](../openspec/changes/archive/2026-10-08-block-variants/) | **full-photo hero** (text over the image), **compact team list** (name, role, contact; for teams without portraits), **services as a list or accordion** (many or long items), **gallery showing whole images** (screenshots, logos). A block setting now; templates set the defaults later | done |
 | 6d | C | `service-pages` | a page per service from the services collection (scope, price, a call to action), and lists inside a service's description | |
 | 6e | C | `documents` | PDFs in the media library next to images; a documents block and links to documents from texts | |
 | 6f | C | `business-details` | business types for education, legal, financial and lodging businesses; company ID and registration; a regulatory note in the footer (for example "supervised by the Czech National Bank"); check-in and check-out times for rentals | |

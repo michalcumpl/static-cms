@@ -45,7 +45,7 @@ Every node reference SHALL point to an existing node of an allowed type. All nod
 
 ### Requirement: Site node
 The root node SHALL be of type `site`. It SHALL carry:
-- the schema version (`8`);
+- the schema version (`9`);
 - the site name;
 - a language tag (for example `cs`);
 - an optional base URL;
@@ -73,7 +73,7 @@ The home page ID SHALL name a page in the site's list of pages. The position of 
 - **THEN** validation reports a missing-home error
 
 #### Scenario: Unsupported schema version
-- **WHEN** a document has schema version 7
+- **WHEN** a document has schema version 8
 - **THEN** validation reports an unsupported-schema-version error
 
 #### Scenario: Two favicons
@@ -676,3 +676,31 @@ Messages SHALL name the page and the item's position, as other block messages do
 #### Scenario: Steps without a heading
 - **WHEN** the steps block on "Služby" has an empty heading
 - **THEN** validation reports an empty-heading error that names "Služby"
+
+### Requirement: Block variants
+Four blocks SHALL carry a choice of how they look, with today's look as the default:
+- a `hero` block's `layout`: `beside` (the text next to the image) or `cover` (the image fills the block, the text over it);
+- a `services` block's `layout`: `cards`, `list` or `accordion`;
+- a `team` block's `layout`: `cards` or `list` (without portraits);
+- a `gallery` block's `image_fit`: `fill` (images cropped to one shape) or `whole` (each image shown complete).
+
+Any other value SHALL be reported as an error. A hero with the layout `cover` and no image SHALL be reported as a warning, since it shows as `beside` until it has one. The choices SHALL NOT change what a block holds: a team in the `list` layout keeps its portraits, which show again in `cards`.
+
+#### Scenario: Full-photo hero
+- **WHEN** the home page's hero has the layout `cover` and an image
+- **THEN** the document is valid
+
+#### Scenario: Full-photo hero without a photo
+- **WHEN** a hero has the layout `cover` and no image
+- **THEN** validation reports a cover-without-image warning, and the document stays valid
+
+#### Scenario: Unknown layout
+- **WHEN** a services block has the layout `grid`
+- **THEN** validation reports an invalid-value error for that block
+
+### Requirement: Upgrading version-8 documents
+A version-8 document SHALL be upgradable to version 9 without changing what its pages show. The upgrade SHALL give every `hero` the layout `beside`, every `services` and `team` block the layout `cards`, and every `gallery` the image fit `fill`, and set the schema version to 9. Stored documents SHALL be upgraded when read and stored at their next save, as for earlier versions.
+
+#### Scenario: Upgrade the bakery
+- **WHEN** the version-8 demo site, with a hero and a services block on its home page, is upgraded
+- **THEN** the hero has the layout `beside`, the services block `cards`, the schema version is 9, and every page renders exactly as before
