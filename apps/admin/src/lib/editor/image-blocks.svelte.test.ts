@@ -104,6 +104,9 @@ describe("node components", () => {
       "time_range",
       "item_ref",
       "social_link",
+      // A project's categories and facts are edited in What you offer (collection-pages).
+      "project_category",
+      "fact",
     ];
     const missing = Object.keys(siteSchema).filter(
       (type) => !offCanvas.includes(type) && !(type in nodeComponents),

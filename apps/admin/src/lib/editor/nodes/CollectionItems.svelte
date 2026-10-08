@@ -5,6 +5,7 @@ import { getEditor } from "../state.svelte";
 import FaqItem from "./FaqItem.svelte";
 import ItemPreview from "./ItemPreview.svelte";
 import Person from "./Person.svelte";
+import ProjectTile from "./ProjectTile.svelte";
 import ServiceItem from "./ServiceItem.svelte";
 import Testimonial from "./Testimonial.svelte";
 
@@ -31,6 +32,7 @@ const ITEM_COMPONENTS: Record<string, Component<any>> = {
   team: Person,
   testimonials: Testimonial,
   faqs: FaqItem,
+  projects: ProjectTile,
 };
 </script>
 

@@ -340,6 +340,7 @@ export const LIST_SECTIONS: Record<CollectionName, "offer" | "about"> = {
   faqs: "offer",
   team: "about",
   testimonials: "about",
+  projects: "offer",
 };
 
 /** An item's first field, where a problem about the whole item leads. */
@@ -348,6 +349,7 @@ const FIRST_FIELDS: Record<CollectionName, string> = {
   faqs: "question",
   team: "name",
   testimonials: "quote",
+  projects: "name",
 };
 
 /** A field of an item in a list form: one of its texts, its image (`image`) or its description. */
@@ -381,9 +383,11 @@ export function listTarget(
     let index = items.indexOf(nodeId);
     let field = property ?? FIRST_FIELDS[collection];
     if (index < 0 && isImage) {
-      index = items.findIndex((id) =>
-        (doc.nodes[id]?.image as { nodes?: string[] } | undefined)?.nodes?.includes(nodeId),
-      );
+      index = items.findIndex((id) => {
+        const item = doc.nodes[id];
+        const images = item?.[item.type === "project" ? "cover" : "image"];
+        return (images as { nodes?: string[] } | undefined)?.nodes?.includes(nodeId);
+      });
       field = property === "alt" ? "image-alt" : "image";
     }
     const itemId = items[index];
@@ -396,10 +400,21 @@ export function listTarget(
 
 /** The fields of each collection's items in the list forms. */
 const ITEM_FIELDS: Record<CollectionName, readonly string[]> = {
-  services: ["name", "description", "price"],
+  services: ["name", "description", "price", "slug", "body"],
   faqs: ["question", "answer"],
   team: ["name", "role", "text", "image"],
   testimonials: ["quote", "name", "detail", "image"],
+  projects: [
+    "name",
+    "category_id",
+    "summary",
+    "body",
+    "facts",
+    "image",
+    "photos",
+    "video_url",
+    "slug",
+  ],
 };
 
 /** The list form field an element ID (`?focus=`) names, in the section `section`. */

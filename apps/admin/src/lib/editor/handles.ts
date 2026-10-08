@@ -23,6 +23,7 @@ export const BLOCK_TYPES: readonly BlockType[] = [
   "faq",
   "figures",
   "steps",
+  "projects",
 ];
 
 /** Why a block can't go somewhere; the picker says it with `editor.unavailable.<reason>`. */

@@ -83,7 +83,7 @@ milestones in [`roadmap.md`](roadmap.md). Implementation goes through OpenSpec c
   - [x] key figures and steps (`figures-and-steps`)
   - [x] full-photo hero, compact team list, services as a list, gallery showing whole images
     (`block-variants`)
-  - [ ] a page per service or project, a projects collection and a projects block filtered by
+  - [x] a page per service or project, a projects collection and a projects block filtered by
     category (`collection-pages`)
   - [ ] cards: image, title, text and link (`cards`)
   - [ ] video, moved from the beta, and a hero slideshow for film and creative agencies

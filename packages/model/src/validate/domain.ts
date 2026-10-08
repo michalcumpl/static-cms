@@ -29,7 +29,7 @@ const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const MIN_SHARE_WIDTH = 600;
 /** The largest icon made from a favicon that phones show on their home screens. */
 const MIN_FAVICON_SIZE = 180;
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -98,6 +98,7 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
       );
     }
     checkCollections(site, get, problems);
+    checkItemPages(site, get, problems);
     for (const pageId of pageIds) {
       const page = get(pageId, "page");
       if (page) checkCollectionBlocks(site, page, check, get, problems);
@@ -550,6 +551,7 @@ const ITEM_LABELS: Record<CollectionName, string> = {
   team: "Person",
   testimonials: "Testimonial",
   faqs: "Question",
+  projects: "Project",
 };
 
 /** The panel section where an item is edited, for messages (offer-and-about decision 7). */
@@ -558,6 +560,7 @@ const ITEM_HOMES: Record<CollectionName, string> = {
   team: "About you",
   testimonials: "About you",
   faqs: "What you offer",
+  projects: "What you offer",
 };
 
 /** The items' own contents, collection by collection (business-collections, "Collections"). */
@@ -600,6 +603,145 @@ function checkCollections(
         if (isBlank(faq.question)) need("empty-question", id, "its question", "question");
         if (isBlank(faq.answer)) need("empty-answer", id, "its answer", "answer");
       }
+      const project = get(id, "project");
+      if (project) checkProject(project, label, home, site, get, problems);
+    });
+  }
+  site.project_categories.nodes.forEach((id, i) => {
+    const category = get(id, "project_category");
+    if (category && isBlank(category.name)) {
+      problems.error(
+        "empty-name",
+        id,
+        `Project category ${i + 1} needs a name; edit it in What you offer.`,
+        "name",
+      );
+    }
+  });
+}
+
+/** A project's own contents (collection-pages, "Projects"). */
+function checkProject(
+  project: NodeOfType<"project">,
+  label: string,
+  home: string,
+  site: NodeOfType<"site">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  if (isBlank(project.name)) {
+    problems.error("empty-name", project.id, `${label} needs a name; ${home}.`, "name");
+  }
+  if (project.category_id !== "" && !site.project_categories.nodes.includes(project.category_id)) {
+    problems.error(
+      "missing-category",
+      project.id,
+      `${label} is in a category that no longer exists; choose another one, ${home}.`,
+      "category_id",
+    );
+  }
+  for (const factId of project.facts.nodes) {
+    const fact = get(factId, "fact");
+    if (!fact) continue;
+    const name = fact.label.content.trim();
+    if (name === "") {
+      problems.error(
+        "empty-label",
+        factId,
+        `${label} has a fact without a label; ${home}.`,
+        "label",
+      );
+    } else if (isBlank(fact.value)) {
+      problems.error(
+        "empty-value",
+        factId,
+        `${label}'s fact "${name}" needs a value; ${home}.`,
+        "value",
+      );
+    }
+  }
+  if (project.cover.nodes.length > 1) {
+    problems.error("too-many-items", project.id, `${label} can have at most one cover.`, "cover");
+  } else if (project.cover.nodes.length === 0) {
+    problems.warning(
+      "missing-cover",
+      project.id,
+      `${label} has no cover image, so its tile has no picture; ${home}.`,
+      "cover",
+    );
+  }
+  if (project.video_url !== "" && !isHttpsUrl(project.video_url)) {
+    problems.error(
+      "unsafe-link",
+      project.id,
+      `${label}'s video address "${project.video_url}" must start with https://; ${home}.`,
+      "video_url",
+    );
+  }
+}
+
+/**
+ * The listing pages of services and projects, and their items' addresses while they have one
+ * (collection-pages, "Item pages").
+ */
+function checkItemPages(
+  site: NodeOfType<"site">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const collections = [
+    { collection: "services", property: "services_page_id", what: "services" },
+    { collection: "projects", property: "projects_page_id", what: "projects" },
+  ] as const;
+  for (const { collection, property, what } of collections) {
+    const listing = site[property];
+    if (listing === "") continue;
+    if (!site.pages.nodes.includes(listing) || !get(listing, "page")) {
+      problems.error(
+        "missing-page",
+        site.id,
+        `The page listing the ${what} no longer exists; choose another one in What you offer.`,
+        property,
+      );
+      continue;
+    }
+    if (listing === site.home_page_id) {
+      problems.error(
+        "invalid-listing-page",
+        site.id,
+        `The ${what} can't have pages under the home page; choose another page to list them in What you offer.`,
+        property,
+      );
+      continue;
+    }
+    const seen = new Map<string, string>();
+    site[collection].nodes.forEach((id, i) => {
+      const item = get(id, collection === "services" ? "service_item" : "project");
+      if (!item) return;
+      const label = `${ITEM_LABELS[collection]} ${i + 1}`;
+      const normalized = slugify(item.slug);
+      if (normalized === "" || normalized !== item.slug) {
+        problems.error(
+          "invalid-slug",
+          id,
+          normalized === ""
+            ? `${label} needs an address for its page; edit it in What you offer.`
+            : `The address "${item.slug}" of ${label} may only contain lowercase letters, digits and dashes; try "${normalized}".`,
+          "slug",
+        );
+        return;
+      }
+      const other = seen.get(item.slug);
+      if (other !== undefined) {
+        problems.error(
+          "duplicate-slug",
+          id,
+          `${other} and ${label} have the same address "${item.slug}".`,
+          "slug",
+        );
+      } else {
+        seen.set(item.slug, label);
+      }
     });
   }
 }
@@ -621,6 +763,26 @@ function checkCollectionBlocks(
     const { collection } = COLLECTIONS[block.type];
     const members = new Set(site[collection].nodes);
     const name = BLOCK_NAMES[block.type];
+    if (block.type === "projects" && block.category_id !== "") {
+      if (!site.project_categories.nodes.includes(block.category_id)) {
+        problems.error(
+          "missing-category",
+          block.id,
+          `The ${name} on ${on} shows a category that no longer exists; choose another one.`,
+          "category_id",
+        );
+      } else if (
+        block.show === "all" &&
+        !site.projects.nodes.some((id) => get(id, "project")?.category_id === block.category_id)
+      ) {
+        problems.warning(
+          "empty-block",
+          block.id,
+          `The ${name} on ${on} shows a category without projects yet.`,
+          "category_id",
+        );
+      }
+    }
     if (block.show === "all") {
       if (block.chosen.nodes.length > 0) {
         problems.error(
@@ -675,6 +837,7 @@ const BLOCK_NAMES = {
   team: "team block",
   testimonials: "testimonials block",
   faq: "questions block",
+  projects: "projects block",
 } as const;
 
 /** Whether a contact or opening hours block would show anything of one location. */

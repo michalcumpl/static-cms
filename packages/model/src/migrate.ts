@@ -13,7 +13,8 @@ type RawDoc = { document_id: string; nodes: Record<string, RawNode> };
  * services, team and testimonials blocks into the site's collections, which the blocks then show
  * (all, or the items they chose), and adds the FAQ collection and social profiles, empty;
  * version 8 moves the business's contact details and opening hours into its one location, and
- * lets contact and opening hours blocks show all locations.
+ * lets contact and opening hours blocks show all locations; version 9 stores each block's look;
+ * version 10 adds projects and item pages, none to begin with.
  * Anything that isn't a site of an older version is returned unchanged, for validation to
  * judge. The input is not modified.
  */
@@ -28,6 +29,7 @@ export function migrateSite(doc: unknown): unknown {
   if (siteOf(current)?.schema_version === 6) current = toVersion7(current);
   if (siteOf(current)?.schema_version === 7) current = toVersion8(current);
   if (siteOf(current)?.schema_version === 8) current = toVersion9(current);
+  if (siteOf(current)?.schema_version === 9) current = toVersion10(current);
   return current;
 }
 
@@ -322,6 +324,30 @@ function toVersion9<T extends RawDoc>(doc: T): T {
     if (look) upgraded[id] = { ...(node as RawNode), ...look };
   }
   upgraded[doc.document_id] = { ...site, schema_version: 9 };
+  return { ...doc, nodes: upgraded };
+}
+
+/**
+ * Version 10 (collection-pages): an empty projects collection and category list, no listing
+ * pages, and an empty address and page text on every service, so nothing renders differently.
+ */
+function toVersion10<T extends RawDoc>(doc: T): T {
+  const site = siteOf(doc) as RawNode;
+  const empty = () => ({ nodes: [], marks: [], annotations: [] });
+  const upgraded: Record<string, RawNode> = { ...doc.nodes };
+  for (const [id, node] of Object.entries(doc.nodes)) {
+    if (isObject(node) && node.type === "service_item") {
+      upgraded[id] = { ...(node as RawNode), slug: "", body: empty() };
+    }
+  }
+  upgraded[doc.document_id] = {
+    ...site,
+    schema_version: 10,
+    projects: empty(),
+    project_categories: empty(),
+    services_page_id: "",
+    projects_page_id: "",
+  };
   return { ...doc, nodes: upgraded };
 }
 

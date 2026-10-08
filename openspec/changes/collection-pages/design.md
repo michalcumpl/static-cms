@@ -175,3 +175,25 @@ practice areas get pages with their scope lists. Their stand-in galleries and ha
 
 Format 10, upgraded on read and stored at the next save (decision 3). Nothing to run; no site
 changes until an owner turns item pages on or adds a projects block.
+
+## Changes made while building
+
+- **A new item's address follows its name** as it is typed, until the owner changes the address
+  (the project-page delta now says so). Made on the first typed letter, it was just "p".
+- **Photos get a description field in the form** (and the decorative switch), not only in the
+  editor's Image panel: a photo added in What you offer otherwise blocked the preview until
+  described elsewhere.
+- **One image helper for covers:** `setImage`, `removeImage`, `chooseImage`, `ImageSlot`,
+  `FormImage` and the Image panel take the image property from the owner's type
+  (`imagePropertyOf`: a project's `cover`, everyone else's `image`), so callers didn't change.
+- **The editing operations** live in `lib/editor/item-pages.ts` (listing pages, addresses, facts,
+  photos, categories, the projects block's category and number), with `listingPageChoices` for
+  the page choice.
+- **The block panel's "New …" button** returns focus to the canvas, so the caret is in the new
+  item (for services too); the panel's category and number fields have explicit labels.
+- **Share files:** a project's cover is listed as its page's share image in `usedMediaFiles` and
+  the export, since the share file is made on demand.
+- **Rendering:** `RenderContext` exposes `nodes`, `itemPages`, `itemUrl` and `translationUrls`
+  (the export builds each language's page map from it); `renderDocument`, `indent`,
+  `galleryGrid`, `blockHeading` and `renderBodyChild` are shared with the item pages.
+- **Empty facts and photos** aren't drawn in the form, only their Add buttons.

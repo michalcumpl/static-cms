@@ -2,7 +2,7 @@ import type { DocumentPath } from "svedit";
 import { tick } from "svelte";
 import { locateNode } from "./locate";
 import type { EditorState } from "./state.svelte";
-import { addItemsWithImages, removeImage, setImage } from "./transforms";
+import { addItemsWithImages, imagePropertyOf, removeImage, setImage } from "./transforms";
 
 // Images of any block (image-blocks design.md decision 4): the hero, text with image, a person's
 // portrait, a gallery photo and a logo all keep their image in an `image` list of 0..1 nodes.
@@ -16,6 +16,7 @@ export const OPTIONAL_IMAGE_OWNERS: readonly string[] = [
   "text_with_image",
   "person",
   "testimonial",
+  "project",
 ];
 
 type Doc = Parameters<typeof locateNode>[0];
@@ -32,9 +33,12 @@ export function startsDecorative(ownerType: string): boolean {
  */
 export async function chooseImage(editor: EditorState, ownerId: string): Promise<void> {
   const { session } = editor;
-  const owner = session.get(ownerId) as { type: string; image: { nodes: string[] } } | undefined;
+  const owner = session.get(ownerId) as
+    | ({ type: string } & Record<string, { nodes: string[] }>)
+    | undefined;
   if (!owner) return;
-  const current = owner.image.nodes[0];
+  const property = imagePropertyOf(owner.type);
+  const current = owner[property]?.nodes[0];
   const currentKey = current ? (session.get(current) as { src: string }).src : undefined;
   const chosen = await editor.openLibrary(currentKey);
   if (!chosen) return;
@@ -42,7 +46,7 @@ export async function chooseImage(editor: EditorState, ownerId: string): Promise
   if (!ownerPath) return;
   const tr = session.tr;
   setImage(tr, ownerId, chosen, { decorative: startsDecorative(owner.type) });
-  tr.set_selection({ type: "property", path: [...ownerPath, "image", 0, "src"] as DocumentPath });
+  tr.set_selection({ type: "property", path: [...ownerPath, property, 0, "src"] as DocumentPath });
   session.apply(tr);
   await tick();
   document.getElementById(IMAGE_ALT_FIELD)?.focus();
@@ -63,7 +67,7 @@ export function ownerOfSelectedImage(
   const selection = editor.session.selection as { path?: DocumentPath } | null;
   const path = selection?.path;
   if (!path) return undefined;
-  const index = path.lastIndexOf("image");
+  const index = Math.max(path.lastIndexOf("image"), path.lastIndexOf("cover"));
   if (index < 1) return undefined;
   const owner = editor.session.get(path.slice(0, index)) as { id?: string; type?: string };
   return owner?.id && owner.type ? { id: owner.id, type: owner.type } : undefined;

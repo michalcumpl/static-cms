@@ -127,17 +127,35 @@ export const en = {
       noDomain: "Not published yet",
     },
     lists: {
+      pages: {
+        services: "Each service has its own page",
+        projects: "Each project has its own page",
+        listedOn: "Listed on the page",
+        choose: "Choose a page…",
+      },
+      categories: {
+        title: "Categories",
+        hint: "Projects can be shown by category, such as Exhibitions or Interiors.",
+        name: "Category {n}",
+        add: "Add a category",
+        deleteTitle: "Delete the category {name}?",
+        deleteUsed:
+          "Projects in it: {projects}. Blocks showing it: {blocks}. They keep their place and show no category.",
+      },
+      projects: "Projects",
       services: "Services",
       faqs: "Questions",
       team: "People",
       testimonials: "Testimonials",
       item: {
+        projects: "Project {n}",
         services: "Service {n}",
         faqs: "Question {n}",
         team: "Person {n}",
         testimonials: "Testimonial {n}",
       },
       add: {
+        projects: "Add a project",
         services: "Add a service",
         faqs: "Add a question",
         team: "Add a person",
@@ -156,6 +174,24 @@ export const en = {
       saveFirst: "Your changes have to be saved before the editor opens. Save them now?",
       named: "{item}: {name}",
       fields: {
+        category: "Category",
+        noCategory: "No category",
+        summary: "Summary (one line, optional)",
+        body: "Text",
+        pageText: "Text of its page",
+        addText: "Add text",
+        facts: "Facts",
+        factLabel: "Label",
+        factValue: "Value",
+        addFact: "Add a fact",
+        remove: "Remove",
+        cover: "Cover",
+        photos: "Photos",
+        addPhotos: "Add photos",
+        caption: "Caption (optional)",
+        video: "Video address (optional)",
+        slug: "Address",
+        openPage: "Open page",
         name: "Name",
         description: "Description",
         price: "Price (optional)",
@@ -437,6 +473,10 @@ export const en = {
       },
       deleteTitle: "Delete “{title}”?",
       noLinks: "No links on other pages point to it.",
+      listing: {
+        services: "It lists the services: their own pages will no longer be published.",
+        projects: "It lists the projects: their own pages will no longer be published.",
+      },
       links: {
         one: "{count} link elsewhere in the site points to it. It will be listed as a problem to fix.",
         other:
@@ -713,6 +753,10 @@ export const en = {
       noLabel: "Enter a label for the menu.",
     },
     blocks: {
+      projects: {
+        name: "Projects",
+        description: "Your work as photo tiles, all of it or one category",
+      },
       hero: {
         name: "Hero",
         description: "The big opening: a heading, a short text, a photo and a button",
@@ -777,10 +821,18 @@ export const en = {
       addedInPrimary: "{collection} are added and removed in {language}",
     },
     collections: {
+      projects: "Projects",
       services: "Services",
       team: "People",
       testimonials: "Testimonials",
       faqs: "Questions",
+    },
+    projectsBlock: {
+      category: "Category",
+      allCategories: "All categories",
+      count: "How many",
+      all: "All",
+      edit: "Edit projects",
     },
     look: {
       legend: "Look",
@@ -793,12 +845,14 @@ export const en = {
     collectionBlock: {
       show: "Show",
       all: {
+        projects: "All projects",
         services: "All services",
         team: "All people",
         testimonials: "All testimonials",
         faqs: "All questions",
       },
       chosen: {
+        projects: "Chosen projects",
         services: "Chosen services",
         team: "Chosen people",
         testimonials: "Chosen testimonials",
@@ -808,6 +862,7 @@ export const en = {
       choose: "Choose…",
       add: "Add",
       newItem: {
+        projects: "New project",
         services: "New service",
         team: "New person",
         testimonials: "New testimonial",

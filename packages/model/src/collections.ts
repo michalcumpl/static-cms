@@ -3,19 +3,20 @@
 import type { NodeOfType, NodeType, SiteDocument } from "./schema/index.js";
 
 /** The block types that show a collection. */
-export type CollectionBlockType = "services" | "team" | "testimonials" | "faq";
+export type CollectionBlockType = "services" | "team" | "testimonials" | "faq" | "projects";
 
 /** The site node's collection properties. */
-export type CollectionName = "services" | "team" | "testimonials" | "faqs";
+export type CollectionName = "services" | "team" | "testimonials" | "faqs" | "projects";
 
 /** The item node types, one per collection. */
-export type CollectionItemType = "service_item" | "person" | "testimonial" | "faq_item";
+export type CollectionItemType = "service_item" | "person" | "testimonial" | "faq_item" | "project";
 
 export const COLLECTION_BLOCK_TYPES: readonly CollectionBlockType[] = [
   "services",
   "team",
   "testimonials",
   "faq",
+  "projects",
 ];
 
 /** Which collection a block shows, and what its items are. */
@@ -27,6 +28,7 @@ export const COLLECTIONS: Record<
   team: { collection: "team", item: "person" },
   testimonials: { collection: "testimonials", item: "testimonial" },
   faq: { collection: "faqs", item: "faq_item" },
+  projects: { collection: "projects", item: "project" },
 };
 
 export const COLLECTION_NAMES: readonly CollectionName[] = [
@@ -34,6 +36,7 @@ export const COLLECTION_NAMES: readonly CollectionName[] = [
   "team",
   "testimonials",
   "faqs",
+  "projects",
 ];
 
 export function isCollectionBlockType(type: unknown): type is CollectionBlockType {
@@ -64,6 +67,20 @@ export function blockItems(doc: SiteDocument, block: CollectionBlockNode): Colle
     const node = doc.nodes[id];
     return node?.type === itemType ? [node as CollectionItemNode] : [];
   });
+}
+
+/**
+ * The projects a projects block shows: its items (`blockItems`) in its category, if it has one,
+ * up to its limit, if it has one (collection-pages design decision 3).
+ */
+export function projectsShown(
+  doc: SiteDocument,
+  block: NodeOfType<"projects">,
+): NodeOfType<"project">[] {
+  const items = (blockItems(doc, block) as NodeOfType<"project">[]).filter(
+    (project) => block.category_id === "" || project.category_id === block.category_id,
+  );
+  return block.limit > 0 ? items.slice(0, block.limit) : items;
 }
 
 /** The node type of the items in the collection a block type shows. */

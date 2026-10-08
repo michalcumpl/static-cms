@@ -102,6 +102,9 @@ describe("problem categories", () => {
       "long-figure": true,
       "empty-title": true,
       "cover-without-image": true,
+      "missing-category": true,
+      "missing-cover": true,
+      "invalid-listing-page": true,
     };
     for (const code of Object.keys(codes) as ProblemCode[]) {
       expect(["structure", "site"], code).toContain(problemCategory(code));

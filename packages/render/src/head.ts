@@ -15,6 +15,42 @@ export interface HeadOptions {
   description: string;
   /** The page shown, for its canonical link, share metadata and (home) structured data. */
   page?: NodeOfType<"page">;
+  /** Or the service or project whose own page this is (collection-pages decision 4). */
+  item?: { id: string; title: string; shareImageId?: string };
+}
+
+/** What the page tags need to know about the page shown, a page of the site or an item's. */
+interface Subject {
+  id: string;
+  /** The key its counterparts in other languages share. */
+  key: string;
+  ogTitle: string;
+  shareImageId?: string;
+  home: boolean;
+}
+
+function subjectOf(ctx: RenderContext, options: HeadOptions): Subject | undefined {
+  const { page, item } = options;
+  if (page) {
+    const home = page.id === ctx.homeId;
+    return {
+      id: page.id,
+      key: page.translation_key,
+      ogTitle: home ? ctx.site.name : page.title,
+      shareImageId: page.share_image.nodes[0],
+      home,
+    };
+  }
+  if (item) {
+    return {
+      id: item.id,
+      key: item.id,
+      ogTitle: item.title,
+      shareImageId: item.shareImageId,
+      home: false,
+    };
+  }
+  return undefined;
 }
 
 /**
@@ -24,7 +60,7 @@ export interface HeadOptions {
  * site's address is known. Without `page` (the not-found page) there are no page tags.
  */
 export function renderHead(ctx: RenderContext, options: HeadOptions): Html {
-  const { page } = options;
+  const page = subjectOf(ctx, options);
   const lines: Html[] = [
     html`<meta charset="utf-8">`,
     html`<meta name="viewport" content="width=device-width, initial-scale=1">`,
@@ -36,7 +72,7 @@ export function renderHead(ctx: RenderContext, options: HeadOptions): Html {
   lines.push(html`<link rel="stylesheet" href="${ctx.url("assets/style.css")}">`);
   const canonical = page && ctx.canonicalUrl(page.id);
   if (canonical) lines.push(html`<link rel="canonical" href="${canonical}">`);
-  if (page && ctx.multilingual) lines.push(...alternates(ctx, page.translation_key));
+  if (page && ctx.multilingual) lines.push(...alternates(ctx, page.key));
   if (ctx.site.favicon.nodes.length > 0) {
     lines.push(
       html`<link rel="icon" href="${ctx.url("favicon.ico")}" sizes="32x32">`,
@@ -46,7 +82,7 @@ export function renderHead(ctx: RenderContext, options: HeadOptions): Html {
   }
   if (page) {
     lines.push(...shareMetadata(ctx, page, options.description, canonical));
-    if (page.id === ctx.homeId) {
+    if (page.home) {
       const data = structuredData(ctx);
       if (data) lines.push(data);
     }
@@ -72,16 +108,15 @@ function alternates(ctx: RenderContext, key: string): Html[] {
 
 function shareMetadata(
   ctx: RenderContext,
-  page: NodeOfType<"page">,
+  page: Subject,
   description: string,
   canonical: string | undefined,
 ): Html[] {
   const { site } = ctx;
-  const isHome = page.id === ctx.homeId;
   const lines = [
     html`<meta property="og:type" content="website">`,
     html`<meta property="og:site_name" content="${site.name}">`,
-    html`<meta property="og:title" content="${isHome ? site.name : page.title}">`,
+    html`<meta property="og:title" content="${page.ogTitle}">`,
   ];
   if (description !== "") {
     lines.push(html`<meta property="og:description" content="${description}">`);
@@ -105,8 +140,8 @@ function shareMetadata(
 }
 
 /** The page's own share image, else the site's default. */
-function shareImage(ctx: RenderContext, page: NodeOfType<"page">): NodeOfType<"image"> | undefined {
-  const id = page.share_image.nodes[0] ?? ctx.site.share_image.nodes[0];
+function shareImage(ctx: RenderContext, page: Subject): NodeOfType<"image"> | undefined {
+  const id = page.shareImageId ?? ctx.site.share_image.nodes[0];
   return id === undefined ? undefined : ctx.node(id, "image");
 }
 

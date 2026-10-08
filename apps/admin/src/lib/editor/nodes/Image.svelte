@@ -8,7 +8,11 @@ const svedit = getContext<SveditContext>("svedit");
 const editor = getEditor();
 const image = $derived(svedit.session.get(path));
 // Styled like the published image of its block (see the site stylesheet).
-const CLASS_BY_OWNER: Record<string, string> = { hero: "hero-image", person: "portrait" };
+const CLASS_BY_OWNER: Record<string, string> = {
+  hero: "hero-image",
+  person: "portrait",
+  project: "project-cover",
+};
 const ownerType = $derived((svedit.session.get(path.slice(0, -2)) as { type?: string })?.type);
 </script>
 

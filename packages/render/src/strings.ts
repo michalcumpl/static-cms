@@ -18,6 +18,12 @@ export interface SiteStrings {
   socialLabel: string;
   /** The name of the business's offer catalog in structured data. */
   servicesLabel: string;
+  /** The link after a projects block that shows only some projects (collection-pages). */
+  allProjects: string;
+  /** The link to a project's video. */
+  watchVideo: string;
+  /** The link to a service's page inside an opened accordion row. */
+  moreAboutService: string;
 }
 
 const STRINGS: Record<string, SiteStrings> = {
@@ -34,6 +40,9 @@ const STRINGS: Record<string, SiteStrings> = {
     menuLabel: "Hlavní nabídka",
     socialLabel: "Sociální sítě",
     servicesLabel: "Služby",
+    allProjects: "Všechny projekty",
+    watchVideo: "Přehrát video",
+    moreAboutService: "Více o službě",
   },
   sk: {
     notFoundHeading: "Stránka sa nenašla",
@@ -48,6 +57,9 @@ const STRINGS: Record<string, SiteStrings> = {
     menuLabel: "Hlavná ponuka",
     socialLabel: "Sociálne siete",
     servicesLabel: "Služby",
+    allProjects: "Všetky projekty",
+    watchVideo: "Prehrať video",
+    moreAboutService: "Viac o službe",
   },
   de: {
     notFoundHeading: "Seite nicht gefunden",
@@ -63,6 +75,9 @@ const STRINGS: Record<string, SiteStrings> = {
     menuLabel: "Hauptmenü",
     socialLabel: "Soziale Medien",
     servicesLabel: "Leistungen",
+    allProjects: "Alle Projekte",
+    watchVideo: "Video ansehen",
+    moreAboutService: "Mehr zu dieser Leistung",
   },
   pl: {
     notFoundHeading: "Nie znaleziono strony",
@@ -77,6 +92,9 @@ const STRINGS: Record<string, SiteStrings> = {
     menuLabel: "Menu główne",
     socialLabel: "Media społecznościowe",
     servicesLabel: "Usługi",
+    allProjects: "Wszystkie projekty",
+    watchVideo: "Obejrzyj wideo",
+    moreAboutService: "Więcej o usłudze",
   },
   en: {
     notFoundHeading: "Page not found",
@@ -91,6 +109,9 @@ const STRINGS: Record<string, SiteStrings> = {
     menuLabel: "Main menu",
     socialLabel: "Social media",
     servicesLabel: "Services",
+    allProjects: "All projects",
+    watchVideo: "Watch the video",
+    moreAboutService: "More about this service",
   },
 };
 

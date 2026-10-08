@@ -124,6 +124,12 @@ export function deletePage(session: Session, pageId: string): boolean {
     navItems(doc).nodes.filter((id) => !own.has(id)),
   );
   tr.set([doc.document_id, "pages"], list(siteOf(doc).pages.nodes.filter((id) => id !== pageId)));
+  // A page listing services or projects takes their own pages with it (collection-pages).
+  for (const property of ["services_page_id", "projects_page_id"] as const) {
+    if ((siteOf(doc) as unknown as Record<string, unknown>)[property] === pageId) {
+      tr.set([doc.document_id, property], "");
+    }
+  }
   // The selection may point into the deleted page.
   tr.set_selection(null as never);
   session.apply(tr);

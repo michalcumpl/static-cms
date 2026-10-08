@@ -232,7 +232,7 @@ const statusText = $derived(saveStatusText(editor, i18n.t));
       {/if}
     </div>
     <ButtonPanel {editor} />
-    <BlockPanel {editor} />
+    <BlockPanel {editor} focusCanvas={() => canvas?.focus_canvas()} />
     <ImagePanel {editor} />
   </aside>
 </div>

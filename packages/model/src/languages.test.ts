@@ -136,6 +136,8 @@ describe("applySharedFields: collections", () => {
       name: text("Vánočka"),
       description: text(""),
       price: text(""),
+      slug: "",
+      body: { nodes: [], marks: [], annotations: [] },
     };
     cs.nodes.site_1.services.nodes.push("service_vanocka");
     const before = structuredClone(en.doc);
@@ -291,6 +293,110 @@ describe("applySharedFields: locations", () => {
     expect(result.nodes.location_kh).toBeUndefined();
     expect(result.nodes.kh_mon).toBeUndefined();
     expect(result.nodes.contact_kh.location_id).toBe("");
+    expect(validateSite(result).problems.filter((p) => p.severity === "error")).toEqual([]);
+  });
+});
+
+describe("applySharedFields: projects (collection-pages)", () => {
+  const text = (content: string) => ({ content, marks: [], annotations: [] });
+
+  /** "Poslední závod" with a cover, a photo and a fact, in both languages, listed under "Kontakt". */
+  function withProject() {
+    const { cs, en } = languages();
+    for (const [doc, name, slug, label] of [
+      [cs, "Poslední závod", "posledni-zavod", "Režie"],
+      [en, "The Last Race", "the-last-race", "Director"],
+    ] as const) {
+      const nodes = doc.nodes;
+      nodes.category_film = { id: "category_film", type: "project_category", name: text("Film") };
+      nodes.cover_race = image("cover_race", "race.jpg", doc === cs ? "Plakát" : "Poster");
+      nodes.photo_img = image("photo_img", "race-1.jpg", "Start");
+      nodes.photo_1 = {
+        id: "photo_1",
+        type: "gallery_item",
+        image: list(["photo_img"]),
+        caption: text(doc === cs ? "Start" : "The start"),
+      };
+      nodes.fact_1 = { id: "fact_1", type: "fact", label: text(label), value: text("Tomáš Hodan") };
+      nodes.project_race = {
+        id: "project_race",
+        type: "project",
+        name: text(name),
+        category_id: "category_film",
+        summary: text(""),
+        body: list([]),
+        facts: list(["fact_1"]),
+        cover: list(["cover_race"]),
+        photos: list(["photo_1"]),
+        video_url: "https://vimeo.com/697475416",
+        slug,
+      };
+      nodes.site_1.project_categories = list(["category_film"]);
+      nodes.site_1.projects = list(["project_race"]);
+      nodes.site_1.projects_page_id = "page_contact";
+    }
+    return { cs, en };
+  }
+
+  it("Project translated to English", () => {
+    const { cs, en } = withProject();
+    cs.nodes.cover_race.src = "race-new.jpg";
+    cs.nodes.project_race.video_url = "https://vimeo.com/1";
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.project_race).toMatchObject({
+      name: { content: "The Last Race" },
+      slug: "the-last-race",
+      video_url: "https://vimeo.com/1",
+    });
+    expect(result.nodes.fact_1.label.content).toBe("Director");
+    expect(result.nodes.photo_1.caption.content).toBe("The start");
+    // A new cover in Czech: its description is the primary's until translated.
+    expect(result.nodes.cover_race).toMatchObject({ src: "race-new.jpg", alt: "Plakát" });
+    expect(result.nodes.site_1.projects_page_id).toBe("page_contact");
+    expect(validateSite(result).problems).toEqual([]);
+  });
+
+  it("New project in Czech", () => {
+    const { cs, en } = withProject();
+    cs.nodes.project_mustang = {
+      ...cs.nodes.project_race,
+      id: "project_mustang",
+      name: text("Mustang"),
+      slug: "mustang",
+      facts: list([]),
+      photos: list([]),
+      cover: list([]),
+    };
+    cs.nodes.site_1.projects.nodes.push("project_mustang");
+    const before = structuredClone(en.doc);
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(en.doc).toEqual(before);
+    expect(result.nodes.site_1.projects.nodes).toEqual(["project_race", "project_mustang"]);
+    expect(result.nodes.project_mustang).toMatchObject({
+      name: { content: "Mustang" },
+      slug: "mustang",
+    });
+  });
+
+  it("drops a category the primary deleted, from projects' blocks too", () => {
+    const { cs, en } = withProject();
+    en.nodes.projects_1 = {
+      id: "projects_1",
+      type: "projects",
+      heading: text(""),
+      show: "all",
+      chosen: list([]),
+      category_id: "category_film",
+      limit: 0,
+    };
+    en.nodes.page_contact.blocks.nodes.push("projects_1");
+    cs.nodes.site_1.project_categories = list([]);
+    cs.nodes.project_race.category_id = "";
+    delete cs.nodes.category_film;
+    const result = applySharedFields(cs.doc, en.doc) as unknown as { nodes: LooseNodes };
+    expect(result.nodes.category_film).toBeUndefined();
+    expect(result.nodes.projects_1.category_id).toBe("");
+    expect(result.nodes.project_race.category_id).toBe("");
     expect(validateSite(result).problems.filter((p) => p.severity === "error")).toEqual([]);
   });
 });

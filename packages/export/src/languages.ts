@@ -44,10 +44,7 @@ export function exportSiteLanguages(
   const siteLanguages: SiteLanguage[] = ordered.map(({ lang, document }) => {
     const languageBase = lang === primary.lang ? basePath : `${basePath}${lang}/`;
     const ctx = new RenderContext(document as SiteDocument, languageBase);
-    const pages = new Map<string, string>();
-    for (const pageId of ctx.site.pages.nodes) {
-      pages.set(ctx.node(pageId, "page").translation_key, ctx.pageUrl(pageId));
-    }
+    const pages = ctx.translationUrls();
     return {
       lang,
       name: languageName(lang),

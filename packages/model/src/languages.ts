@@ -28,6 +28,75 @@ function ownedIds(nodes: Record<string, LooseNode>, id: string): string[] {
   return ids;
 }
 
+/**
+ * The primary's images of a list, as nodes for `other`: an image keeps `other`'s description
+ * while it is the same image as `other`'s at that position.
+ */
+function sharedImages(
+  pNodes: Record<string, LooseNode>,
+  oNodes: Record<string, LooseNode>,
+  nodes: Record<string, LooseNode>,
+  pList: unknown,
+  oList: unknown,
+): NodeList {
+  const oImages = idsOf(oList).map((imageId) => oNodes[imageId]);
+  for (const imageId of idsOf(oList)) delete nodes[imageId];
+  const imageIds = idsOf(pList).filter((imageId) => pNodes[imageId]);
+  imageIds.forEach((imageId, i) => {
+    const pImage = pNodes[imageId] as LooseNode;
+    const oImage = oImages[i];
+    nodes[imageId] =
+      oImage && oImage.src === pImage.src
+        ? { ...pImage, alt: oImage.alt, decorative: oImage.decorative }
+        : { ...pImage };
+  });
+  return list(imageIds);
+}
+
+/**
+ * A project both languages have: the primary's category, video, cover, and photos and facts in
+ * its order, with `other`'s texts (name, summary, text, address, captions, fact labels and values)
+ * where `other` has them (collection-pages design decision 3).
+ */
+function sharedProject(
+  pNodes: Record<string, LooseNode>,
+  oNodes: Record<string, LooseNode>,
+  nodes: Record<string, LooseNode>,
+  pItem: LooseNode,
+  oItem: LooseNode,
+): LooseNode {
+  /** The primary's children of a list, each `other`'s own copy where it has one. */
+  const children = (
+    pList: unknown,
+    oList: unknown,
+    own: (pChild: LooseNode, oChild: LooseNode) => LooseNode,
+  ) => {
+    const pIds = idsOf(pList);
+    for (const id of idsOf(oList)) {
+      if (!pIds.includes(id)) for (const owned of ownedIds(oNodes, id)) delete nodes[owned];
+    }
+    for (const id of pIds) {
+      const pChild = pNodes[id];
+      const oChild = oNodes[id];
+      if (!pChild) continue;
+      if (oChild && oChild.type === pChild.type) nodes[id] = own(pChild, oChild);
+      else for (const owned of ownedIds(pNodes, id)) nodes[owned] = { ...pNodes[owned] };
+    }
+    return list(pIds);
+  };
+  return {
+    ...oItem,
+    category_id: pItem.category_id,
+    video_url: pItem.video_url,
+    cover: sharedImages(pNodes, oNodes, nodes, pItem.cover, oItem.cover),
+    facts: children(pItem.facts, oItem.facts, (_p, o) => o),
+    photos: children(pItem.photos, oItem.photos, (pPhoto, oPhoto) => ({
+      ...oPhoto,
+      image: sharedImages(pNodes, oNodes, nodes, pPhoto.image, oPhoto.image),
+    })),
+  };
+}
+
 const idsOf = (value: unknown): string[] => {
   const nodes = (value as { nodes?: unknown } | undefined)?.nodes;
   return Array.isArray(nodes) ? nodes.filter((id): id is string => typeof id === "string") : [];
@@ -147,21 +216,35 @@ export function applySharedFields<T>(primary: T, other: T): T {
         for (const owned of ownedIds(p.nodes, id)) nodes[owned] = { ...p.nodes[owned] };
         continue;
       }
-      if (!("image" in pItem)) continue;
-      const [oImageId] = idsOf(oItem.image);
-      const oImage = oImageId ? o.nodes[oImageId] : undefined;
-      for (const imageId of idsOf(oItem.image)) delete nodes[imageId];
-      const imageIds = idsOf(pItem.image).filter((imageId) => p.nodes[imageId]);
-      for (const imageId of imageIds) {
-        const pImage = p.nodes[imageId] as LooseNode;
-        const same = oImage && oImage.src === pImage.src;
-        nodes[imageId] = same
-          ? { ...pImage, alt: oImage.alt, decorative: oImage.decorative }
-          : { ...pImage };
+      if (pItem.type === "project") {
+        nodes[id] = sharedProject(p.nodes, o.nodes, nodes, pItem, oItem);
+        continue;
       }
-      nodes[id] = { ...oItem, image: list(imageIds) };
+      if (!("image" in pItem)) continue;
+      nodes[id] = {
+        ...oItem,
+        image: sharedImages(p.nodes, o.nodes, nodes, pItem.image, oItem.image),
+      };
     }
     site[collection] = list(pIds);
+  }
+  // Project categories: the primary's, in its order, keeping `other`'s names of the ones it has.
+  const pCategories = idsOf(pSite.project_categories);
+  const droppedCategories = new Set<string>();
+  for (const id of idsOf(oSite.project_categories)) {
+    if (pCategories.includes(id)) continue;
+    droppedCategories.add(id);
+    for (const owned of ownedIds(o.nodes, id)) delete nodes[owned];
+  }
+  for (const id of pCategories) {
+    if (o.nodes[id]?.type === "project_category" || !p.nodes[id]) continue;
+    for (const owned of ownedIds(p.nodes, id)) nodes[owned] = { ...p.nodes[owned] };
+  }
+  if ("project_categories" in pSite) site.project_categories = list(pCategories);
+  for (const [id, node] of Object.entries(nodes)) {
+    if (node.type === "projects" && droppedCategories.has(node.category_id as string)) {
+      nodes[id] = { ...node, category_id: "" };
+    }
   }
   // Blocks that chose an item the primary no longer has stop showing it. Other references stay
   // for validation to judge.

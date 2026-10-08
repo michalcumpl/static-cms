@@ -4,6 +4,7 @@ import {
   type CollectionBlockNode,
   type CollectionItemNode,
   isSafeHref,
+  projectsShown,
 } from "@webmio/model";
 import { type BusinessInfo, businessInfo, type LocationInfo, locationsFor } from "./business.js";
 import { type SiteStrings, siteStrings } from "./strings.js";
@@ -29,6 +30,13 @@ export interface SiteLanguage {
   home: string;
 }
 
+/** A service's or project's own page, under its listing page (collection-pages decision 2). */
+export interface ItemPage {
+  /** The item's node ID; also its route's key and, being shared, its translation key. */
+  id: string;
+  listingPageId: string;
+}
+
 export interface PageRoute {
   /** Output file path relative to the site root: `index.html`, `kontakt/index.html`. */
   path: string;
@@ -40,7 +48,9 @@ export interface PageRoute {
 export class RenderContext {
   readonly site: SiteNode;
   readonly routes = new Map<string, PageRoute>();
-  private readonly nodes: Record<string, AnyNode>;
+  /** The items that have pages, services first, each in collection order. */
+  readonly itemPages: ItemPage[] = [];
+  readonly nodes: Record<string, AnyNode>;
 
   /** The site's business details, resolved. */
   readonly business: BusinessInfo;
@@ -76,6 +86,39 @@ export class RenderContext {
           : { path: `${slug}/index.html`, route: `${slug}/` },
       );
     }
+    const listings = [
+      [this.site.services, this.site.services_page_id],
+      [this.site.projects, this.site.projects_page_id],
+    ] as const;
+    for (const [collection, listingPageId] of listings) {
+      const listing = this.routes.get(listingPageId);
+      if (!listing || listingPageId === this.homeId) continue;
+      for (const id of collection.nodes) {
+        const item = this.nodes[id];
+        if (item?.type !== "service_item" && item?.type !== "project") continue;
+        const route = `${listing.route}${item.slug}/`;
+        this.routes.set(id, { path: `${route}index.html`, route });
+        this.itemPages.push({ id, listingPageId });
+      }
+    }
+  }
+
+  /** The URL of an item's page, or undefined when its collection has no listing page. */
+  itemUrl(itemId: string): string | undefined {
+    return this.itemPages.some((page) => page.id === itemId) ? this.pageUrl(itemId) : undefined;
+  }
+
+  /**
+   * Every page's URL by its translation key, item pages by their item's ID, as other languages
+   * need it for alternates and the language switcher.
+   */
+  translationUrls(): Map<string, string> {
+    const urls = new Map<string, string>();
+    for (const pageId of this.site.pages.nodes) {
+      urls.set(this.node(pageId, "page").translation_key, this.pageUrl(pageId));
+    }
+    for (const { id } of this.itemPages) urls.set(id, this.pageUrl(id));
+    return urls;
   }
 
   /** The home page, served at the base path; its own slug is never used while it is home. */
@@ -114,7 +157,7 @@ export class RenderContext {
 
   /** The items a collection block shows (business-collections design decision 3). */
   items(block: CollectionBlockNode): CollectionItemNode[] {
-    return blockItems(this.doc, block);
+    return block.type === "projects" ? projectsShown(this.doc, block) : blockItems(this.doc, block);
   }
 
   /** Nodes of a node_array, in order. */

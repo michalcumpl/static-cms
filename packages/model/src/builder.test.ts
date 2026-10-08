@@ -33,7 +33,28 @@ function everything(lang: "cs" | "en") {
     description: t("Pro děti **6–12** let.", "For children **6–12**."),
     price: "4 500 Kč",
   });
-  site.service({ name: t("Výtvarka", "Art"), price: "4 000 Kč" });
+  site.service({
+    name: t("Výtvarka", "Art"),
+    price: "4 000 Kč",
+    page: t(
+      "Malujeme.\n\n## Co se naučíte\n\n- kresbu\n- malbu",
+      "We paint.\n\n## What you learn\n\n- drawing\n- painting",
+    ),
+  });
+  const films = site.projectCategory(t("Filmy", "Films"));
+  site.projectCategory(t("Výstavy", "Exhibitions"));
+  site.project({
+    name: t("Poslední závod", "The Last Race"),
+    category: films,
+    summary: t("Skutečný příběh.", "A true story."),
+    body: t("Drama o závodu.\n\n- 1913\n- Krkonoše", "A drama.\n\n- 1913\n- Giant Mountains"),
+    facts: [[t("Režie", "Director"), "Tomáš Hodan"]],
+    cover: image("race.jpg"),
+    photos: [{ image: image("race-1.jpg"), caption: t("Start", "The start") }],
+    video: "https://vimeo.com/697475416",
+  });
+  site.project({ name: t("Poslední závod", "The Last Race"), cover: image("race-2.jpg") });
+  site.itemPages({ services: "kontakt", projects: "kontakt" });
   site.person({ name: "Kateřina", role: t("Lektorka", "Teacher"), image: image("kaca.jpg") });
   site.testimonial({ quote: t("Skvělé!", "Great!"), name: "Petra", detail: t("maminka", "a mum") });
   site.faq({
@@ -83,6 +104,7 @@ function everything(lang: "cs" | "en") {
         { title: "Start" },
       ],
     }),
+    blocks.projects(t("Práce", "Work"), { category: films, limit: 4 }),
     blocks.callToAction({
       heading: t("Přihlaste se", "Sign up"),
       actions: [{ label: "Web", url: "https://example.org" }],
@@ -116,9 +138,24 @@ describe("siteBuilder", () => {
       "call_to_action",
       "figures",
       "steps",
+      "projects",
     ]) {
       expect(types, type).toContain(type);
     }
+  });
+
+  it("gives services and projects addresses made from their names, unique, once they have pages", () => {
+    const doc = everything("cs");
+    const nodes = doc.nodes as unknown as Record<string, Record<string, unknown>>;
+    const site = nodes.site_1 as { services_page_id: string; projects_page_id: string };
+    expect(site.services_page_id).toBe(site.projects_page_id);
+    expect(nodes[site.projects_page_id]).toMatchObject({ slug: "kontakt" });
+    expect([nodes.service_1?.slug, nodes.service_2?.slug]).toEqual(["animace", "vytvarka"]);
+    expect([nodes.project_1?.slug, nodes.project_2?.slug]).toEqual([
+      "posledni-zavod",
+      "posledni-zavod-2",
+    ]);
+    expect(nodes.project_1).toMatchObject({ video_url: "https://vimeo.com/697475416" });
   });
 
   it("gives the same IDs to the same site in another language, and pairs its pages", () => {

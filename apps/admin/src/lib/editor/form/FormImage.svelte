@@ -3,7 +3,13 @@ import { getI18n } from "$lib/i18n";
 import Button from "$lib/ui/Button.svelte";
 import { startsDecorative } from "../image-slots";
 import { getEditor } from "../state.svelte";
-import { removeImage, setImage, setImageAlt, setImageDecorative } from "../transforms";
+import {
+  imagePropertyOf,
+  removeImage,
+  setImage,
+  setImageAlt,
+  setImageDecorative,
+} from "../transforms";
 import { getFormLists, listFieldId } from "./lists";
 
 // A person's portrait or a testimonial's photo in a list form (offer-and-about decision 6): the
@@ -14,10 +20,12 @@ const i18n = getI18n();
 const editor = getEditor();
 const form = getFormLists();
 const owner = $derived(
-  editor.session.get(ownerId) as { type: string; image: { nodes: string[] } } | undefined,
+  editor.session.get(ownerId) as
+    | ({ type: string } & Record<string, { nodes: string[] }>)
+    | undefined,
 );
 const image = $derived.by(() => {
-  const id = owner?.image.nodes[0];
+  const id = owner?.[imagePropertyOf(owner.type)]?.nodes[0];
   return id === undefined
     ? undefined
     : (editor.session.get(id) as {

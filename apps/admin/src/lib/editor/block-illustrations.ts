@@ -181,4 +181,18 @@ export const BLOCK_ILLUSTRATIONS: Record<BlockType, string> = {
         })
         .join(""),
   ),
+  // A heading, then two rows of photo tiles, each with its name over the bottom of the photo.
+  projects: svg(
+    heading() +
+      [0, 1, 2, 3, 4, 5]
+        .map((i) => {
+          const x = 8 + (i % 3) * 36;
+          const y = 18 + Math.floor(i / 3) * 26;
+          return (
+            photo(x, y, 32, 22) +
+            bar(x + 3, y + 16, [18, 14, 20, 16, 12, 18][i] as number, 3, "#fff")
+          );
+        })
+        .join(""),
+  ),
 };

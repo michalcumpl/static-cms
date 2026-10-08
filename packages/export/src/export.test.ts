@@ -13,7 +13,10 @@ import { exportSite, type SiteFiles, zipFiles } from "./index.js";
 const decode = (bytes: Uint8Array | undefined) => new TextDecoder().decode(bytes);
 
 function exported(input: unknown = loadDemoSite(), basePath?: string) {
-  const result = exportSite(input, loadDemoMedia(), basePath ? { basePath } : {});
+  const media = loadDemoMedia();
+  // Share files are made on demand; project covers need the demo image's.
+  media.set("hero.png-share.jpg", new Uint8Array([1]));
+  const result = exportSite(input, media, basePath ? { basePath } : {});
   if (!result.ok) throw new Error(JSON.stringify(result.problems, null, 2));
   return result;
 }
@@ -123,6 +126,84 @@ describe("exportSite", () => {
     expect([...files.keys()].filter((k) => k.startsWith("assets/images/"))).toEqual([
       "assets/images/hero.png-320.webp",
     ]);
+  });
+
+  it("Project pages in the sitemap", () => {
+    const { doc, nodes } = editableDemoSite();
+    nodes.site_1.base_url = "https://punkfilm.cz";
+    const ids = ["the-last-race", "mustang"].map((slug, i) => {
+      const id = `project_${i}`;
+      nodes[`cover_${i}`] = { ...nodes.image_hero, id: `cover_${i}` };
+      nodes[id] = {
+        id,
+        type: "project",
+        name: { content: slug, marks: [], annotations: [] },
+        category_id: "",
+        summary: { content: "", marks: [], annotations: [] },
+        body: { nodes: [], marks: [], annotations: [] },
+        facts: { nodes: [], marks: [], annotations: [] },
+        cover: { nodes: [`cover_${i}`], marks: [], annotations: [] },
+        photos: { nodes: [], marks: [], annotations: [] },
+        video_url: "",
+        slug,
+      };
+      return id;
+    });
+    nodes.site_1.projects = { nodes: ids, marks: [], annotations: [] };
+    nodes.site_1.projects_page_id = "page_contact";
+    const { files } = exported(doc);
+    expect(files.has("kontakt/the-last-race/index.html")).toBe(true);
+    expect(files.has("kontakt/mustang/index.html")).toBe(true);
+    // A project's cover is its page's share image.
+    expect(usedMediaFiles(doc)).toContain("hero.png-share.jpg");
+    expect(decode(files.get("sitemap.xml"))).toBe(
+      `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://punkfilm.cz/</loc></url>
+  <url><loc>https://punkfilm.cz/kontakt/</loc></url>
+  <url><loc>https://punkfilm.cz/kontakt/the-last-race/</loc></url>
+  <url><loc>https://punkfilm.cz/kontakt/mustang/</loc></url>
+</urlset>
+`,
+    );
+  });
+
+  it("exports a site with a hundred project pages", () => {
+    const { doc, nodes } = editableDemoSite();
+    const ids = Array.from({ length: 100 }, (_, i) => {
+      const id = `project_${i}`;
+      nodes[`cover_${i}`] = { ...nodes.image_hero, id: `cover_${i}` };
+      nodes[id] = {
+        id,
+        type: "project",
+        name: { content: `Projekt ${i}`, marks: [], annotations: [] },
+        category_id: "",
+        summary: { content: "", marks: [], annotations: [] },
+        body: { nodes: [], marks: [], annotations: [] },
+        facts: { nodes: [], marks: [], annotations: [] },
+        cover: { nodes: [`cover_${i}`], marks: [], annotations: [] },
+        photos: { nodes: [], marks: [], annotations: [] },
+        video_url: "",
+        slug: `projekt-${i}`,
+      };
+      return id;
+    });
+    nodes.site_1.projects = { nodes: ids, marks: [], annotations: [] };
+    nodes.site_1.projects_page_id = "page_contact";
+    nodes.projects_1 = {
+      id: "projects_1",
+      type: "projects",
+      heading: { content: "", marks: [], annotations: [] },
+      show: "all",
+      chosen: { nodes: [], marks: [], annotations: [] },
+      category_id: "",
+      limit: 0,
+    };
+    nodes.page_contact.blocks.nodes.push("projects_1");
+    const pages = [...exported(doc).files.keys()].filter((path) =>
+      path.startsWith("kontakt/projekt-"),
+    );
+    expect(pages).toHaveLength(100);
   });
 
   it("lists every page's absolute URL in the sitemap", () => {

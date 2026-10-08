@@ -58,7 +58,7 @@ const i18n = getI18n();
 
 /** The lists each form section shows. */
 const LISTS: Partial<Record<typeof section, readonly CollectionName[]>> = {
-  offer: ["services", "faqs"],
+  offer: ["services", "projects", "faqs"],
   about: ["team", "testimonials"],
 };
 /* svelte-ignore state_referenced_locally */

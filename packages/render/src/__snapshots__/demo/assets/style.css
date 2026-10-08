@@ -336,6 +336,145 @@ img {
   margin: 0;
 }
 
+.projects-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-tile {
+  min-width: 0;
+}
+
+.project-link {
+  display: grid;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--color-secondary);
+  color: var(--color-background);
+  text-decoration: none;
+}
+
+.project-link > .project-cover,
+.project-link > .project-name {
+  grid-area: 1 / 1;
+}
+
+.project-cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.project-name {
+  align-self: end;
+  padding: 2rem 1rem 0.75rem;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--color-text) 75%, transparent));
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.project-no-cover + .project-name {
+  align-self: stretch;
+  background: none;
+  color: var(--color-text);
+}
+
+.project-category {
+  margin: 0.5rem 0 0;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.project-summary {
+  margin: 0.25rem 0 0;
+}
+
+.projects-more {
+  margin: 1.5rem 0 0;
+}
+
+.item-page {
+  padding-block: 2rem 3rem;
+}
+
+.back-link {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+}
+
+.back-link a::before {
+  content: "← ";
+}
+
+.item-page .page-title {
+  margin-bottom: 0.5rem;
+}
+
+.project-page-cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-block: 1.5rem;
+  border-radius: var(--radius);
+}
+
+.project-body {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.project-facts {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.project-facts div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.project-facts dt {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.project-facts dd {
+  margin: 0;
+}
+
+.project-text > :first-child,
+.service-text > :first-child {
+  margin-top: 0;
+}
+
+.project-video {
+  margin-top: 2rem;
+}
+
+.service-page .service-price {
+  margin-bottom: 1.5rem;
+}
+
+.service-name a {
+  color: inherit;
+}
+
+.service-more {
+  margin: 0.5rem 0 0;
+}
+
 .gallery-grid img {
   display: block;
   width: 100%;
@@ -526,6 +665,10 @@ img {
 }
 
 @container (min-width: 44rem) {
+  .projects-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .figure-columns-1 {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -672,6 +815,15 @@ img {
 @container (min-width: 48rem) {
   .site-logo {
     height: 3rem;
+  }
+
+  .projects-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .project-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 2.5rem;
   }
 
   .hero-inner {

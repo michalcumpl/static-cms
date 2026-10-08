@@ -39,6 +39,8 @@ function eightServices(nodes: Nodes) {
       name: text(`Oblast ${i + 1}`),
       description: text(`Rozsah oblasti ${i + 1}.`),
       price: text(`${i + 1} 000 Kč`),
+      slug: "",
+      body: { nodes: [], marks: [], annotations: [] },
     };
   }
   nodes.site_1.services = { nodes: ids, marks: [], annotations: [] };

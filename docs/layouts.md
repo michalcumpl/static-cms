@@ -69,8 +69,8 @@ Film added 15–20 and the second video. Today's stand-in is in brackets.
 3. **Steps** (2: Mortgage's "how it works", Fond 10X's investment process): **done**, the steps
    block (`figures-and-steps`).
 4. **Service detail pages, or lists in a service** (2: Mareš's eight areas each with a scope list,
-   Aniděti's long course descriptions) [lines starting with "–" in the description: tall cards].
-   Planned with project pages as `collection-pages`.
+   Aniděti's long course descriptions): **done**, a page per service with its own text and lists
+   (`collection-pages`); Mareš's practice areas use it.
 5. **Contact form** (3: Mortgage, Fond 10X, Roubenka) [email and phone buttons]. Planned as
    `contact-form`.
 6. **Documents to download** (2: Fond 10X's statute and key information documents, Mareš's award
@@ -91,10 +91,10 @@ Film added 15–20 and the second video. Today's stand-in is in brackets.
     lodging or production type exists, so the examples use LocalBusiness or ProfessionalService.
 15. **Projects (a portfolio)** (2, the core of both: about 90 projects at Scénografie in four
     categories, about 30 at Punk Film in three) [galleries with captions that can't link; one
-    project page made by hand each]. A projects collection: cover image, category, facts
-    (client, year, place, author or director, photographer, scope, credits), photos, a trailer;
-    a block of tiles with the name over the photo, filtered by category, with "show more"; a
-    page per project. Planned as `collection-pages`.
+    project page made by hand each]: **done** (`collection-pages`), a projects collection with
+    categories, facts, photos and a video address, a projects block (all, chosen or one
+    category, the first few with a link to all), and a page per project. Filtering in the
+    browser stays out (no JavaScript): category pages do it.
 16. **Cards: image, title, text and a link** (2: both home pages lead to their categories with
     photo tiles; Scénografie's awards and capabilities) [galleries, which can't link; text with
     image eight times in a row]. Planned as `cards`.

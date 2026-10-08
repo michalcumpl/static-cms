@@ -9,6 +9,8 @@ export {
   type LinkInput,
   type LocationInput,
   type PageInput,
+  type ProjectInput,
+  type ServiceInput,
   type SiteBuilder,
   siteBuilder,
   type ThemeInput,
@@ -24,6 +26,7 @@ export {
   type CollectionItemType,
   type CollectionName,
   isCollectionBlockType,
+  projectsShown,
   type SocialKind,
   socialKind,
 } from "./collections.js";

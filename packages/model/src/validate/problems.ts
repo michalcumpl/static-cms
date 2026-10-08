@@ -79,7 +79,11 @@ export type ProblemCode =
   | "long-figure"
   | "empty-title"
   // Block variants (block-variants)
-  | "cover-without-image";
+  | "cover-without-image"
+  // Projects and item pages (collection-pages)
+  | "missing-category"
+  | "missing-cover"
+  | "invalid-listing-page";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -149,6 +153,9 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "long-figure": "site",
   "empty-title": "site",
   "cover-without-image": "site",
+  "missing-category": "site",
+  "missing-cover": "site",
+  "invalid-listing-page": "site",
   "empty-answer": "site",
   "missing-item": "site",
   "wrong-collection": "site",

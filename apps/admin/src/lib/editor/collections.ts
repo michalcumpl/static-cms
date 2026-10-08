@@ -131,7 +131,15 @@ export function pageCollections(
             const index = typeof itemId === "string" ? members.indexOf(itemId) : -1;
             return index < 0 ? [] : [{ itemId: itemId as string, index, refIndex }];
           });
-    const items = shown.map((item, position) => {
+    // A projects block may show one category, and only its first few (collection-pages).
+    const category = block.type === "projects" ? String(block.category_id ?? "") : "";
+    const limit = block.type === "projects" ? Number(block.limit ?? 0) : 0;
+    const inCategory =
+      category === ""
+        ? shown
+        : shown.filter((item) => nodes[item.itemId]?.category_id === category);
+    const filtered = limit > 0 ? inCategory.slice(0, limit) : inCategory;
+    const items = filtered.map((item, position) => {
       const editable = !mounted.has(item.itemId);
       mounted.add(item.itemId);
       return { ...item, position, editable };
@@ -143,7 +151,8 @@ export function pageCollections(
       collection,
       mode,
       items,
-      wholeList: mode === "all" && items.every((item) => item.editable),
+      wholeList:
+        mode === "all" && filtered.length === shown.length && items.every((item) => item.editable),
     });
   });
   return views;
@@ -184,6 +193,8 @@ function createItem(tr: Transaction, collection: CollectionName): { id: string; 
         name: text("Nová služba"),
         description: text(),
         price: text(),
+        slug: "",
+        body: list(),
       });
       return { id, focus: "name" };
     case "team":
@@ -202,6 +213,21 @@ function createItem(tr: Transaction, collection: CollectionName): { id: string; 
     case "faqs":
       tr.create({ id, type: "faq_item", question: text("Nová otázka"), answer: text() });
       return { id, focus: "question" };
+    case "projects":
+      tr.create({
+        id,
+        type: "project",
+        name: text(),
+        category_id: "",
+        summary: text(),
+        body: list(),
+        facts: list(),
+        cover: list(),
+        photos: list(),
+        video_url: "",
+        slug: "",
+      });
+      return { id, focus: "name" };
   }
 }
 

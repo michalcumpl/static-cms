@@ -68,6 +68,8 @@ export function insertServiceItem(tr: Tr): boolean {
     name: text("Nová služba"),
     description: text(),
     price: text(),
+    slug: "",
+    body: list(),
   });
   insertAndFocus(tr, id, "name");
   return true;
@@ -120,6 +122,14 @@ export function insertFigure(tr: Tr): boolean {
   return true;
 }
 
+/** An empty fact of a project (Enter in a fact's value). */
+export function insertFact(tr: Tr): boolean {
+  const id = tr.generate_id();
+  tr.create({ id, type: "fact", label: text(), value: text() });
+  insertAndFocus(tr, id, "label");
+  return true;
+}
+
 /** An empty step (Enter and "Add item"). */
 export function insertStep(tr: Tr): boolean {
   insertAndFocus(tr, createStep(tr), "title");
@@ -165,8 +175,8 @@ export function insertRichText(tr: Tr): boolean {
  * empty, `first` creates its first item, so the new block has something to edit.
  */
 function insertCollectionBlock(
-  type: "services" | "team" | "testimonials" | "faq",
-  collection: "services" | "team" | "testimonials" | "faqs",
+  type: "services" | "team" | "testimonials" | "faq" | "projects",
+  collection: "services" | "team" | "testimonials" | "faqs" | "projects",
   heading: string,
   first?: (tr: Tr) => string,
 ) {
@@ -175,7 +185,12 @@ function insertCollectionBlock(
     const members = (tr.get([siteId, collection]) as NodeList | undefined)?.nodes ?? [];
     if (members.length === 0 && first) tr.set([siteId, collection], list([first(tr)]));
     const block = tr.generate_id();
-    const layout = type === "services" || type === "team" ? { layout: "cards" } : {};
+    const layout =
+      type === "services" || type === "team"
+        ? { layout: "cards" }
+        : type === "projects"
+          ? { category_id: "", limit: 0 }
+          : {};
     tr.create({ id: block, type, heading: text(heading), show: "all", chosen: list(), ...layout });
     insertAndFocus(tr, block, "heading");
     return true;
@@ -190,6 +205,8 @@ export const insertServices = insertCollectionBlock("services", "services", "Slu
     name: text("Nová služba"),
     description: text(),
     price: text(),
+    slug: "",
+    body: list(),
   });
   return id;
 });
@@ -323,6 +340,9 @@ export const insertFaq = insertCollectionBlock("faq", "faqs", "Časté dotazy", 
   return id;
 });
 
+/** A projects block showing every project of every category (collection-pages). */
+export const insertProjects = insertCollectionBlock("projects", "projects", "Projekty");
+
 export type BlockType =
   | "hero"
   | "rich_text"
@@ -337,7 +357,8 @@ export type BlockType =
   | "testimonials"
   | "faq"
   | "figures"
-  | "steps";
+  | "steps"
+  | "projects";
 
 export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   hero: insertHero,
@@ -354,6 +375,7 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   faq: insertFaq,
   figures: insertFigures,
   steps: insertSteps,
+  projects: insertProjects,
 };
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
@@ -375,6 +397,7 @@ export function insertableBlocks(blocks: { type: string }[], index: number): Blo
     "faq",
     "figures",
     "steps",
+    "projects",
   ];
   return heroAllowed ? ["hero", ...others] : others;
 }
@@ -390,6 +413,11 @@ export function setImageDecorative(tr: Tr, imageId: string, decorative: boolean)
   tr.set([imageId, "decorative"], decorative);
   if (decorative) tr.set([imageId, "alt"], "");
   return true;
+}
+
+/** The property holding an owner's 0..1 image: a project's cover, everyone else's image. */
+export function imagePropertyOf(ownerType: string | undefined): "image" | "cover" {
+  return ownerType === "project" ? "cover" : "image";
 }
 
 /** An image from the media library, as the document stores it. */
@@ -413,8 +441,9 @@ export function setImage(
   image: ChosenImage,
   options: { decorative?: boolean } = {},
 ): string {
-  const owner = tr.get(ownerId) as { image: { nodes: string[] } };
-  const [existing] = owner.image.nodes;
+  const owner = tr.get(ownerId) as { type: string } & Record<string, { nodes: string[] }>;
+  const property = imagePropertyOf(owner.type);
+  const [existing] = owner[property]?.nodes ?? [];
   const decorative = options.decorative ?? false;
   if (existing) {
     const current = tr.get(existing) as { src: string };
@@ -428,7 +457,7 @@ export function setImage(
     return existing;
   }
   const id = createImage(tr, image, decorative);
-  tr.set([ownerId, "image"], list([id]));
+  tr.set([ownerId, property], list([id]));
   return id;
 }
 
@@ -449,9 +478,10 @@ export function createImage(tr: Tr, image: ChosenImage, decorative = false): str
 
 /** Takes the image out of its owner; undo brings it back with its alt text. */
 export function removeImage(tr: Tr, ownerId: string): boolean {
-  const owner = tr.get(ownerId) as { image: { nodes: string[] } };
-  if (owner.image.nodes.length === 0) return false;
-  tr.set([ownerId, "image"], list());
+  const owner = tr.get(ownerId) as { type: string } & Record<string, { nodes: string[] }>;
+  const property = imagePropertyOf(owner.type);
+  if ((owner[property]?.nodes.length ?? 0) === 0) return false;
+  tr.set([ownerId, property], list());
   return true;
 }
 

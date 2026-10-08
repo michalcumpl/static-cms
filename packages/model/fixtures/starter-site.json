@@ -106,7 +106,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 9,
+      "schema_version": 10,
       "name": "Můj web",
       "lang": "cs",
       "base_url": "",
@@ -157,7 +157,19 @@
         "nodes": [],
         "marks": [],
         "annotations": []
-      }
+      },
+      "projects": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "project_categories": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "services_page_id": "",
+      "projects_page_id": ""
     },
     "day_mon": {
       "id": "day_mon",

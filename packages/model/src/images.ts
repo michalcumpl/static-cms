@@ -58,11 +58,28 @@ export function isDerivedImageProperty(type: string, property: string): boolean 
 
 type LooseNode = { type?: unknown; [key: string]: unknown };
 
+/** The sources of the projects' covers while projects have pages: their pages' share images. */
+function projectCoverSources(nodes: Record<string, LooseNode>, rootId: string): string[] {
+  const site = nodes[rootId];
+  if (!site || typeof site.projects_page_id !== "string" || site.projects_page_id === "") return [];
+  const ids = (value: unknown): unknown[] => {
+    const list = (value as { nodes?: unknown } | undefined)?.nodes;
+    return Array.isArray(list) ? list : [];
+  };
+  return ids(site.projects).flatMap((projectId) => {
+    const project = typeof projectId === "string" ? nodes[projectId] : undefined;
+    const [coverId] = ids(project?.cover);
+    const src = typeof coverId === "string" ? nodes[coverId]?.src : undefined;
+    return typeof src === "string" ? [src] : [];
+  });
+}
+
 /**
  * The media files a document's exported site uses, each once, sorted: every variant of every
  * image reachable from the site root through its pages and its logo, the favicon's icons, and
- * the share file of the site's and each page's share image. Works on any document, valid or not, so
- * callers can use it to decide which files to supply.
+ * the share file of the site's and each page's share image, and of each project's cover while
+ * projects have pages (collection-pages). Works on any document, valid or not, so callers can use
+ * it to decide which files to supply.
  */
 export function usedMediaFiles(doc: unknown): string[] {
   const files = new Set<string>();
@@ -100,5 +117,6 @@ export function usedMediaFiles(doc: unknown): string[] {
     }
   };
   visit(rootId);
+  for (const src of projectCoverSources(all, rootId)) files.add(shareFile(src));
   return [...files].sort();
 }

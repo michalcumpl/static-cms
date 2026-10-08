@@ -70,7 +70,7 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 9 },
+      schema_version: { type: "integer", min: 1, default: 10 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
@@ -97,6 +97,16 @@ export const siteSchema = {
         default_node_type: "testimonial",
       },
       faqs: { type: "node_array", node_types: ["faq_item"], default_node_type: "faq_item" },
+      projects: { type: "node_array", node_types: ["project"], default_node_type: "project" },
+      project_categories: {
+        type: "node_array",
+        node_types: ["project_category"],
+        default_node_type: "project_category",
+      },
+      /** The page listing the services, under which each service has a page; "" for none. */
+      services_page_id: { type: "string" },
+      /** The page listing the projects, under which each project has a page; "" for none. */
+      projects_page_id: { type: "string" },
       pages: { type: "node_array", node_types: ["page"], default_node_type: "page" },
       home_page_id: { type: "string" },
     },
@@ -160,6 +170,7 @@ export const siteSchema = {
           "faq",
           "figures",
           "steps",
+          "projects",
         ],
         default_node_type: "rich_text",
       },
@@ -223,6 +234,14 @@ export const siteSchema = {
       name: { type: "text", allow_newlines: false },
       description: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
       price: { type: "text", allow_newlines: false },
+      /** The service's address under the services' listing page (collection-pages). */
+      slug: { type: "string" },
+      /** The text of the service's page, shown there in place of the description. */
+      body: {
+        type: "node_array",
+        node_types: ["paragraph", "subheading", "list"],
+        default_node_type: "paragraph",
+      },
     },
   },
   text_with_image: {
@@ -363,6 +382,52 @@ export const siteSchema = {
     properties: {
       title: { type: "text", allow_newlines: false },
       text: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
+    },
+  },
+  /** Shows the site's projects (collection-pages design decision 3). */
+  projects: {
+    kind: "block",
+    properties: {
+      ...COLLECTION_BLOCK,
+      /** A project category, or "" for every category. */
+      category_id: { type: "string" },
+      /** At most this many projects; 0 for all of them. */
+      limit: { type: "integer", min: 0, default: 0 },
+    },
+  },
+  project: {
+    kind: "block",
+    properties: {
+      name: { type: "text", allow_newlines: false },
+      /** A project category, or "" for none. */
+      category_id: { type: "string" },
+      summary: { type: "text", allow_newlines: false },
+      body: {
+        type: "node_array",
+        node_types: ["paragraph", "subheading", "list"],
+        default_node_type: "paragraph",
+      },
+      facts: { type: "node_array", node_types: ["fact"], default_node_type: "fact" },
+      cover: { type: "node_array", node_types: ["image"] },
+      photos: { type: "node_array", node_types: ["gallery_item"] },
+      /** An `https` address of the project's video, or "". */
+      video_url: { type: "string" },
+      /** The project's address under the projects' listing page. */
+      slug: { type: "string" },
+    },
+  },
+  project_category: {
+    kind: "block",
+    properties: {
+      name: { type: "text", allow_newlines: false },
+    },
+  },
+  /** A label and a value, such as "Client" and "Národní technické muzeum". */
+  fact: {
+    kind: "block",
+    properties: {
+      label: { type: "text", allow_newlines: false },
+      value: { type: "text", allow_newlines: false },
     },
   },
   /** Points a collection block at one item of its collection, by the item's node ID. */

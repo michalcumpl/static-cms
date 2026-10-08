@@ -7,6 +7,7 @@
 // same IDs: the languages pair page for page and item for item.
 import type { BusinessType, NodeType, SiteDocument, Weekday } from "./schema/index.js";
 import { WEEKDAYS } from "./schema/index.js";
+import { slugify, uniqueSlug } from "./slug.js";
 import { graphemeLength } from "./text.js";
 import { THEME_PRESETS } from "./themes.js";
 
@@ -111,7 +112,44 @@ export type BlockInput =
   | { type: "opening_hours"; heading?: string; location?: string }
   | { type: "call_to_action"; heading: string; text?: string; actions: LinkInput[] }
   | { type: "figures"; heading?: string; items: { value: string; label: string }[] }
-  | { type: "steps"; heading: string; items: { title: string; text?: string }[] };
+  | { type: "steps"; heading: string; items: { title: string; text?: string }[] }
+  | {
+      type: "projects";
+      heading?: string;
+      /** The projects to show, by the IDs the builder returned; all of them without it. */
+      chosen?: string[];
+      /** A category, by the ID the builder returned; every category without it. */
+      category?: string;
+      /** At most this many; all without it. */
+      limit?: number;
+    };
+
+/** A service: its card, and its page's address and text when services have pages. */
+export interface ServiceInput {
+  name: string;
+  description?: string;
+  price?: string;
+  /** The page's address; made from the name when services have pages and it's missing. */
+  slug?: string;
+  /** The page's text: paragraphs, `## ` subheadings and `- ` lists. */
+  page?: string;
+}
+
+/** A project (collection-pages). */
+export interface ProjectInput {
+  name: string;
+  /** A category, by the ID `projectCategory` returned. */
+  category?: string;
+  summary?: string;
+  /** Paragraphs, `## ` subheadings and `- ` lists. */
+  body?: string;
+  facts?: [label: string, value: string][];
+  cover?: ImageInput;
+  photos?: { image: ImageInput; caption?: string }[];
+  video?: string;
+  /** The page's address; made from the name when projects have pages and it's missing. */
+  slug?: string;
+}
 
 /** Shorthands for writing blocks. */
 export const blocks = {
@@ -156,6 +194,10 @@ export const blocks = {
     ({ type: "figures", ...b }) as BlockInput,
   steps: (b: Omit<Extract<BlockInput, { type: "steps" }>, "type">) =>
     ({ type: "steps", ...b }) as BlockInput,
+  projects: (
+    heading = "",
+    options: Omit<Extract<BlockInput, { type: "projects" }>, "type" | "heading"> = {},
+  ): BlockInput => ({ type: "projects", heading, ...options }),
 };
 
 const list = (nodes: string[] = []) => ({ nodes, marks: [], annotations: [] });
@@ -182,8 +224,11 @@ export function siteBuilder(options: {
   } = {};
   const locations: { id: string; input: LocationInput }[] = [];
   const images: { slot: "logo" | "favicon" | "share_image"; image: ImageInput }[] = [];
-  const services: { id: string; input: { name: string; description?: string; price?: string } }[] =
-    [];
+  const services: { id: string; input: ServiceInput }[] = [];
+  const projects: { id: string; input: ProjectInput }[] = [];
+  const categories: { id: string; name: string }[] = [];
+  /** The listing pages of services and projects, by slug (collection-pages decision 2). */
+  let listingPages: { services?: string; projects?: string } = {};
   const team: {
     id: string;
     input: { name: string; role?: string; text?: string; image?: ImageInput };
@@ -221,10 +266,24 @@ export function siteBuilder(options: {
     shareImage(image: ImageInput) {
       images.push({ slot: "share_image", image });
     },
-    service(input: { name: string; description?: string; price?: string }): string {
+    service(input: ServiceInput): string {
       const id = nextId("service");
       services.push({ id, input });
       return id;
+    },
+    projectCategory(name: string): string {
+      const id = nextId("category");
+      categories.push({ id, name });
+      return id;
+    },
+    project(input: ProjectInput): string {
+      const id = nextId("project");
+      projects.push({ id, input });
+      return id;
+    },
+    /** Gives services or projects a page each, under the page with this slug. */
+    itemPages(input: { services?: string; projects?: string }) {
+      listingPages = input;
     },
     person(input: { name: string; role?: string; text?: string; image?: ImageInput }): string {
       const id = nextId("person");
@@ -340,7 +399,7 @@ export function siteBuilder(options: {
           });
 
       const collectionBlock = (
-        type: "services" | "team" | "testimonials" | "faq",
+        type: "services" | "team" | "testimonials" | "faq" | "projects",
         heading: string | undefined,
         chosen: string[] | undefined,
         layout: string | undefined,
@@ -433,6 +492,16 @@ export function siteBuilder(options: {
                 ),
               ),
             });
+          case "projects":
+            return add("projects", {
+              heading: text(input.heading),
+              show: input.chosen ? "chosen" : "all",
+              chosen: list(
+                (input.chosen ?? []).map((itemId) => add("item_ref", { item_id: itemId })),
+              ),
+              category_id: input.category ?? "",
+              limit: input.limit ?? 0,
+            });
           case "steps":
             return add("steps", {
               heading: text(input.heading),
@@ -501,14 +570,58 @@ export function siteBuilder(options: {
         social: list((businessInput.social ?? []).map((url) => add("social_link", { url }))),
       });
 
+      /** Item addresses: given, or made from the name and unique, once the items have pages. */
+      const slugs = (entries: { input: { name: string; slug?: string } }[], pages: boolean) => {
+        const taken: string[] = [];
+        return entries.map(({ input }) => {
+          const slug = input.slug ?? (pages ? uniqueSlug(slugify(input.name), taken) : "");
+          taken.push(slug);
+          return slug;
+        });
+      };
+      const serviceSlugs = slugs(services, listingPages.services !== undefined);
+      const projectSlugs = slugs(projects, listingPages.projects !== undefined);
       const items = {
-        services: services.map(({ id, input }) =>
+        services: services.map(({ id, input }, i) =>
           add(
             "service_item",
             {
               name: text(input.name),
               description: text(input.description),
               price: text(input.price),
+              slug: serviceSlugs[i],
+              body: list(body(input.page ?? "", true)),
+            },
+            id,
+          ),
+        ),
+        projectCategories: categories.map(({ id, name }) =>
+          add("project_category", { name: text(name) }, id),
+        ),
+        projects: projects.map(({ id, input }, i) =>
+          add(
+            "project",
+            {
+              name: text(input.name),
+              category_id: input.category ?? "",
+              summary: text(input.summary),
+              body: list(body(input.body ?? "", true)),
+              facts: list(
+                (input.facts ?? []).map(([label, value]) =>
+                  add("fact", { label: text(label), value: text(value) }),
+                ),
+              ),
+              cover: list(image(input.cover)),
+              photos: list(
+                (input.photos ?? []).map((photo) =>
+                  add("gallery_item", {
+                    image: list(image(photo.image)),
+                    caption: text(photo.caption),
+                  }),
+                ),
+              ),
+              video_url: input.video ?? "",
+              slug: projectSlugs[i],
             },
             id,
           ),
@@ -576,7 +689,7 @@ export function siteBuilder(options: {
       nodes[siteId] = {
         id: siteId,
         type: "site",
-        schema_version: 9,
+        schema_version: 10,
         name: options.name,
         lang: options.lang,
         base_url: options.baseUrl ?? "",
@@ -594,6 +707,10 @@ export function siteBuilder(options: {
         team: list(items.team),
         testimonials: list(items.testimonials),
         faqs: list(items.faqs),
+        projects: list(items.projects),
+        project_categories: list(items.projectCategories),
+        services_page_id: listingPages.services ? pageId(listingPages.services) : "",
+        projects_page_id: listingPages.projects ? pageId(listingPages.projects) : "",
         pages: list(pageIds),
         home_page_id: home?.id ?? "",
       };

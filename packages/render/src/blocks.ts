@@ -3,6 +3,7 @@ import { imageFile, imageVariants, srcVariant } from "@webmio/model";
 import { contactDetails, type LocationInfo, locationsBody, openingHoursTable } from "./business.js";
 import type { RenderContext } from "./context.js";
 import { type Html, html } from "./html.js";
+import { renderProjects } from "./items.js";
 import { isEmpty, renderText } from "./text.js";
 
 export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
@@ -35,6 +36,8 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderFigures(block, ctx);
     case "steps":
       return renderSteps(block, ctx);
+    case "projects":
+      return renderProjects(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -92,7 +95,7 @@ function renderRichText(block: NodeOfType<"rich_text">, ctx: RenderContext): Htm
 }
 
 /** A paragraph, subheading or list of a text body. */
-function renderBodyChild(child: AnyNode, ctx: RenderContext): Html {
+export function renderBodyChild(child: AnyNode, ctx: RenderContext): Html {
   switch (child.type) {
     case "paragraph":
       return html`
@@ -118,7 +121,7 @@ function renderBodyChild(child: AnyNode, ctx: RenderContext): Html {
 }
 
 /** An optional block heading, always an `<h2>`. */
-function blockHeading(
+export function blockHeading(
   heading: NodeOfType<"services">["heading"],
   ctx: RenderContext,
 ): Html | false {
@@ -152,7 +155,16 @@ function renderTextWithImage(block: NodeOfType<"text_with_image">, ctx: RenderCo
 }
 
 function renderGallery(block: NodeOfType<"gallery">, ctx: RenderContext): Html {
-  const items = ctx.children(block.items).map((item) => {
+  const whole = block.image_fit === "whole" ? " gallery-whole" : "";
+  return html`<section class="block gallery${whole}">
+      <div class="container">${blockHeading(block.heading, ctx)}${galleryGrid(block.items, ctx)}
+      </div>
+    </section>`;
+}
+
+/** Gallery items as the gallery's grid of linked, captioned images (also a project's photos). */
+export function galleryGrid(itemIds: { nodes: string[] }, ctx: RenderContext): Html {
+  const items = ctx.children(itemIds).map((item) => {
     if (item.type !== "gallery_item") return false;
     const image = imageOf(item, ctx);
     if (!image) return false;
@@ -169,13 +181,9 @@ function renderGallery(block: NodeOfType<"gallery">, ctx: RenderContext): Html {
             </figure>
           </li>`;
   });
-  const whole = block.image_fit === "whole" ? " gallery-whole" : "";
-  return html`<section class="block gallery${whole}">
-      <div class="container">${blockHeading(block.heading, ctx)}
+  return html`
         <ul class="gallery-grid">${items}
-        </ul>
-      </div>
-    </section>`;
+        </ul>`;
 }
 
 function renderTeam(block: NodeOfType<"team">, ctx: RenderContext): Html {
@@ -402,7 +410,11 @@ function renderServices(block: NodeOfType<"services">, ctx: RenderContext): Html
   const accordion = block.layout === "accordion";
   const items = ctx.items(block).map((item) => {
     if (item.type !== "service_item") return false;
-    const name = html`<p class="service-name">${renderText(item.name, ctx)}</p>`;
+    // With pages, the name links to the service's own page (collection-pages).
+    const url = ctx.itemUrl(item.id);
+    const name = html`<p class="service-name">${
+      url ? html`<a href="${url}">${renderText(item.name, ctx)}</a>` : renderText(item.name, ctx)
+    }</p>`;
     const price =
       !isEmpty(item.price) && html`<p class="service-price">${renderText(item.price, ctx)}</p>`;
     const description =
@@ -416,7 +428,11 @@ function renderServices(block: NodeOfType<"services">, ctx: RenderContext): Html
               <summary><span class="service-name">${renderText(item.name, ctx)}</span>${
                 price && html`<span class="service-price">${renderText(item.price, ctx)}</span>`
               }</summary>
-              ${description}
+              ${description}${
+                url &&
+                html`
+              <p class="service-more"><a href="${url}">${ctx.strings.moreAboutService}</a></p>`
+              }
             </details>
           </li>`;
     }
@@ -459,6 +475,10 @@ export const IMAGE_SIZES = {
   textWithImage: "(min-width: 48rem) 50vw, 100vw",
   /** Three columns from 48rem, two below. */
   gallery: "(min-width: 48rem) 33vw, 50vw",
+  /** A project tile: three columns from 48rem, two from 30rem, one below. */
+  projectTile: "(min-width: 48rem) 33vw, (min-width: 30rem) 50vw, 100vw",
+  /** A project page's cover spans the content (collection-pages). */
+  projectCover: "(min-width: 64rem) 64rem, 100vw",
   portrait: "10rem",
   logo: "12rem",
   testimonial: "4rem",

@@ -3,7 +3,7 @@
 ### Requirement: Item pages in What you offer
 The Services and Projects lists SHALL each start with the choice "Each service has its own page" ("Each project has its own page"), off or on, and when on, the page that lists them, chosen from the language's pages other than the home page. Turning it on SHALL give every item without an address one made from its name, unique within the collection, in the same undoable step. Turning it off SHALL keep the addresses.
 
-While the collection has a listing page, every item SHALL show its address as a field with the full path before it (`/prace/`), and a link "Open page" to its page in the preview. A service SHALL then also show its page text, edited with paragraphs, subheadings, lists, bold, italic and links. A new item SHALL get an address made from its name when its name is first typed.
+While the collection has a listing page, every item SHALL show its address as a field with the full path before it (`/prace/`), and a link "Open page" to its page in the preview. A service SHALL then also show its page text, edited with paragraphs, subheadings, lists, bold, italic and links. A new item's address SHALL follow its name as it is typed, until the owner changes the address.
 
 #### Scenario: Give the practice areas pages
 - **WHEN** the owner turns on "Each service has its own page" for Mareš Partners, chooses "Specializace" and saves

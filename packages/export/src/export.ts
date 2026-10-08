@@ -132,6 +132,10 @@ export function exportSite(
   const shareImages = [
     site.share_image.nodes[0],
     ...site.pages.nodes.map((id) => (doc.nodes[id] as NodeOfType<"page">).share_image.nodes[0]),
+    // A project's cover is its page's share image (collection-pages).
+    ...(site.projects_page_id === ""
+      ? []
+      : site.projects.nodes.map((id) => (doc.nodes[id] as NodeOfType<"project">).cover.nodes[0])),
   ];
   for (const id of shareImages) {
     const image = imageOf(doc, id);

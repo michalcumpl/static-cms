@@ -15,6 +15,8 @@ function siteWith(serviceNames: string[], blocks: AnyNode[]): SiteDocument {
       name: text(name),
       description: text(""),
       price: text(""),
+      slug: "",
+      body: { nodes: [], marks: [], annotations: [] },
     };
     return id;
   });

@@ -1,6 +1,10 @@
 import type { Component } from "svelte";
 import { createCommandsAndKeymap } from "./commands";
+import FormCategory from "./form/FormCategory.svelte";
+import FormFact from "./form/FormFact.svelte";
 import FormPerson from "./form/FormPerson.svelte";
+import FormPhoto from "./form/FormPhoto.svelte";
+import FormProject from "./form/FormProject.svelte";
 import FormQuestion from "./form/FormQuestion.svelte";
 import FormService from "./form/FormService.svelte";
 import FormSite from "./form/FormSite.svelte";
@@ -29,6 +33,8 @@ import Page from "./nodes/Page.svelte";
 import PageLink from "./nodes/PageLink.svelte";
 import Paragraph from "./nodes/Paragraph.svelte";
 import Person from "./nodes/Person.svelte";
+import Projects from "./nodes/Projects.svelte";
+import ProjectTile from "./nodes/ProjectTile.svelte";
 import RichText from "./nodes/RichText.svelte";
 import ServiceItem from "./nodes/ServiceItem.svelte";
 import Services from "./nodes/Services.svelte";
@@ -41,6 +47,7 @@ import Testimonial from "./nodes/Testimonial.svelte";
 import Testimonials from "./nodes/Testimonials.svelte";
 import TextWithImage from "./nodes/TextWithImage.svelte";
 import {
+  insertFact,
   insertFaqItem,
   insertFigure,
   insertListItem,
@@ -85,6 +92,8 @@ export const nodeComponents: Record<string, Component<any>> = {
   figure: Figure,
   steps: Steps,
   step: Step,
+  projects: Projects,
+  project: ProjectTile,
   image: Image,
   strong: MarkStrong,
   emphasis: MarkEmphasis,
@@ -106,6 +115,11 @@ const formComponents: Record<string, Component<any>> = {
   faq_item: FormQuestion,
   person: FormPerson,
   testimonial: FormTestimonial,
+  project: FormProject,
+  project_category: FormCategory,
+  fact: FormFact,
+  // In the forms, gallery items are only a project's photos.
+  gallery_item: FormPhoto,
 };
 
 /** Svedit session config for the site editor, or for the panel's list forms. */
@@ -123,6 +137,7 @@ export function createConfig(view: EditorView = "canvas") {
       testimonial: insertTestimonial,
       faq_item: insertFaqItem,
       figure: insertFigure,
+      fact: insertFact,
       step: insertStep,
       rich_text: insertRichText,
     },

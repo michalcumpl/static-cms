@@ -18,7 +18,9 @@ const item = $derived.by(() => {
 });
 const textOf = (property: string) => (item?.[property] as Text | undefined)?.content ?? "";
 const image = $derived.by(() => {
-  const id = (item?.image as { nodes: string[] } | undefined)?.nodes[0];
+  const id = (
+    item?.[item?.type === "project" ? "cover" : "image"] as { nodes: string[] } | undefined
+  )?.nodes[0];
   return id === undefined
     ? undefined
     : (svedit.session.get(id) as { src: string; width: number; alt: string });
@@ -28,6 +30,7 @@ const FIRST_TEXT: Record<CollectionName, string> = {
   team: "name",
   testimonials: "quote",
   faqs: "question",
+  projects: "name",
 };
 
 function focusEditable() {

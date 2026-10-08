@@ -1,7 +1,8 @@
 import type { Problem, SiteDocument } from "@webmio/model";
 import { isValidBaseUrl, problem, validateSite } from "@webmio/model";
-import { isValidBasePath, RenderContext, type SiteLanguage } from "./context.js";
+import { isValidBasePath, type PageRoute, RenderContext, type SiteLanguage } from "./context.js";
 import { siteCss } from "./css.js";
+import { renderItemPage } from "./items.js";
 import { renderNotFound, renderPage } from "./page.js";
 
 export { isValidBasePath, type SiteLanguage } from "./context.js";
@@ -112,6 +113,16 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
       html: renderPage(ctx.node(pageId, "page"), ctx).value,
     };
   });
+  // Each service or project page, after the document's pages (collection-pages decision 4).
+  for (const { id, listingPageId } of ctx.itemPages) {
+    const route = ctx.routes.get(id) as PageRoute;
+    pages.push({
+      pageId: id,
+      path: route.path,
+      url: ctx.pageUrl(id),
+      html: renderItemPage(id, listingPageId, ctx).value,
+    });
+  }
   const css = siteCss(ctx.node(ctx.site.theme, "theme"));
   const notFound = renderNotFound(ctx).value;
   return { ok: true, site: { pages, css, notFound }, warnings: validation.problems };

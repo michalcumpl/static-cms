@@ -77,7 +77,7 @@ function siteBrand(ctx: RenderContext): Html {
 }
 
 /** A whole HTML document: head, the site's header and menu, `main`, and the footer. */
-function renderDocument(
+export function renderDocument(
   ctx: RenderContext,
   head: Html,
   main: Html,
@@ -153,6 +153,6 @@ function socialLinks(ctx: RenderContext): Html | false {
 }
 
 /** Indents every line after the first; block markup is written relative to its own start. */
-function indent(markup: Html, by: string): Html {
+export function indent(markup: Html, by: string): Html {
   return raw(markup.value.replaceAll("\n", `\n${by}`));
 }

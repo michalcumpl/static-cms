@@ -51,6 +51,14 @@ export interface SiteNode {
   team: NodeArrayValue;
   testimonials: NodeArrayValue;
   faqs: NodeArrayValue;
+  /** `project` nodes. */
+  projects: NodeArrayValue;
+  /** `project_category` nodes. */
+  project_categories: NodeArrayValue;
+  /** The page listing the services, under which each service has a page; "" for none. */
+  services_page_id: string;
+  /** The page listing the projects, under which each project has a page; "" for none. */
+  projects_page_id: string;
   pages: NodeArrayValue;
   /** ID of the home page, served at the site root. Its position in `pages` doesn't matter. */
   home_page_id: string;
@@ -175,6 +183,53 @@ export interface ServiceItemNode {
   name: TextValue;
   description: TextValue;
   price: TextValue;
+  /** The service's address under the services' listing page. */
+  slug: string;
+  /** Paragraphs, subheadings and lists for the service's page. */
+  body: NodeArrayValue;
+}
+
+/** Shows the site's projects, all of them or one category, up to `limit`. */
+export interface ProjectsNode extends CollectionBlock {
+  type: "projects";
+  /** A project category, or "" for every category. */
+  category_id: string;
+  /** At most this many projects; 0 for all of them. */
+  limit: number;
+}
+
+export interface ProjectNode {
+  id: string;
+  type: "project";
+  name: TextValue;
+  /** A project category, or "" for none. */
+  category_id: string;
+  summary: TextValue;
+  /** Paragraphs, subheadings and lists. */
+  body: NodeArrayValue;
+  /** `fact` nodes. */
+  facts: NodeArrayValue;
+  /** Zero or one `image` node. */
+  cover: NodeArrayValue;
+  /** `gallery_item` nodes. */
+  photos: NodeArrayValue;
+  /** An `https` address of the project's video, or "". */
+  video_url: string;
+  /** The project's address under the projects' listing page. */
+  slug: string;
+}
+
+export interface ProjectCategoryNode {
+  id: string;
+  type: "project_category";
+  name: TextValue;
+}
+
+export interface FactNode {
+  id: string;
+  type: "fact";
+  label: TextValue;
+  value: TextValue;
 }
 
 export interface TextWithImageNode {
@@ -462,6 +517,10 @@ export type AnyNode =
   | ListItemNode
   | ServicesNode
   | ServiceItemNode
+  | ProjectsNode
+  | ProjectNode
+  | ProjectCategoryNode
+  | FactNode
   | TextWithImageNode
   | GalleryNode
   | GalleryItemNode

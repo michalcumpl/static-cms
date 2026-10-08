@@ -1,6 +1,7 @@
 <script lang="ts">
 import { getI18n } from "$lib/i18n";
 import Button from "$lib/ui/Button.svelte";
+import { collectionsListedOn } from "./item-pages";
 import { countLinksTo, deletePage } from "./pages";
 import type { EditorState } from "./state.svelte";
 
@@ -12,6 +13,7 @@ const i18n = getI18n();
 let dialog: HTMLDialogElement | undefined = $state();
 let target = $state<{ id: string; title: string } | undefined>();
 const linkCount = $derived(target ? countLinksTo(editor.session.doc, target.id) : 0);
+const listed = $derived(target ? collectionsListedOn(editor.session.doc as never, target.id) : []);
 
 export function open(page: { id: string; title: string }): void {
   target = { id: page.id, title: page.title };
@@ -35,6 +37,9 @@ function confirmDelete(event: SubmitEvent) {
         : i18n.t("editor.page.links", { count: linkCount })}
       {i18n.t("editor.page.undoNote")}
     </p>
+    {#each listed as collection (collection)}
+      <p>{i18n.t(`editor.page.listing.${collection}`)}</p>
+    {/each}
     <div class="buttons">
       <Button onclick={() => dialog?.close()}>{i18n.t("common.cancel")}</Button>
       <Button type="submit" kind="danger">{i18n.t("editor.page.deletePage")}</Button>

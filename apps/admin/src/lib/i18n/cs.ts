@@ -132,17 +132,35 @@ export const cs: Messages = {
       noDomain: "Zatím nezveřejněno",
     },
     lists: {
+      pages: {
+        services: "Každá služba má vlastní stránku",
+        projects: "Každý projekt má vlastní stránku",
+        listedOn: "Seznam je na stránce",
+        choose: "Vyberte stránku…",
+      },
+      categories: {
+        title: "Kategorie",
+        hint: "Projekty lze ukazovat po kategoriích, například Výstavy nebo Interiéry.",
+        name: "Kategorie {n}",
+        add: "Přidat kategorii",
+        deleteTitle: "Smazat kategorii {name}?",
+        deleteUsed:
+          "Projekty v ní: {projects}. Bloky, které ji ukazují: {blocks}. Zůstanou na svém místě, jen bez kategorie.",
+      },
+      projects: "Projekty",
       services: "Služby",
       faqs: "Otázky",
       team: "Lidé",
       testimonials: "Reference",
       item: {
+        projects: "Projekt {n}",
         services: "Služba {n}",
         faqs: "Otázka {n}",
         team: "Člověk {n}",
         testimonials: "Reference {n}",
       },
       add: {
+        projects: "Přidat projekt",
         services: "Přidat službu",
         faqs: "Přidat otázku",
         team: "Přidat člověka",
@@ -162,6 +180,24 @@ export const cs: Messages = {
       saveFirst: "Změny je třeba před otevřením editoru uložit. Uložit je teď?",
       named: "{item}: {name}",
       fields: {
+        category: "Kategorie",
+        noCategory: "Bez kategorie",
+        summary: "Shrnutí (jeden řádek, nepovinné)",
+        body: "Text",
+        pageText: "Text jeho stránky",
+        addText: "Přidat text",
+        facts: "Údaje",
+        factLabel: "Název",
+        factValue: "Hodnota",
+        addFact: "Přidat údaj",
+        remove: "Odebrat",
+        cover: "Titulní fotka",
+        photos: "Fotky",
+        addPhotos: "Přidat fotky",
+        caption: "Popisek (nepovinný)",
+        video: "Adresa videa (nepovinná)",
+        slug: "Adresa",
+        openPage: "Otevřít stránku",
         name: "Název",
         description: "Popis",
         price: "Cena (nepovinné)",
@@ -446,6 +482,10 @@ export const cs: Messages = {
       },
       deleteTitle: "Smazat „{title}“?",
       noLinks: "Nevedou na ni žádné odkazy z jiných stránek.",
+      listing: {
+        services: "Je na ní seznam služeb: jejich vlastní stránky se přestanou zveřejňovat.",
+        projects: "Je na ní seznam projektů: jejich vlastní stránky se přestanou zveřejňovat.",
+      },
       links: {
         one: "Vede na ni {count} odkaz z jiného místa webu. Ukáže se jako problém k opravě.",
         few: "Vedou na ni {count} odkazy z jiných míst webu. Ukážou se jako problémy k opravě.",
@@ -728,6 +768,10 @@ export const cs: Messages = {
       noLabel: "Zadejte popisek do menu.",
     },
     blocks: {
+      projects: {
+        name: "Projekty",
+        description: "Vaše práce jako dlaždice s fotkami, všechna nebo jedna kategorie",
+      },
       hero: {
         name: "Úvodní blok",
         description: "Velký začátek stránky: nadpis, krátký text, fotka a tlačítko",
@@ -793,10 +837,18 @@ export const cs: Messages = {
       addedInPrimary: "{collection} se přidávají a odebírají v jazyce {language}",
     },
     collections: {
+      projects: "Projekty",
       services: "Služby",
       team: "Lidé",
       testimonials: "Reference",
       faqs: "Otázky",
+    },
+    projectsBlock: {
+      category: "Kategorie",
+      allCategories: "Všechny kategorie",
+      count: "Kolik",
+      all: "Všechny",
+      edit: "Upravit projekty",
     },
     look: {
       legend: "Vzhled",
@@ -809,12 +861,14 @@ export const cs: Messages = {
     collectionBlock: {
       show: "Zobrazit",
       all: {
+        projects: "Všechny projekty",
         services: "Všechny služby",
         team: "Všechny lidi",
         testimonials: "Všechny reference",
         faqs: "Všechny otázky",
       },
       chosen: {
+        projects: "Vybrané projekty",
         services: "Vybrané služby",
         team: "Vybrané lidi",
         testimonials: "Vybrané reference",
@@ -824,6 +878,7 @@ export const cs: Messages = {
       choose: "Vyberte…",
       add: "Přidat",
       newItem: {
+        projects: "Nový projekt",
         services: "Nová služba",
         team: "Nový člověk",
         testimonials: "Nová reference",
