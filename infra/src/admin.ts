@@ -406,7 +406,8 @@ const userData = serverEnv.apply((env) =>
 );
 
 // The server (design.md decision 1). A change to its files replaces it: it restores itself.
-// Newer Amazon Linux images are picked up when it is replaced for another reason.
+// Newer Amazon Linux images are picked up when it is replaced for another reason. The old server
+// goes first, so two servers never write to the same replica; the admin is down meanwhile.
 const image = aws.ssm.getParameterOutput({
   name: "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64",
 });
@@ -425,7 +426,11 @@ export const server = new aws.ec2.Instance(
     metadataOptions: { httpTokens: "required", httpPutResponseHopLimit: 2 },
     tags: { Name: name("server"), "webmio-admin": stack },
   },
-  { ignoreChanges: ["ami"], dependsOn: [...logGroups, serverSsm, serverHosting, serverPolicy] },
+  {
+    ignoreChanges: ["ami"],
+    deleteBeforeReplace: true,
+    dependsOn: [...logGroups, serverSsm, serverHosting, serverPolicy],
+  },
 );
 export const serverAddress = new aws.ec2.Eip(name("server"), {
   domain: "vpc",

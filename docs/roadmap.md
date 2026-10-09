@@ -131,7 +131,7 @@ Blocks the example sites need come first, because the templates render them
 | --- | --- | --- |
 | `admin-on-aws` | the admin on one small EU server at `app.webmio.eu`, media in S3, Litestream backups | Planned |
 | `presentation-site` | `webmio.cz` and `webmio.eu`, built and published with Webmio | Planned |
-| `operator-console` | customers, websites, plan status, renewal dates, manual invoices | Planned |
+| `operator-console` | the operator's own part of the admin: an overview and stats, customers and their websites, inviting users, deleting websites and accounts, plan status, renewal dates, manual invoices | Planned |
 | `legal-documents` | terms, privacy policy, data processing agreement, cookie statement, complaints procedure | Planned |
 
 ### 8. After the beta
@@ -264,6 +264,18 @@ Invite-only, small and cheap, for friends.
 - **`legal-documents`:** Czech and English, reviewed by a lawyer before taking money.
 - **`operator-console`** (minimum) and **emails:** renewal reminders, publish failures, health
   alerts.
+  - **What the console covers:** an overview with stats, every customer and website, inviting
+    users, and deleting websites and accounts. It replaces the server commands (`create-user`
+    and the others) for everyday work.
+  - **Where it lives:** the same app on the same server, but behind its own address (such as
+    `ops.webmio.eu`), its own route group and an operator role with a second sign-in factor.
+    It is not a separate app, for three reasons:
+    - It needs the admin's own logic. Deleting a website or account is the same purge of
+      media, hosting and tenants; invitations are the same tokens and mail.
+    - SQLite has one writer, on one server.
+    - One image means one deploy.
+  - **When a separate app would be worth it:** only if the console ever has to run where the
+    admin doesn't.
 
 ### 8. After the beta
 
@@ -274,7 +286,7 @@ Invite-only, small and cheap, for friends.
   advanced analytics. The monthly email carries the health summary too.
 - **`google-sign-in`:** Facebook isn't planned (little use for business owners, app-review
   overhead).
-- **`operator-console`** grows: cash flow, trends, renewal forecasts.
+- **`operator-console`** grows: billing (with `billing`), cash flow, trends, renewal forecasts.
 
 ## Known limits and later ideas from done work
 

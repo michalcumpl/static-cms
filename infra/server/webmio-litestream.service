@@ -2,6 +2,9 @@
 Description=Webmio: Litestream replicating the admin's database
 After=docker.service webmio-restore.service
 Requires=docker.service webmio-restore.service
+# Started before the admin and stopped after it, so the admin's last writes are replicated when
+# the server shuts down.
+Before=webmio-admin.service
 StartLimitIntervalSec=0
 
 [Service]
