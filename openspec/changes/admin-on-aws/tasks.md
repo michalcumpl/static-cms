@@ -27,8 +27,8 @@
 
 - [ ] 4.1 Through `app.dev.webmio.net`: sign in with a link sent by SES (from `mail.dev.webmio.net`, signed DKIM, passing SPF and DMARC), upload a 19 MB photo, publish to Webmio hosting; verify the images are in the media bucket and the website is live
 - [x] 4.2 Deploy a version whose `/healthz` never answers (a temporary branch, `workflow_dispatch`); verify the previous version is running again and the workflow failed; then deploy `main` again
-- [ ] 4.3 Restore drill: terminate the `dev` instance and let Pulumi (`pulumi up`) or the recover action bring a new one; verify the admin starts with the data from before, and record how long it took and how many seconds of writes were lost
-- [ ] 4.4 Restore an earlier moment with `litestream restore -timestamp` as the guide describes; verify the admin shows what it held then
+- [x] 4.3 Restore drill: terminate the `dev` instance and let Pulumi (`pulumi up`) or the recover action bring a new one; verify the admin starts with the data from before, and record how long it took and how many seconds of writes were lost
+- [x] 4.4 Restore an earlier moment with `litestream restore -timestamp` as the guide describes; verify the admin shows what it held then
 - [ ] 4.5 Trigger each alarm (stop the admin container, fill the disk past 80 % with a temporary file, stop Litestream); verify each email arrives and its recovery email follows
 
 ## 5. Documentation and `prod`
