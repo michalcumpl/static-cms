@@ -75,8 +75,7 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
 | [`example-sites`](../openspec/changes/archive/2026-10-08-example-sites/) | `pnpm admin load-site`; the seven launch examples loaded locally | Done |
 | [`image-cropping`](../openspec/changes/archive/2026-10-08-image-cropping/) | crop, focal point and rotation in the media library | Done |
 | `guided-setup` | the "Tell us about your business" wizard | Planned |
-| `site-import` | import a public website by its address (version 1, no AI), reviewed before publishing | Planned |
-
+| [`site-import`](../openspec/changes/archive/2026-10-09-site-import/) | import a public website by its address (version 1, no AI), reviewed before publishing; see [`import-mapping.md`](import-mapping.md) | Done |
 ### 4. Templates as website systems · In progress
 
 Blocks the example sites need come first, because the templates render them

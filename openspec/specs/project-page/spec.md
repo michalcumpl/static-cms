@@ -315,7 +315,8 @@ The dashboard, "Overview", SHALL show at the top:
 - the site's name;
 - its state: "Live" with the site's address as a link, or "Not published yet";
 - the Publish button, or, when the workspace isn't connected to hosting, the note and link the Publish section gives;
-- the problems of the saved site: the number of errors and warnings, and each problem's message as a link to where it is fixed (a section field, an item's field in What you offer or About you, or the editor at the node).
+- the problems of the saved site: the number of errors and warnings, and each problem's message as a link to where it is fixed (a section field, an item's field in What you offer or About you, or the editor at the node);
+- for a project made by an import whose review hasn't been dismissed, a link to the import review (see "Import review" in the site-import capability).
 
 Below it, the dashboard SHALL show one card per section, each with a short summary and a link to it:
 - **Business:** the business name (or the site name), the main location's city, and the number of locations when there are several;
@@ -345,6 +346,10 @@ The dashboard SHALL show the primary language.
 #### Scenario: Offer card
 - **WHEN** the site has five services and the owner chooses the What you offer card
 - **THEN** the What you offer section opens
+
+#### Scenario: Imported project
+- **WHEN** the owner opens the Overview of a project made by an import, before dismissing its review
+- **THEN** the dashboard links to the import review
 
 ### Requirement: Delete website
 For workspace owners, the Website section's main page SHALL end with a "Delete website" area, apart from the settings and not part of what Save saves. Choosing **Delete website** SHALL open a confirmation that:
