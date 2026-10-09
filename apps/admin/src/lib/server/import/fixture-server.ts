@@ -15,6 +15,7 @@ const ORIGINS: Record<string, string> = {
   bakery: "https://pekarna-ulipy.cz",
   studio: "https://northlight.example",
   spa: "https://kavarna.example",
+  agency: "https://cestovka-vlna.example",
 };
 
 const TYPES: Record<string, string> = {

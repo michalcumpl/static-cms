@@ -24,11 +24,11 @@ The reading is [`@webmio/import`](../packages/import/) (pure, tested on the inve
 | `<details>` and FAQPage questions into the FAQ collection | `blocks.ts`, `site.ts` | done |
 | Theme: colours, catalogue fonts, contrast | `theme.ts` | done |
 | Each page's old address, redirected when published | `site.ts`, admin `publishing/redirects.ts` | done |
-| Forms, maps and widgets left out and reported | `blocks.ts` | done |
+| Forms and widgets left out and reported | `blocks.ts` | done |
+| Cards, key figures, steps, opening hours, maps, booking widgets and footer logos as Webmio's blocks | `structures.ts`, `booking.ts`, `site.ts` | done (`import-existing-blocks`) |
 | Other languages | | reported, not imported |
 | One-page sites split into pages per section | | not yet: imported as one home page |
 | Subpages of one kind as collection items; repeated cards as services or team | | **AI** (v2) |
-| Booking widgets as a call to action | | not yet: reported as an embed |
 | Pages built by JavaScript (headless browser) | `script.ts` | detected and reported, not read |
 | Links to PDFs as documents | | not yet: links to the old site's own files are dropped |
 | Retrying pages that didn't answer and images that failed; the next 20 pages over the limit | [`retry.ts`](../packages/import/src/retry.ts), admin `import/retry.ts` | done (`import-review-actions`) |
@@ -70,18 +70,21 @@ What the first run taught, now rules with tests:
 What the seven examples (and vroomagazine.com, imported 2026-10-09 as a large, messy stress test:
 Webmio doesn't target magazines, and the 20-page limit stays) showed that the import doesn't produce yet, by what it would take.
 
-**Blocks that exist, but the import never makes them** (mapping only, no new block):
+**Blocks that exist, which the import didn't make** (mapping only, no new block; the rules are in
+[`structures.ts`](../packages/import/src/structures.ts), tested on the bakery and agency
+fixtures):
 
-| Pattern seen | Block | Examples |
-| --- | --- | --- |
-| A grid of repeated cards: image, title, short text, link (today one gallery per card, stacked) | `cards` | vroomagazine (3×4 article grids) |
-| Large numbers with a short label | `figures` | Fond 10X ("300M CZK managed") |
-| Numbered "how it works" headings | `steps` | Fond 10X |
-| A Google Maps embed (left out today) | `map`, from the business's location | Aniděti, the bakery fixture |
-| A booking widget or checkout link (left out as an embed) | `call_to_action` to the booking service | Roubenka (Lodgify) |
-| Opening hours in text or a table | `opening_hours`, from the business | the bakery fixture |
-| Repeated cards of people, quotes, priced services | `team`, `testimonials`, `services` | Aniděti, Fond 10X, Roubenka (**AI**, v2) |
-| Many pages of one kind | `projects` collection | Scénografie (327), Punk Film (**AI**, v2) |
+| Pattern seen | Block | Examples | Status |
+| --- | --- | --- | --- |
+| A grid of three or more repeated cards: one image, a title, a short text, a link (was one gallery per card, stacked) | `cards`, 12 a block | vroomagazine (3×4 article grids) | done (`import-existing-blocks`) |
+| Two to six short number-led values with labels | `figures` | Fond 10X ("300M CZK managed") | done |
+| A bold-titled ordered list, or headings numbered 1, 2, 3, under a heading | `steps` | Fond 10X | done |
+| A Google Maps or Mapy.cz embed (was left out) | `contact`, with the "Show on map" link; the embed's place as the map link when the location has no address | Aniděti, the bakery and agency fixtures | done |
+| A booking widget or link of a known service (was left out as an embed) | `call_to_action` to the booking service, with the heading and sentence before it | Roubenka (Lodgify) | done |
+| Opening hours in a table or list | `opening_hours`, when structured data gave the business its hours; text otherwise | the bakery fixture | done |
+| Award or partner logos in the home page's footer | `logos` at the home page's end | Mareš Partners | done |
+| Repeated cards of people, quotes, priced services | `team`, `testimonials`, `services` | Aniděti, Fond 10X, Roubenka | **AI** (v2) |
+| Many pages of one kind | `projects` collection | Scénografie (327), Punk Film | **AI** (v2) |
 
 **New blocks already on the roadmap:** `documents` (links to PDFs: the bakery's price list),
 `contact-form` (forms on most examples), `newsletter` (Fond 10X's signup on every page),

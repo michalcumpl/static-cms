@@ -24,11 +24,6 @@ exports[`reading a whole site > reports what it imported and left out 1`] = `
       "page": "/kontakt.html",
       "reason": "form",
     },
-    {
-      "detail": "www.google.com",
-      "page": "/kontakt.html",
-      "reason": "embed",
-    },
   ],
   "pages": [
     {

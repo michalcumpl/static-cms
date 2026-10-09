@@ -1,4 +1,4 @@
-import { escapeInline, videoEmbed } from "@webmio/model";
+import { escapeInline, videoEmbed, type Weekday } from "@webmio/model";
 import { type Cheerio, type CheerioAPI, load } from "cheerio";
 import type { AnyNode, Element } from "domhandler";
 import { resolve } from "./addresses.js";
@@ -7,6 +7,7 @@ import { collapse, contentArea } from "./content.js";
 import { backgroundImages, inlineDeclarations } from "./css.js";
 import { candidateList, type ImageCollector, imageCandidates } from "./images.js";
 import type { LeftOut } from "./report.js";
+import { detectStructure } from "./structures.js";
 import { type InlineContext, inlineText, plainText } from "./text.js";
 
 // A page's content as segments of the new page (site-import spec, "Page content"; design decision
@@ -31,7 +32,28 @@ export type Segment =
   | { kind: "gallery"; heading: string; items: { image: ImageUse; caption: string }[] }
   | { kind: "logos"; heading: string; items: { image: ImageUse; name: string; url: string }[] }
   | { kind: "videos"; heading: string; items: { url: string; title: string }[] }
-  | { kind: "faq"; heading: string; items: { question: string; answer: string }[] };
+  | { kind: "faq"; heading: string; items: { question: string; answer: string }[] }
+  // Structures mapped to Webmio's blocks (import-existing-blocks).
+  | {
+      kind: "cards";
+      heading: string;
+      /** `link`: `page:<slug>`, an outside address, or `""`. */
+      items: { image?: ImageUse; title: string; text: string; link: string }[];
+    }
+  | { kind: "figures"; heading: string; items: { value: string; label: string }[] }
+  | { kind: "steps"; heading: string; items: { title: string; text: string }[] }
+  /** The business's opening hours, where the page showed them. */
+  | { kind: "hours"; heading: string }
+  /** A map: the business's contact details; `place`, a map link the embed names, or `""`. */
+  | { kind: "map"; heading: string; place: string }
+  /** A booking service, with the sentence before it; `label` `""` for the language's word. */
+  | { kind: "booking"; heading: string; text: string; label: string; url: string };
+
+/** The segments made from structures, which take the heading right before them. */
+type StructureSegment = Extract<
+  Segment,
+  { kind: "cards" | "figures" | "steps" | "hours" | "map" | "booking" }
+>;
 
 export interface PageContent {
   /** The page's first `<h1>`, as words. */
@@ -49,7 +71,8 @@ type Item =
   | { kind: "image"; image: ImageUse; caption: string; link: string; group: Element | null }
   | { kind: "video"; url: string; title: string; group: Element | null }
   | { kind: "faq"; question: string; answer: string; group: Element | null }
-  | { kind: "twi"; segment: Extract<Segment, { kind: "text_with_image" }>; group: Element | null };
+  | { kind: "twi"; segment: Extract<Segment, { kind: "text_with_image" }>; group: Element | null }
+  | { kind: "structure"; segment: StructureSegment; group: Element | null };
 
 /** Text an image needs beside it to be a text with image block. */
 const TEXT_BESIDE = 80;
@@ -92,6 +115,8 @@ export interface ReadOptions {
   hero: boolean;
   /** The page's old path, naming it in the report. */
   page: string;
+  /** The days the business's imported hours name: a schedule naming them is its hours. */
+  hoursDays?: ReadonlySet<Weekday>;
 }
 
 export function readPage(html: string, options: ReadOptions): PageContent {
@@ -121,6 +146,11 @@ export function readPage(html: string, options: ReadOptions): PageContent {
     const el = $(node as Element);
     const name = (node as Element).name.toLowerCase();
     const group = groupOf($, node);
+    const structure = detectStructure(el, name, detecting);
+    if (structure) {
+      items.push({ kind: "structure", segment: structure as StructureSegment, group });
+      return;
+    }
     switch (name) {
       case "h1":
       case "h2":
@@ -250,12 +280,14 @@ export function readPage(html: string, options: ReadOptions): PageContent {
     }
   };
 
-  const image = (img: Cheerio<AnyNode>, group: Element | null, caption = "") => {
-    if (!img.length) return;
-    const el = img as Cheerio<Element>;
+  const isIcon = (el: Cheerio<Element>) => {
     const width = Number(el.attr("width"));
     const height = Number(el.attr("height"));
-    if ((width > 0 && width < ICON) || (height > 0 && height < ICON)) return;
+    return (width > 0 && width < ICON) || (height > 0 && height < ICON);
+  };
+  /** Adds a content image to the site's and returns how the page uses it. */
+  const use = (el: Cheerio<Element>): ImageUse | undefined => {
+    if (isIcon(el)) return undefined;
     const alt = collapse(el.attr("alt") ?? "");
     const ref = options.images.add(
       imageCandidates(el, options.ctx.base),
@@ -263,11 +295,24 @@ export function readPage(html: string, options: ReadOptions): PageContent {
       "content",
       options.page,
     );
-    if (!ref) return;
+    return ref ? { ref, alt } : undefined;
+  };
+  const detecting = {
+    $,
+    ctx: options.ctx,
+    image: use,
+    isIcon,
+    hoursDays: options.hoursDays ?? new Set<Weekday>(),
+  };
+  const image = (img: Cheerio<AnyNode>, group: Element | null, caption = "") => {
+    if (!img.length) return;
+    const el = img as Cheerio<Element>;
+    const used = use(el);
+    if (!used) return;
     const linked = resolve(el.closest("a").attr("href"), options.ctx.base);
     items.push({
       kind: "image",
-      image: { ref, alt },
+      image: used,
       caption,
       link:
         linked && (linked.protocol === "http:" || linked.protocol === "https:") ? linked.href : "",
@@ -277,7 +322,7 @@ export function readPage(html: string, options: ReadOptions): PageContent {
 
   root.contents().each((_i, child) => walk(child));
   const heroImage = options.hero ? takeHeroImage(items) : undefined;
-  const segments = assemble(textWithImages(items));
+  const segments = assemble(textWithImages(numberedSteps(items)));
   // Questions only in FAQPage structured data: a questions block at the page's end, since
   // structured data has no place on the page.
   const shown = new Set(items.flatMap((i) => (i.kind === "faq" ? [i.question] : [])));
@@ -430,6 +475,55 @@ function findGroup(el: Element | null): Element | undefined {
   return undefined;
 }
 
+const NUMBERED = /^(\d+)[.)]\s+(.+)$/;
+
+/**
+ * Two or more headings of one level numbered 1, 2, 3… in order, each with the texts after it, as
+ * steps (import-existing-blocks design decision 4); their numbers go, the block numbers them.
+ */
+function numberedSteps(items: Item[]): Item[] {
+  const out: Item[] = [];
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i] as Item;
+    const first = item.kind === "heading" ? NUMBERED.exec(item.text) : null;
+    if (item.kind !== "heading" || !first || first[1] !== "1") {
+      out.push(item);
+      continue;
+    }
+    const steps: { title: string; text: string }[] = [];
+    let j = i;
+    while (j < items.length) {
+      const heading = items[j] as Item;
+      const numbered = heading.kind === "heading" ? NUMBERED.exec(heading.text) : null;
+      if (
+        heading.kind !== "heading" ||
+        heading.level !== item.level ||
+        Number(numbered?.[1]) !== steps.length + 1
+      ) {
+        break;
+      }
+      const texts: string[] = [];
+      j++;
+      while (items[j]?.kind === "paragraph") {
+        texts.push((items[j] as { text: string }).text);
+        j++;
+      }
+      steps.push({ title: numbered?.[2] ?? "", text: texts.join(" ") });
+    }
+    if (steps.length < 2) {
+      out.push(item);
+      continue;
+    }
+    out.push({
+      kind: "structure",
+      segment: { kind: "steps", heading: "", items: steps },
+      group: item.group,
+    });
+    i = j - 1;
+  }
+  return out;
+}
+
 /** Items in document order as segments: text blocks split at main headings, runs as blocks. */
 function assemble(items: Item[]): Segment[] {
   const levels = [...new Set(items.flatMap((i) => (i.kind === "heading" ? [i.level] : [])))].sort();
@@ -450,6 +544,15 @@ function assemble(items: Item[]): Segment[] {
         hasMain = true;
         continue;
       }
+      // And a structure's: its block's heading.
+      if (next?.kind === "structure") {
+        flush();
+        segments.push({ ...next.segment, heading: item.text });
+        // Validation counts these blocks' headings as main ones, not key figures' and steps'.
+        if (next.segment.kind !== "figures" && next.segment.kind !== "steps") hasMain = true;
+        i++;
+        continue;
+      }
       const main = item.level === levels[0] || !hasMain;
       if (main) {
         flush();
@@ -463,6 +566,29 @@ function assemble(items: Item[]): Segment[] {
     } else if (item.kind === "twi") {
       flush();
       segments.push(item.segment);
+    } else if (item.kind === "structure") {
+      if (item.segment.kind === "steps") {
+        // Steps need a heading (validation): without one they stay a list.
+        text.push(
+          item.segment.items.map((s) => `- **${s.title}**${s.text ? ` ${s.text}` : ""}`).join("\n"),
+        );
+      } else if (item.segment.kind === "booking") {
+        // A booking widget under a heading and a sentence: the call to action's own.
+        const sentence =
+          text.length >= 2 && !/^(#|- )/.test(text.at(-1) ?? "") ? text.pop() : undefined;
+        const heading = /^#{2,3} (.+)$/.exec(text.at(-1) ?? "");
+        if (heading) text.pop();
+        else if (sentence !== undefined) text.push(sentence);
+        flush();
+        segments.push({
+          ...item.segment,
+          heading: heading?.[1] ?? "",
+          text: heading ? (sentence ?? "") : "",
+        });
+      } else {
+        flush();
+        segments.push(item.segment);
+      }
     } else {
       i = run(items, i, "", segments, flush);
     }

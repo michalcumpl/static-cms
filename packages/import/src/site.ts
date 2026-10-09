@@ -7,6 +7,7 @@ import {
   siteBuilder,
   slugify,
   uniqueSlug,
+  type Weekday,
 } from "@webmio/model";
 import { STANDARD } from "@webmio/templates";
 import { load } from "cheerio";
@@ -16,8 +17,9 @@ import { readBusiness } from "./business.js";
 import { collapse, contentArea } from "./content.js";
 import { backgroundRules } from "./css.js";
 import { candidateList, ImageCollector, type ImageReference } from "./images.js";
-import { type MenuEntry, menuLinks } from "./links.js";
+import { type MenuEntry, menuLinks, profile } from "./links.js";
 import type { ImportReport, LeftOut } from "./report.js";
+import { MAX_CARDS } from "./structures.js";
 import { externalTarget } from "./text.js";
 import { guessTheme } from "./theme.js";
 
@@ -120,6 +122,8 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
     if (!ordered.includes(page)) ordered.push(page);
 
   const business = readBusiness(ordered, lang, nav.social);
+  // A schedule on a page naming the days of these hours is the business's (structured data only).
+  const hoursDays = new Set(Object.keys(business.location.hours ?? {}) as Weekday[]);
   const name = siteName(home.html, business.name);
   const homeName = czech(lang) ? STANDARD.layouts[0]?.name.cs : STANDARD.layouts[0]?.name.en;
   const metaDescription = collapse(
@@ -161,6 +165,7 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
         css: page.css,
         hero: page === home,
         page: oldPath(url),
+        hoursDays,
       });
       return [page, content] as const;
     }),
@@ -204,6 +209,7 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
     "favicon",
     oldPath(homeUrl),
   );
+  const awards = footerLogos(home.html, homeUrl, logoCandidates, images);
 
   const fetched = options.images;
   const file = (ref: string | undefined) => (ref && fetched ? fetched.get(ref) : undefined);
@@ -216,7 +222,15 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
   // Each stylesheet once: pages sharing one would make its one-off colours look repeated.
   site.theme(guessTheme([...new Set(ordered.flatMap((p) => p.css))]));
   site.business({ name, type: business.type, social: business.social });
-  site.location(business.location);
+  // A map embed names the place when the location has no address of its own.
+  const location = business.location;
+  if (!location.street && !location.city && !location.map_url) {
+    const place = [...final.values()]
+      .flatMap((content) => content.segments)
+      .find((segment) => segment.kind === "map" && segment.place);
+    if (place?.kind === "map") location.map_url = place.place;
+  }
+  site.location(location);
   const logo = image(logoRef, name);
   if (logo) site.logo(logo);
   const favicon = image(faviconRef, "");
@@ -240,12 +254,18 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
     }
     for (const segment of content?.segments ?? []) {
       out.push(
-        ...segmentBlocks(segment, image, (q) => {
-          questions++;
-          return site.faq(q);
-        }),
+        ...segmentBlocks(
+          segment,
+          image,
+          (q) => {
+            questions++;
+            return site.faq(q);
+          },
+          lang,
+        ),
       );
     }
+    if (page === home && awards) out.push(...segmentBlocks(awards, image, site.faq, lang));
     return out;
   };
   // Pages in order; the menu's links and groups as the source's navigation had them.
@@ -341,6 +361,8 @@ export function segmentBlocks(
   segment: Segment,
   image: (ref: string | undefined, alt: string) => ImageInput | undefined,
   faq: (question: { question: string; answer: string }) => string,
+  /** The site's language, for a booking block's words. */
+  lang: string,
 ): BlockInput[] {
   switch (segment.kind) {
     case "text":
@@ -389,6 +411,47 @@ export function segmentBlocks(
       const ids = segment.items.map((q) => faq({ question: q.question, answer: q.answer }));
       return [blocks.faq(segment.heading, ids)];
     }
+    // Structures (import-existing-blocks). The contact and hours blocks show the main location.
+    case "cards": {
+      const all = segment.items.map((card) => ({
+        image: card.image ? image(card.image.ref, card.image.alt) : undefined,
+        title: card.title,
+        text: card.text,
+        ...(card.link.startsWith("page:")
+          ? { page: card.link.slice(5) }
+          : card.link
+            ? { url: card.link }
+            : {}),
+      }));
+      const out: BlockInput[] = [];
+      for (let i = 0; i < all.length; i += MAX_CARDS) {
+        out.push({
+          type: "cards",
+          heading: i === 0 ? segment.heading : "",
+          items: all.slice(i, i + MAX_CARDS),
+        });
+      }
+      return out;
+    }
+    case "figures":
+      return [{ type: "figures", heading: segment.heading, items: segment.items }];
+    case "steps":
+      return [{ type: "steps", heading: segment.heading, items: segment.items }];
+    case "hours":
+      return [{ type: "opening_hours", heading: segment.heading }];
+    case "map":
+      return [{ type: "contact", heading: segment.heading }];
+    case "booking": {
+      const cs = czech(lang);
+      return [
+        {
+          type: "call_to_action",
+          heading: segment.heading || (cs ? "Rezervace" : "Book now"),
+          text: segment.text,
+          actions: [{ label: segment.label || (cs ? "Rezervovat" : "Book"), url: segment.url }],
+        },
+      ];
+    }
   }
 }
 
@@ -415,6 +478,54 @@ export function summary(html: string): string {
  */
 function headingOnly(heading: string): BlockInput[] {
   return heading ? [blocks.text(`## ${heading}`)] : [];
+}
+
+/** Smaller images are icons (as in a page's content). */
+const FOOTER_ICON = 48;
+/** A footer logo's name from the words beside it, at most. */
+const LOGO_NAME = 80;
+
+/**
+ * Award or partner logos in the home page's footer, as a logos segment for the page's end
+ * (import-existing-blocks design decision 7): two or more images with a name, not the site's
+ * logo, not an icon, not a link to a social profile.
+ */
+function footerLogos(
+  html: string,
+  homeUrl: URL,
+  siteLogo: readonly string[],
+  images: ImageCollector,
+): Extract<Segment, { kind: "logos" }> | undefined {
+  const $ = load(html);
+  // The page's footer, and blocks its template calls one (Mareš's awards sit in `.a-footer`).
+  const found = $("footer img, [class*=footer] img")
+    .toArray()
+    .filter((node, i, all) => all.indexOf(node) === i)
+    .flatMap((node) => {
+      const img = $(node);
+      const width = Number(img.attr("width"));
+      const height = Number(img.attr("height"));
+      if ((width > 0 && width < FOOTER_ICON) || (height > 0 && height < FOOTER_ICON)) return [];
+      const candidates = candidateList([img.attr("src")], homeUrl);
+      if (candidates.length === 0 || candidates.some((c) => siteLogo.includes(c))) return [];
+      const href = resolve(img.closest("a").attr("href"), homeUrl);
+      if (href && profile(href)) return [];
+      const beside = img.parent().clone();
+      beside.find("img").remove();
+      const name = collapse(img.attr("alt") ?? "") || collapse(beside.text()).slice(0, LOGO_NAME);
+      if (!name) return [];
+      const external = href && !sameSite(href, homeUrl) && /^https?:$/.test(href.protocol);
+      return [{ candidates, name, url: external ? href.href : "" }];
+    });
+  if (found.length < 2) return undefined;
+  return {
+    kind: "logos",
+    heading: "",
+    items: found.flatMap(({ candidates, name, url }) => {
+      const ref = images.add(candidates, name, "content", oldPath(homeUrl));
+      return ref ? [{ image: { ref, alt: name }, name: escapeInline(name), url }] : [];
+    }),
+  };
 }
 
 function homeMenuLabel(

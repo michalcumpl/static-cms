@@ -95,15 +95,10 @@ describe("the import job", () => {
       "/kontakt.html",
     ]);
     expect(row?.report?.leftOut.map((l) => l.reason)).toEqual(
-      expect.arrayContaining([
-        "disallowed",
-        "unreachable",
-        "language",
-        "hidden-email",
-        "form",
-        "embed",
-      ]),
+      expect.arrayContaining(["disallowed", "unreachable", "language", "hidden-email", "form"]),
     );
+    // The contact page's map is a contact block now, not left out (import-existing-blocks).
+    expect(row?.report?.leftOut.map((l) => l.reason)).not.toContain("embed");
   });
 
   it("keeps what a retry needs: failed pages and images, the queue, the menu, the pages", async () => {
@@ -151,6 +146,25 @@ describe("the import job", () => {
       "/akce/",
       "/kontakt.html",
     ]);
+  });
+
+  it("imports the agency's structures as Webmio's blocks (import-existing-blocks)", async () => {
+    const row = await importFixture("agency");
+    expect(row?.state).toBe("done");
+    const { db } = project();
+    const doc = readSite(db, row?.projectId ?? "")?.document as {
+      nodes: Record<string, { type: string; slug?: string; blocks?: { nodes: string[] } }>;
+    };
+    const blocksOf = (slug: string) => {
+      const page = Object.values(doc.nodes).find((n) => n.type === "page" && n.slug === slug);
+      return (page?.blocks?.nodes ?? []).map((id) => doc.nodes[id]?.type);
+    };
+    expect(blocksOf("uvod")).toEqual(["hero", "rich_text", "cards", "call_to_action", "logos"]);
+    expect(blocksOf("kontakt")).toEqual(["rich_text", "contact"]);
+    // The map and the booking widget aren't left out; nothing else on the site is.
+    expect(row?.report?.leftOut).toEqual([]);
+    // The cards' and logos' photos arrived.
+    expect(row?.report?.images).toBeGreaterThanOrEqual(10);
   });
 
   it("fails a site built in the browser, leaving no project, version or media file", async () => {
