@@ -95,6 +95,11 @@ const LINK = /(^|[\s>+~])a$/i;
 const BUTTON = /(button|\.btn|\[class\*?=["']?(btn|button)|\.button|\.cta)/i;
 const HEADINGS = /(^|[\s>+~])h[1-3]\b/i;
 
+/** The colours a list has at least twice. */
+function repeatedColors(colors: string[]): string[] {
+  return colors.filter((c, i) => colors.indexOf(c) !== i);
+}
+
 /** The most frequent colour of a list, or undefined. */
 function mostFrequent(colors: string[]): string | undefined {
   const counts = new Map<string, number>();
@@ -184,18 +189,23 @@ export function guessTheme(stylesheets: readonly string[]): ThemeInput {
         (d.property === "background" || d.property === "background-color"),
     )
     .flatMap((d) => colorsIn(d.value));
-  const primary =
-    mostFrequent(accents) ??
-    mostFrequent(declarations.flatMap((d) => colorsIn(d.value)).filter(saturated));
+  // Without a link or button colour, a colour the stylesheets use repeatedly, not a pale tint: a
+  // one-off colour is a widget's or a state's (a yellow highlight), not the brand's.
+  const repeated = repeatedColors(
+    declarations.flatMap((d) => colorsIn(d.value)).filter((c) => saturated(c) && hsl(c)[2] <= 0.75),
+  );
   const bg = background ?? preset?.color_background ?? "#ffffff";
+  const ink = text ?? (light(bg) ? "#222222" : "#f5f5f5");
+  // A site with no colour of its own stays without one: its text colour leads.
+  const primary = mostFrequent(accents) ?? mostFrequent(repeated) ?? ink;
   const secondary = mostFrequent(
     allBackgrounds.filter((c) => c !== bg && c !== primary && light(c) === light(bg)),
   );
 
   const colors = withContrast({
     color_background: bg,
-    color_text: text ?? (light(bg) ? "#222222" : "#f5f5f5"),
-    color_primary: primary ?? preset?.color_primary ?? "#1f5a8a",
+    color_text: ink,
+    color_primary: primary,
     color_secondary: secondary ?? (light(bg) ? (preset?.color_secondary ?? "#f2f2f2") : "#2a2a2a"),
   });
 

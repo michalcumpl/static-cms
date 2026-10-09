@@ -213,6 +213,8 @@ export function readPage(html: string, options: ReadOptions): PageContent {
           ? options.images.add(
               candidateList([source], options.ctx.base),
               collapse(el.attr("alt") ?? ""),
+              "content",
+              options.page,
             )
           : undefined;
         if (ref)
@@ -255,7 +257,12 @@ export function readPage(html: string, options: ReadOptions): PageContent {
     const height = Number(el.attr("height"));
     if ((width > 0 && width < ICON) || (height > 0 && height < ICON)) return;
     const alt = collapse(el.attr("alt") ?? "");
-    const ref = options.images.add(imageCandidates(el, options.ctx.base), alt);
+    const ref = options.images.add(
+      imageCandidates(el, options.ctx.base),
+      alt,
+      "content",
+      options.page,
+    );
     if (!ref) return;
     const linked = resolve(el.closest("a").attr("href"), options.ctx.base);
     items.push({

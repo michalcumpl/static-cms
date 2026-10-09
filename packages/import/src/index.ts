@@ -17,6 +17,13 @@ export type {
   LeftOut,
   LeftOutReason,
 } from "./report.js";
+export {
+  type RetryPage,
+  type RetryPages,
+  type RetryPagesOptions,
+  type RetrySource,
+  readPagesForRetry,
+} from "./retry.js";
 export { type RobotsRules, robotsRules } from "./robots.js";
 export { looksBuiltByScript } from "./script.js";
 export {
@@ -27,3 +34,4 @@ export {
   type SourcePage,
   siteLanguage,
 } from "./site.js";
+export { pageUnchanged } from "./unchanged.js";

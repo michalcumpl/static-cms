@@ -1,7 +1,7 @@
 import { readdirSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
-import { imports, media, pageOrigins, projects } from "../db/schema";
+import { imports, media, pageOrigins, projects, siteDocuments } from "../db/schema";
 import { mediaRoot } from "../import-working-copy";
 import { readSite } from "../site-documents";
 import { useTestProject } from "../test-project";
@@ -22,8 +22,9 @@ afterEach(async () => {
 });
 
 /** Starts an import of a fixture site and waits for it. */
-async function importFixture(site: string, path = "/") {
+async function importFixture(site: string, path = "/", failing: string[] = []) {
   server = await startFixtureServer(site);
+  for (const failed of failing) server.failing.add(failed);
   const { db, workspaceId, owner } = project();
   const started = startImport(
     db,
@@ -103,6 +104,53 @@ describe("the import job", () => {
         "embed",
       ]),
     );
+  });
+
+  it("keeps what a retry needs: failed pages and images, the queue, the menu, the pages", async () => {
+    const row = await importFixture("bakery", "/", ["/images/rohliky.jpg"]);
+    const origin = server?.origin ?? "";
+    const { db } = project();
+    const stored = db
+      .select()
+      .from(imports)
+      .where(eq(imports.id, row?.id ?? ""))
+      .get();
+    const state = stored?.retryState;
+    const current = db
+      .select({ id: siteDocuments.currentVersionId })
+      .from(siteDocuments)
+      .where(eq(siteDocuments.projectId, row?.projectId ?? ""))
+      .get()?.id;
+    expect(state?.versionId).toBe(current);
+    expect(stored?.importVersionId).toBe(current);
+    expect(state?.unreachable).toEqual([`${origin}/cenik.pdf`]);
+    expect(state?.queue).toEqual([]);
+    expect(state?.menu).toContain(`${origin}/kontakt.html`);
+    expect(state?.failedImages).toEqual([
+      {
+        id: `${origin}/images/rohliky.jpg`,
+        candidates: [`${origin}/images/rohliky.jpg`],
+        alt: expect.any(String),
+        role: "content",
+        pages: ["/nase-pecivo/"],
+      },
+    ]);
+    // Every other image arrived, under a key of the project's library.
+    const keys = db
+      .select()
+      .from(media)
+      .where(eq(media.projectId, row?.projectId ?? ""))
+      .all()
+      .map((m) => m.key);
+    expect(Object.keys(state?.media ?? {})).toContain(`${origin}/images/chleb.jpg`);
+    for (const key of Object.values(state?.media ?? {})) expect(keys).toContain(key);
+    expect(state?.pages.map((p) => p.url.replace(origin, ""))).toEqual([
+      "/",
+      "/nase-pecivo/",
+      "/o-nas/",
+      "/akce/",
+      "/kontakt.html",
+    ]);
   });
 
   it("fails a site built in the browser, leaving no project, version or media file", async () => {

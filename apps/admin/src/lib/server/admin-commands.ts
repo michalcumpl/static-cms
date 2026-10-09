@@ -93,7 +93,10 @@ export async function importSiteCommand(
   const timer = setInterval(() => {
     const progress = readImport(db, started.importId, owner.userId)?.progress;
     const line = progress ? `${progress.phase}: ${progress.done} of ${progress.total}` : "";
-    if (line && line !== last) log((last = line));
+    if (line && line !== last) {
+      last = line;
+      log(line);
+    }
   }, 250);
   await importsSettled();
   clearInterval(timer);

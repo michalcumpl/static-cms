@@ -17,6 +17,8 @@ export interface ImageReference {
   candidates: string[];
   alt: string;
   role: ImageRole;
+  /** The old paths of the pages showing it, in the order they were met; a retry re-places it there. */
+  pages: string[];
 }
 
 /** The entries of a `srcset`: address and width (or density × 1000 for `x` descriptors). */
@@ -112,7 +114,12 @@ export class ImageCollector {
   readonly references = new Map<string, ImageReference>();
 
   /** Adds an image (or finds it again) and returns its reference ID; undefined without an address. */
-  add(candidates: string[], alt: string, role: ImageRole = "content"): string | undefined {
+  add(
+    candidates: string[],
+    alt: string,
+    role: ImageRole = "content",
+    page?: string,
+  ): string | undefined {
     const [first] = candidates;
     if (!first) return undefined;
     // The same image under another address it was seen with.
@@ -122,9 +129,10 @@ export class ImageCollector {
     if (known) {
       if (!known.alt && alt) known.alt = alt;
       if (role !== "content") known.role = role;
+      if (page && !known.pages.includes(page)) known.pages.push(page);
       return known.id;
     }
-    this.references.set(first, { id: first, candidates, alt, role });
+    this.references.set(first, { id: first, candidates, alt, role, pages: page ? [page] : [] });
     return first;
   }
 }

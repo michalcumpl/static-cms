@@ -13,7 +13,8 @@ import { load } from "cheerio";
 import { oldPath, pageKey, resolve, sameSite, withoutFragment } from "./addresses.js";
 import { readPage, type Segment } from "./blocks.js";
 import { readBusiness } from "./business.js";
-import { collapse } from "./content.js";
+import { collapse, contentArea } from "./content.js";
+import { backgroundRules } from "./css.js";
 import { candidateList, ImageCollector, type ImageReference } from "./images.js";
 import { type MenuEntry, menuLinks } from "./links.js";
 import type { ImportReport, LeftOut } from "./report.js";
@@ -75,7 +76,7 @@ function siteName(home: string, businessName: string): string {
 }
 
 /** A page's title: its `<h1>`, or its `<title>` without the site's name. */
-function pageTitle(h1: string, html: string, name: string): string {
+export function pageTitle(h1: string, html: string, name: string): string {
   if (h1) return h1;
   const parts = collapse(load(html)("title").text())
     .split(/\s+[|–—-]\s+/)
@@ -84,7 +85,7 @@ function pageTitle(h1: string, html: string, name: string): string {
 }
 
 /** A slug from an address's last segment, without its extension; `""` for the root. */
-function slugFromPath(url: URL): string {
+export function slugFromPath(url: URL): string {
   const last = url.pathname.split("/").filter(Boolean).at(-1) ?? "";
   return slugify(decodeURIComponent(last).replace(/\.(html?|php|aspx?)$/i, ""));
 }
@@ -121,7 +122,11 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
   const business = readBusiness(ordered, lang, nav.social);
   const name = siteName(home.html, business.name);
   const homeName = czech(lang) ? STANDARD.layouts[0]?.name.cs : STANDARD.layouts[0]?.name.en;
-  const description = collapse(load(home.html)('meta[name="description"]').attr("content") ?? "");
+  const metaDescription = collapse(
+    load(home.html)('meta[name="description"]').attr("content") ?? "",
+  );
+  // Without one, the home page's first paragraph describes the site to search engines.
+  const description = metaDescription || summary(home.html);
 
   // Slugs first, so texts can link to the new pages.
   const taken: string[] = [];
@@ -164,18 +169,41 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
   // The logo and favicon.
   const $home = load(home.html);
   const headerLogo = $home("header a img, [class*=logo] img, img[class*=logo], #logo img").first();
-  const logoRef = images.add(
-    business.logo.length ? business.logo : candidateList([headerLogo.attr("src")], homeUrl),
-    name,
-    "logo",
-  );
+  // Backgrounds of the home page's elements: a logo drawn by CSS, a photo filling a panel.
+  const shown = home.css.flatMap(backgroundRules).filter((rule) => {
+    // States and generated content (`:hover`, `::before`) don't show the image.
+    if (/:/.test(rule.selector)) return false;
+    try {
+      return $home(rule.selector).length > 0;
+    } catch {
+      return false;
+    }
+  });
+  // The last matching rule is usually the most specific (`.pg-index .logo` after `.logo`).
+  const cssLogo = shown.filter((rule) => /logo/i.test(rule.selector)).at(-1)?.url;
+  const logoCandidates = business.logo.length
+    ? business.logo
+    : candidateList([headerLogo.attr("src") ?? cssLogo], homeUrl);
+  const logoRef = images.add(logoCandidates, name, "logo", oldPath(homeUrl));
+  // A photo filling a panel of the home page (a painting beside the text), for the hero when
+  // the content has none.
+  const backdrop = shown.find((rule) => rule.cover && !/logo/i.test(rule.selector))?.url;
+  const backdropRef =
+    backdrop && !final.get(home)?.heroImage
+      ? images.add(candidateList([backdrop], homeUrl), "", "content", oldPath(homeUrl))
+      : undefined;
   const iconHref =
     $home('link[rel~="apple-touch-icon"]').attr("href") ??
     $home('link[rel~="icon"]')
       .toArray()
       .map((el) => $home(el).attr("href") ?? "")
       .find((href) => /\.(png|svg)(\?|$)/i.test(href));
-  const faviconRef = images.add(candidateList([iconHref], homeUrl), "", "favicon");
+  const faviconRef = images.add(
+    candidateList([iconHref], homeUrl),
+    "",
+    "favicon",
+    oldPath(homeUrl),
+  );
 
   const fetched = options.images;
   const file = (ref: string | undefined) => (ref && fetched ? fetched.get(ref) : undefined);
@@ -185,7 +213,8 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
   };
 
   const site = siteBuilder({ name, lang, description });
-  site.theme(guessTheme(ordered.flatMap((p) => p.css)));
+  // Each stylesheet once: pages sharing one would make its one-off colours look repeated.
+  site.theme(guessTheme([...new Set(ordered.flatMap((p) => p.css))]));
   site.business({ name, type: business.type, social: business.social });
   site.location(business.location);
   const logo = image(logoRef, name);
@@ -201,67 +230,24 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
       out.push(
         blocks.hero({
           heading: escapeInline(name),
-          text: escapeInline(description),
+          text: escapeInline(metaDescription),
           image: content?.heroImage
             ? image(content.heroImage.ref, content.heroImage.alt)
-            : undefined,
+            : image(backdropRef, ""),
           layout: STANDARD.looks.hero,
         }),
       );
     }
-    for (const segment of content?.segments ?? []) out.push(...segmentBlocks(segment));
+    for (const segment of content?.segments ?? []) {
+      out.push(
+        ...segmentBlocks(segment, image, (q) => {
+          questions++;
+          return site.faq(q);
+        }),
+      );
+    }
     return out;
   };
-  const segmentBlocks = (segment: Segment): BlockInput[] => {
-    switch (segment.kind) {
-      case "text":
-        return [blocks.text(segment.source)];
-      case "text_with_image": {
-        const img = image(segment.image.ref, segment.image.alt);
-        if (!img) {
-          const heading = segment.heading ? `## ${segment.heading}\n\n` : "";
-          return [blocks.text(`${heading}${segment.body}`)];
-        }
-        return [
-          blocks.textWithImage({
-            heading: segment.heading,
-            body: segment.body,
-            image: img,
-            side: segment.side,
-          }),
-        ];
-      }
-      case "gallery": {
-        const items = segment.items.flatMap((i) => {
-          const img = image(i.image.ref, i.image.alt);
-          return img ? [{ image: img, caption: i.caption }] : [];
-        });
-        return items.length
-          ? [blocks.gallery({ heading: segment.heading, items, imageFit: STANDARD.looks.gallery })]
-          : [];
-      }
-      case "logos": {
-        const items = segment.items.flatMap((i) => {
-          const img = image(i.image.ref, i.image.alt || i.name);
-          return img ? [{ image: img, name: escapeInline(i.name), url: i.url }] : [];
-        });
-        return items.length ? [blocks.logos({ heading: segment.heading, items })] : [];
-      }
-      case "videos":
-        return [
-          blocks.videos({
-            heading: segment.heading,
-            items: segment.items.map((v) => ({ url: v.url, title: escapeInline(v.title) })),
-          }),
-        ];
-      case "faq": {
-        const ids = segment.items.map((q) => site.faq({ question: q.question, answer: q.answer }));
-        questions += ids.length;
-        return [blocks.faq(segment.heading, ids)];
-      }
-    }
-  };
-
   // Pages in order; the menu's links and groups as the source's navigation had them.
   const pageIds = new Map<SourcePage, string>();
   const add = (page: SourcePage, menu?: string) => {
@@ -345,6 +331,90 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
     leftOut,
   };
   return { name, lang, document, images: references, origins, report };
+}
+
+/**
+ * A segment of a page's content as blocks: `image` gives an image only when it was fetched, and
+ * `faq` adds a question to the FAQ collection and returns its ID.
+ */
+export function segmentBlocks(
+  segment: Segment,
+  image: (ref: string | undefined, alt: string) => ImageInput | undefined,
+  faq: (question: { question: string; answer: string }) => string,
+): BlockInput[] {
+  switch (segment.kind) {
+    case "text":
+      return [blocks.text(segment.source)];
+    case "text_with_image": {
+      const img = image(segment.image.ref, segment.image.alt);
+      if (!img) {
+        const heading = segment.heading ? `## ${segment.heading}\n\n` : "";
+        return [blocks.text(`${heading}${segment.body}`)];
+      }
+      return [
+        blocks.textWithImage({
+          heading: segment.heading,
+          body: segment.body,
+          image: img,
+          side: segment.side,
+        }),
+      ];
+    }
+    case "gallery": {
+      const items = segment.items.flatMap((i) => {
+        const img = image(i.image.ref, i.image.alt);
+        return img ? [{ image: img, caption: i.caption }] : [];
+      });
+      if (items.length === 0) return headingOnly(segment.heading);
+      return [
+        blocks.gallery({ heading: segment.heading, items, imageFit: STANDARD.looks.gallery }),
+      ];
+    }
+    case "logos": {
+      const items = segment.items.flatMap((i) => {
+        const img = image(i.image.ref, i.image.alt || i.name);
+        return img ? [{ image: img, name: escapeInline(i.name), url: i.url }] : [];
+      });
+      if (items.length === 0) return headingOnly(segment.heading);
+      return [blocks.logos({ heading: segment.heading, items })];
+    }
+    case "videos":
+      return [
+        blocks.videos({
+          heading: segment.heading,
+          items: segment.items.map((v) => ({ url: v.url, title: escapeInline(v.title) })),
+        }),
+      ];
+    case "faq": {
+      const ids = segment.items.map((q) => faq({ question: q.question, answer: q.answer }));
+      return [blocks.faq(segment.heading, ids)];
+    }
+  }
+}
+
+/** Search engines show about this many characters of a description. */
+const DESCRIPTION_LENGTH = 160;
+
+/** The first paragraph of a page's content worth a description, shortened at a word. */
+export function summary(html: string): string {
+  const $ = load(html);
+  const text =
+    contentArea($)
+      .find("p")
+      .toArray()
+      .map((p) => collapse($(p).text()))
+      .find((t) => t.length >= 40) ?? "";
+  if (text.length <= DESCRIPTION_LENGTH) return text;
+  const cut = text.slice(0, DESCRIPTION_LENGTH - 1);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 40)).replace(/[\s,;:–-]+$/, "")}…`;
+}
+
+/**
+ * A block left without its images keeps its heading as a main subheading: the page's smaller
+ * subheadings after it need one before them (validation's "heading-skip").
+ */
+function headingOnly(heading: string): BlockInput[] {
+  return heading ? [blocks.text(`## ${heading}`)] : [];
 }
 
 function homeMenuLabel(

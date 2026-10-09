@@ -31,6 +31,11 @@ The reading is [`@webmio/import`](../packages/import/) (pure, tested on the inve
 | Booking widgets as a call to action | | not yet: reported as an embed |
 | Pages built by JavaScript (headless browser) | `script.ts` | detected and reported, not read |
 | Links to PDFs as documents | | not yet: links to the old site's own files are dropped |
+| Retrying pages that didn't answer and images that failed; the next 20 pages over the limit | [`retry.ts`](../packages/import/src/retry.ts), admin `import/retry.ts` | done (`import-review-actions`) |
+| Imported images without a description marked decorative in one step | admin `import/decorative.ts` | done (`import-review-actions`) |
+| A logo drawn by CSS (a background on the logo element); a photo filling a panel of the home page (`background-size: cover`) as the hero's photo | `css.ts`, `site.ts` | done (Mareš: the logo and the painting of the office) |
+| A site without a colour of its own keeps a black-and-white theme (each stylesheet read once; a fallback colour must repeat); the home page's first paragraph as the site description without a meta description | `theme.ts`, `site.ts` | done (Mareš) |
+| A gallery or logo row without its images keeps its heading; smaller subheadings first on a page fixed in one step | `site.ts`, admin `heading-levels.ts` | done (`import-review-actions`) |
 
 ## The examples imported (2026-10-09)
 
@@ -60,7 +65,40 @@ What the first run taught, now rules with tests:
 - FAQPage structured data gives questions (Roubenka's 7).
 - The same thing left out twice on a page is reported once.
 
-## Fetching
+## Blocks the examples call for (2026-10-09)
+
+What the seven examples (and vroomagazine.com, imported 2026-10-09 as a large, messy stress test:
+Webmio doesn't target magazines, and the 20-page limit stays) showed that the import doesn't produce yet, by what it would take.
+
+**Blocks that exist, but the import never makes them** (mapping only, no new block):
+
+| Pattern seen | Block | Examples |
+| --- | --- | --- |
+| A grid of repeated cards: image, title, short text, link (today one gallery per card, stacked) | `cards` | vroomagazine (3×4 article grids) |
+| Large numbers with a short label | `figures` | Fond 10X ("300M CZK managed") |
+| Numbered "how it works" headings | `steps` | Fond 10X |
+| A Google Maps embed (left out today) | `map`, from the business's location | Aniděti, the bakery fixture |
+| A booking widget or checkout link (left out as an embed) | `call_to_action` to the booking service | Roubenka (Lodgify) |
+| Opening hours in text or a table | `opening_hours`, from the business | the bakery fixture |
+| Repeated cards of people, quotes, priced services | `team`, `testimonials`, `services` | Aniděti, Fond 10X, Roubenka (**AI**, v2) |
+| Many pages of one kind | `projects` collection | Scénografie (327), Punk Film (**AI**, v2) |
+
+**New blocks already on the roadmap:** `documents` (links to PDFs: the bakery's price list),
+`contact-form` (forms on most examples), `newsletter` (Fond 10X's signup on every page),
+`booking` (Roubenka's calendar).
+
+**New blocks planned from imports:** `banner-block`, a full-width image with a heading, text and a
+button anywhere on a page, for the "hero" bands between vroomagazine's card grids (today a text
+block and a one-photo gallery; the hero block must be first).
+
+**Not on the roadmap yet:**
+- **Posts** (a blog or news collection with dates): Mortgage Specialist's 91 posts, all over the
+  page limit; a `projects`-like collection with dates and a listing page.
+- **Price list** (items with prices, grouped): Roubenka's rates, the bakery's price list; today
+  bold list items or a PDF.
+- **Footer content** (award logos, partners): Mareš's awards sit in the footer, which the import
+  doesn't read; a logos block above the footer would hold them.
+
 
 | What we met | Rule |
 | --- | --- |
@@ -109,3 +147,30 @@ What the first run taught, now rules with tests:
 - What was left out: forms, videos, widgets, hidden emails, images that couldn't be fetched.
 - The validation problems of the imported site, each leading to its field, before anything is
   published.
+
+## The review's actions (`import-review-actions`)
+
+- **Try again**, under "What was left out", while pages didn't answer or images couldn't be
+  imported: they are fetched again with the import's rules and limits. Forms, embeds, hidden
+  emails, disallowed or script-built pages, files and other languages offer no retry.
+- **Import the next pages (N left)** while pages were over the limit: the next 20, in the import's
+  order (the menu's, then the sitemap's).
+- A retry runs in the background on the import queue, one per project, its progress on the review.
+  New pages go at the end of the page list with a slug unique in the project, keep their old
+  address for redirects, and join the end of the menu when the old menu linked them. An image that
+  arrives is placed where its page shows it when the owner hasn't changed that page since the
+  import ([`pageUnchanged`](../packages/import/src/unchanged.ts) compares the page's whole
+  subtree without node IDs); otherwise it goes to the media library and the review says so. The
+  retry saves one version, and fails without changing the site when the owner saved meanwhile.
+- **Mark these images as decorative (N)**, under "Before you publish", while imported images
+  (from the import's version, or placed by a retry) lack a description: one saved version that
+  version history can undo. The owner's own images are never marked. Screen readers skip
+  decorative images, so images that carry information are better described; each problem still
+  leads to its image.
+- The same problem on several pages or images is one item; pages without a description lead to
+  the site's description, which fixes them all at once.
+- **Fix the subheading levels on N pages**, under "Before you publish", while a page has a smaller
+  subheading before any main one: the first such subheading on each page becomes a main one, as
+  one saved version.
+- What the import keeps for a retry is `imports.retry_state`; imports made before it offer no
+  retry, and marking decorative uses the project's first version as the import's.

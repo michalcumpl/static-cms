@@ -175,7 +175,7 @@ describe("createSiteProject (site-import design decision 8)", () => {
     const doc = broken.languages.get("en")?.doc as unknown as {
       nodes: Record<string, Record<string, unknown>>;
     };
-    (doc.nodes.page_1?.blocks as { nodes: string[] }).nodes.push("gone");
+    (doc.nodes.page_1?.blocks as { nodes: string[] } | undefined)?.nodes.push("gone");
     const result = await createSiteProject(db, workspaceId, owner.id, broken, {
       allowSiteProblems: true,
     });

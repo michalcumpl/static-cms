@@ -9,6 +9,7 @@ import Dialog from "./Dialog.svelte";
 import EmptyState from "./EmptyState.svelte";
 import Notice from "./Notice.svelte";
 import PageHeader from "./PageHeader.svelte";
+import ProgressBar from "./ProgressBar.svelte";
 import Select from "./Select.svelte";
 import Tabs from "./Tabs.svelte";
 import TextField from "./TextField.svelte";
@@ -127,5 +128,18 @@ describe("structure", () => {
     expect(html(EmptyState, { title: "No projects yet", icon: "plus" })).toContain(
       "No projects yet",
     );
+  });
+});
+
+describe("ProgressBar", () => {
+  it("says how far it is when known, and slides without a value when not", () => {
+    const known = html(ProgressBar, { value: 0.4, label: "Importing your website" });
+    expect(known).toContain('role="progressbar"');
+    expect(known).toContain('aria-label="Importing your website"');
+    expect(known).toContain('aria-valuenow="40"');
+    expect(known).toContain("width: 40%");
+    const unknown = html(ProgressBar, { label: "Importing your website" });
+    expect(unknown).toContain("indeterminate");
+    expect(unknown).not.toContain("aria-valuenow");
   });
 });

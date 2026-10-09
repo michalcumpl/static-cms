@@ -1,10 +1,17 @@
-import { type ImportReport, type LeftOut, readSite } from "@webmio/import";
+import { type ImportReport, type LeftOut, pageLanguage, readSite } from "@webmio/import";
 import { LANGUAGES } from "@webmio/render";
 import { and, eq } from "drizzle-orm";
 import { sayIn } from "../../i18n/translate";
 import { type Locale, type Said, said } from "../../i18n/types";
 import type { Db } from "../db/index";
-import { type ImportProgress, imports, pageOrigins } from "../db/schema";
+import {
+  type ImportProgress,
+  importRetries,
+  imports,
+  pageOrigins,
+  type RetryState,
+  siteDocuments,
+} from "../db/schema";
 import { newId } from "../ids";
 import { createSiteProject } from "../load-site";
 import { type CrawlFailure, crawl } from "./crawl";
@@ -39,9 +46,14 @@ const FAILURES: Record<CrawlFailure, Said> = {
 
 let queue: Promise<unknown> = Promise.resolve();
 
-/** Resolves when every import started so far has finished (tests). */
+/** Resolves when every import and retry started so far has finished (tests). */
 export function importsSettled(): Promise<unknown> {
   return queue;
+}
+
+/** Runs a job after every import and retry started so far: one at a time on the server. */
+export function onImportQueue(run: () => Promise<void>): void {
+  queue = queue.then(run, run);
 }
 
 /**
@@ -103,13 +115,20 @@ export function startImport(
       startedAt: new Date(),
     })
     .run();
-  const run = () => runImport(db, importId, url.href, start, options);
-  queue = queue.then(run, run);
+  onImportQueue(() => runImport(db, importId, url.href, start, options));
   return { ok: true, importId };
 }
 
-/** Imports still running when the server starts again were interrupted: they fail. */
+/** Imports and retries still running when the server starts again were interrupted: they fail. */
 export function failInterruptedImports(db: Db, locale: Locale = "en"): number {
+  db.update(importRetries)
+    .set({
+      state: "failed",
+      error: sayIn(locale, said("server.import.retryInterrupted")),
+      finishedAt: new Date(),
+    })
+    .where(eq(importRetries.state, "running"))
+    .run();
   const result = db
     .update(imports)
     .set({
@@ -197,11 +216,40 @@ async function runImport(
         )
         .run();
     }
+    // What a retry needs (import-review-actions design decision 1).
+    const versionId =
+      db
+        .select({ id: siteDocuments.currentVersionId })
+        .from(siteDocuments)
+        .where(
+          and(eq(siteDocuments.projectId, created.projectId), eq(siteDocuments.lang, site.lang)),
+        )
+        .get()?.id ?? "";
+    const homeUrl = crawled.pages[0]?.url ?? address;
+    const retryState: RetryState = {
+      versionId,
+      homeLang: pageLanguage(crawled.pages[0]?.html ?? ""),
+      unreachable: crawled.unreachable,
+      queue: crawled.queue,
+      menu: crawled.menu,
+      failedImages: site.images
+        .filter((ref) => !fetched.byReference.has(ref.id))
+        .map(({ id, candidates, alt, role, pages }) => ({ id, candidates, alt, role, pages })),
+      media: Object.fromEntries(
+        [...fetched.byReference].flatMap(([id, name]) => {
+          const key = created.media.get(name);
+          return key ? [[id, key]] : [];
+        }),
+      ),
+      pages: origins.map((o) => ({ url: new URL(o.path, homeUrl).href, pageId: o.pageId })),
+    };
     db.update(imports)
       .set({
         state: "done",
         projectId: created.projectId,
         report,
+        retryState,
+        importVersionId: versionId,
         progress: { phase: "building", done: 1, total: 1 },
         finishedAt: new Date(),
       })
@@ -238,6 +286,10 @@ export interface ImportRow {
   projectId: string | null;
   report: ImportReport | null;
   reviewDismissed: boolean;
+  /** What a retry needs; null for imports made before retries. */
+  retryState: RetryState | null;
+  /** The primary language's version the import saved. */
+  importVersionId: string | null;
 }
 
 /** An import by its ID, for the person who started it. */

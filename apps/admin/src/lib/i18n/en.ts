@@ -1056,6 +1056,51 @@ export const en = {
     toDo: "Before you publish",
     nothingToDo: "Nothing left to do: the site can be published.",
     problems: "{errors} to fix, {total} in all. Each leads to where it is fixed.",
+    suggestionsOnly: {
+      one: "Nothing blocks publishing; {count} suggestion. It leads to where it is fixed.",
+      other: "Nothing blocks publishing; {count} suggestions. Each leads to where it is fixed.",
+    },
+    noDescriptionGroup: {
+      one: "{count} page has no description for search engines and link previews: add one description of the whole site.",
+      other:
+        "{count} pages have no description for search engines and link previews: add one description of the whole site.",
+    },
+    similarProblems: {
+      one: "{message}",
+      other: "{count} like this: {message}",
+    },
+    showEach: { one: "Show it", other: "Show each ({count})" },
+    tryAgain: "Try again",
+    tryAgainHint:
+      "Fetches again the pages that didn't answer and the images that couldn't be imported.",
+    nextPages: {
+      one: "Import the next page ({count} left)",
+      other: "Import the next pages ({count} left)",
+    },
+    retrying: "Trying again…",
+    retryPages: { one: "{count} page added.", other: "{count} pages added." },
+    retryPlaced: {
+      one: "{count} image placed where the old website had it.",
+      other: "{count} images placed where the old website had them.",
+    },
+    retryLibrary: {
+      one: "{count} image went to your media library: its page changed since the import, so place it yourself.",
+      other:
+        "{count} images went to your media library: their pages changed since the import, so place them yourself.",
+    },
+    retryNothingNew: "Nothing new arrived; what still fails is listed below.",
+    decorative: {
+      one: "Mark this image as decorative",
+      other: "Mark these images as decorative ({count})",
+    },
+    headingLevels: {
+      one: "Fix the subheading levels on {count} page",
+      other: "Fix the subheading levels on {count} pages",
+    },
+    headingLevelsNote:
+      "On each page, the first smaller subheading becomes a main subheading; the others keep their level.",
+    decorativeNote:
+      "Screen readers skip decorative images. Describe the images that carry information instead: each problem below leads to its image.",
   },
   newProject: {
     title: "New project",
@@ -1156,6 +1201,13 @@ export const en = {
         "This website builds its pages in the browser with JavaScript; we can't read it yet.",
       interrupted: "The import was interrupted. Start it again.",
       failed: "The import failed: {error}",
+      retryRunning: "An import or a retry of this website is running. Wait until it finishes.",
+      retryClosed: "The import review is dismissed; there's nothing to retry.",
+      retryNothing: "There's nothing to retry.",
+      savedMeanwhile: "The website was saved meanwhile. Reload the page and try again.",
+      retryConflict: "The website was saved while retrying. Try again.",
+      retryInterrupted: "The retry was interrupted. Try again.",
+      retryFailed: "The retry failed: {error}",
     },
     media: {
       noThumbnail: "YouTube or Vimeo has no picture for this video.",

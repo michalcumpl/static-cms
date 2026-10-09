@@ -1,12 +1,12 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
-import { dev } from "$app/environment";
 import { sayIn } from "$lib/i18n";
 import { projectPaths } from "$lib/project-paths";
 import { requireOwner } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { workspaces } from "$lib/server/db/schema";
 import { startImport } from "$lib/server/import/job";
+import { testHosts } from "$lib/server/import/test-hosts";
 import { createProject } from "$lib/server/site-documents";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -15,16 +15,6 @@ function workspaceName(id: string): string {
     getDb().select({ name: workspaces.name }).from(workspaces).where(eq(workspaces.id, id)).get()
       ?.name ?? ""
   );
-}
-
-/**
- * Local test sites the dev server may import from (`host:port`, comma-separated): the end-to-end
- * tests' fixture sites. Read only by the dev server, never by a production build.
- */
-function testHosts(): ReadonlySet<string> | undefined {
-  if (!dev) return undefined;
-  const hosts = process.env.E2E_IMPORT_ALLOW_HOSTS?.split(",").filter(Boolean) ?? [];
-  return hosts.length ? new Set(hosts) : undefined;
 }
 
 export const load: PageServerLoad = (event) => {

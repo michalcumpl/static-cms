@@ -1076,6 +1076,67 @@ export const cs: Messages = {
     toDo: "Než web zveřejníte",
     nothingToDo: "Nic dalšího není potřeba: web lze zveřejnit.",
     problems: "K opravě: {errors}, celkem {total}. Každá položka vede tam, kde se opravuje.",
+    suggestionsOnly: {
+      one: "Zveřejnění nic nebrání; {count} doporučení. Vede tam, kde se opravuje.",
+      few: "Zveřejnění nic nebrání; {count} doporučení. Každé vede tam, kde se opravuje.",
+      other: "Zveřejnění nic nebrání; {count} doporučení. Každé vede tam, kde se opravuje.",
+    },
+    noDescriptionGroup: {
+      one: "{count} stránka nemá popis pro vyhledávače a náhledy odkazů: doplňte jeden popis celého webu.",
+      few: "{count} stránky nemají popis pro vyhledávače a náhledy odkazů: doplňte jeden popis celého webu.",
+      other:
+        "{count} stránek nemá popis pro vyhledávače a náhledy odkazů: doplňte jeden popis celého webu.",
+    },
+    similarProblems: {
+      one: "{message}",
+      few: "{count} podobné: {message}",
+      other: "{count} podobných: {message}",
+    },
+    showEach: {
+      one: "Zobrazit",
+      few: "Zobrazit všechny ({count})",
+      other: "Zobrazit všech {count}",
+    },
+    tryAgain: "Zkusit znovu",
+    tryAgainHint:
+      "Znovu načte stránky, které neodpověděly, a obrázky, které se nepodařilo převzít.",
+    nextPages: {
+      one: "Převést další stránku (zbývá {count})",
+      few: "Převést další stránky (zbývají {count})",
+      other: "Převést další stránky (zbývá {count})",
+    },
+    retrying: "Zkoušíme znovu…",
+    retryPages: {
+      one: "Přibyla {count} stránka.",
+      few: "Přibyly {count} stránky.",
+      other: "Přibylo {count} stránek.",
+    },
+    retryPlaced: {
+      one: "{count} obrázek je tam, kde ho měl starý web.",
+      few: "{count} obrázky jsou tam, kde je měl starý web.",
+      other: "{count} obrázků je tam, kde je měl starý web.",
+    },
+    retryLibrary: {
+      one: "{count} obrázek je v knihovně médií: jeho stránka se od převodu změnila, umístěte ho sami.",
+      few: "{count} obrázky jsou v knihovně médií: jejich stránky se od převodu změnily, umístěte je sami.",
+      other:
+        "{count} obrázků je v knihovně médií: jejich stránky se od převodu změnily, umístěte je sami.",
+    },
+    retryNothingNew: "Nic nového nepřišlo; co dál selhává, je uvedeno níže.",
+    decorative: {
+      one: "Označit obrázek jako dekorativní",
+      few: "Označit tyto obrázky jako dekorativní ({count})",
+      other: "Označit tyto obrázky jako dekorativní ({count})",
+    },
+    headingLevels: {
+      one: "Opravit úrovně podnadpisů na {count} stránce",
+      few: "Opravit úrovně podnadpisů na {count} stránkách",
+      other: "Opravit úrovně podnadpisů na {count} stránkách",
+    },
+    headingLevelsNote:
+      "Na každé stránce se první menší podnadpis změní na hlavní; ostatní si úroveň ponechají.",
+    decorativeNote:
+      "Čtečky obrazovky dekorativní obrázky přeskakují. Obrázky, které nesou informaci, raději popište: každý problém níže vede ke svému obrázku.",
   },
   newProject: {
     title: "Nový projekt",
@@ -1179,6 +1240,13 @@ export const cs: Messages = {
         "Tento web skládá své stránky v prohlížeči JavaScriptem; zatím ho přečíst neumíme.",
       interrupted: "Převod webu se přerušil. Spusťte ho znovu.",
       failed: "Převod webu se nepodařil: {error}",
+      retryRunning: "Převod nebo další pokus u tohoto webu právě běží. Počkejte, až skončí.",
+      retryClosed: "Přehled převodu je zavřený, není co zkoušet znovu.",
+      retryNothing: "Není co zkusit znovu.",
+      savedMeanwhile: "Web se mezitím uložil. Načtěte stránku znovu a zkuste to znovu.",
+      retryConflict: "Během pokusu se web uložil. Zkuste to znovu.",
+      retryInterrupted: "Pokus se přerušil. Zkuste to znovu.",
+      retryFailed: "Pokus se nepodařil: {error}",
     },
     media: {
       noThumbnail: "YouTube ani Vimeo k tomuto videu obrázek nemá.",

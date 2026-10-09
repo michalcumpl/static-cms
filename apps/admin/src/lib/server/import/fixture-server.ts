@@ -34,20 +34,57 @@ export interface FixtureServer {
   host: string;
   /** How many requests each path got. */
   hits: Map<string, number>;
+  /** Paths that answer 503 while they are in the set, for retries. */
+  failing: Set<string>;
   close: () => Promise<void>;
 }
 
 /**
  * Serves one fixture site. Besides its files: `/slow` answers after 20 s, `/huge` is a gzip
  * response of 6 MB of text, `/to-metadata` redirects to the cloud metadata address, `/loop`
- * redirects to itself, `/broken` answers 500.
+ * redirects to itself, `/broken` answers 500, and the paths in `failing` answer 503.
+ * `/__fixture/fail?path=…` makes a path fail, `/__fixture/answer?path=…` makes it answer a page
+ * titled by `title`, and `/__fixture/reset` undoes both (the end-to-end tests' retries).
+ * The site `"generated"` has no files: a home page and 50 pages `/strana-N.html` in its sitemap.
  */
 export function startFixtureServer(site: string, port = 0): Promise<FixtureServer> {
   const hits = new Map<string, number>();
+  const failing = new Set<string>();
+  const answering = new Map<string, string>();
   let origin = "";
   const server: Server = createServer((request, response) => {
     const path = decodeURIComponent((request.url ?? "/").split("?")[0] ?? "/");
+    if (path.startsWith("/__fixture/")) {
+      const query = new URL(request.url ?? "/", "http://fixture").searchParams;
+      const target = query.get("path") ?? "";
+      if (path === "/__fixture/fail") failing.add(target);
+      if (path === "/__fixture/answer") {
+        failing.delete(target);
+        const title = query.get("title") ?? "Stránka";
+        answering.set(
+          target,
+          `<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>${title}</title></head><body><main><h1>${title}</h1><p>Tato stránka teď odpovídá.</p></main></body></html>`,
+        );
+      }
+      if (path === "/__fixture/reset") {
+        failing.clear();
+        answering.clear();
+      }
+      response.end("ok");
+      return;
+    }
     hits.set(path, (hits.get(path) ?? 0) + 1);
+    const answer = answering.get(path);
+    if (answer !== undefined && !failing.has(path)) {
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      response.end(answer);
+      return;
+    }
+    if (failing.has(path)) {
+      response.writeHead(503);
+      response.end();
+      return;
+    }
     if (path === "/slow") {
       setTimeout(() => response.end("late"), 20_000).unref();
       return;
@@ -70,6 +107,14 @@ export function startFixtureServer(site: string, port = 0): Promise<FixtureServe
     if (path === "/broken") {
       response.writeHead(500);
       response.end();
+      return;
+    }
+    if (site === "generated") {
+      const generated = generatedPage(path, origin);
+      response.writeHead(generated ? 200 : 404, {
+        "content-type": path.endsWith(".xml") ? "application/xml" : "text/html; charset=utf-8",
+      });
+      response.end(generated ?? "<h1>Not found</h1>");
       return;
     }
     const file = normalize(join(fixtures, site, path.endsWith("/") ? `${path}index.html` : path));
@@ -95,6 +140,7 @@ export function startFixtureServer(site: string, port = 0): Promise<FixtureServe
         origin,
         host: `127.0.0.1:${bound}`,
         hits,
+        failing,
         close: () =>
           new Promise((done) => {
             server.closeAllConnections();
@@ -103,4 +149,23 @@ export function startFixtureServer(site: string, port = 0): Promise<FixtureServe
       });
     });
   });
+}
+
+/** Pages of the site generated for the page limit: a home page and 50 pages in the sitemap. */
+const GENERATED_PAGES = 50;
+
+function generatedPage(path: string, origin: string): string | undefined {
+  const page = (title: string, body: string) =>
+    `<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>${title} | Vzorek</title></head><body><main><h1>${title}</h1><p>${body}</p></main></body></html>`;
+  if (path === "/") return page("Vzorek", "Web s mnoha stránkami pro zkoušku limitu stránek.");
+  if (path === "/sitemap.xml") {
+    const urls = Array.from(
+      { length: GENERATED_PAGES },
+      (_, i) => `<url><loc>${origin}/strana-${i + 1}.html</loc></url>`,
+    );
+    return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join("")}</urlset>`;
+  }
+  const n = Number(/^\/strana-(\d+)\.html$/.exec(path)?.[1]);
+  if (n >= 1 && n <= GENERATED_PAGES) return page(`Strana ${n}`, `Obsah stránky číslo ${n}.`);
+  return undefined;
 }

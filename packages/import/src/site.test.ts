@@ -3,7 +3,7 @@ import type { LooseNodes } from "@webmio/model/testing";
 import { TEMPLATE_RELEASES } from "@webmio/templates";
 import { load } from "cheerio";
 import { describe, expect, it } from "vitest";
-import { type ImportedSite, readSite, type SourcePage, siteLanguage } from "./site.js";
+import { type ImportedSite, readSite, type SourcePage, siteLanguage, summary } from "./site.js";
 import { FIXTURE_ORIGINS, type FixtureSite, fixtureText } from "./testing.js";
 
 const LANGUAGES = ["cs", "sk", "en", "de"];
@@ -131,6 +131,12 @@ describe("reading a whole site", () => {
     ]);
   });
 
+  it("names the pages showing each image, for a retry to re-place it", () => {
+    const bread = bakery.images.find((ref) => ref.id.endsWith("/images/chleb.jpg"));
+    expect(bread?.pages).toEqual(["/", "/kontakt.html"]);
+    expect(bakery.images.find((ref) => ref.role === "logo")?.pages).toEqual(["/"]);
+  });
+
   it("gives a document whose only errors are images without descriptions", () => {
     // Sizes come with the upload; until then any size stands in, as `createSiteProject` does.
     const sized = structuredClone(bakery.document) as unknown as { nodes: Nodes };
@@ -162,9 +168,86 @@ describe("reading a whole site", () => {
     );
     expect(validateSite(site.document).problems.filter((p) => p.severity === "error")).toEqual([]);
   });
+
+  it("keeps the heading of a gallery whose photos didn't arrive, for the subheadings after it", () => {
+    const html = `<!doctype html><html lang="cs"><head><title>Rakousko | Studio</title></head><body><main>
+      <h1>Rakousko</h1><h2>Realizace</h2>
+      <img src="/a.jpg" alt="A" width="800"><img src="/b.jpg" alt="B" width="800">
+      <h3>Vídeň</h3><p>Scéna pro divadlo ve Vídni.</p>
+    </main></body></html>`;
+    const site = readSite([{ url: "https://studio.example/", html, css: [] }], {
+      languages: LANGUAGES,
+      fallbackLanguage: "cs",
+      images: new Map(),
+    });
+    const problems = validateSite(site.document, { templates: TEMPLATE_RELEASES }).problems;
+    expect(problems.filter((p) => p.code === "heading-skip")).toEqual([]);
+    const levels = Object.values(site.document.nodes as Nodes)
+      .filter((n) => n.type === "subheading")
+      .map((n) => [n.level, n.content.content]);
+    expect(levels).toEqual([
+      [2, "Realizace"],
+      [3, "Vídeň"],
+    ]);
+  });
 });
 
 describe("other sites", () => {
+  it("Logo and photo drawn by CSS: the logo, and the photo for the home page's hero", () => {
+    const html = `<!doctype html><html lang="en"><head><title>Mareš Partners</title></head>
+      <body class="pg-index"><header class="h"><h1 class="logo"><strong class="offscreen">Mareš Partners</strong></h1></header>
+      <article class="a"><p><strong>MAREŠ PARTNERS</strong> is a leading independent law firm in the Czech Republic.</p></article>
+      <aside class="i">&nbsp;</aside></body></html>`;
+    const css = [
+      `.i {position: fixed; background: url("img/dusni.jpg") no-repeat center center; background-size: cover;}
+       .logo {background: url("img/logo-40.png") no-repeat left center;}
+       .pg-index .logo {background: url("img/logo.png") no-repeat left center; background-size: auto 100%;}
+       .h-nav-launcher {background: url("img/icons/ico-menu-pos.svg");}
+       .doclist .docpdf {background: url("img/icons/ico-pdf.png") no-repeat;}`,
+    ];
+    const pages = [{ url: "https://www.marespartners.cz/", html, css }];
+    const first = readSite(pages, { languages: LANGUAGES, fallbackLanguage: "en" });
+    expect(first.images.map((r) => [r.role, r.candidates[0]])).toEqual([
+      ["logo", "https://www.marespartners.cz/img/logo.png"],
+      ["content", "https://www.marespartners.cz/img/dusni.jpg"],
+    ]);
+    const files = new Map(first.images.map((ref, i) => [ref.id, `image-${i + 1}.jpg`]));
+    const site = readSite(pages, { languages: LANGUAGES, fallbackLanguage: "en", images: files });
+    const nodes = site.document.nodes as Nodes;
+    const siteNode = Object.values(nodes).find((n) => n.type === "site");
+    expect(nodes[siteNode?.logo.nodes[0]]?.src).toBe("image-1.jpg");
+    const hero = Object.values(nodes).find((n) => n.type === "hero");
+    expect(nodes[hero?.image.nodes[0]]?.src).toBe("image-2.jpg");
+    // No meta description: the first paragraph describes the site, and isn't repeated in the hero.
+    expect(siteNode?.description).toBe(
+      "MAREŠ PARTNERS is a leading independent law firm in the Czech Republic.",
+    );
+    expect(hero?.text.content).toBe("");
+    const problems = validateSite(site.document, { templates: TEMPLATE_RELEASES }).problems;
+    expect(problems.filter((p) => p.code === "no-description")).toEqual([]);
+  });
+
+  it("reads a stylesheet the pages share once for the theme", () => {
+    // Mareš: one stylesheet on 13 pages, with a one-off green on a single class.
+    const css = [`body {background: #fff; color: #000;} .cnt-emph {background: #9cc801;}`];
+    const pages = ["/", "/a/", "/b/"].map((path) => ({
+      url: `https://www.marespartners.cz${path}`,
+      html: `<html lang="en"><body><main><h1>${path}</h1><p>Text of the page.</p></main></body></html>`,
+      css,
+    }));
+    const site = readSite(pages, { languages: LANGUAGES, fallbackLanguage: "en" });
+    const theme = Object.values(site.document.nodes as Nodes).find((n) => n.type === "theme");
+    expect(theme?.color_primary).toBe("#000000");
+  });
+
+  it("shortens a long first paragraph at a word for the description", () => {
+    const words = "Pečeme chléb z kvasu podle receptu našich babiček každé ráno od pěti hodin";
+    const text = summary(`<main><p>Krátce.</p><p>${words}. ${words}. ${words}.</p></main>`);
+    expect(text.length).toBeLessThanOrEqual(160);
+    expect(text).toMatch(/^Pečeme chléb z kvasu .*\S…$/);
+    expect(words.repeat(3)).toContain(text.slice(-12, -1).trim().split(" ").at(-1) ?? "");
+  });
+
   it("reads a one-page English site", () => {
     const studio = imported("studio", ["/"], "cs");
     expect(studio.lang).toBe("en");

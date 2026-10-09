@@ -6,6 +6,7 @@ import Card from "$lib/ui/Card.svelte";
 import Notice from "$lib/ui/Notice.svelte";
 import Page from "$lib/ui/Page.svelte";
 import PageHeader from "$lib/ui/PageHeader.svelte";
+import ProgressBar from "$lib/ui/ProgressBar.svelte";
 import type { PageProps } from "./$types";
 
 // What a running import is doing, updated every second; the review opens when it is done
@@ -42,6 +43,12 @@ $effect(() => {
   };
 });
 
+/** How far the pages or images are; unknown while starting and building. */
+const fraction = $derived.by(() => {
+  const progress = current?.progress;
+  if (!progress || progress.phase === "building" || progress.total === 0) return undefined;
+  return progress.done / progress.total;
+});
 const step = $derived.by(() => {
   const progress = current?.progress;
   if (!progress) return i18n.t("imports.starting");
@@ -72,6 +79,7 @@ const step = $derived.by(() => {
       </div>
     {:else}
       <p class="step" role="status">{step}</p>
+      <div class="bar"><ProgressBar value={fraction} label={i18n.t("imports.title")} /></div>
       <p class="hint">{i18n.t("imports.leave")}</p>
     {/if}
   </Card>
@@ -86,6 +94,10 @@ const step = $derived.by(() => {
 
   .step {
     margin: 0 0 var(--ui-space-2);
+  }
+
+  .bar {
+    margin-bottom: var(--ui-space-3);
   }
 
   .hint {

@@ -74,3 +74,25 @@ export function backgroundImages(css: string): { selector: string; url: string }
     .filter((d) => d.property === "background" || d.property === "background-image")
     .flatMap((d) => d.urls.map((url) => ({ selector: d.selector, url })));
 }
+
+/**
+ * The background images of rules, with whether a rule with the same selector sizes it to cover
+ * its element: a photo filling a panel rather than an icon or a pattern.
+ */
+export function backgroundRules(css: string): { selector: string; url: string; cover: boolean }[] {
+  const declarations = cssDeclarations(css);
+  const covered = new Set(
+    declarations
+      .filter(
+        (d) =>
+          (d.property === "background-size" || d.property === "background") &&
+          /\bcover\b/.test(d.value),
+      )
+      .map((d) => d.selector),
+  );
+  return declarations
+    .filter((d) => d.property === "background" || d.property === "background-image")
+    .flatMap((d) =>
+      d.urls.map((url) => ({ selector: d.selector, url, cover: covered.has(d.selector) })),
+    );
+}

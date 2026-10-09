@@ -33,7 +33,17 @@ export interface CrawlOptions extends SafeFetchOptions {
 export type CrawlFailure = "blocked" | "unreachable" | "not-html" | "disallowed" | "script-built";
 
 export type CrawlResult =
-  | { ok: true; pages: SourcePage[]; leftOut: LeftOut[] }
+  | {
+      ok: true;
+      pages: SourcePage[];
+      leftOut: LeftOut[];
+      /** Addresses of the pages that didn't answer, for a retry (import-review-actions). */
+      unreachable: string[];
+      /** Addresses of the pages over the limit, in the order they would have been read. */
+      queue: string[];
+      /** Addresses the home page's menu linked. */
+      menu: string[];
+    }
   | { ok: false; failure: CrawlFailure; status?: number };
 
 /** A response's text, in the charset its header or `<meta>` names, UTF-8 otherwise. */
@@ -58,12 +68,91 @@ function failureOf(result: Extract<FetchResult, { ok: false }>): CrawlFailure {
   return result.reason === "blocked" ? "blocked" : "unreachable";
 }
 
+const pathOf = (url: URL) => `${url.pathname}${url.search}`;
+
+/** What reading pages needs to know about the site. */
+export interface SiteRules {
+  homeUrl: URL;
+  /** The home page's language: pages in another aren't imported. */
+  homeLang: string;
+  /** Whether robots.txt allows a path. */
+  allowed: (path: string) => boolean;
+}
+
+export type PageFetch =
+  | { ok: true; url: URL; html: string }
+  /** Not imported: why, unless it was redirected off the site (said nowhere). */
+  | { ok: false; address: string; leftOut?: LeftOut };
+
+/**
+ * Fetches a page of the site with the import's checks: robots.txt, an answer, HTML, the home
+ * page's language, not built by a script, and not redirected off the site.
+ */
+export async function fetchPage(
+  url: URL,
+  site: SiteRules,
+  options: SafeFetchOptions = {},
+): Promise<PageFetch> {
+  const page = pathOf(url);
+  const left = (leftOut: LeftOut): PageFetch => ({ ok: false, address: url.href, leftOut });
+  if (!site.allowed(page)) return left({ reason: "disallowed", page });
+  const result = await safeFetch(url.href, "page", options);
+  if (!result.ok) {
+    return left({
+      reason: "unreachable",
+      page,
+      detail: result.status ? String(result.status) : result.reason,
+    });
+  }
+  if (!isHtml(result)) return left({ reason: "not-html", page });
+  const final = new URL(result.url);
+  const html = decodeText(result.body, result.contentType);
+  if (!sameSite(final, site.homeUrl))
+    return left({ reason: "unreachable", page, detail: "redirect" });
+  // Only the home page's language is imported (site-import spec, "Language").
+  const lang = pageLanguage(html);
+  if (site.homeLang && lang && lang !== site.homeLang) {
+    return left({ reason: "language", page, detail: final.href });
+  }
+  if (looksBuiltByScript(html)) return left({ reason: "script-built", page });
+  return { ok: true, url: final, html };
+}
+
+/** Each page with its stylesheets, each fetched once, and its own style elements. */
+export async function withStyles(
+  pages: readonly { url: URL; html: string }[],
+  options: SafeFetchOptions = {},
+): Promise<SourcePage[]> {
+  const stylesheets = new Map<string, string>();
+  const withCss: SourcePage[] = [];
+  for (const page of pages) {
+    const { linked, inline } = pageStyles(page.html, page.url);
+    const css: string[] = [];
+    for (const url of linked) {
+      if (!stylesheets.has(url) && stylesheets.size < MAX_STYLESHEETS) {
+        const result = await safeFetch(url, "text", options);
+        stylesheets.set(url, result.ok ? decodeText(result.body, result.contentType) : "");
+      }
+      css.push(stylesheets.get(url) ?? "");
+    }
+    withCss.push({ url: page.url.href, html: page.html, css: [...css, ...inline].filter(Boolean) });
+  }
+  return withCss;
+}
+
+/** The site's robots.txt rules. */
+export async function siteRobots(
+  homeUrl: URL,
+  options: SafeFetchOptions = {},
+): Promise<(path: string) => boolean> {
+  const robots = await safeFetch(new URL("/robots.txt", homeUrl).href, "text", options);
+  return robotsRules(robots.ok ? decodeText(robots.body, robots.contentType) : undefined);
+}
+
 export async function crawl(address: string, options: CrawlOptions = {}): Promise<CrawlResult> {
   const maxPages = options.maxPages ?? MAX_PAGES;
   const start = new URL(address);
-  const robots = await safeFetch(new URL("/robots.txt", start).href, "text", options);
-  const allowed = robotsRules(robots.ok ? decodeText(robots.body, robots.contentType) : undefined);
-  const pathOf = (url: URL) => `${url.pathname}${url.search}`;
+  const allowed = await siteRobots(start, options);
   if (!allowed(pathOf(start))) return { ok: false, failure: "disallowed" };
 
   const homeResult = await safeFetch(start.href, "page", options);
@@ -76,6 +165,7 @@ export async function crawl(address: string, options: CrawlOptions = {}): Promis
   if (looksBuiltByScript(homeHtml)) return { ok: false, failure: "script-built" };
 
   const leftOut: LeftOut[] = [];
+  const unreachable: string[] = [];
   const pages: { url: URL; html: string }[] = [{ url: homeUrl, html: homeHtml }];
   const seen = new Set([pageKey(start), pageKey(homeUrl)]);
 
@@ -93,8 +183,12 @@ export async function crawl(address: string, options: CrawlOptions = {}): Promis
     queue.push(url);
   };
   const nav = menuLinks(homeHtml, homeUrl);
+  const menu: string[] = [];
   for (const entry of nav.menu) {
-    for (const link of "items" in entry ? entry.items : [entry]) enqueue(link.url.href);
+    for (const link of "items" in entry ? entry.items : [entry]) {
+      enqueue(link.url.href);
+      if (sameSite(link.url, homeUrl) && !menu.includes(link.url.href)) menu.push(link.url.href);
+    }
   }
   const sitemaps = [new URL("/sitemap.xml", homeUrl).href];
   for (let i = 0; i < sitemaps.length && i <= MAX_SITEMAPS; i++) {
@@ -105,56 +199,31 @@ export async function crawl(address: string, options: CrawlOptions = {}): Promis
     for (const sitemap of listed.sitemaps) if (!sitemaps.includes(sitemap)) sitemaps.push(sitemap);
   }
 
+  const site = { homeUrl, homeLang, allowed };
   const total = () => Math.min(maxPages, pages.length + queue.length);
   options.onProgress?.(pages.length, total());
   while (queue.length > 0 && pages.length < maxPages) {
     const batch = queue.splice(0, Math.min(PARALLEL, maxPages - pages.length));
-    const results = await Promise.all(
-      batch.map((url) => (allowed(pathOf(url)) ? safeFetch(url.href, "page", options) : undefined)),
-    );
-    batch.forEach((url, i) => {
-      const result = results[i];
-      const page = pathOf(url);
-      if (!result) leftOut.push({ reason: "disallowed", page });
-      else if (!result.ok) {
-        leftOut.push({
-          reason: "unreachable",
-          page,
-          detail: result.status ? String(result.status) : result.reason,
-        });
-      } else if (!isHtml(result)) leftOut.push({ reason: "not-html", page });
-      else {
-        const final = new URL(result.url);
-        const html = decodeText(result.body, result.contentType);
-        // Redirected off the site, or to a page already read.
-        if (!sameSite(final, homeUrl) || pages.some((p) => pageKey(p.url) === pageKey(final)))
-          return;
-        // Only the home page's language is imported (site-import spec, "Language").
-        const lang = pageLanguage(html);
-        if (homeLang && lang && lang !== homeLang) {
-          leftOut.push({ reason: "language", page, detail: final.href });
-        } else if (looksBuiltByScript(html)) leftOut.push({ reason: "script-built", page });
-        else pages.push({ url: final, html });
+    const results = await Promise.all(batch.map((url) => fetchPage(url, site, options)));
+    for (const result of results) {
+      if (!result.ok) {
+        if (result.leftOut) leftOut.push(result.leftOut);
+        if (result.leftOut?.reason === "unreachable") unreachable.push(result.address);
+      } else if (!pages.some((p) => pageKey(p.url) === pageKey(result.url))) {
+        // Not redirected to a page already read.
+        pages.push(result);
       }
-    });
+    }
     options.onProgress?.(pages.length, total());
   }
   if (queue.length > 0) leftOut.push({ reason: "over-limit", detail: String(queue.length) });
-
-  // Each page's stylesheets, each fetched once, and its own style elements.
-  const stylesheets = new Map<string, string>();
-  const withCss: SourcePage[] = [];
-  for (const page of pages) {
-    const { linked, inline } = pageStyles(page.html, page.url);
-    const css: string[] = [];
-    for (const url of linked) {
-      if (!stylesheets.has(url) && stylesheets.size < MAX_STYLESHEETS) {
-        const result = await safeFetch(url, "text", options);
-        stylesheets.set(url, result.ok ? decodeText(result.body, result.contentType) : "");
-      }
-      css.push(stylesheets.get(url) ?? "");
-    }
-    withCss.push({ url: page.url.href, html: page.html, css: [...css, ...inline].filter(Boolean) });
-  }
-  return { ok: true, pages: withCss, leftOut };
+  const withCss = await withStyles(pages, options);
+  return {
+    ok: true,
+    pages: withCss,
+    leftOut,
+    unreachable,
+    queue: queue.map((url) => url.href),
+    menu,
+  };
 }

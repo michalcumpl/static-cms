@@ -16,6 +16,7 @@ describe("openDatabase", () => {
       .sort();
     expect(tables).toEqual([
       "hosting_connections",
+      "import_retries",
       "imports",
       "invitations",
       "login_tokens",
@@ -53,6 +54,16 @@ describe("openDatabase", () => {
       project_id: null,
       review_dismissed: 0,
     });
+    // import-review-actions: what a retry needs, empty for imports made before it.
+    expect(db.get(sql`select retry_state, import_version_id from imports`)).toEqual({
+      retry_state: null,
+      import_version_id: null,
+    });
+    db.run(
+      sql`insert into import_retries (id, import_id, kind, state, started_at) values ('rt_1', 'i_1', 'again', 'done', 0)`,
+    );
+    db.run(sql`delete from imports where id = 'i_1'`);
+    expect(db.all(sql`select * from import_retries`)).toEqual([]);
   });
 
   it("keeps one media row per file content and project", () => {

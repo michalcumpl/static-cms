@@ -263,6 +263,39 @@ export interface ImportProgress {
   total: number;
 }
 
+/** An image of the old site, as a retry fetches it again. */
+export interface RetryImage {
+  id: string;
+  candidates: string[];
+  alt: string;
+  role: "content" | "logo" | "favicon";
+  /** The old paths of the pages showing it. */
+  pages: string[];
+}
+
+/** What a retry needs to know about an import (import-review-actions design decision 1). */
+export interface RetryState {
+  /** The primary language's version the import, or the last retry, saved. */
+  versionId: string;
+  /** The old home page's language: pages in another aren't imported. */
+  homeLang: string;
+  /** Addresses of the pages that didn't answer, in the import's order. */
+  unreachable: string[];
+  /** Addresses of the pages over the limit, in the order the crawl would have read them. */
+  queue: string[];
+  /** Addresses the old site's menu linked. */
+  menu: string[];
+  failedImages: RetryImage[];
+  /** Images that arrived: reference ID to media key. */
+  media: Record<string, string>;
+  /** Each page read: its address on the old site and its page ID. */
+  pages: { url: string; pageId: string }[];
+  /** Image node IDs retries placed: imported images, as those of the import's version are. */
+  importedImages?: string[];
+}
+
+export const retryKinds = ["again", "next"] as const;
+
 /**
  * Imports of a website by its address (site-import design decision 9): the running job, then
  * the project it made and its review, or why it failed.
@@ -285,6 +318,10 @@ export const imports = sqliteTable(
     /** What was imported and left out, for the review (`ImportReport` of `@webmio/import`). */
     report: text("report", { mode: "json" }).$type<unknown>(),
     reviewDismissed: integer("review_dismissed", { mode: "boolean" }).notNull().default(false),
+    /** What a retry can still try (import-review-actions design decision 1); null before it. */
+    retryState: text("retry_state", { mode: "json" }).$type<RetryState>(),
+    /** The primary language's version the import saved: its images are the imported ones. */
+    importVersionId: text("import_version_id"),
     startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
     finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
   },
@@ -310,4 +347,36 @@ export const pageOrigins = sqliteTable(
     path: text("path").notNull(),
   },
   (t) => [primaryKey({ columns: [t.projectId, t.lang, t.pageId] })],
+);
+
+/** What a retry added to the project, for the review. */
+export interface RetryAdded {
+  pages: number;
+  /** Images placed where their pages show them. */
+  placed: number;
+  /** Images added to the library only: their pages were changed since the import. */
+  library: number;
+}
+
+/**
+ * Retries of an import's left-out pages and images (import-review-actions design decision 2):
+ * "again" for what failed, "next" for the pages over the limit.
+ */
+export const importRetries = sqliteTable(
+  "import_retries",
+  {
+    id: text("id").primaryKey(),
+    importId: text("import_id")
+      .notNull()
+      .references(() => imports.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+    kind: text("kind", { enum: retryKinds }).notNull(),
+    state: text("state", { enum: importStates }).notNull(),
+    progress: text("progress", { mode: "json" }).$type<ImportProgress>(),
+    error: text("error"),
+    added: text("added", { mode: "json" }).$type<RetryAdded>(),
+    startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
+    finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+  },
+  (t) => [index("import_retries_import_idx").on(t.importId, t.startedAt)],
 );

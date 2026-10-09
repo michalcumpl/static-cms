@@ -16,6 +16,7 @@ const ref = (id: string, candidates: string[], role: ImageReference["role"] = "c
   candidates: candidates.map((c) => `${server.origin}${c}`),
   alt: "",
   role,
+  pages: [],
 });
 
 describe("fetching an import's images", () => {

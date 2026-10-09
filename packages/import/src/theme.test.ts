@@ -48,6 +48,22 @@ describe("guessed design", () => {
     });
   });
 
+  it("Site without a colour of its own: monochrome, not a widget's one-off highlight", () => {
+    // Mareš Partners: greys, and a yellow highlight in a widget stylesheet.
+    const theme = guessTheme([
+      `body {background: #fff; color: #333;} .h a {color: #555;} .ix-links a {background: #efefef;}
+       .doclist .highlight {background: #ffff99;} .error {color: #ffcccc;}`,
+    ]);
+    expect(theme).toMatchObject({ color_primary: "#333333", color_text: "#333333" });
+  });
+
+  it("A colour used repeatedly leads when links and buttons have none", () => {
+    const theme = guessTheme([
+      `body {background: #fff; color: #222;} .band {background: #0b6e4f;} h2 {border-color: #0b6e4f;}`,
+    ]);
+    expect(theme.color_primary).toBe("#0b6e4f");
+  });
+
   it("reads a dark site's style element", () => {
     expect(guessTheme([studioCss()])).toMatchObject({
       color_background: "#111111",

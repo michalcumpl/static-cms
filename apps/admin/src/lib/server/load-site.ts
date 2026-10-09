@@ -20,7 +20,14 @@ export interface ProjectFile {
   languages: Record<string, string>;
 }
 
-export type LoadResult = { ok: true; projectId: string } | { ok: false; problems: string[] };
+export type LoadResult =
+  | {
+      ok: true;
+      projectId: string;
+      /** Each uploaded file's media key, by the name the documents gave it. */
+      media: ReadonlyMap<string, string>;
+    }
+  | { ok: false; problems: string[] };
 
 type Doc = { document_id: string; nodes: Record<string, Record<string, unknown>> };
 
@@ -229,5 +236,9 @@ export async function createSiteProject(
     const problem = save(lang);
     if (problem) return fail(problem);
   }
-  return { ok: true, projectId };
+  return {
+    ok: true,
+    projectId,
+    media: new Map([...uploaded].map(([name, media]) => [name, media.key])),
+  };
 }

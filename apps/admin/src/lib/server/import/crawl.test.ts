@@ -31,6 +31,8 @@ describe("crawling a site", () => {
       { reason: "unreachable", page: "/cenik.pdf", detail: "404" },
     ]);
     expect(server?.hits.get("/admin/")).toBeUndefined();
+    expect(result.unreachable).toEqual([`${origin}/cenik.pdf`]);
+    expect(result.queue).toEqual([]);
     // Each page with its stylesheet, fetched once.
     expect(result.pages[0]?.css[0]).toContain("Brandon Grotesque");
     expect(server?.hits.get("/style.css")).toBe(1);
@@ -51,6 +53,22 @@ describe("crawling a site", () => {
       "/o-nas/",
     ]);
     expect(result.leftOut).toEqual([{ reason: "over-limit", detail: "5" }]);
+    // What a retry imports next, and the menu's pages among them.
+    expect(result.queue.map((url) => new URL(url).pathname)).toEqual([
+      "/akce/",
+      "/kontakt.html",
+      "/admin/",
+      "/en/",
+      "/cenik.pdf",
+    ]);
+    expect(result.menu.map((url) => new URL(url).pathname)).toEqual([
+      "/",
+      "/nase-pecivo/",
+      "/o-nas/",
+      "/akce/",
+      "/kontakt.html",
+      "/admin/",
+    ]);
     expect(progress.at(-1)).toEqual([3, 3]);
   });
 
