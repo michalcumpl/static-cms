@@ -47,6 +47,7 @@ function storeJobs(count: number): void {
   nodes.jobs_1 = {
     id: "jobs_1",
     type: "jobs",
+    hidden: false,
     heading: text("Volné pozice"),
     empty_note: text("Momentálně nikoho nehledáme."),
     items: list(ids),

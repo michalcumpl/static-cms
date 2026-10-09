@@ -1,7 +1,9 @@
 import { slugify, uniqueSlug } from "@webmio/model";
+import { pageFromLayout } from "@webmio/templates";
 import type { Document, Session, Transaction } from "svedit";
 import { checkLinkAddress, type LinkAddressCheck } from "./links";
 import { editorSchema } from "./schema";
+import { siteTemplate } from "./template";
 import { createRichText, list, text } from "./transforms";
 
 // Page and menu operations (design.md decision 6). Each one builds one transaction and applies
@@ -92,26 +94,43 @@ function setNavItems(tr: Tr, doc: Document, nodes: string[]): void {
 }
 
 /**
- * Adds a page with a slug made from its title, one text block, and a menu item at the end.
+ * Adds a page with a slug made from its title and a menu item at the end. The page starts with
+ * one text block, or with the blocks of `layoutId`, a layout of the site's template
+ * (template-system design decision 7); nothing in it refers back to the layout. One undo step.
  * Returns the new page's ID, or undefined when the title is empty.
  */
-export function addPage(session: Session, title: string): string | undefined {
+export function addPage(session: Session, title: string, layoutId?: string): string | undefined {
   const name = title.trim();
   if (name === "") return undefined;
   const doc = session.doc;
   const tr = session.tr;
-  const id = tr.generate_id();
-  tr.create({
-    id,
-    type: "page",
-    title: name,
-    slug: uniqueSlug(slugify(name), slugsExcept(doc)),
-    seo_description: "",
-    // Its own key: not paired with a page in another language.
-    translation_key: id,
-    share_image: list([]),
-    blocks: list([createRichText(tr)]),
-  });
+  const slug = uniqueSlug(slugify(name), slugsExcept(doc));
+  const made = layoutId
+    ? pageFromLayout(doc, siteTemplate(doc), layoutId, {
+        title: name,
+        slug,
+        newId: () => tr.generate_id(),
+      })
+    : undefined;
+  let id: string;
+  if (made) {
+    // Children first, the page last, as `pageFromLayout` orders them.
+    for (const node of made.nodes) tr.create(node as Parameters<Tr["create"]>[0]);
+    id = made.pageId;
+  } else {
+    id = tr.generate_id();
+    tr.create({
+      id,
+      type: "page",
+      title: name,
+      slug,
+      seo_description: "",
+      // Its own key: not paired with a page in another language.
+      translation_key: id,
+      share_image: list([]),
+      blocks: list([createRichText(tr)]),
+    });
+  }
   tr.set([doc.document_id, "pages"], list([...siteOf(doc).pages.nodes, id]));
   setNavItems(tr, doc, [...navItems(doc).nodes, createMenuItem(tr, id, name)]);
   session.apply(tr);

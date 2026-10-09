@@ -1,8 +1,13 @@
 # Layouts
 
 *Written 2026-10-07 from the five example sites migrated with `example-sites`; Scénografie and
-Punk Film added 2026-10-08. Input for
-`template-system`, which turns these recipes into data.*
+Punk Film added 2026-10-08. Input for `template-system`, which turned the shared recipes into
+data: `SHARED_LAYOUTS` in
+[`packages/templates/src/layouts.ts`](../packages/templates/src/layouts.ts), with starting texts
+in Czech and English. They keep to blocks that fill themselves from the site's data (no key
+figures, steps or logos, which would start empty), and Media / press isn't one of them yet. The
+template layouts below come with their templates (`template-creative` and the others). How
+layouts work in code: [`templates.md`](templates.md).*
 
 A **layout** is a page recipe: an ordered list of blocks with their settings and the collections
 they read, with no styling (strategy, "Templates, designs and layouts"). The recipes below are the

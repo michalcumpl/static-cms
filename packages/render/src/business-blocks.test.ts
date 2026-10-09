@@ -26,6 +26,7 @@ function addBlocks(nodes: LooseNodes) {
   nodes.contact_1 = {
     id: "contact_1",
     type: "contact",
+    hidden: false,
     heading: text("Kde nás najdete"),
     show_address: true,
     show_phone: true,
@@ -36,6 +37,7 @@ function addBlocks(nodes: LooseNodes) {
   nodes.hours_1 = {
     id: "hours_1",
     type: "opening_hours",
+    hidden: false,
     heading: text("Otevírací doba"),
     location_id: "",
   };

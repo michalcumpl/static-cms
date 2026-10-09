@@ -11,7 +11,13 @@ const list = (nodes: string[] = []) => ({ nodes, marks: [], annotations: [] });
 function site(urls: string[] = ["https://youtu.be/wNdrFte2T4w"]) {
   const { doc, nodes } = editableDemoSite();
   const ids = urls.map((url, i) => video(nodes, i + 1, url));
-  nodes.videos_1 = { id: "videos_1", type: "videos", heading: text("Filmy"), items: list(ids) };
+  nodes.videos_1 = {
+    id: "videos_1",
+    type: "videos",
+    hidden: false,
+    heading: text("Filmy"),
+    items: list(ids),
+  };
   nodes.page_contact.blocks.nodes.unshift("videos_1");
   return { doc, nodes };
 }

@@ -102,6 +102,7 @@ describe("image blocks", () => {
     nodes.rt_after = {
       id: "rt_after",
       type: "rich_text",
+      hidden: false,
       body: { nodes: ["sub_after"], marks: [], annotations: [] },
     };
     nodes.page_gallery.blocks.nodes = ["gallery_work", "rt_after"];

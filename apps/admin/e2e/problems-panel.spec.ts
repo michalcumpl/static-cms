@@ -26,6 +26,7 @@ function addEmptyHeadings(count: number) {
   doc.nodes.block_extra = {
     id: "block_extra",
     type: "rich_text",
+    hidden: false,
     body: { nodes: headings, marks: [], annotations: [] },
   };
   doc.nodes.page_home.blocks.nodes.push("block_extra");

@@ -283,6 +283,7 @@ describe("applySharedFields: locations", () => {
     en.nodes.contact_kh = {
       id: "contact_kh",
       type: "contact",
+      hidden: false,
       heading: { content: "Contact", marks: [], annotations: [] },
       show_address: true,
       show_phone: true,
@@ -385,6 +386,7 @@ describe("applySharedFields: projects (collection-pages)", () => {
     en.nodes.projects_1 = {
       id: "projects_1",
       type: "projects",
+      hidden: false,
       heading: text(""),
       show: "all",
       chosen: list([]),

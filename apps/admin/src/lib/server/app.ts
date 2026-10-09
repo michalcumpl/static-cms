@@ -1,6 +1,7 @@
 // The server's shared resources, created on first use. Tests swap them with the `use…` setters.
 import { RateLimiter, signInLimiter } from "./auth";
 import { type Db, openDatabase } from "./db/index";
+import { failInterruptedImports } from "./import/job";
 import { createMailer, type Mailer } from "./mail";
 import { upgradeProjects } from "./upgrade-projects";
 
@@ -18,6 +19,8 @@ export function getDb(): Db {
     try {
       const count = upgradeProjects(opened);
       if (count > 0) console.info(`Upgraded ${count} project(s) to the current document format.`);
+      // Imports run in this process: any still running were cut off when it stopped.
+      failInterruptedImports(opened);
     } catch (err) {
       console.error(err);
       throw err;

@@ -91,6 +91,7 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
   nodes.contact_1 = {
     id: "contact_1",
     type: "contact",
+    hidden: false,
     heading: { content: "Kontakt", marks: [], annotations: [] },
     show_address: true,
     show_phone: false,
@@ -110,6 +111,7 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
   nodes.testimonials_1 = {
     id: "testimonials_1",
     type: "testimonials",
+    hidden: false,
     heading: { content: "Reference", marks: [], annotations: [] },
     show: "all",
     chosen: { nodes: [], marks: [], annotations: [] },
@@ -126,6 +128,7 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
   nodes.faq_block = {
     id: "faq_block",
     type: "faq",
+    hidden: false,
     heading: { content: "Dotazy", marks: [], annotations: [] },
     show: "chosen",
     chosen: { nodes: ["faq_ref_gone"], marks: [], annotations: [] },
@@ -136,6 +139,7 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
   nodes.cta_1 = {
     id: "cta_1",
     type: "call_to_action",
+    hidden: false,
     heading: { content: "", marks: [], annotations: [] },
     text: { content: "", marks: [], annotations: [] },
     actions: { nodes: [], marks: [], annotations: [] },
@@ -160,6 +164,7 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
   nodes.figures_1 = {
     id: "figures_1",
     type: "figures",
+    hidden: false,
     heading: text(""),
     items: { nodes: ["figure_1", "figure_2"], marks: [], annotations: [] },
   };
@@ -167,6 +172,7 @@ function brokenSite(): { doc: unknown; nodes: LooseNodes } {
   nodes.steps_1 = {
     id: "steps_1",
     type: "steps",
+    hidden: false,
     heading: text(""),
     items: { nodes: ["step_1"], marks: [], annotations: [] },
   };

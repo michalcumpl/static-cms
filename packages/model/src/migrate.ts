@@ -1,3 +1,4 @@
+import { siteSchema } from "./schema/index.js";
 import { slugify, uniqueSlug } from "./slug.js";
 
 type RawNode = { type?: unknown; [key: string]: unknown };
@@ -15,7 +16,8 @@ type RawDoc = { document_id: string; nodes: Record<string, RawNode> };
  * version 8 moves the business's contact details and opening hours into its one location, and
  * lets contact and opening hours blocks show all locations; version 9 stores each block's look;
  * version 10 adds projects and item pages, none to begin with; version 11 gives heroes slides;
- * version 12 gives every image a centred focal point.
+ * version 12 gives every image a centred focal point; version 13 gives the site the Standard
+ * template at release 1 and shows every block.
  * Anything that isn't a site of an older version is returned unchanged, for validation to
  * judge. The input is not modified.
  */
@@ -33,6 +35,7 @@ export function migrateSite(doc: unknown): unknown {
   if (siteOf(current)?.schema_version === 9) current = toVersion10(current);
   if (siteOf(current)?.schema_version === 10) current = toVersion11(current);
   if (siteOf(current)?.schema_version === 11) current = toVersion12(current);
+  if (siteOf(current)?.schema_version === 12) current = toVersion13(current);
   return current;
 }
 
@@ -377,6 +380,30 @@ function toVersion12<T extends RawDoc>(doc: T): T {
     }
   }
   upgraded[doc.document_id] = { ...site, schema_version: 12 };
+  return { ...doc, nodes: upgraded };
+}
+
+/** The block types a page's blocks can have: the ones with a `hidden` switch from version 13. */
+const PAGE_BLOCK_TYPES = new Set<unknown>(siteSchema.page.properties.blocks.node_types);
+
+/**
+ * Version 13 (template-system): the site uses the Standard template at release 1, which looks
+ * exactly like version 12, and every block is shown.
+ */
+function toVersion13<T extends RawDoc>(doc: T): T {
+  const site = siteOf(doc) as RawNode;
+  const upgraded: Record<string, RawNode> = { ...doc.nodes };
+  for (const [id, node] of Object.entries(doc.nodes)) {
+    if (isObject(node) && PAGE_BLOCK_TYPES.has(node.type)) {
+      upgraded[id] = { ...(node as RawNode), hidden: false };
+    }
+  }
+  upgraded[doc.document_id] = {
+    ...site,
+    schema_version: 13,
+    template: "standard",
+    template_release: 1,
+  };
   return { ...doc, nodes: upgraded };
 }
 

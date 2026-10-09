@@ -16,6 +16,7 @@ function site() {
   nodes.cta_1 = {
     id: "cta_1",
     type: "call_to_action",
+    hidden: false,
     heading: text("Upečeme vám dort"),
     text: text("Na objednávku do tří dnů."),
     actions: list([
@@ -53,6 +54,7 @@ function site() {
   nodes.testimonials_1 = {
     id: "testimonials_1",
     type: "testimonials",
+    hidden: false,
     heading: text("Co o nás říkají"),
     show: "all",
     chosen: list([]),
@@ -165,6 +167,7 @@ describe("key figures and steps (figures-and-steps)", () => {
     nodes.figures_1 = {
       id: "figures_1",
       type: "figures",
+      hidden: false,
       heading: text(""),
       items: list(figureIds),
     };
@@ -177,6 +180,7 @@ describe("key figures and steps (figures-and-steps)", () => {
     nodes.steps_1 = {
       id: "steps_1",
       type: "steps",
+      hidden: false,
       heading: text("Jak to funguje"),
       items: list(stepIds),
     };

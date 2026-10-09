@@ -1,3 +1,6 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { openDatabase } from "./index";
@@ -13,10 +16,13 @@ describe("openDatabase", () => {
       .sort();
     expect(tables).toEqual([
       "hosting_connections",
+      "import_retries",
+      "imports",
       "invitations",
       "login_tokens",
       "media",
       "memberships",
+      "page_origins",
       "project_hosting",
       "projects",
       "publish_documents",
@@ -27,6 +33,37 @@ describe("openDatabase", () => {
       "versions",
       "workspaces",
     ]);
+  });
+
+  it("adds the import tables to an existing database, and drops a project's origins with it", () => {
+    const file = join(mkdtempSync(join(tmpdir(), "db-")), "app.db");
+    openDatabase(file).run(
+      sql`insert into workspaces (id, name, created_at) values ('w_1', 'W', 0)`,
+    );
+    const db = openDatabase(file);
+    db.run(
+      sql`insert into projects (id, workspace_id, name, created_at) values ('p_1', 'w_1', 'P', 0)`,
+    );
+    db.run(sql`insert into page_origins values ('p_1', 'cs', 'page_1', '/kontakt.html')`);
+    db.run(
+      sql`insert into imports (id, workspace_id, address, state, project_id, started_at) values ('i_1', 'w_1', 'https://x.cz/', 'done', 'p_1', 0)`,
+    );
+    db.run(sql`delete from projects where id = 'p_1'`);
+    expect(db.all(sql`select * from page_origins`)).toEqual([]);
+    expect(db.get(sql`select project_id, review_dismissed from imports`)).toEqual({
+      project_id: null,
+      review_dismissed: 0,
+    });
+    // import-review-actions: what a retry needs, empty for imports made before it.
+    expect(db.get(sql`select retry_state, import_version_id from imports`)).toEqual({
+      retry_state: null,
+      import_version_id: null,
+    });
+    db.run(
+      sql`insert into import_retries (id, import_id, kind, state, started_at) values ('rt_1', 'i_1', 'again', 'done', 0)`,
+    );
+    db.run(sql`delete from imports where id = 'i_1'`);
+    expect(db.all(sql`select * from import_retries`)).toEqual([]);
   });
 
   it("keeps one media row per file content and project", () => {

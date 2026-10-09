@@ -1,5 +1,6 @@
 import { migrateSite } from "@webmio/model";
 import { type LooseNodes, loadFixture } from "@webmio/model/testing";
+import { upgradeSite } from "@webmio/templates";
 import { describe, expect, it } from "vitest";
 import { renderSite } from "./index.js";
 
@@ -41,5 +42,15 @@ describe("pages of an upgraded version-6 document", () => {
     const [homeHtml, contactHtml] = result.site.pages.map((page) => page.html);
     expect(serviceNames(homeHtml)).toEqual(["Chléb", "Rohlíky"]);
     expect(serviceNames(contactHtml)).toEqual(["Chléb", "Rohlíky", "Dorty"]);
+  });
+});
+
+describe("pages of an upgraded version-12 document (template-system)", () => {
+  it("Upgrade the bakery: every page renders exactly as before", () => {
+    // The demo site's pages are pinned by the snapshots, unchanged by template-system.
+    const upgraded = renderSite(upgradeSite(loadFixture("demo-site-v12.json")));
+    const current = renderSite(loadFixture("demo-site.json"));
+    if (!upgraded.ok || !current.ok) throw new Error("render failed");
+    expect(upgraded.site).toEqual(current.site);
   });
 });

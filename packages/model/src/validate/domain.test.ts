@@ -55,10 +55,10 @@ describe("validateSite: site rules", () => {
     expect(validateSite(loadFixture("demo-site-v5.json")).valid).toBe(false);
   });
 
-  it("rejects schema version 11, which must be upgraded first", () => {
-    expect(errors(loadFixture("demo-site-v11.json")).map((p) => p.code)).toContain(
-      "unsupported-version",
-    );
+  it("rejects schema versions 11 and 12, which must be upgraded first", () => {
+    for (const name of ["demo-site-v11.json", "demo-site-v12.json"]) {
+      expect(errors(loadFixture(name)).map((p) => p.code)).toContain("unsupported-version");
+    }
   });
 
   it("reports two pages with the same translation key, naming both", () => {
@@ -475,7 +475,12 @@ describe("validateSite: site rules", () => {
     nodes.image_hero.alt = "";
     const result = validateSite(doc);
     expect(result.valid).toBe(false);
-    expect(result.problems.map((p) => p.code).sort()).toEqual(["duplicate-slug", "missing-alt"]);
+    // The added page has no blocks.
+    expect(result.problems.map((p) => p.code).sort()).toEqual([
+      "duplicate-slug",
+      "missing-alt",
+      "page-shows-nothing",
+    ]);
   });
 });
 

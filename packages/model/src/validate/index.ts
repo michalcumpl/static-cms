@@ -1,7 +1,8 @@
-import { checkSiteRules } from "./domain.js";
+import { checkSiteRules, type ValidateOptions } from "./domain.js";
 import { checkStructure } from "./generic.js";
 import { Problems, type ValidationResult } from "./problems.js";
 
+export type { ValidateOptions } from "./domain.js";
 export type {
   Problem,
   ProblemCategory,
@@ -15,11 +16,11 @@ export { problem, problemCategory } from "./problems.js";
  * Checks a site document (any JSON value) against the schema and the site rules.
  * Reports every problem found; the document is valid when none of them is an error.
  */
-export function validateSite(input: unknown): ValidationResult {
+export function validateSite(input: unknown, options: ValidateOptions = {}): ValidationResult {
   const problems = new Problems();
   const check = checkStructure(input, problems);
   if (check) {
-    checkSiteRules((input as { document_id: string }).document_id, check, problems);
+    checkSiteRules((input as { document_id: string }).document_id, check, problems, options);
   }
   return problems.result();
 }

@@ -55,8 +55,17 @@ export const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as con
 const INLINE_MARKS: readonly NodeType[] = ["strong", "emphasis", "link", "internal_link"];
 const LINK_TYPES: readonly NodeType[] = ["page_link", "external_link"];
 
+/**
+ * The properties every page block has: `hidden` keeps the block in its page but off the website
+ * (template-system design decision 4).
+ */
+const PAGE_BLOCK = {
+  hidden: { type: "boolean", default: false },
+} as const;
+
 /** The properties every collection block has (business-collections design decision 2). */
 const COLLECTION_BLOCK = {
+  ...PAGE_BLOCK,
   heading: { type: "text", allow_newlines: false },
   show: { type: "string", values: COLLECTION_SHOW, default: "all" },
   /** `item_ref` nodes; used only when `show` is `chosen`. */
@@ -71,7 +80,7 @@ export const siteSchema = {
   site: {
     kind: "document",
     properties: {
-      schema_version: { type: "integer", min: 1, default: 12 },
+      schema_version: { type: "integer", min: 1, default: 13 },
       name: { type: "string" },
       lang: { type: "string" },
       base_url: { type: "string" },
@@ -85,6 +94,10 @@ export const siteSchema = {
       theme: { type: "node", node_types: ["theme"] },
       nav: { type: "node", node_types: ["nav"] },
       business: { type: "node", node_types: ["business"] },
+      /** The ID of the site's template (see `@webmio/templates`), such as `standard`. */
+      template: { type: "string" },
+      /** The release of the template the site was last upgraded to. */
+      template_release: { type: "integer", min: 1, default: 1 },
       /** The site's collections: each item is held once, and blocks show it. */
       services: {
         type: "node_array",
@@ -195,6 +208,7 @@ export const siteSchema = {
   hero: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       text: { type: "text", mark_types: ["strong", "emphasis"], allow_newlines: false },
       image: { type: "node_array", node_types: ["image"] },
@@ -221,6 +235,7 @@ export const siteSchema = {
   rich_text: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       body: {
         type: "node_array",
         node_types: ["paragraph", "subheading", "list"],
@@ -279,6 +294,7 @@ export const siteSchema = {
   text_with_image: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       body: {
         type: "node_array",
@@ -292,6 +308,7 @@ export const siteSchema = {
   gallery: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       items: { type: "node_array", node_types: ["gallery_item"] },
       image_fit: { type: "string", values: GALLERY_IMAGE_FITS, default: "fill" },
@@ -323,6 +340,7 @@ export const siteSchema = {
   logos: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       items: { type: "node_array", node_types: ["logo_item"] },
     },
@@ -341,6 +359,7 @@ export const siteSchema = {
   contact: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       show_address: { type: "boolean", default: true },
       show_phone: { type: "boolean", default: true },
@@ -353,6 +372,7 @@ export const siteSchema = {
   opening_hours: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       /** A location of the business, or "" for all of them. */
       location_id: { type: "string" },
@@ -361,6 +381,7 @@ export const siteSchema = {
   call_to_action: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       text: { type: "text", allow_newlines: false },
       /** One or two buttons; added and removed only through the button panel. */
@@ -390,6 +411,7 @@ export const siteSchema = {
   figures: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       items: { type: "node_array", node_types: ["figure"], default_node_type: "figure" },
     },
@@ -405,6 +427,7 @@ export const siteSchema = {
   steps: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       items: { type: "node_array", node_types: ["step"], default_node_type: "step" },
     },
@@ -466,6 +489,7 @@ export const siteSchema = {
   cards: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       /** `below`: the image, then the title and text; `over`: the title over the image. */
       layout: { type: "string", values: CARDS_LAYOUTS, default: "below" },
@@ -488,6 +512,7 @@ export const siteSchema = {
   videos: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       items: { type: "node_array", node_types: ["video"], default_node_type: "video" },
     },
@@ -506,6 +531,7 @@ export const siteSchema = {
   jobs: {
     kind: "block",
     properties: {
+      ...PAGE_BLOCK,
       heading: { type: "text", allow_newlines: false },
       empty_note: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
       items: { type: "node_array", node_types: ["job"], default_node_type: "job" },

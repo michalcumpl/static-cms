@@ -29,6 +29,7 @@ import {
   moveSelectedNode,
 } from "./structure";
 import type { BlockType } from "./transforms";
+import { setBlockHidden } from "./visibility";
 
 // Class names start with `cs-` so the site stylesheet (`.block`, `.add`…) never styles them.
 // Handles and "+ Add block" points on the canvas (canvas-structure design.md decisions 1–3, 7
@@ -69,6 +70,26 @@ const blockIds = $derived(
     : ((session.get(blocksPath) as { nodes: string[] } | undefined)?.nodes ?? []),
 );
 const blockTypes = $derived(blockIds.map((id) => session.get(id) as { type: string }));
+// Hidden blocks stay in place, dimmed, with a label saying they aren't on the website
+// (template-system design decision 9). The label isn't part of the document.
+const hiddenPaths = $derived(
+  blockIds.flatMap((id, index) =>
+    (session.get(id) as { hidden?: boolean } | undefined)?.hidden
+      ? [serialize_path([...blocksPath, index])]
+      : [],
+  ),
+);
+$effect(() => {
+  const element = canvas;
+  if (!element) return;
+  const hidden = new Set(hiddenPaths);
+  for (const node of element.querySelectorAll<HTMLElement>('[data-type="node"][data-path]')) {
+    const path = node.dataset.path ?? "";
+    // Only the page's blocks: their path is the blocks list plus an index.
+    if (hidden.has(path)) node.dataset.hidden = "";
+    else if (node.dataset.hidden !== undefined) delete node.dataset.hidden;
+  }
+});
 
 // The selection wins over the pointer, so the handles can be reached without hovering.
 const targets = $derived.by(() => {
@@ -271,6 +292,11 @@ function menuEntries(kind: "block" | "item", target: HandleTarget): MenuEntry[] 
     },
   ];
   if (kind === "block") {
+    const hidden = (session.get(target.id) as { hidden?: boolean } | undefined)?.hidden === true;
+    entries.splice(3, 0, {
+      label: i18n.t(hidden ? "editor.visibility.show" : "editor.visibility.hide"),
+      run: after(() => setBlockHidden(session, target.id, !hidden)),
+    });
     const anchor = `--handle-${kind}`;
     for (const [label, index] of [
       [i18n.t("editor.handles.addAbove"), target.index],
@@ -322,6 +348,12 @@ const pickerEntries = $derived.by((): MenuEntry[] => {
 </script>
 
 <div class="canvas-overlay">
+  {#each hiddenPaths as path (path)}
+    <p class="cs-hidden-label" style="position-anchor: --{path};">
+      <strong>{i18n.t("editor.visibility.label")}</strong> · {i18n.t("editor.visibility.labelDetail")}
+    </p>
+  {/each}
+
   {#each [["block", targets.block], ["item", targets.item]] as const as [kind, target] (kind)}
     {#if target}
       <button
@@ -426,6 +458,21 @@ const pickerEntries = $derived.by((): MenuEntry[] => {
 
   .cs-add.cs-bottom {
     top: anchor(bottom);
+  }
+
+  .cs-hidden-label {
+    position: absolute;
+    z-index: 19;
+    top: calc(anchor(top) + 0.4rem);
+    right: calc(anchor(right) + 0.5rem);
+    margin: 0;
+    padding: 0.25rem 0.6rem;
+    font: 0.8rem/1.2 var(--ui-font);
+    color: var(--ui-attention);
+    background: var(--ui-attention-soft);
+    border: 1px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-pill);
+    pointer-events: none;
   }
 
   .cs-handle:hover,

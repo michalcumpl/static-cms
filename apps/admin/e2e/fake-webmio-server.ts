@@ -5,7 +5,7 @@ import { mkdirSync } from "node:fs";
 import { createServer } from "node:http";
 import { resetFakeHosting, serveFake } from "../src/lib/server/publishing/webmio-fake";
 
-const port = Number(process.argv[2] ?? 5196);
+const port = Number(process.argv[2] ?? 5194);
 const dir = process.env.WEBMIO_HOSTING_FAKE_DIR ?? "";
 const sitesDomain = process.env.WEBMIO_SITES_DOMAIN || "webmio.site";
 if (!dir) throw new Error("WEBMIO_HOSTING_FAKE_DIR is not set");

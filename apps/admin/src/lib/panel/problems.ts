@@ -42,3 +42,50 @@ export function problemHref(paths: ProjectPaths, doc: Doc, problem: Problem): st
     ...(problem.property ? { property: problem.property } : {}),
   });
 }
+
+/** A problem with where it is fixed. */
+export type LinkedProblem = Problem & { href: string };
+
+/** Problems of one code: one alone, or several shown as one item with each under it. */
+export interface ProblemGroup {
+  severity: Problem["severity"];
+  code: Problem["code"];
+  /** Where the whole group is fixed at once, when one place does (a site's description). */
+  href: string;
+  problems: LinkedProblem[];
+}
+
+/**
+ * The problems with the same code together, in the order their first one came. Pages without a
+ * description are fixed at once by the site's description, so their group leads there.
+ */
+export function groupProblems(
+  paths: ProjectPaths,
+  doc: Doc,
+  problems: readonly LinkedProblem[],
+): ProblemGroup[] {
+  const groups = new Map<string, ProblemGroup>();
+  for (const problem of problems) {
+    const key = `${problem.severity}:${problem.code}`;
+    const group = groups.get(key);
+    if (group) group.problems.push(problem);
+    else {
+      groups.set(key, {
+        severity: problem.severity,
+        code: problem.code,
+        href: problem.href,
+        problems: [problem],
+      });
+    }
+  }
+  for (const group of groups.values()) {
+    if (group.code === "no-description" && group.problems.length > 1) {
+      group.href = problemHref(paths, doc, {
+        ...(group.problems[0] as Problem),
+        nodeId: doc.document_id,
+        property: "description",
+      });
+    }
+  }
+  return [...groups.values()];
+}

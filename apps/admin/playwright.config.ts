@@ -11,6 +11,9 @@ const dataDir = process.env.E2E_DATA_DIR;
 const port = 5198;
 /** The fake Netlify API the dev server publishes to (src/lib/server/publishing/fake-netlify.ts). */
 const netlifyPort = 5197;
+/** The import's fixture websites (e2e/fixture-sites.ts): the bakery, and a site built by a script. */
+export const bakeryPort = 5196;
+export const spaPort = 5195;
 
 export const e2eEnv = {
   DATABASE_PATH: join(dataDir, "app.db"),
@@ -23,6 +26,8 @@ export const e2eEnv = {
   SECRET_KEY: "e2e-secret-key-that-is-long-enough-1234",
   // Webmio hosting on a folder, off until a test switches it on (e2e/fixtures.ts).
   WEBMIO_HOSTING_FAKE_DIR: join(dataDir, "webmio"),
+  // The dev server may import from the fixture sites (site-import); production never reads this.
+  E2E_IMPORT_ALLOW_HOSTS: `127.0.0.1:${bakeryPort},127.0.0.1:${spaPort}`,
 };
 Object.assign(process.env, e2eEnv);
 
@@ -55,6 +60,12 @@ export default defineConfig({
       command: `tsx e2e/fake-webmio-server.ts ${webmioPort}`,
       url: `http://127.0.0.1:${webmioPort}/__fake/ready`,
       env: e2eEnv,
+      reuseExistingServer: false,
+      timeout: 30_000,
+    },
+    {
+      command: `tsx e2e/fixture-sites.ts ${bakeryPort} ${spaPort}`,
+      url: `http://127.0.0.1:${bakeryPort}/robots.txt`,
       reuseExistingServer: false,
       timeout: 30_000,
     },

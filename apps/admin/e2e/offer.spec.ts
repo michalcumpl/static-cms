@@ -37,6 +37,7 @@ function storeHighlights(): void {
   doc.nodes.services_all = {
     id: "services_all",
     type: "services",
+    hidden: false,
     layout: "cards",
     heading: text("Všechny služby"),
     show: "all",

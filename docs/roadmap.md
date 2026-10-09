@@ -18,16 +18,18 @@ about their business, and we keep a fast, valid, always-working website live. Wh
 Questions and loose ends that have no change yet are in [`tasks.md`](tasks.md); what the example
 sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
 
-## Where we are (2026-10-08)
+## Where we are (2026-10-09)
 
 - **Built:** the site document, validation, rendering and export; on-page editing with Svedit;
-  pages and menus, media, SEO, theme, version history, languages; publishing to Netlify;
-  business data as collections with locations; the business control panel; 18 block types with
-  their looks, from key figures to the hero slideshow; the seven example sites, loaded locally;
-  cropping and turning images, and a focal point for each use of an image.
-- **Next:** `guided-setup` and the rest of phase 4 (templates).
-  `own-hosting` (phase 5) doesn't depend on phases 3–4 and can start any time; it is the longest
-  pole before the beta.
+  pages and menus, media, SEO, theme, version history, languages; publishing to our own
+  hosting (S3 and CloudFront, `<site>.webmio.site`, custom domains), with Netlify for websites
+  already there; business data as collections with locations; the business control panel; 18
+  block types with their looks, from key figures to the hero slideshow; the seven example
+  sites, loaded locally; cropping and turning images, and a focal point for each use of an
+  image; templates (the Standard template, layouts for new pages, blocks hidden from the
+  website); importing a website from its address.
+- **Next:** `guided-setup` and the rest of phase 4 (templates); `safe-publishing` finishes
+  phase 5. Our hosting runs in the `dev` stack; `prod` is deployed before the beta.
 - **Private beta** (phase 7) when phases 3–6 work with at least two launch templates.
 
 ## Phases
@@ -74,8 +76,11 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
 | [`example-sites`](../openspec/changes/archive/2026-10-08-example-sites/) | `pnpm admin load-site`; the seven launch examples loaded locally | Done |
 | [`image-cropping`](../openspec/changes/archive/2026-10-08-image-cropping/) | crop, focal point and rotation in the media library | Done |
 | `guided-setup` | the "Tell us about your business" wizard | Planned |
-| `site-import` | import a public website by its address (version 1, no AI), reviewed before publishing | Planned |
-
+| [`site-import`](../openspec/changes/archive/2026-10-09-site-import/) | import a public website by its address (version 1, no AI), reviewed before publishing; see [`import-mapping.md`](import-mapping.md) | Done |
+| [`import-review-actions`](../openspec/changes/archive/2026-10-09-import-review-actions/) | the import review's retry (failed pages and images, the next pages) and fixes (images marked decorative, subheading levels); the same problem grouped ("13 pages have no description", leading to the site's description); and import fixes found on marespartners.cz (a logo and photo drawn by CSS, a black-and-white theme for a site without colours, the site description from the first paragraph) | Done |
+| `import-languages` | "Import the Czech version": another language version of the old site as a project language, pages paired through the language switcher's links; and choosing which language is primary before importing | Planned |
+| `import-existing-blocks` | the import fills blocks Webmio already has: grids of repeated cards (image, title, text, link) as a `cards` block instead of one gallery per card (found on vroomagazine, a stress test, not a target site), key figures, numbered steps, map embeds, booking buttons, opening hours, and award or partner logos in the footer as a logos block (Mareš's awards) | Planned |
+| `banner-block` | a full-width image with a heading, text and a button anywhere on a page (the hero is first only); the import maps mid-page "hero" bands to it | Planned |
 ### 4. Templates as website systems · In progress
 
 Blocks the example sites need come first, because the templates render them
@@ -93,7 +98,7 @@ Blocks the example sites need come first, because the templates render them
 | [`jobs`](../openspec/changes/archive/2026-10-08-jobs/) | job openings with a folded description and a contact | Done |
 | `documents` | PDFs in the media library, a documents block, links to documents from texts | Planned |
 | `business-details` | business types, company and regulatory details, billing address and bank details, check-in and check-out times | Planned |
-| `template-system` | the template contract, layouts (also offered by "Add page"), homepage sections on or off, template versions | Planned |
+| [`template-system`](../openspec/changes/archive/2026-10-09-template-system/) | the template contract and the Standard template, layouts (also offered by "Add page"), homepage sections on or off, template releases; see [`templates.md`](templates.md) | Done |
 | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | Planned |
 | `template-creative`, `template-education`, `template-law`, `template-finance`, `template-investment`, `template-rentals`, `template-exhibitions` | the seven launch templates, each checked against its example site; two before the beta | Planned |
 | `template-switching` | choose another template, preview it with your own content, publish | Planned |
@@ -138,6 +143,7 @@ Blocks the example sites need come first, because the templates render them
 | `agencies` | an agency account sets up client websites; clients get the simple panel | After the beta |
 | `ai-assist` | suggested alt and SEO texts, filling in the business, edits in plain words, translation | After the beta |
 | `site-import` version 2 | AI sorts imported texts into services, team, testimonials and FAQs | After the beta |
+| `import-insights` | each import records what it couldn't map (embeds, forms, section patterns, layouts) with a snapshot; the operator console groups them across imports as candidates for new blocks, looks and templates | After the beta |
 | `template-local-services`, `template-hospitality`, `template-personal-professional` | the templates after launch | After the beta |
 
 ## Decisions

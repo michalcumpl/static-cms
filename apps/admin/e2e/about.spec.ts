@@ -35,6 +35,7 @@ function storeTeam(options: { jana?: boolean } = {}): void {
   doc.nodes.team_all = {
     id: "team_all",
     type: "team",
+    hidden: false,
     layout: "cards",
     heading: text("Náš tým"),
     show: "all",
@@ -57,6 +58,7 @@ function storeTeam(options: { jana?: boolean } = {}): void {
     doc.nodes.team_pick = {
       id: "team_pick",
       type: "team",
+      hidden: false,
       layout: "cards",
       heading: text("Kdo peče"),
       show: "chosen",

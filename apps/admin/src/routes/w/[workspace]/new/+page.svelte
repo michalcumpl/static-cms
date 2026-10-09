@@ -6,8 +6,12 @@ import Page from "$lib/ui/Page.svelte";
 import PageHeader from "$lib/ui/PageHeader.svelte";
 import type { PageProps } from "./$types";
 
+// Two ways to a new website, side by side (accounts, "Projects"): empty, or from the owner's
+// current website by its address (site-import, "Starting an import").
 let { data, form }: PageProps = $props();
 const i18n = getI18n();
+const importError = $derived(form && "importError" in form ? form.importError : undefined);
+const nameMissing = $derived(Boolean(form && "missing" in form && form.missing));
 </script>
 
 <svelte:head>
@@ -20,33 +24,73 @@ const i18n = getI18n();
     breadcrumb={[{ href: "/", label: i18n.t("projects.title") }]}
     breadcrumbLabel={i18n.t("common.breadcrumb")}
   />
-  <Card>
-    <form method="POST">
-      <div class="field">
-        <label for="name">{i18n.t("newProject.name")}</label>
-        <input
-          id="name"
-          name="name"
-          required
-          defaultValue={form?.name ?? ""}
-          aria-invalid={form?.missing ? "true" : undefined}
-          aria-describedby={form?.missing ? "name-error" : "name-hint"}
-        />
-        <p id="name-hint" class="hint">{i18n.t("newProject.nameHint")}</p>
-        {#if form?.missing}
-          <p id="name-error" class="error" role="alert">{i18n.t("newProject.missing")}</p>
+  <div class="ways">
+    <Card>
+      <form method="POST" action="?/empty" aria-labelledby="empty-title">
+        <h2 id="empty-title">{i18n.t("newProject.empty")}</h2>
+        <div class="field">
+          <label for="name">{i18n.t("newProject.name")}</label>
+          <input
+            id="name"
+            name="name"
+            required
+            defaultValue={form && "name" in form ? (form.name ?? "") : ""}
+            aria-invalid={nameMissing ? "true" : undefined}
+            aria-describedby={nameMissing ? "name-error" : "name-hint"}
+          />
+          <p id="name-hint" class="hint">{i18n.t("newProject.nameHint")}</p>
+          {#if nameMissing}
+            <p id="name-error" class="error" role="alert">{i18n.t("newProject.missing")}</p>
+          {/if}
+        </div>
+        <div><Button type="submit" kind="primary" icon="plus">{i18n.t("newProject.create")}</Button></div>
+      </form>
+    </Card>
+    <Card>
+      <form method="POST" action="?/import" aria-labelledby="import-title">
+        <h2 id="import-title">{i18n.t("newProject.fromWebsite")}</h2>
+        <p class="hint">{i18n.t("newProject.fromWebsiteText")}</p>
+        <div class="field">
+          <label for="address">{i18n.t("newProject.address")}</label>
+          <input
+            id="address"
+            name="address"
+            inputmode="url"
+            autocomplete="url"
+            placeholder={i18n.t("newProject.addressExample")}
+            defaultValue={form && "address" in form ? (form.address ?? "") : ""}
+            aria-invalid={importError ? "true" : undefined}
+            aria-describedby={importError ? "import-error" : undefined}
+          />
+        </div>
+        <label class="check">
+          <input type="checkbox" name="confirm" />
+          {i18n.t("newProject.confirm")}
+        </label>
+        {#if importError}
+          <p id="import-error" class="error" role="alert">{importError}</p>
         {/if}
-      </div>
-      <div><Button type="submit" kind="primary" icon="plus">{i18n.t("newProject.create")}</Button></div>
-    </form>
-  </Card>
+        <div><Button type="submit" kind="primary" icon="globe">{i18n.t("newProject.import")}</Button></div>
+      </form>
+    </Card>
+  </div>
 </Page>
 
 <style>
+  .ways {
+    display: grid;
+    gap: var(--ui-space-5);
+  }
+
   form {
     display: flex;
     flex-direction: column;
     gap: var(--ui-space-4);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: var(--ui-text-lg);
   }
 
   .field {
@@ -60,7 +104,18 @@ const i18n = getI18n();
     font-weight: 600;
   }
 
-  input {
+  .check {
+    display: flex;
+    gap: var(--ui-space-2);
+    align-items: flex-start;
+    font-weight: 400;
+  }
+
+  .check input {
+    margin-top: 0.2rem;
+  }
+
+  input:not([type="checkbox"]) {
     min-height: var(--ui-control);
     padding: 0 var(--ui-space-3);
     border: 1px solid var(--ui-border-strong);

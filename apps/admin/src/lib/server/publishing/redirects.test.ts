@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { pageOrigins } from "../db/schema";
 import { demoSite } from "../demo";
-import { pageAddresses, redirectsFrom } from "./redirects";
+import { useTestProject } from "../test-project";
+import { earlierAddresses, pageAddresses, redirectsFrom, redirectsFromOrigins } from "./redirects";
 
 // biome-ignore lint/suspicious/noExplicitAny: tests edit nodes freely.
 type Doc = { nodes: Record<string, any> };
@@ -49,6 +51,56 @@ describe("redirectsFrom", () => {
     const back = demo();
     expect(redirectsFrom([demo(), second], back)).toEqual([
       { from: "/napiste-nam/", to: "/kontakt/" },
+    ]);
+  });
+});
+
+describe("redirectsFromOrigins (site-import)", () => {
+  it("Imported page: its path on the old site redirects to its address", () => {
+    const origins = [
+      { pageId: "page_home", path: "/" },
+      { pageId: "page_contact", path: "/kontakt.html" },
+    ];
+    expect(redirectsFromOrigins(origins, demo())).toEqual([
+      { from: "/kontakt.html", to: "/kontakt/" },
+    ]);
+  });
+
+  it("Imported page deleted: no redirect", () => {
+    const now = demo();
+    now.nodes.site_1.pages.nodes = ["page_home"];
+    delete now.nodes.page_contact;
+    expect(redirectsFromOrigins([{ pageId: "page_contact", path: "/pecivo.php" }], now)).toEqual(
+      [],
+    );
+  });
+
+  it("skips paths with a query, paths in use, and paths already redirected", () => {
+    const origins = [
+      { pageId: "page_contact", path: "/?page_id=12" },
+      { pageId: "page_contact", path: "/kontakt/" },
+      { pageId: "page_home", path: "/index.php" },
+    ];
+    expect(redirectsFromOrigins(origins, demo(), new Set(["/index.php"]))).toEqual([]);
+  });
+});
+
+describe("earlierAddresses with imported pages", () => {
+  const project = useTestProject();
+
+  it("adds the project's old-site paths, under the language's addresses", () => {
+    const { db, projectId } = project();
+    db.insert(pageOrigins)
+      .values([
+        { projectId, lang: "cs", pageId: "page_contact", path: "/kontakt.html" },
+        { projectId, lang: "en", pageId: "page_contact", path: "/contact.html" },
+      ])
+      .run();
+    expect(earlierAddresses(db, projectId, "cs", demo())).toEqual([
+      { from: "/kontakt.html", to: "/kontakt/" },
+    ]);
+    expect(earlierAddresses(db, projectId, "en", demo(), "/en/")).toEqual([
+      { from: "/contact.html", to: "/en/kontakt/" },
     ]);
   });
 });

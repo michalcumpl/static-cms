@@ -47,6 +47,7 @@ function twoShops(options: { contact?: string; hours?: string; heading?: string 
   nodes.contact_1 = {
     id: "contact_1",
     type: "contact",
+    hidden: false,
     heading: text(options.heading ?? "Kde nás najdete"),
     show_address: true,
     show_phone: true,
@@ -57,6 +58,7 @@ function twoShops(options: { contact?: string; hours?: string; heading?: string 
   nodes.hours_1 = {
     id: "hours_1",
     type: "opening_hours",
+    hidden: false,
     heading: text("Otevírací doba"),
     location_id: options.hours ?? "",
   };

@@ -1,4 +1,6 @@
 import { FONTS, type FontId, isFontId } from "@webmio/model";
+import type { Localized } from "@webmio/templates";
+import { siteTemplate } from "$lib/editor/template";
 
 // What the panel's cards say about a saved site (control-panel design decisions 3 and 7). Pure
 // functions of the document, so the dashboard's server load and the Website page share them.
@@ -9,6 +11,8 @@ type Doc = { document_id: string; nodes: Record<string, any> };
 const ids = (value: unknown): string[] => (value as { nodes?: string[] } | undefined)?.nodes ?? [];
 
 export interface DesignSummary {
+  /** The site's template, named and described in both interface languages (template-system). */
+  template: { name: Localized; description: Localized };
   /** Primary, secondary, background and text, as the theme stores them. */
   colors: string[];
   headingFont: string;
@@ -24,7 +28,9 @@ export function designSummary(doc: Doc): DesignSummary {
   const theme = doc.nodes[site.theme] ?? {};
   const logoId = ids(site.logo)[0];
   const logo = logoId ? doc.nodes[logoId] : undefined;
+  const { name, description } = siteTemplate(doc);
   return {
+    template: { name, description },
     colors: [
       theme.color_primary,
       theme.color_secondary,

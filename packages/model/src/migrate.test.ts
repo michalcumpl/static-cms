@@ -51,8 +51,23 @@ const COLLECTION_OF = { services: "services", team: "team", testimonials: "testi
  * An upgraded document as version 7 had it: the business's one location folded back into the
  * business, and no location choice on blocks.
  */
+/** An upgraded document as version 12 had it: no template, and blocks without `hidden`. */
+function asVersion12(upgraded: { nodes: LooseNodes }): { nodes: LooseNodes } {
+  const nodes: LooseNodes = { ...upgraded.nodes };
+  for (const [id, node] of Object.entries(nodes)) {
+    if ("hidden" in node) {
+      const { hidden: _hidden, ...block } = node;
+      nodes[id] = block;
+    }
+  }
+  const { template: _t, template_release: _r, ...site } = nodes.site_1;
+  nodes.site_1 = { ...site, schema_version: 12 };
+  return { ...upgraded, nodes };
+}
+
 /** An upgraded document as version 11 had it: images without a focal point. */
-function asVersion11(doc: { nodes: LooseNodes }): { nodes: LooseNodes } {
+function asVersion11(upgraded: { nodes: LooseNodes }): { nodes: LooseNodes } {
+  const doc = asVersion12(upgraded);
   const nodes: LooseNodes = { ...doc.nodes };
   for (const [id, node] of Object.entries(nodes)) {
     if (node.type === "image") {
@@ -483,7 +498,7 @@ describe("upgrading version-7 documents", () => {
     const before = structuredClone(v7);
     const result = migrateSite(v7) as { nodes: LooseNodes };
     expect(v7).toEqual(before);
-    expect(result.nodes.site_1.schema_version).toBe(12);
+    expect(result.nodes.site_1.schema_version).toBe(13);
     expect(result.nodes.business_1).toMatchObject({
       business_type: "Bakery",
       locations: { nodes: ["location_1"] },
@@ -533,7 +548,7 @@ describe("upgrading version-8 documents (block-variants)", () => {
     const before = structuredClone(v8);
     const result = migrateSite(v8) as { nodes: LooseNodes };
     expect(v8).toEqual(before);
-    expect(result.nodes.site_1.schema_version).toBe(12);
+    expect(result.nodes.site_1.schema_version).toBe(13);
     expect(result.nodes.hero_1.layout).toBe("beside");
     expect(result.nodes.services_1.layout).toBe("cards");
     expect(result.nodes.gallery_1.image_fit).toBe("fill");
@@ -548,7 +563,7 @@ describe("upgrading version-9 documents (collection-pages)", () => {
     const result = migrateSite(v9) as { nodes: LooseNodes };
     expect(v9).toEqual(before);
     expect(result.nodes.site_1).toMatchObject({
-      schema_version: 12,
+      schema_version: 13,
       projects: { nodes: [] },
       project_categories: { nodes: [] },
       services_page_id: "",
@@ -566,7 +581,7 @@ describe("upgrading version-10 documents (hero-slideshow)", () => {
     const before = structuredClone(v10);
     const result = migrateSite(v10) as { nodes: LooseNodes };
     expect(v10).toEqual(before);
-    expect(result.nodes.site_1.schema_version).toBe(12);
+    expect(result.nodes.site_1.schema_version).toBe(13);
     expect(result.nodes.hero_1.slides).toEqual({ nodes: [], marks: [], annotations: [] });
     expect(validateSite(result).problems).toEqual([]);
     expect(result).toEqual(loadDemoSite());
@@ -579,11 +594,44 @@ describe("upgrading version-11 documents (image-cropping)", () => {
     const before = structuredClone(v11);
     const result = migrateSite(v11) as { nodes: LooseNodes };
     expect(v11).toEqual(before);
-    expect(result.nodes.site_1.schema_version).toBe(12);
+    expect(result.nodes.site_1.schema_version).toBe(13);
     const images = Object.values(result.nodes).filter((n) => n.type === "image");
     expect(images.length).toBeGreaterThan(0);
     for (const image of images) expect(image).toMatchObject({ focus_x: 50, focus_y: 50 });
     expect(validateSite(result).problems).toEqual([]);
     expect(result).toEqual(loadDemoSite());
+  });
+});
+
+describe("upgrading version-12 documents (template-system)", () => {
+  it("Upgrade the bakery: Standard at release 1, and no block hidden", () => {
+    const v12 = loadFixture("demo-site-v12.json") as { nodes: LooseNodes };
+    const before = structuredClone(v12);
+    const result = migrateSite(v12) as { nodes: LooseNodes };
+    expect(v12).toEqual(before);
+    expect(result.nodes.site_1).toMatchObject({
+      schema_version: 13,
+      template: "standard",
+      template_release: 1,
+    });
+    const blocks = Object.values(result.nodes).filter((n) => "hidden" in n);
+    expect(blocks.map((b) => b.type).sort()).toEqual([
+      "hero",
+      "rich_text",
+      "rich_text",
+      "services",
+    ]);
+    for (const block of blocks) expect(block.hidden).toBe(false);
+    expect(validateSite(result).problems).toEqual([]);
+    expect(result).toEqual(loadDemoSite());
+  });
+
+  it("leaves nodes that aren't page blocks alone", () => {
+    const result = migrateSite(loadFixture("demo-site-v12.json")) as { nodes: LooseNodes };
+    for (const type of ["page", "service_item", "image", "paragraph", "theme"]) {
+      const node = Object.values(result.nodes).find((n) => n.type === type);
+      expect(node, type).toBeDefined();
+      expect(node, type).not.toHaveProperty("hidden");
+    }
   });
 });

@@ -60,6 +60,7 @@ function site(): { doc: unknown; nodes: LooseNodes } {
     nodes[id] = {
       id,
       type,
+      hidden: false,
       heading: text(""),
       show: "all",
       chosen: list([]),

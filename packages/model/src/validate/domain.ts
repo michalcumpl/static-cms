@@ -30,7 +30,7 @@ const MEDIA_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const MIN_SHARE_WIDTH = 600;
 /** The largest icon made from a favicon that phones show on their home screens. */
 const MIN_FAVICON_SIZE = 180;
-export const SCHEMA_VERSION = 12;
+export const SCHEMA_VERSION = 13;
 
 /** How messages name a page: by its title, since owners don't know node IDs. */
 export function pageLabel(page: { title: string }): string {
@@ -38,8 +38,25 @@ export function pageLabel(page: { title: string }): string {
   return title === "" ? "An untitled page" : `"${title}"`;
 }
 
+export interface ValidateOptions {
+  /**
+   * The templates there are, each ID with its current release (`TEMPLATE_RELEASES` of
+   * `@webmio/templates`, which the model can't import). Without it, only the shape of the site's
+   * template ID and release is checked (template-system design decision 5).
+   */
+  templates?: ReadonlyMap<string, number>;
+}
+
+/** A template ID: lowercase letters, digits and dashes. */
+const TEMPLATE_ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
 /** Site rules on top of the structural checks. Only reads nodes that are well-formed. */
-export function checkSiteRules(docId: string, check: GenericCheck, problems: Problems): void {
+export function checkSiteRules(
+  docId: string,
+  check: GenericCheck,
+  problems: Problems,
+  options: ValidateOptions = {},
+): void {
   const get = <T extends NodeType>(id: string, type: T): NodeOfType<T> | undefined => {
     const node = check.nodes[id];
     return node?.type === type && check.wellFormed.has(id)
@@ -57,12 +74,23 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
       `The root node must be a site, not ${String(root.type)}.`,
     );
   }
+  // Checked even when the site node is malformed: an older document lacks newer properties, and
+  // what it needs is upgrading.
+  if (root?.type === "site" && root.schema_version !== SCHEMA_VERSION) {
+    problems.error(
+      "unsupported-version",
+      docId,
+      `Schema version ${String(root.schema_version)} is not supported; expected ${SCHEMA_VERSION}.`,
+      "schema_version",
+    );
+  }
   const site = get(docId, "site");
   const where = placesOf(site, check);
 
   const pageIds = new Set<string>();
   if (site) {
     checkSiteNode(site, problems);
+    checkSiteTemplate(site, problems, options.templates);
     const seen = new Map<string, NodeOfType<"page">>();
     const keys = new Map<string, NodeOfType<"page">>();
     for (const pageId of site.pages.nodes) {
@@ -89,6 +117,14 @@ export function checkSiteRules(docId: string, check: GenericCheck, problems: Pro
         );
       }
       checkPageBlocks(page, get, problems);
+      if (page.blocks.nodes.every((id) => check.nodes[id]?.hidden === true)) {
+        problems.warning(
+          "page-shows-nothing",
+          page.id,
+          `${pageLabel(page)} shows nothing but its title; add a block or show a hidden one.`,
+          "blocks",
+        );
+      }
     }
     if (site.pages.nodes.length > 0 && !pageIds.has(site.home_page_id)) {
       problems.error(
@@ -303,15 +339,32 @@ function placesOf(
   return (id) => places.get(id) ?? "";
 }
 
-function checkSiteNode(site: NodeOfType<"site">, problems: Problems): void {
-  if (site.schema_version !== SCHEMA_VERSION) {
+/** The site's template exists, and its recorded release isn't newer than the code's. */
+function checkSiteTemplate(
+  site: NodeOfType<"site">,
+  problems: Problems,
+  templates: ReadonlyMap<string, number> | undefined,
+): void {
+  const current = templates?.get(site.template);
+  if (!TEMPLATE_ID.test(site.template) || (templates && current === undefined)) {
     problems.error(
-      "unsupported-version",
+      "unknown-template",
       site.id,
-      `Schema version ${site.schema_version} is not supported; expected ${SCHEMA_VERSION}.`,
-      "schema_version",
+      `The site's template "${site.template}" doesn't exist.`,
+      "template",
+    );
+  } else if (current !== undefined && site.template_release > current) {
+    problems.error(
+      "unknown-template-release",
+      site.id,
+      `The site records release ${site.template_release} of the template "${site.template}", ` +
+        `but the newest is ${current}: the document comes from newer code.`,
+      "template_release",
     );
   }
+}
+
+function checkSiteNode(site: NodeOfType<"site">, problems: Problems): void {
   if (site.name.trim() === "") {
     problems.error("missing-site-name", site.id, "The site needs a name.", "name");
   }

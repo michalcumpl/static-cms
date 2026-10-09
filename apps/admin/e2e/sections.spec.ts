@@ -173,6 +173,7 @@ test.describe("the business", () => {
     doc.nodes.contact_kh = {
       id: "contact_kh",
       type: "contact",
+      hidden: false,
       heading: { content: "Kutná Hora", marks: [], annotations: [] },
       show_address: true,
       show_phone: true,
