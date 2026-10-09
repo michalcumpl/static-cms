@@ -24,7 +24,8 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
   pages and menus, media, SEO, theme, version history, languages; publishing to Netlify;
   business data as collections with locations; the business control panel; 18 block types with
   their looks, from key figures to the hero slideshow; the seven example sites, loaded locally;
-  cropping and turning images, and a focal point for each use of an image.
+  cropping and turning images, and a focal point for each use of an image; templates (the
+  Standard template, layouts for new pages, blocks hidden from the website).
 - **Next:** `guided-setup` and the rest of phase 4 (templates).
   `own-hosting` (phase 5) doesn't depend on phases 3–4 and can start any time; it is the longest
   pole before the beta.
@@ -93,7 +94,7 @@ Blocks the example sites need come first, because the templates render them
 | [`jobs`](../openspec/changes/archive/2026-10-08-jobs/) | job openings with a folded description and a contact | Done |
 | `documents` | PDFs in the media library, a documents block, links to documents from texts | Planned |
 | `business-details` | business types, company and regulatory details, billing address and bank details, check-in and check-out times | Planned |
-| `template-system` | the template contract, layouts (also offered by "Add page"), homepage sections on or off, template versions | Planned |
+| [`template-system`](../openspec/changes/archive/2026-10-09-template-system/) | the template contract and the Standard template, layouts (also offered by "Add page"), homepage sections on or off, template releases; see [`templates.md`](templates.md) | Done |
 | `lighthouse-gate` | Lighthouse 100 in CI for every template and variant | Planned |
 | `template-creative`, `template-education`, `template-law`, `template-finance`, `template-investment`, `template-rentals`, `template-exhibitions` | the seven launch templates, each checked against its example site; two before the beta | Planned |
 | `template-switching` | choose another template, preview it with your own content, publish | Planned |
