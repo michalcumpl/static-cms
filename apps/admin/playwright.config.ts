@@ -26,6 +26,10 @@ export const e2eEnv = {
   SECRET_KEY: "e2e-secret-key-that-is-long-enough-1234",
   // Webmio hosting on a folder, off until a test switches it on (e2e/fixtures.ts).
   WEBMIO_HOSTING_FAKE_DIR: join(dataDir, "webmio"),
+  // No internet to ask other websites; the fakes answer verification at once, so a forced
+  // failure needn't wait the real two minutes (safe-publishing).
+  PUBLISH_CHECK_OUTSIDE_LINKS: "false",
+  PUBLISH_VERIFY_DEADLINE_MS: "3000",
   // The dev server may import from the fixture sites (site-import); production never reads this.
   E2E_IMPORT_ALLOW_HOSTS: `127.0.0.1:${bakeryPort},127.0.0.1:${spaPort}`,
 };

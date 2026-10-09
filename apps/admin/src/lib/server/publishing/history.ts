@@ -11,7 +11,7 @@ export const INTERRUPTED = "The publish was interrupted by a server restart. Pub
 export function markInterruptedPublishes(db: Db): number {
   return db
     .update(publishes)
-    .set({ state: "failed", error: INTERRUPTED, finishedAt: new Date() })
+    .set({ state: "failed", step: null, error: INTERRUPTED, finishedAt: new Date() })
     .where(and(eq(publishes.state, "running")))
     .run().changes;
 }

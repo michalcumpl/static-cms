@@ -216,6 +216,27 @@ export function netlifyTarget(
       if (response.status !== 404) await expectOk(response, "deleteSite");
     },
 
+    /**
+     * The live website. A fake Netlify (another `apiUrl`) serves each website by the hostname
+     * visitors use at `<apiUrl>/hosts/<hostname>/<path>`.
+     */
+    fetchLive(url, init) {
+      const doFetch = options.fetch ?? fetch;
+      const apiUrl = options.apiUrl ?? NETLIFY_API_URL;
+      if (apiUrl === NETLIFY_API_URL) return doFetch(url, init);
+      const address = new URL(url);
+      return doFetch(
+        `${apiUrl}/hosts/${address.hostname}${address.pathname}${address.search}`,
+        init,
+      );
+    },
+
+    /** Netlify can't unpublish a site's only deploy: the new site goes as a whole. */
+    async takeOffline(siteId) {
+      await this.deleteSite(siteId);
+      return { siteDeleted: true };
+    },
+
     async certificateIssued(siteId) {
       const site = (await (
         await expectOk(

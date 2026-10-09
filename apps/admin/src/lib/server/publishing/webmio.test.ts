@@ -259,6 +259,41 @@ describe("domains", () => {
   });
 });
 
+describe("the live website", () => {
+  it("is fetched as visitors reach it, HEAD with its length", async () => {
+    const { siteId } = await target.createSite("pekarna-u-lipy");
+    await target.deploy(siteId, first);
+    const page = await target.fetchLive("https://pekarna-u-lipy.webmio.site/kontakt/");
+    expect(page.status).toBe(200);
+    expect(await page.text()).toBe("<h1>Kontakt</h1>");
+    const head = await target.fetchLive("https://pekarna-u-lipy.webmio.site/assets/style.css", {
+      method: "HEAD",
+    });
+    expect(head.headers.get("content-length")).toBe(String(encode("h1{color:brown}").byteLength));
+    expect(await head.text()).toBe("");
+  });
+
+  it("serves the previous deploy while the fake edge is stale", async () => {
+    const { siteId } = await target.createSite("pekarna-u-lipy");
+    await target.deploy(siteId, first);
+    await target.deploy(siteId, site({ "index.html": "<h1>Nová</h1>" }));
+    hosting.serveStale(true);
+    expect((await visit("/")).text).toBe("<h1>Pekárna</h1>");
+    hosting.serveStale(false);
+    expect((await visit("/")).text).toBe("<h1>Nová</h1>");
+  });
+
+  it("goes offline after a failed first publish, keeping its name", async () => {
+    const created = await target.createSite("pekarna-u-lipy");
+    await target.deploy(created.siteId, first);
+    const hosted = { ...created, domain: null, domainRef: null };
+    expect(await target.takeOffline(created.siteId, hosted)).toEqual({ siteDeleted: false });
+    expect(await visit("/")).toMatchObject({ status: 404 });
+    expect(hosting.keys()).toEqual({ "h:pekarna-u-lipy.webmio.site": created.siteId });
+    expect(hosting.objectKeys(`sites/${created.siteId}/`)).toEqual([]);
+  });
+});
+
 describe("an exported site", () => {
   it("publishes, serves its pages, redirects and 404 page, and rolls back", async () => {
     const media = loadDemoMedia();

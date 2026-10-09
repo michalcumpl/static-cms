@@ -87,7 +87,12 @@ async function makeLive(id: string) {
     {#if !info || info.publishes.length === 0}
       <p class="muted">{i18n.t("publishing.nothing")}</p>
     {:else}
-      <PublishHistory publishes={info.publishes} {busy} onMakeLive={makeLive} />
+      <PublishHistory
+        publishes={info.publishes}
+        busy={busy || publishing.status.kind === "publishing"}
+        onMakeLive={makeLive}
+        onTryAgain={() => void publishing.publish()}
+      />
     {/if}
     {#if restoreError}<Notice kind="problem"><p>{restoreError}</p></Notice>{/if}
   </Card>

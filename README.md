@@ -117,6 +117,13 @@ environment:
 Webmio hosting counts as configured when the first four are set. The end-to-end tests use
 `WEBMIO_HOSTING_FAKE_DIR`, a folder that stands in for AWS; it is ignored in production.
 
+Every publish checks the website's own links before uploading, verifies the live website after
+the switch, and puts the previous version back when that fails. On Webmio hosting and on Netlify
+alike, it also asks the links to other websites, and lists those that don't answer as warnings.
+`PUBLISH_CHECK_OUTSIDE_LINKS=false` turns that off, for servers without internet access such as
+the end-to-end runs. `PUBLISH_VERIFY_DEADLINE_MS` shortens verification's two-minute deadline;
+the end-to-end runs use it, since their fake hosting answers at once.
+
 | Command | What it does |
 | --- | --- |
 | `pnpm dev` | builds the packages and runs the admin |

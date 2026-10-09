@@ -15,7 +15,15 @@ export interface PublishSummary {
   live: boolean;
   /** Whether it can be made live again (Webmio hosting keeps the newest publishes' files). */
   restorable: boolean;
+  /** What a running publish is doing (safe-publishing design.md decision 7). */
+  step: "checking" | "uploading" | "verifying" | null;
+  /** What a successful publish warns about, such as links to other websites that didn't answer. */
+  warnings: PublishWarning[];
 }
+
+export type PublishWarning =
+  | { kind: "outside-link"; page: string; url: string; status?: number }
+  | { kind: "outside-links-skipped"; count: number };
 
 export interface DnsRecord {
   type: "A" | "CNAME";
@@ -42,8 +50,8 @@ export interface PublishingInfo {
 
 export type PublishStatus =
   | { kind: "idle" }
-  | { kind: "publishing" }
-  | { kind: "published"; url: string }
+  | { kind: "publishing"; step?: PublishSummary["step"] }
+  | { kind: "published"; url: string; warnings: number }
   /**
    * `message` is the server's own explanation (already in the interface language); without one,
    * `problems` means the site has errors, else `httpStatus` says what failed.
@@ -70,13 +78,13 @@ export class Publishing {
     this.info = await response.json();
     const latest = this.latest;
     if (latest?.state === "running") {
-      this.status = { kind: "publishing" };
+      this.status = { kind: "publishing", step: latest.step };
       clearTimeout(this.#timer);
       this.#timer = setTimeout(() => void this.refresh(), POLL_MS);
     } else if (this.status.kind === "publishing" && latest) {
       this.status =
         latest.state === "ready"
-          ? { kind: "published", url: latest.url ?? "" }
+          ? { kind: "published", url: latest.url ?? "", warnings: latest.warnings.length }
           : { kind: "failed", message: latest.error ?? undefined };
     }
   }

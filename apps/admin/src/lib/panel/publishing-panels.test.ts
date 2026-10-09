@@ -2,6 +2,7 @@ import type { Component } from "svelte";
 import { render } from "svelte/server";
 import { describe, expect, it } from "vitest";
 import type { Locale } from "$lib/i18n";
+import PublishButton from "$lib/PublishButton.svelte";
 import { projectPaths } from "$lib/project-paths";
 import { Publishing, type PublishingInfo, type PublishSummary } from "$lib/publishing.svelte";
 import DomainPanel from "./DomainPanel.svelte";
@@ -87,6 +88,44 @@ describe("Domain panel on Webmio hosting", () => {
   });
 });
 
+describe("Publish button", () => {
+  const button = (status: Publishing["status"]) => {
+    const state = publishing({});
+    state.status = status;
+    return html(PublishButton, { paths: projectPaths("p_1"), publishing: state });
+  };
+
+  it("names the step while publishing", () => {
+    expect(button({ kind: "publishing", step: "uploading" })).toContain("Uploading…");
+    expect(button({ kind: "publishing" })).toContain("Publishing…");
+  });
+
+  it("offers Try again after a publish failed, with the reason", () => {
+    const markup = button({
+      kind: "failed",
+      message:
+        "Publishing failed: The hosting service couldn't be reached. Your previous version is still online.",
+    });
+    expect(markup).toContain("Try again");
+    expect(markup).toContain("Your previous version is still online.");
+  });
+
+  it("keeps Publish when the site has errors to fix first", () => {
+    const markup = button({ kind: "failed", problems: [] });
+    expect(markup).not.toContain("Try again");
+    expect(markup).toContain(" Publish</button>");
+  });
+
+  it("points to the warnings after a publish with warnings", () => {
+    const markup = button({
+      kind: "published",
+      url: "https://pekarna-u-lipy.webmio.site",
+      warnings: 2,
+    });
+    expect(markup).toContain("2 links to other websites didn't answer");
+  });
+});
+
 describe("Publish history", () => {
   const publish = (id: string, more: Partial<PublishSummary>): PublishSummary => ({
     id,
@@ -98,7 +137,61 @@ describe("Publish history", () => {
     finishedAt: "2026-10-08T10:00:05.000Z",
     live: false,
     restorable: true,
+    step: null,
+    warnings: [],
     ...more,
+  });
+
+  it("shows a running publish's step", () => {
+    const markup = html(PublishHistory, {
+      busy: false,
+      onMakeLive: () => {},
+      publishes: [publish("pb_1", { state: "running", step: "verifying" })],
+    });
+    expect(markup).toContain("Verifying the website…");
+  });
+
+  it("shows a failure as it was recorded, with Try again on the newest", () => {
+    const error =
+      "Publishing failed: The website didn't show the new version in time (/). Your previous version is still online.";
+    const markup = html(PublishHistory, {
+      busy: false,
+      onMakeLive: () => {},
+      onTryAgain: () => {},
+      publishes: [
+        publish("pb_3", { state: "failed", error }),
+        publish("pb_2", { live: true }),
+        publish("pb_1", { state: "failed", error: "Publishing failed: older" }),
+      ],
+    });
+    expect(markup).toContain(error);
+    expect(markup).not.toContain("Failed: Publishing failed");
+    expect(markup.match(/Try again/g)).toHaveLength(1);
+  });
+
+  it("lists a successful publish's warnings", () => {
+    const markup = html(
+      PublishHistory,
+      {
+        busy: false,
+        onMakeLive: () => {},
+        publishes: [
+          publish("pb_1", {
+            live: true,
+            warnings: [
+              { kind: "outside-link", page: "/kontakt/", url: "https://stary-eshop.example/" },
+              { kind: "outside-link", page: "/", url: "https://gone.example/", status: 404 },
+              { kind: "outside-links-skipped", count: 3 },
+            ],
+          }),
+        ],
+      },
+      "cs",
+    );
+    expect(markup).toContain("2 odkazy na jiné weby neodpověděly");
+    expect(markup).toContain("https://stary-eshop.example/ na /kontakt/");
+    expect(markup).toContain("https://gone.example/ na / (odpověď 404)");
+    expect(markup).toContain("dalších 3 se nekontrolovalo");
   });
 
   it("offers to make kept publishes live again, and not the ones no longer kept", () => {

@@ -63,6 +63,9 @@ export interface HostingBackend {
   /** The names of the folders and objects directly under `prefix` (which ends in `/`). */
   listNames(prefix: string): Promise<string[]>;
 
+  /** Fetches from a website as visitors reach it, to verify a publish. */
+  fetchSite(url: string, init?: RequestInit): Promise<Response>;
+
   /** A key of the edge's key-value store; undefined when it is missing. */
   getKey(key: string): Promise<string | undefined>;
   /** Puts and deletes keys in one write, which reaches the edge within seconds. */

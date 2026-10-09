@@ -124,6 +124,18 @@ export function webmioTarget(hosting: HostingBackend): Required<PublishTarget> {
 
     servedHost,
 
+    fetchLive: (url, init) => hosting.fetchSite(url, init),
+
+    /**
+     * No deploy is live any more and the failed one's files go; the name stays the website's
+     * for the next publish.
+     */
+    async takeOffline(siteId) {
+      await hosting.updateKeys({ delete: [`s:${siteId}`] });
+      await hosting.deletePrefix(siteFolder(siteId));
+      return { siteDeleted: false };
+    },
+
     /**
      * Serves the domain's hostname from the website, through a tenant once CloudFront creates
      * one: only for a domain whose DNS already leads to it. Until then it returns undefined, and

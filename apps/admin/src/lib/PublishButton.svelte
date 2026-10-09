@@ -49,6 +49,16 @@ const failure = $derived.by(() => {
     ? i18n.t("publish.failed", { status: status.httpStatus })
     : i18n.t("publish.failedPlain");
 });
+// After a publish failed (not for errors in the site, which need fixing first), the same
+// action reads "Try again" (safe-publishing design.md decision 7).
+const retry = $derived(status.kind === "failed" && !status.problems);
+const label = $derived.by(() => {
+  if (status.kind === "publishing") {
+    return status.step ? i18n.t(`publish.steps.${status.step}`) : i18n.t("publish.publishing");
+  }
+  if (unsaved) return i18n.t("publish.saveAndPublish");
+  return retry ? i18n.t("publish.tryAgain") : i18n.t("publish.publish");
+});
 </script>
 
 <span class="publish">
@@ -65,17 +75,16 @@ const failure = $derived.by(() => {
           ? i18n.t("publish.hostingNotSetUp")
           : i18n.t("publish.connectFirst"))}
   >
-    {status.kind === "publishing"
-      ? i18n.t("publish.publishing")
-      : unsaved
-        ? i18n.t("publish.saveAndPublish")
-        : i18n.t("publish.publish")}
+    {label}
   </Button>
   <span class="publish-status" aria-live="polite">
     {#if !canPublish}
       <a href={paths.publishPage}>{onWebmio ? i18n.t("publish.hostingNotSetUp") : i18n.t("publish.notConnected")}</a>
     {:else if status.kind === "published"}
       {i18n.t("publish.published")} · <a href={status.url} target="_blank" rel="noopener">{status.url.replace(/^https:\/\//, "")}</a>
+      {#if status.warnings > 0}
+        · <a href={paths.publishPage}>{i18n.t("publish.warnings", { count: status.warnings })}</a>
+      {/if}
     {:else if status.kind === "failed"}
       <span class="problem">{failure}</span>
       {#if status.problems?.length}

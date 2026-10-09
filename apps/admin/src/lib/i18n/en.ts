@@ -309,6 +309,16 @@ export const en = {
     connectFirst: "Connect Netlify in the workspace settings first",
     notConnected: "Not connected to Netlify",
     hostingNotSetUp: "Hosting isn't set up",
+    tryAgain: "Try again",
+    steps: {
+      checking: "Checking the site…",
+      uploading: "Uploading…",
+      verifying: "Verifying the website…",
+    },
+    warnings: {
+      one: "{count} link to another website didn't answer",
+      other: "{count} links to other websites didn't answer",
+    },
     published: "Published",
     fixProblems: "Fix the problems first; the site can't be published with errors.",
     failed: "Publishing failed ({status}).",
@@ -350,6 +360,9 @@ export const en = {
     live: "Live",
     makeLive: "Make live again",
     notKept: "No longer kept",
+    linkDidntAnswer: "{url} on {page}",
+    linkAnswered: "{url} on {page} (answered {status})",
+    linksSkipped: "{count} more weren't checked",
     requestFailed: "Failed ({status}).",
   },
   history: {
@@ -1264,6 +1277,15 @@ export const en = {
       nothingToConnect: "Websites on this server are hosted by Webmio; there's nothing to connect.",
       problems: "{problems}",
       failed: "Publishing failed: {error}",
+      failedKept: "Publishing failed: {reason} Your previous version is still online.",
+      failedFirst: "Publishing failed: {reason} The website isn't online yet.",
+      failedRollback:
+        "Publishing failed: {reason} Putting the previous version back failed too: {rollback}",
+      brokenLinks: "Some links lead to addresses the website doesn't have: {links}.",
+      brokenLink: "{page} links to {address}",
+      andMore: "and {count} more",
+      notServed: "The website didn't show the new version in time ({addresses}).",
+      unexpected: "{error}",
     },
     domains: {
       invalid: "Enter a domain name only, such as anideti.cz or web.anideti.cz.",

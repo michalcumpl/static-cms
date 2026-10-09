@@ -139,3 +139,22 @@ describe("netlifyTarget", () => {
     });
   });
 });
+
+describe("the live website", () => {
+  it("is fetched at its netlify.app address, which the fake serves", async () => {
+    const { siteId } = await target().createSite("sc-p1");
+    await target().deploy(siteId, files({ "index.html": "<h1>A</h1>" }));
+    const response = await target().fetchLive?.("https://sc-p1.netlify.app/");
+    expect(response?.status).toBe(200);
+    expect(await response?.text()).toBe("<h1>A</h1>");
+  });
+
+  it("goes offline as a whole after a failed first publish", async () => {
+    const { siteId } = await target().createSite("sc-p1");
+    await target().deploy(siteId, files({ "index.html": "<h1>A</h1>" }));
+    const site = { siteId, siteName: "sc-p1", domain: null, domainRef: null };
+    expect(await target().takeOffline?.(siteId, site)).toEqual({ siteDeleted: true });
+    expect(fake.sites.size).toBe(0);
+    expect((await visit("sc-p1", "/")).status).toBe(404);
+  });
+});

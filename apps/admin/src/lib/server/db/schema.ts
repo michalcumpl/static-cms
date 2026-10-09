@@ -223,6 +223,12 @@ export const projectHosting = sqliteTable(
 );
 
 export const publishStates = ["running", "ready", "failed"] as const;
+export const publishSteps = ["checking", "uploading", "verifying"] as const;
+
+/** A warning stored with a publish (safe-publishing design.md decision 3). */
+export type PublishWarning =
+  | { kind: "outside-link"; page: string; url: string; status?: number }
+  | { kind: "outside-links-skipped"; count: number };
 
 /** Every publish of a project: which saved version, by whom, and how it went. */
 export const publishes = sqliteTable(
@@ -245,6 +251,10 @@ export const publishes = sqliteTable(
     finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
     /** When Webmio hosting deleted the deploy's files; it can't be made live again after. */
     filesDeletedAt: integer("files_deleted_at", { mode: "timestamp_ms" }),
+    /** What a running publish is doing (safe-publishing design.md decision 1); null when done. */
+    step: text("step", { enum: publishSteps }),
+    /** What a successful publish warns about, such as outside links that didn't answer. */
+    warnings: text("warnings", { mode: "json" }).$type<PublishWarning[]>(),
   },
   (t) => [index("publishes_project_idx").on(t.projectId, t.startedAt)],
 );

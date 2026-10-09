@@ -318,6 +318,17 @@ export const cs: Messages = {
     connectFirst: "Nejdřív připojte Netlify v nastavení pracovního prostoru",
     notConnected: "Nepřipojeno k Netlify",
     hostingNotSetUp: "Hosting není nastavený",
+    tryAgain: "Zkusit znovu",
+    steps: {
+      checking: "Kontroluji web…",
+      uploading: "Nahrávám…",
+      verifying: "Ověřuji web…",
+    },
+    warnings: {
+      one: "{count} odkaz na jiný web neodpověděl",
+      few: "{count} odkazy na jiné weby neodpověděly",
+      other: "{count} odkazů na jiné weby neodpovědělo",
+    },
     published: "Zveřejněno",
     fixProblems: "Nejdřív opravte problémy; web s chybami nejde zveřejnit.",
     failed: "Zveřejnění selhalo ({status}).",
@@ -359,6 +370,9 @@ export const cs: Messages = {
     live: "Aktuální",
     makeLive: "Znovu zveřejnit tuto verzi",
     notKept: "Už se neuchovává",
+    linkDidntAnswer: "{url} na {page}",
+    linkAnswered: "{url} na {page} (odpověď {status})",
+    linksSkipped: "dalších {count} se nekontrolovalo",
     requestFailed: "Selhalo ({status}).",
   },
   history: {
@@ -1302,6 +1316,15 @@ export const cs: Messages = {
       nothingToConnect: "Weby na tomto serveru hostuje Webmio; není potřeba nic připojovat.",
       problems: "{problems}",
       failed: "Zveřejnění se nepovedlo: {error}",
+      failedKept: "Zveřejnění se nepovedlo: {reason} Předchozí verze webu zůstává online.",
+      failedFirst: "Zveřejnění se nepovedlo: {reason} Web zatím není online.",
+      failedRollback:
+        "Zveřejnění se nepovedlo: {reason} Vrátit předchozí verzi se také nepovedlo: {rollback}",
+      brokenLinks: "Některé odkazy vedou na adresy, které web nemá: {links}.",
+      brokenLink: "{page} odkazuje na {address}",
+      andMore: "a {count} dalších",
+      notServed: "Web neukázal novou verzi včas ({addresses}).",
+      unexpected: "{error}",
     },
     domains: {
       invalid: "Zadejte jen název domény, například anideti.cz nebo web.anideti.cz.",

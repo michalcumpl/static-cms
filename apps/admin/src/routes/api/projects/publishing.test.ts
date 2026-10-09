@@ -166,7 +166,8 @@ describe("publishing", () => {
     const [latest, previous] = (await state()).publishes;
     expect(latest).toMatchObject({
       state: "failed",
-      error: "The hosting service (Netlify) couldn't be reached.",
+      error:
+        "Publishing failed: The hosting service (Netlify) couldn't be reached. Your previous version is still online.",
       live: false,
     });
     expect(previous).toMatchObject({ state: "ready", live: true });
@@ -182,7 +183,8 @@ describe("publishing", () => {
     fake.setDown(false);
     expect((await state()).publishes[0]).toMatchObject({
       state: "failed",
-      error: "Hostingová služba (Netlify) není dostupná.",
+      error:
+        "Zveřejnění se nepovedlo: Hostingová služba (Netlify) není dostupná. Web zatím není online.",
     });
   });
 
@@ -200,7 +202,8 @@ describe("publishing", () => {
     await publishesSettled();
     expect((await state()).publishes[0]).toMatchObject({
       state: "failed",
-      error: "Netlify refused the workspace's token. An owner needs to reconnect Netlify.",
+      error:
+        "Publishing failed: Netlify refused the workspace's token. An owner needs to reconnect Netlify. The website isn't online yet.",
     });
   });
 

@@ -222,6 +222,8 @@ export function awsHosting(config: WebmioHostingConfig): HostingBackend {
       }
     },
 
+    fetchSite: (url, init) => fetch(url, init),
+
     async getKey(key) {
       try {
         const result = await kvs.send(new GetKeyCommand({ KvsARN: config.kvsArn, Key: key }));

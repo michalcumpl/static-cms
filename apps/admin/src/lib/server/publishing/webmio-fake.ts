@@ -41,6 +41,10 @@ interface FakeState {
   unreachable: boolean;
   /** End-to-end runs: whether the server has Webmio hosting at all, switched per test. */
   disabled: boolean;
+  /** The deploy each website was on before its last switch (`s:<siteId>` → deploy). */
+  previous: Record<string, string>;
+  /** While on, the edge keeps serving each website's previous deploy, as if a switch hung. */
+  stale: boolean;
 }
 
 export interface FakeHosting extends HostingBackend {
@@ -58,6 +62,8 @@ export interface FakeHosting extends HostingBackend {
   setUnreachable(unreachable: boolean): void;
   /** Makes uploads of matching keys fail, until called with undefined. */
   failUploads(match: RegExp | undefined): void;
+  /** While on, websites keep serving the deploy they had before their last switch. */
+  serveStale(stale: boolean): void;
 }
 
 const EMPTY: FakeState = {
@@ -71,6 +77,8 @@ const EMPTY: FakeState = {
   slowTenantDeletion: false,
   unreachable: false,
   disabled: false,
+  previous: {},
+  stale: false,
 };
 
 const statePath = (dir: string) => join(dir, "state.json");
@@ -188,6 +196,20 @@ export function fakeHosting(
       return [...names].sort();
     },
 
+    async fetchSite(url, init) {
+      const address = new URL(url);
+      const answer = await serveFake(dir, {
+        host: address.host,
+        uri: address.pathname,
+        querystring: address.search.slice(1),
+      });
+      const head = (init?.method ?? "GET").toUpperCase() === "HEAD";
+      return new Response(head || answer.status === 301 ? null : answer.body.slice(), {
+        status: answer.status,
+        headers: { ...answer.headers, "content-length": String(answer.body.byteLength) },
+      });
+    },
+
     async getKey(key) {
       return reachable().keys[key];
     },
@@ -195,8 +217,16 @@ export function fakeHosting(
     async updateKeys(changes) {
       reachable();
       update((state) => {
-        Object.assign(state.keys, changes.put ?? {});
-        for (const key of changes.delete ?? []) delete state.keys[key];
+        for (const [key, value] of Object.entries(changes.put ?? {})) {
+          const old = state.keys[key];
+          if (key.startsWith("s:") && old !== undefined && old !== value) state.previous[key] = old;
+          state.keys[key] = value;
+        }
+        for (const key of changes.delete ?? []) {
+          const old = state.keys[key];
+          if (key.startsWith("s:") && old !== undefined) state.previous[key] = old;
+          delete state.keys[key];
+        }
       });
     },
 
@@ -274,6 +304,10 @@ export function fakeHosting(
     failUploads(match) {
       failing = match;
     },
+    serveStale: (stale) =>
+      update((s) => {
+        s.stale = stale;
+      }),
   };
 }
 
@@ -295,7 +329,11 @@ export async function serveFake(
   const state = readState(dir);
   const routed = await route(
     { host: request.host, uri: request.uri, querystring: request.querystring ?? "" },
-    async (key) => state.keys[key],
+    // A stale edge still has each website's deploy from before its last switch.
+    async (key) =>
+      state.stale && key.startsWith("s:") && key in state.previous
+        ? state.previous[key]
+        : state.keys[key],
   );
   const text = (body: string | undefined) => new TextEncoder().encode(body ?? "");
   if (routed.kind === "respond") {

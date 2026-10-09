@@ -13,7 +13,7 @@ import { createSession } from "../src/lib/server/auth";
 import { type Db, openDatabase } from "../src/lib/server/db/index";
 import { projectHosting, publishes, siteDocuments, versions } from "../src/lib/server/db/schema";
 import { demoSite, imageBlocksSite } from "../src/lib/server/demo";
-import { resetFakeHosting } from "../src/lib/server/publishing/webmio-fake";
+import { fakeHosting, resetFakeHosting } from "../src/lib/server/publishing/webmio-fake";
 import {
   projectLanguages,
   readSite,
@@ -110,6 +110,11 @@ function resetWebmio(): void {
 /** Switches the dev server's Webmio hosting on for this test, empty. */
 export function useWebmioHosting(): void {
   resetFakeHosting(webmioDir(), true);
+}
+
+/** While on, the fake edge keeps serving each website's previous publish, so verification fails. */
+export function staleEdge(stale: boolean): void {
+  fakeHosting(webmioDir()).serveStale(stale);
 }
 
 /** A website's address on the Webmio hosting fake, as a browser reaches it. */

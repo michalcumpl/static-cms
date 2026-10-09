@@ -54,6 +54,17 @@ export interface PublishTarget {
   setRedirectHost?(site: HostedSite, host: string | null): Promise<void>;
   /** Deletes the files of every deploy but `keep`; the live deploy is always kept. */
   prune?(siteId: string, keep: readonly string[]): Promise<void>;
+  /**
+   * Fetches from the live website, to verify a publish (safe-publishing design.md decision 4);
+   * the global `fetch` when the target has no fake to answer instead.
+   */
+  fetchLive?(url: string, init?: RequestInit): Promise<Response>;
+  /**
+   * Takes a website whose first publish failed offline again (design.md decision 5): its
+   * address answers as before the publish. Returns whether the site itself is gone, so its
+   * hosting record goes too.
+   */
+  takeOffline?(siteId: string, site: HostedSite): Promise<{ siteDeleted: boolean }>;
 }
 
 export type PublishErrorKind =

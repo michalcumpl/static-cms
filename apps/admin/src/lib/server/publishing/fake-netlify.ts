@@ -99,7 +99,8 @@ export async function startFakeNetlify(port = 0): Promise<FakeNetlify> {
     const file = deploy.files[path.endsWith("/") ? `${path}index.html` : path];
     const bytes = file ? blobs.get(file) : undefined;
     if (!bytes) return json(response, 404, { error: "not found" });
-    response.writeHead(200);
+    // HEAD gets the length too, as Netlify's CDN sends it.
+    response.writeHead(200, { "content-length": String(bytes.byteLength) });
     response.end(bytes);
   };
 
@@ -118,8 +119,18 @@ export async function startFakeNetlify(port = 0): Promise<FakeNetlify> {
         return json(response, 200, { ok: true });
       }
       const served = /^\/sites\/([^/]+)(\/.*)$/.exec(path);
-      if (served && request.method === "GET")
+      if (served && (request.method === "GET" || request.method === "HEAD"))
         return serveSite(served[1] ?? "", served[2] ?? "/", response);
+      // A website by the hostname visitors use: `<name>.netlify.app` or its custom domain.
+      const byHost = /^\/hosts\/([^/]+)(\/.*)$/.exec(path);
+      if (byHost && (request.method === "GET" || request.method === "HEAD")) {
+        const host = (byHost[1] ?? "").toLowerCase();
+        const site = [...sites.values()].find(
+          (s) =>
+            `${s.name}.netlify.app` === host || s.customDomain === host || s.aliases.includes(host),
+        );
+        return serveSite(site?.name ?? "", byHost[2] ?? "/", response);
+      }
 
       if (down) {
         request.socket.destroy();

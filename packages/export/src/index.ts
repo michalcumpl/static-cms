@@ -9,3 +9,10 @@ export {
   zipFiles,
 } from "./export.js";
 export { exportSiteLanguages, type LanguageDocument } from "./languages.js";
+export {
+  addressOf,
+  type BrokenLink,
+  checkSiteLinks,
+  type LinkCheck,
+  type OutsideLink,
+} from "./links.js";
