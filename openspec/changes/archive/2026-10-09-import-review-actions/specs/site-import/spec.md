@@ -34,6 +34,12 @@ SHALL a retry, marking images decorative or fixing subheading levels.
 - **WHEN** the only things left out are a form and a page built by JavaScript
 - **THEN** the review offers no "Try again"
 
+#### Scenario: Thirteen pages without a description
+- **WHEN** an imported site has no description and none of its 13 pages has one
+- **THEN** "Before you publish" shows one item, "13 pages have no description … add one description
+  of the whole site", leading to the site's description, with each page listed under it, and says
+  nothing blocks publishing
+
 ## ADDED Requirements
 
 ### Requirement: Retrying what was left out
@@ -135,9 +141,3 @@ subheadings after it keep one before them.
 - **WHEN** the gallery "Realizace" on an imported page gets none of its photos, and the subheading
   "Vídeň" follows it
 - **THEN** the page has "Realizace" as a main subheading before "Vídeň", and no subheading problem
-
-#### Scenario: Thirteen pages without a description
-- **WHEN** an imported site has no description and none of its 13 pages has one
-- **THEN** "Before you publish" shows one item, "13 pages have no description … add one description
-  of the whole site", leading to the site's description, with each page listed under it, and says
-  nothing blocks publishing
