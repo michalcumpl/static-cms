@@ -28,8 +28,9 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
   sites, loaded locally; cropping and turning images, and a focal point for each use of an
   image; templates (the Standard template, layouts for new pages, blocks hidden from the
   website); importing a website from its address.
-- **Next:** `guided-setup` and the rest of phase 4 (templates); `safe-publishing` finishes
-  phase 5. Our hosting runs in the `dev` stack; `prod` is deployed before the beta.
+- **Next:** `guided-setup` and the rest of phase 4 (templates). Phase 5 is done: every publish
+  checks links, verifies the live website and keeps the previous version on failure. Our
+  hosting runs in the `dev` stack; `prod` is deployed before the beta.
 - **Private beta** (phase 7) when phases 3–6 work with at least two launch templates.
 
 ## Phases
@@ -108,12 +109,12 @@ Blocks the example sites need come first, because the templates render them
 | `newsletter` | a signup form passing addresses to the owner's email service | During the beta |
 | `design-touches` | a heavy display font for headings; a darker shade offered when a brand colour fails contrast | During the beta |
 
-### 5. Our own hosting · In progress
+### 5. Our own hosting · Done
 
 | Change | What | Status |
 | --- | --- | --- |
 | [`own-hosting`](../openspec/changes/archive/2026-10-09-own-hosting/) | S3 and CloudFront, `<site>.webmio.site`, atomic deploys, rollback; new websites only, Netlify ones stay | Done |
-| `safe-publishing` | the publish pipeline: link check, deploy verification, previous version kept on failure | Planned |
+| [`safe-publishing`](../openspec/changes/archive/2026-10-09-safe-publishing/) | the publish pipeline: link check, outside links as warnings, verifying the live website, previous version kept on failure, *Try again* | Done |
 
 ### 6. Domains and website health · Planned
 
