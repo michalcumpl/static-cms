@@ -103,11 +103,11 @@ Blocks the example sites need come first, because the templates render them
 | `newsletter` | a signup form passing addresses to the owner's email service | During the beta |
 | `design-touches` | a heavy display font for headings; a darker shade offered when a brand colour fails contrast | During the beta |
 
-### 5. Our own hosting · Planned
+### 5. Our own hosting · In progress
 
 | Change | What | Status |
 | --- | --- | --- |
-| `own-hosting` | S3 and CloudFront, `<site>.webmio.site`, atomic deploys, rollback | Planned |
+| [`own-hosting`](../openspec/changes/archive/2026-10-09-own-hosting/) | S3 and CloudFront, `<site>.webmio.site`, atomic deploys, rollback; new websites only, Netlify ones stay | Done |
 | `safe-publishing` | the publish pipeline: link check, deploy verification, previous version kept on failure | Planned |
 
 ### 6. Domains and website health · Planned
@@ -217,10 +217,11 @@ Product (2026-10, from the strategy refresh):
 ### 5. Our own hosting
 
 - **S3 and CloudFront as our own Netlify:** one bucket and one multi-tenant distribution; each
-  site a tenant with its own domains and an automatically issued certificate. Free address
-  `<site>.webmio.site`; previews there too.
+  custom domain a tenant with an automatically issued certificate, pointed at its website's own
+  `<name>.sites.webmio.net`. Free address `<site>.webmio.site`; previews there later.
 - **Atomic deploys and instant rollback:** each publish in its own folder, uploading only changed
-  files; a CloudFront Function with a key-value store points each domain at its live publish.
+  files; a CloudFront Function with a key-value store points each domain at its live publish, and
+  a Lambda@Edge function answers missing addresses with the publish's redirects and 404 page.
 - **The publish pipeline:** validate, check links, generate metadata and structured data, build,
   deploy, **verify the live deployment**, keep the previous version. On failure the previous
   version stays live and the owner sees *Try again*.

@@ -1,10 +1,4 @@
-# publishing Specification
-
-## Purpose
-
-Puts a project's saved site on the web: publishing it to Webmio hosting (or, for websites already there, to the workspace's own Netlify team), connecting the owner's domain, redirecting earlier addresses, and keeping a history that can be made live again.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Connecting a workspace to Netlify
 A workspace owner SHALL be able to connect the workspace to a Netlify team by entering a Netlify personal access token. The server SHALL check the token with Netlify, let the owner choose one of the teams the token can access, and store the connection for the workspace. A token Netlify refuses SHALL be rejected with a message. An owner SHALL be able to disconnect the workspace; its projects' sites at Netlify stay as they are. Editors SHALL see whether the workspace is connected and to which team, but SHALL NOT connect or disconnect it. When the server has Webmio hosting configured, the workspace settings SHALL say that the workspace's websites are hosted by Webmio. They SHALL show the Netlify connection only to a workspace that is connected, so its owners can still disconnect it, and SHALL offer no way to connect a new one.
@@ -61,21 +55,6 @@ The first publish SHALL create the project's site there. Publishing to Netlify S
 #### Scenario: Hidden language
 - **WHEN** a project has a hidden German language and a member publishes
 - **THEN** the deploy contains no `/de/` pages, and the published pages link no German alternate
-
-### Requirement: Publish status
-A publish SHALL run in the background. While it runs, the project SHALL show it as publishing; afterwards as published (with the time, who published, and the address) or as failed (with a readable reason). A project SHALL have at most one publish running at a time; publishing again while one runs SHALL be refused with a message. Only files the provider doesn't already have from earlier deploys SHALL be uploaded.
-
-#### Scenario: Second publish uploads only changes
-- **WHEN** a member changes one heading, saves and publishes again
-- **THEN** only the changed page's HTML is uploaded, and the site shows the new heading
-
-#### Scenario: Provider unreachable
-- **WHEN** the provider's API can't be reached during a publish
-- **THEN** the publish is shown as failed with a message saying the hosting service couldn't be reached, and the site keeps showing the previous publish
-
-#### Scenario: Publishing twice at once
-- **WHEN** a member presses Publish while a publish of the same project is running
-- **THEN** the second request is refused and the running publish continues
 
 ### Requirement: Site address
 Each published project SHALL have an address: its connected custom domain once the domain is ready, otherwise its free address. On Webmio hosting the free address SHALL be `https://<name>.webmio.site`. The name comes from the project's name at the first publish: lowercase, without diacritics, words joined by dashes, at most 40 characters. A number is added (`-2`, `-3`, …) when the name is taken or reserved for Webmio's own use. The name SHALL NOT change when the project is renamed. On Netlify the free address is the site's `netlify.app` address. The address SHALL be used as the site's base URL for its sitemap and canonical links, and shown with every successful publish.
@@ -139,21 +118,6 @@ Where the website is served depends on its hosting:
 - **WHEN** a member enters `https://anideti.cz/kontakt`
 - **THEN** the domain is refused with a message asking for a domain name only, such as `anideti.cz`
 
-### Requirement: Redirects from earlier addresses
-Each deploy SHALL redirect (301) every address at which a still-existing page was published before to that page's current address in the same language. Addresses of pages that no longer exist, and of languages that are no longer published, SHALL NOT be redirected. The redirects SHALL follow the same base path as the pages, `/<lang>/` included.
-
-#### Scenario: Renamed address
-- **WHEN** the page "Kontakt" was published at `/kontakt/`, its address is changed to `/napiste-nam/`, and the site is published again
-- **THEN** `/kontakt/` redirects permanently to `/napiste-nam/`
-
-#### Scenario: Deleted page
-- **WHEN** a published page is deleted and the site is published again
-- **THEN** its old address is not redirected
-
-#### Scenario: Renamed English page
-- **WHEN** the English copy of "Kontakt" was published at `/en/kontakt/`, its slug is changed to `contact`, and the site is published again
-- **THEN** `/en/kontakt/` redirects permanently to `/en/contact/`
-
 ### Requirement: Publish history and rollback
 The project SHALL list its publishes, newest first, with the time, who published, the languages and saved versions it included, and the outcome. It SHALL mark the one that is live. A member SHALL be able to make an earlier successful publish live again. This SHALL switch the site to that deploy without re-uploading and without changing the project's saved document. On Webmio hosting this SHALL be possible only for publishes whose files are still kept (see "Keeping publishes" in the hosting capability); the history SHALL show older ones without the action.
 
@@ -183,13 +147,6 @@ A workspace's Netlify token SHALL be stored encrypted with a key from the server
 #### Scenario: Revoked token
 - **WHEN** the connected token was revoked at Netlify and a member publishes a website on Netlify
 - **THEN** the publish fails with a message asking an owner to reconnect Netlify
-
-### Requirement: Access to publishing
-Publishing, the publish history, rollback and domain settings SHALL be available only to members of the project's workspace; connecting and disconnecting Netlify only to its owners. Others SHALL get "not found", or 401 when not signed in. Requests that change them SHALL be refused when they come from another site's page.
-
-#### Scenario: Someone else's project
-- **WHEN** a member of workspace A tries to publish a project of workspace B
-- **THEN** the response is "not found" and nothing is published
 
 ### Requirement: Taking a deleted website offline
 Deleting a published project SHALL first take its website offline, and only then delete the project.
