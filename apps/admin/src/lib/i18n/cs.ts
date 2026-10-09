@@ -309,6 +309,7 @@ export const cs: Messages = {
     publishing: "Zveřejňuji…",
     connectFirst: "Nejdřív připojte Netlify v nastavení pracovního prostoru",
     notConnected: "Nepřipojeno k Netlify",
+    hostingNotSetUp: "Hosting není nastavený",
     published: "Zveřejněno",
     fixProblems: "Nejdřív opravte problémy; web s chybami nejde zveřejnit.",
     failed: "Zveřejnění selhalo ({status}).",
@@ -320,16 +321,21 @@ export const cs: Messages = {
     notConnected:
       "Tento pracovní prostor zatím není připojený k Netlify. Majitel ho může připojit v nastavení Netlify pro pracovní prostor.",
     hostingLink: "Otevřít nastavení Netlify",
+    hostingNotSetUp:
+      "Hosting Webmio není na tomto serveru nastavený, takže tento web nejde zveřejnit. Obraťte se na správce serveru.",
     team: "Zveřejňuje se do týmu na Netlify {team}.",
+    hostedByWebmio: "Hostuje Webmio.",
     address: "Adresa",
     notPublished: "Zatím nezveřejněno.",
     domain: "Doména",
     state: {
       "waiting-for-dns": "Čeká se na DNS: nastavte u registrátora domény záznamy níže.",
-      "issuing-certificate": "DNS je nastavené; Netlify vydává certifikát (HTTPS).",
+      "issuing-certificate": "DNS je nastavené; vydává se certifikát (HTTPS).",
       ready: "Hotovo: web běží na této doméně.",
     },
     dnsRecords: "Záznamy DNS, které nastavíte u registrátora",
+    forward:
+      "U registrátora také přesměrujte {domain} na {target} (často se tomu říká přesměrování nebo URL forwarding), aby web fungoval i bez www.",
     name: "Název",
     type: "Typ",
     value: "Hodnota",
@@ -344,6 +350,7 @@ export const cs: Messages = {
     failed: "Selhalo: {error}",
     live: "Aktuální",
     makeLive: "Znovu zveřejnit tuto verzi",
+    notKept: "Už se neuchovává",
     requestFailed: "Selhalo ({status}).",
   },
   history: {
@@ -1063,6 +1070,10 @@ export const cs: Messages = {
     checkFailed: "Ověření tokenu selhalo ({status}).",
     connectFailed: "Připojení selhalo ({status}).",
     ownersOnly: "Netlify mohou připojit nebo odpojit jen majitelé tohoto prostoru.",
+    webmioTitle: "Hosting",
+    webmioPageTitle: "Hosting – {workspace}",
+    webmio: "Weby prostoru {workspace} hostuje Webmio. Není potřeba nic připojovat.",
+    netlifyStays: "Weby zveřejněné dřív na Netlify se tam přes toto připojení zveřejňují dál.",
   },
   emails: {
     signInSubject: "Přihlášení do Webmia",
@@ -1113,6 +1124,8 @@ export const cs: Messages = {
     },
     publishing: {
       notSetUp: "Zveřejňování není na tomto serveru nastavené (chybí SECRET_KEY).",
+      hostingNotSetUp:
+        "Hosting Webmio není na tomto serveru nastavený, takže tento web nejde změnit.",
       notConnected:
         "Tento pracovní prostor ještě není připojený k Netlify. Majitel ho může připojit v nastavení pracovního prostoru.",
       running: "Zveřejňování tohoto webu už probíhá.",
@@ -1120,6 +1133,8 @@ export const cs: Messages = {
       tokenRefused: "Netlify tento token odmítlo. Zkontrolujte ho a zkuste to znovu.",
       wrongTeam: "S tímto tokenem nejde zveřejňovat do zvoleného týmu Netlify.",
       noFreeName: "Na Netlify se nepodařilo najít volný název webu.",
+      noFreeAddress: "Pro web se nepodařilo najít volnou adresu.",
+      nothingToConnect: "Weby na tomto serveru hostuje Webmio; není potřeba nic připojovat.",
       problems: "{problems}",
       failed: "Zveřejnění se nepovedlo: {error}",
     },
@@ -1149,6 +1164,25 @@ export const cs: Messages = {
         disconnectDomain: "odpojit doménu",
         deleteSite: "smazat web",
         readSite: "načíst web",
+      },
+    },
+    webmio: {
+      unreachable: "Hostingová služba není dostupná.",
+      failed: "Hostingové službě se nepodařilo {action} ({detail}).",
+      nameTaken: "Adresa {name} je obsazená.",
+      domainInUse:
+        "{domain} je připojená k jiné službě. Nejdřív ji odeberte tam, pak ji připojte tady.",
+      actions: {
+        upload: "nahrát {path}",
+        readFile: "načíst {path}",
+        deleteFiles: "smazat soubory",
+        listFiles: "načíst seznam souborů",
+        readKey: "načíst adresu",
+        writeKeys: "upravit adresy",
+        connectDomain: "připojit doménu",
+        checkCertificate: "zkontrolovat certifikát",
+        requestCertificate: "vyžádat certifikát",
+        disconnectDomain: "odpojit doménu",
       },
     },
   },

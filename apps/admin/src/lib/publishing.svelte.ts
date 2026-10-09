@@ -13,6 +13,8 @@ export interface PublishSummary {
   startedAt: string;
   finishedAt: string | null;
   live: boolean;
+  /** Whether it can be made live again (Webmio hosting keeps the newest publishes' files). */
+  restorable: boolean;
 }
 
 export interface DnsRecord {
@@ -22,13 +24,19 @@ export interface DnsRecord {
 }
 
 export interface PublishingInfo {
-  connected: boolean;
+  /** Whether it can publish without anyone connecting hosting first. */
+  canPublish: boolean;
+  /** Where the website is hosted, or would be on its first publish. */
+  provider: "webmio" | "netlify";
+  /** The workspace's Netlify team, when connected. */
   team: string | null;
   address: string | null;
   defaultUrl: string | null;
   domain: string | null;
   domainState: "waiting-for-dns" | "issuing-certificate" | "ready" | null;
   dnsRecords: DnsRecord[];
+  /** Webmio hosting, bare domain: where to forward it at the registrar. */
+  forwardTo: string | null;
   publishes: PublishSummary[];
 }
 

@@ -1,0 +1,6 @@
+config:
+  aws:region: eu-central-1
+  # Subdomains of the production domains, delegated to this stack's zones (infra/README.md).
+  webmio-hosting:sitesDomain: dev.webmio.site
+  webmio-hosting:netDomain: dev.webmio.net
+encryptionsalt: v1:S4JeMkcis1w=:v1:70lw8XW/I2sRZxfD:Mro81w2AFHGtSZBTgyQOQc1bXmU4XQ==

@@ -59,7 +59,7 @@ business control panel work; templates, our own hosting and the beta are next. S
 | Data | SQLite (better-sqlite3) with Drizzle ORM; one JSON site document per language, versioned on every save; Litestream for backups |
 | Images | sharp on the server (type checks, metadata stripped, a WebP width ladder, crops and turns as new images); HEIC converted in the browser |
 | Sign-in and email | magic links sent over SMTP (Nodemailer); invite-only |
-| Publishing | static export to a file tree or ZIP (fflate); Netlify's API today, our own S3 and CloudFront hosting planned |
+| Publishing | static export to a file tree or ZIP (fflate); Webmio hosting on S3 and a CloudFront multi-tenant distribution (Pulumi), with Netlify's API for websites already there |
 | Quality | Vitest unit tests, Playwright end-to-end tests, `html-validate` on rendered pages, GitHub Actions CI |
 | Process | spec-driven changes with [OpenSpec](https://github.com/Fission-AI/OpenSpec): every feature has a proposal, design, specs and tasks |
 
@@ -70,7 +70,9 @@ business control panel work; templates, our own hosting and the beta are next. S
 | [`packages/model`](packages/model) | `@webmio/model`: the site document's schema and types, validation, format upgrades, the site builder, test fixtures |
 | [`packages/render`](packages/render) | `@webmio/render`: the document to HTML, CSS, metadata and structured data, with no UI framework; runs in Node and the browser |
 | [`packages/export`](packages/export) | `@webmio/export`: the published file tree and ZIP, icons, `robots.txt`, sitemap |
+| [`packages/edge`](packages/edge) | `@webmio/edge`: Webmio hosting's edge code, the CloudFront Function's router and the Lambda@Edge not-found handler, in plain JavaScript |
 | [`apps/admin`](apps/admin) | the admin: control panel, editor, media library, publishing, accounts |
+| [`infra`](infra) | Webmio hosting's infrastructure as a Pulumi program, with `dev` and `prod` stacks ([`infra/README.md`](infra/README.md)) |
 | [`openspec`](openspec) | the specs (`openspec/specs`) and every change, done ones archived with their proposal and design |
 | [`docs`](docs) | strategy, roadmap and design notes (below) |
 
@@ -90,6 +92,28 @@ In development the admin keeps its database, media and outgoing emails under `ap
 (emails are written to `data/outbox/` unless `SMTP_URL` and `MAIL_FROM` are set), and generates
 its own `SECRET_KEY` for encrypting publishing tokens. In production set `SECRET_KEY`, `ORIGIN`,
 `DATABASE_PATH`, `MEDIA_DIR`, `SMTP_URL`, `MAIL_FROM` and `BODY_SIZE_LIMIT=25M`.
+
+### Webmio hosting
+
+With Webmio hosting configured, websites that were never published go to our own hosting, at
+`<name>.webmio.site` and their custom domains; nothing has to be connected first. Websites
+already on Netlify keep publishing there. Without it (development, tests), publishing goes to
+the workspace's Netlify team as before. Deploy the infrastructure as
+[`infra/README.md`](infra/README.md) describes, then set the stack's outputs in the admin's
+environment:
+
+| Variable | What it is |
+| --- | --- |
+| `WEBMIO_HOSTING_BUCKET` | the S3 bucket websites are uploaded to |
+| `WEBMIO_HOSTING_KVS_ARN` | the CloudFront key-value store the edge routes hostnames by |
+| `WEBMIO_HOSTING_DISTRIBUTION_ID` | the multi-tenant distribution that serves every website |
+| `WEBMIO_HOSTING_CONNECTION_GROUP_ID` | the connection group custom domains' tenants join |
+| `WEBMIO_SITES_DOMAIN` | the free addresses' domain (default `webmio.site`) |
+| `WEBMIO_CNAME_DOMAIN` | where websites' CNAME targets live, `<name>.<this>` (default `sites.webmio.net`) |
+| `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | the admin's AWS access, from the stack's IAM user |
+
+Webmio hosting counts as configured when the first four are set. The end-to-end tests use
+`WEBMIO_HOSTING_FAKE_DIR`, a folder that stands in for AWS; it is ignored in production.
 
 | Command | What it does |
 | --- | --- |

@@ -75,7 +75,13 @@ describe("publishing", () => {
     await publishesSettled();
     const result = await state();
     const address = `https://${siteName()}.netlify.app`;
-    expect(result).toMatchObject({ connected: true, team: "Aniděti", address, domain: null });
+    expect(result).toMatchObject({
+      canPublish: true,
+      provider: "netlify",
+      team: "Aniděti",
+      address,
+      domain: null,
+    });
     expect(result.publishes).toEqual([
       expect.objectContaining({
         state: "ready",
@@ -202,7 +208,7 @@ describe("publishing", () => {
     const response = await doPublish();
     expect(response.status).toBe(409);
     expect(await response.json()).toMatchObject({ reason: "not-connected" });
-    expect((await state()).connected).toBe(false);
+    expect((await state()).canPublish).toBe(false);
   });
 
   it("runs one publish at a time per project", async () => {

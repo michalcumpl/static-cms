@@ -300,6 +300,7 @@ export const en = {
     publishing: "Publishing…",
     connectFirst: "Connect Netlify in the workspace settings first",
     notConnected: "Not connected to Netlify",
+    hostingNotSetUp: "Hosting isn't set up",
     published: "Published",
     fixProblems: "Fix the problems first; the site can't be published with errors.",
     failed: "Publishing failed ({status}).",
@@ -311,16 +312,21 @@ export const en = {
     notConnected:
       "This workspace isn't connected to Netlify yet. An owner can connect it in the workspace's Netlify settings.",
     hostingLink: "Open the Netlify settings",
+    hostingNotSetUp:
+      "Webmio hosting isn't set up on this server, so this website can't be published. Ask the server's operator.",
     team: "Publishing to the Netlify team {team}.",
+    hostedByWebmio: "Hosted by Webmio.",
     address: "Address",
     notPublished: "Not published yet.",
     domain: "Domain",
     state: {
       "waiting-for-dns": "Waiting for DNS: set the records below at your domain's registrar.",
-      "issuing-certificate": "DNS is set; Netlify is issuing the certificate (HTTPS).",
+      "issuing-certificate": "DNS is set; the certificate (HTTPS) is being issued.",
       ready: "Ready: the site is served at this domain.",
     },
     dnsRecords: "DNS records to set at your registrar",
+    forward:
+      "Also forward {domain} to {target} at your registrar (often called a redirect or URL forwarding), so the site works without www too.",
     name: "Name",
     type: "Type",
     value: "Value",
@@ -335,6 +341,7 @@ export const en = {
     failed: "Failed: {error}",
     live: "Live",
     makeLive: "Make live again",
+    notKept: "No longer kept",
     requestFailed: "Failed ({status}).",
   },
   history: {
@@ -1044,6 +1051,11 @@ export const en = {
     checkFailed: "Checking the token failed ({status}).",
     connectFailed: "Connecting failed ({status}).",
     ownersOnly: "Only owners of this workspace can connect or disconnect Netlify.",
+    webmioTitle: "Hosting",
+    webmioPageTitle: "Hosting – {workspace}",
+    webmio: "{workspace}'s websites are hosted by Webmio. There's nothing to connect.",
+    netlifyStays:
+      "Websites published to Netlify before keep publishing there through this connection.",
   },
   emails: {
     signInSubject: "Sign in to Webmio",
@@ -1094,6 +1106,8 @@ export const en = {
     },
     publishing: {
       notSetUp: "Publishing isn't set up on this server (SECRET_KEY is missing).",
+      hostingNotSetUp:
+        "Webmio hosting isn't set up on this server, so this website can't be changed.",
       notConnected:
         "This workspace isn't connected to Netlify yet. An owner can connect it in the workspace settings.",
       running: "A publish of this site is already running.",
@@ -1101,6 +1115,8 @@ export const en = {
       tokenRefused: "Netlify refused this token. Check it and try again.",
       wrongTeam: "This token can't publish into that Netlify team.",
       noFreeName: "Couldn't find a free site name at Netlify.",
+      noFreeAddress: "Couldn't find a free web address for the site.",
+      nothingToConnect: "Websites on this server are hosted by Webmio; there's nothing to connect.",
       problems: "{problems}",
       failed: "Publishing failed: {error}",
     },
@@ -1129,6 +1145,25 @@ export const en = {
         disconnectDomain: "disconnect the domain",
         deleteSite: "delete the site",
         readSite: "read the site",
+      },
+    },
+    webmio: {
+      unreachable: "The hosting service couldn't be reached.",
+      failed: "The hosting service couldn't {action} ({detail}).",
+      nameTaken: "The address {name} is taken.",
+      domainInUse:
+        "{domain} is connected to another service. Remove it there first, then connect it here.",
+      actions: {
+        upload: "upload {path}",
+        readFile: "read {path}",
+        deleteFiles: "delete the files",
+        listFiles: "list the files",
+        readKey: "read the address",
+        writeKeys: "update the addresses",
+        connectDomain: "connect the domain",
+        checkCertificate: "check the certificate",
+        requestCertificate: "request a certificate",
+        disconnectDomain: "disconnect the domain",
       },
     },
   },

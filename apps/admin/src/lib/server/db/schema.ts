@@ -192,6 +192,8 @@ export const hostingConnections = sqliteTable("hosting_connections", {
   connectedAt: createdAt(),
 });
 
+export const hostingProviders = ["netlify", "webmio"] as const;
+
 /** A project's site at the provider, its custom domain, and which publish is live. */
 export const projectHosting = sqliteTable(
   "project_hosting",
@@ -199,7 +201,8 @@ export const projectHosting = sqliteTable(
     projectId: text("project_id")
       .primaryKey()
       .references(() => projects.id, { onDelete: "cascade" }),
-    provider: text("provider", { enum: ["netlify"] }).notNull(),
+    provider: text("provider", { enum: hostingProviders }).notNull(),
+    /** Netlify: the team's slug; Webmio hosting: "webmio". */
     accountSlug: text("account_slug").notNull(),
     siteId: text("site_id").notNull(),
     siteName: text("site_name").notNull(),
@@ -209,9 +212,14 @@ export const projectHosting = sqliteTable(
       enum: ["waiting-for-dns", "issuing-certificate", "ready"],
     }),
     domainCheckedAt: integer("domain_checked_at", { mode: "timestamp_ms" }),
+    /** Webmio hosting: the CloudFront tenant serving the domain (own-hosting decision 11). */
+    domainTenantId: text("domain_tenant_id"),
     livePublishId: text("live_publish_id"),
   },
-  (t) => [uniqueIndex("project_hosting_domain_idx").on(t.domain)],
+  (t) => [
+    uniqueIndex("project_hosting_domain_idx").on(t.domain),
+    uniqueIndex("project_hosting_site_name_idx").on(t.provider, t.siteName),
+  ],
 );
 
 export const publishStates = ["running", "ready", "failed"] as const;
@@ -235,6 +243,8 @@ export const publishes = sqliteTable(
     publishedBy: text("published_by").references(() => users.id, { onDelete: "set null" }),
     startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
     finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+    /** When Webmio hosting deleted the deploy's files; it can't be made live again after. */
+    filesDeletedAt: integer("files_deleted_at", { mode: "timestamp_ms" }),
   },
   (t) => [index("publishes_project_idx").on(t.projectId, t.startedAt)],
 );

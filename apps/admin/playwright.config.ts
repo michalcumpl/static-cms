@@ -2,6 +2,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { defineConfig, devices } from "@playwright/test";
+import { webmioPort } from "./e2e/ports";
 
 // One data folder per run, shared by the dev server, the global setup and the test workers
 // (workers load this config again, so the path travels in an environment variable).
@@ -20,6 +21,8 @@ export const e2eEnv = {
   ORIGIN: `http://localhost:${port}`,
   NETLIFY_API_URL: `http://127.0.0.1:${netlifyPort}`,
   SECRET_KEY: "e2e-secret-key-that-is-long-enough-1234",
+  // Webmio hosting on a folder, off until a test switches it on (e2e/fixtures.ts).
+  WEBMIO_HOSTING_FAKE_DIR: join(dataDir, "webmio"),
 };
 Object.assign(process.env, e2eEnv);
 
@@ -45,6 +48,13 @@ export default defineConfig({
     {
       command: `tsx e2e/fake-netlify-server.ts ${netlifyPort}`,
       url: `http://127.0.0.1:${netlifyPort}/__fake/uploads`,
+      reuseExistingServer: false,
+      timeout: 30_000,
+    },
+    {
+      command: `tsx e2e/fake-webmio-server.ts ${webmioPort}`,
+      url: `http://127.0.0.1:${webmioPort}/__fake/ready`,
+      env: e2eEnv,
       reuseExistingServer: false,
       timeout: 30_000,
     },

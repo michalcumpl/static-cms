@@ -197,6 +197,7 @@ export function netlifyTarget(
       );
       // Asks Netlify for the certificate; it is issued once DNS points at Netlify.
       await call(options, "POST", `/sites/${encodeURIComponent(siteId)}/ssl`);
+      return undefined;
     },
 
     async disconnectDomain(siteId) {

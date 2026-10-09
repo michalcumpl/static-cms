@@ -1,0 +1,22 @@
+{
+  "name": "@webmio/infra",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@pulumi/aws": "catalog:",
+    "@pulumi/pulumi": "catalog:",
+    "@webmio/edge": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@webmio/tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

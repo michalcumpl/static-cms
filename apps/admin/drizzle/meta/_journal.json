@@ -15,6 +15,13 @@
       "when": 1791479298822,
       "tag": "0001_image_edits",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791527864437,
+      "tag": "0002_own_hosting",
+      "breakpoints": true
     }
   ]
 }

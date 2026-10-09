@@ -16,6 +16,10 @@
     "admin": "tsx scripts/admin.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudfront": "catalog:",
+    "@aws-sdk/client-cloudfront-keyvaluestore": "catalog:",
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/signature-v4a": "catalog:",
     "@fontsource-variable/dm-sans": "catalog:",
     "@fontsource-variable/inter": "catalog:",
     "@fontsource-variable/lora": "catalog:",
@@ -25,6 +29,7 @@
     "@fontsource-variable/source-sans-3": "catalog:",
     "@fontsource-variable/source-serif-4": "catalog:",
     "@fontsource-variable/work-sans": "catalog:",
+    "@webmio/edge": "workspace:*",
     "@webmio/export": "workspace:*",
     "@webmio/model": "workspace:*",
     "@webmio/render": "workspace:*",

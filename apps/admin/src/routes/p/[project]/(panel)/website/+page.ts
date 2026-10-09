@@ -4,7 +4,7 @@ import type { PageLoad } from "./$types";
 
 /**
  * The site settings' document; the address and domain for the Domain link's summary and, with the
- * Netlify address and the connection, for the Delete website confirmation.
+ * free address and whether its hosting is reachable, for the Delete website confirmation.
  */
 export const load: PageLoad = async ({ fetch, params, parent, url }) => {
   const { lang, primaryLang } = await parent();
@@ -17,6 +17,7 @@ export const load: PageLoad = async ({ fetch, params, parent, url }) => {
     domain: (publishing?.domain as string | null) ?? null,
     address: (publishing?.address as string | null) ?? null,
     defaultUrl: (publishing?.defaultUrl as string | null) ?? null,
-    connected: Boolean(publishing?.connected),
+    canPublish: Boolean(publishing?.canPublish),
+    onNetlify: publishing?.provider === "netlify",
   };
 };

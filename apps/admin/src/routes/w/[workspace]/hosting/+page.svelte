@@ -70,18 +70,32 @@ async function disconnect() {
 </script>
 
 <svelte:head>
-  <title>{i18n.t("common.pageTitle", { page: i18n.t("hosting.pageTitle", { workspace: data.workspace.name }) })}</title>
+  <title>{i18n.t("common.pageTitle", { page: i18n.t(data.webmio ? "hosting.webmioPageTitle" : "hosting.pageTitle", { workspace: data.workspace.name }) })}</title>
 </svelte:head>
 
 <Page width="narrow">
   <PageHeader
-    title={i18n.t("hosting.title")}
+    title={i18n.t(data.webmio ? "hosting.webmioTitle" : "hosting.title")}
     breadcrumb={[{ href: "/", label: i18n.t("projects.title") }]}
     breadcrumbLabel={i18n.t("common.breadcrumb")}
   >
-    {i18n.t("hosting.intro", { workspace: data.workspace.name })}
+    {i18n.t(data.webmio ? "hosting.webmio" : "hosting.intro", { workspace: data.workspace.name })}
   </PageHeader>
 
+  {#if data.webmio}
+    {#if data.connection}
+      <!-- Only for disconnecting: websites already on Netlify keep publishing through it. -->
+      <Card title={i18n.t("hosting.connection")} id="connection">
+        <Notice kind="success">
+          <p role="status">{i18n.t("hosting.connected", { team: data.connection.accountName })}</p>
+        </Notice>
+        <p class="muted">{i18n.t("hosting.netlifyStays")}</p>
+        {#if data.role === "owner"}
+          <div><Button kind="danger" onclick={disconnect} disabled={busy}>{i18n.t("hosting.disconnect")}</Button></div>
+        {/if}
+      </Card>
+    {/if}
+  {:else}
   <Card title={i18n.t("hosting.connection")} id="connection">
     {#if data.connection}
       <Notice kind="success">
@@ -137,6 +151,7 @@ async function disconnect() {
     </Card>
   {:else}
     <p class="muted">{i18n.t("hosting.ownersOnly")}</p>
+  {/if}
   {/if}
 </Page>
 

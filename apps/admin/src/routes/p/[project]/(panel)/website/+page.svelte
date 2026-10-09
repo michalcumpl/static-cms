@@ -77,7 +77,8 @@ const editDesign = $derived(`${paths.edit()}${paths.edit().includes("?") ? "&" :
         name={data.project.name}
         address={data.defaultUrl}
         domain={data.domain}
-        connected={data.connected}
+        reachable={data.canPublish}
+        onNetlify={data.onNetlify}
         beforeDelete={() => screen?.discard()}
       />
     </div>

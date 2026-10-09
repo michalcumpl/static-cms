@@ -1,0 +1,38 @@
+{
+  "name": "@webmio/edge",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./content-types": {
+      "types": "./dist/types/content-types.d.ts",
+      "default": "./src/content-types.js"
+    },
+    "./router": {
+      "types": "./dist/types/router.d.ts",
+      "default": "./src/router.js"
+    },
+    "./not-found": {
+      "types": "./dist/types/not-found.d.ts",
+      "default": "./src/not-found.js"
+    },
+    "./bundles/viewer-request.js": "./dist/viewer-request.js",
+    "./bundles/origin-response.mjs": "./dist/origin-response.mjs"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/bundle.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@webmio/tsconfig": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

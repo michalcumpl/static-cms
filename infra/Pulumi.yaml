@@ -1,0 +1,17 @@
+name: webmio-hosting
+description: Webmio hosting, the bucket and the edge that serve published websites (own-hosting).
+runtime:
+  name: nodejs
+  options:
+    # The program is compiled by `pnpm --filter @webmio/infra build`; TypeScript 7 has no
+    # compiler API for Pulumi's built-in TypeScript support.
+    typescript: false
+    packagemanager: pnpm
+main: dist/index.js
+config:
+  sitesDomain:
+    type: string
+    description: The free addresses' domain; websites get <name>.<sitesDomain>.
+  netDomain:
+    type: string
+    description: Webmio's own domain; websites' CNAME targets are <name>.sites.<netDomain>.

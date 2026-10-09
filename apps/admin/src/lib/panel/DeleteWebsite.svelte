@@ -12,16 +12,19 @@ let {
   name,
   address,
   domain,
-  connected,
+  reachable,
+  onNetlify = false,
   beforeDelete,
 }: {
   projectId: string;
   name: string;
-  /** The Netlify address while the website is published there, else null. */
+  /** The website's free address while it is published, else null. */
   address: string | null;
   domain: string | null;
-  /** Whether the workspace is connected to Netlify. */
-  connected: boolean;
+  /** Whether its hosting can take it offline: Webmio hosting, or a connected Netlify team. */
+  reachable: boolean;
+  /** Whether it is published to Netlify, which keeps it when the workspace isn't connected. */
+  onNetlify?: boolean;
   /** Called before leaving the section, so unsaved changes are dropped without asking. */
   beforeDelete: () => void;
 } = $props();
@@ -67,13 +70,13 @@ async function remove() {
 
 <Dialog id="delete-website" title={i18n.t("panel.deletion.dialogTitle", { name })} bind:this={dialog}>
   <p>{i18n.t("panel.deletion.restorable")}</p>
-  {#if address && connected}
+  {#if address && reachable}
     <p class="warning">
       {domain
         ? i18n.t("panel.deletion.offlineDomain", { address, domain })
         : i18n.t("panel.deletion.offline", { address })}
     </p>
-  {:else if address}
+  {:else if address && onNetlify}
     <p class="warning">{i18n.t("panel.deletion.staysOnNetlify")}</p>
   {/if}
   <TextField

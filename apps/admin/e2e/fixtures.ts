@@ -7,18 +7,20 @@ import {
   type Locator,
   type Page,
 } from "@playwright/test";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { projectPaths } from "../src/lib/project-paths";
 import { createSession } from "../src/lib/server/auth";
 import { type Db, openDatabase } from "../src/lib/server/db/index";
-import { siteDocuments, versions } from "../src/lib/server/db/schema";
+import { projectHosting, publishes, siteDocuments, versions } from "../src/lib/server/db/schema";
 import { demoSite, imageBlocksSite } from "../src/lib/server/demo";
+import { resetFakeHosting } from "../src/lib/server/publishing/webmio-fake";
 import {
   projectLanguages,
   readSite,
   removeLanguage,
   saveSite,
 } from "../src/lib/server/site-documents";
+import { webmioPort } from "./ports";
 import { readState } from "./state";
 
 let db: Db | undefined;
@@ -85,6 +87,35 @@ export async function signIn(context: BrowserContext, user = state().owner): Pro
   ]);
 }
 
+/** The folder the dev server's Webmio hosting fake keeps its websites in. */
+const webmioDir = () => process.env.WEBMIO_HOSTING_FAKE_DIR ?? "";
+
+/**
+ * Switches Webmio hosting off and forgets the project's website on it, so every test starts on
+ * a server without it, as the Netlify flows expect.
+ */
+function resetWebmio(): void {
+  resetFakeHosting(webmioDir(), false);
+  const { projectId } = state();
+  const onWebmio = testDb()
+    .select({ id: projectHosting.projectId })
+    .from(projectHosting)
+    .where(and(eq(projectHosting.projectId, projectId), eq(projectHosting.provider, "webmio")))
+    .get();
+  if (!onWebmio) return;
+  testDb().delete(publishes).where(eq(publishes.projectId, projectId)).run();
+  testDb().delete(projectHosting).where(eq(projectHosting.projectId, projectId)).run();
+}
+
+/** Switches the dev server's Webmio hosting on for this test, empty. */
+export function useWebmioHosting(): void {
+  resetFakeHosting(webmioDir(), true);
+}
+
+/** A website's address on the Webmio hosting fake, as a browser reaches it. */
+export const webmioSite = (name: string, path = "/") =>
+  `http://${name}.localhost:${webmioPort}${path}`;
+
 /**
  * Every test starts from the demo site, signed in as the project's owner, and fails on
  * any uncaught error in the page. Tests about signing in use the `anonymous` option.
@@ -97,6 +128,7 @@ export const test = base.extend<{ anonymous: boolean; pageErrors: Error[] }>({
       const errors: Error[] = [];
       page.on("pageerror", (error) => errors.push(error));
       resetSite();
+      resetWebmio();
       if (!anonymous) await signIn(context);
       await use(errors);
       expect(errors.map((e) => e.message)).toEqual([]);

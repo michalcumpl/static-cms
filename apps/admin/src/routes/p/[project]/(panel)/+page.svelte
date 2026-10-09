@@ -55,10 +55,14 @@ const editDesign = $derived(`${paths.edit()}?tab=theme`);
     <PublishButton {paths} {publishing} blockedReason={data.valid ? undefined : i18n.t("publish.fixProblems")} />
   </section>
 
-  {#if info && !info.connected}
+  {#if info && !info.canPublish}
     <Notice kind="attention">
-      <p role="status">{i18n.t("publishing.notConnected")}</p>
-      <p><a href="/w/{data.workspace.id}/hosting">{i18n.t("publishing.hostingLink")}</a></p>
+      {#if info.provider === "webmio"}
+        <p role="status">{i18n.t("publishing.hostingNotSetUp")}</p>
+      {:else}
+        <p role="status">{i18n.t("publishing.notConnected")}</p>
+        <p><a href="/w/{data.workspace.id}/hosting">{i18n.t("publishing.hostingLink")}</a></p>
+      {/if}
     </Notice>
   {/if}
 

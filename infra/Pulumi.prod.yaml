@@ -1,0 +1,4 @@
+config:
+  aws:region: eu-central-1
+  webmio-hosting:sitesDomain: webmio.site
+  webmio-hosting:netDomain: webmio.net

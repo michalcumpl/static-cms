@@ -3,10 +3,9 @@ import { onDestroy, onMount } from "svelte";
 import DownloadZip from "$lib/DownloadZip.svelte";
 import { getI18n } from "$lib/i18n";
 import PublishButton from "$lib/PublishButton.svelte";
+import PublishHistory from "$lib/panel/PublishHistory.svelte";
 import { projectPaths } from "$lib/project-paths";
 import { Publishing } from "$lib/publishing.svelte";
-import Badge from "$lib/ui/Badge.svelte";
-import Button from "$lib/ui/Button.svelte";
 import Card from "$lib/ui/Card.svelte";
 import Notice from "$lib/ui/Notice.svelte";
 import TabPanel from "$lib/ui/TabPanel.svelte";
@@ -45,8 +44,6 @@ let restoreError = $state("");
 async function makeLive(id: string) {
   restoreError = (await send(paths.restore(id), "POST")) ?? "";
 }
-
-const when = (iso: string) => i18n.formatDate(iso);
 </script>
 
 <svelte:head>
@@ -54,14 +51,20 @@ const when = (iso: string) => i18n.formatDate(iso);
 </svelte:head>
 
 <TabPanel>
-  {#if info?.connected}
-    <p class="team">{i18n.t("publishing.team", { team: info.team ?? "" })}</p>
+  {#if info?.provider === "webmio"}
+    <p class="team">{i18n.t("publishing.hostedByWebmio")}</p>
+  {:else if info?.team}
+    <p class="team">{i18n.t("publishing.team", { team: info.team })}</p>
   {/if}
 
-  {#if info && !info.connected}
+  {#if info && !info.canPublish}
     <Notice kind="attention">
-      <p role="status">{i18n.t("publishing.notConnected")}</p>
-      <p><a href="/w/{data.workspace.id}/hosting">{i18n.t("publishing.hostingLink")}</a></p>
+      {#if info.provider === "webmio"}
+        <p role="status">{i18n.t("publishing.hostingNotSetUp")}</p>
+      {:else}
+        <p role="status">{i18n.t("publishing.notConnected")}</p>
+        <p><a href="/w/{data.workspace.id}/hosting">{i18n.t("publishing.hostingLink")}</a></p>
+      {/if}
     </Notice>
   {/if}
 
@@ -84,23 +87,7 @@ const when = (iso: string) => i18n.formatDate(iso);
     {#if !info || info.publishes.length === 0}
       <p class="muted">{i18n.t("publishing.nothing")}</p>
     {:else}
-      <ul class="history">
-        {#each info.publishes as publish (publish.id)}
-          <li class={publish.state}>
-            <span>{when(publish.startedAt)}</span>
-            <span class="muted">{publish.publishedBy ?? "–"}</span>
-            {#if publish.state === "running"}
-              <Badge status="attention">{i18n.t("publishing.running")}</Badge>
-            {:else if publish.state === "failed"}
-              <span class="error">{i18n.t("publishing.failed", { error: publish.error ?? "" })}</span>
-            {:else if publish.live}
-              <Badge status="success">{i18n.t("publishing.live")}</Badge>
-            {:else}
-              <Button size="sm" onclick={() => makeLive(publish.id)} disabled={busy}>{i18n.t("publishing.makeLive")}</Button>
-            {/if}
-          </li>
-        {/each}
-      </ul>
+      <PublishHistory publishes={info.publishes} {busy} onMakeLive={makeLive} />
     {/if}
     {#if restoreError}<Notice kind="problem"><p>{restoreError}</p></Notice>{/if}
   </Card>
@@ -121,34 +108,7 @@ const when = (iso: string) => i18n.formatDate(iso);
     color: var(--ui-muted);
   }
 
-  .error {
-    color: var(--ui-problem);
-  }
-
-
-
-
-
-
-
-
   .more {
     font-size: var(--ui-text-sm);
-  }
-
-  .history {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ui-space-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .history li {
-    display: grid;
-    grid-template-columns: 11rem 1fr auto;
-    align-items: center;
-    gap: var(--ui-space-3);
   }
 </style>

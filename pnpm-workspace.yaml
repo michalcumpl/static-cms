@@ -2,14 +2,23 @@ packages:
   - apps/*
   - packages/*
   - tooling/*
+  - infra
 
 # Install scripts pnpm may run: better-sqlite3 builds or fetches its native SQLite binding,
 # esbuild (used by tsx and drizzle-kit) checks its platform binary.
 allowBuilds:
   better-sqlite3: true
   esbuild: true
+  # Pulumi's protobufjs only checks its CLI's dependencies after install; nothing to build.
+  protobufjs: false
 
 catalog:
+  # Webmio hosting from the admin (own-hosting design.md decision 8). The key-value store's
+  # client signs with SigV4a, which needs the signer installed beside it.
+  "@aws-sdk/client-cloudfront": 3.1140.0
+  "@aws-sdk/client-cloudfront-keyvaluestore": 3.1140.0
+  "@aws-sdk/client-s3": 3.1140.0
+  "@aws-sdk/signature-v4a": 3.1138.0
   "@biomejs/biome": 2.5.14
   # The admin's own interface font (admin-foundation design.md decision 3), SIL Open Font Licence.
   "@fontsource-variable/dm-sans": 5.3.0
@@ -25,6 +34,9 @@ catalog:
   "@fontsource-variable/source-serif-4": 5.3.0
   "@fontsource-variable/work-sans": 5.3.0
   "@playwright/test": ^1.63.0
+  # Webmio hosting's infrastructure program (own-hosting design.md decision 13).
+  "@pulumi/aws": 7.47.0
+  "@pulumi/pulumi": 3.263.0
   "@sveltejs/adapter-node": ^5.5.7
   "@sveltejs/kit": ^2.70.3
   "@sveltejs/vite-plugin-svelte": ^7.3.1

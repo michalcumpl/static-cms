@@ -6,7 +6,10 @@ import { connectDomain, disconnectDomain } from "$lib/server/publishing/domains"
 import { PublishError } from "$lib/server/publishing/target";
 import type { RequestHandler } from "./$types";
 
-/** Connects `{ domain }`: 200, 400 (not a domain), 409 (not published, taken, not connected). */
+/**
+ * Connects `{ domain }`: 200, 400 (not a domain), 409 (not published, taken here or by another
+ * service, not connected), 502 (the hosting failed).
+ */
 export const PUT: RequestHandler = async (event) => {
   requireMember(event, event.params.project, { api: true });
   const input = (await event.request.json().catch(() => ({}))) as { domain?: unknown };

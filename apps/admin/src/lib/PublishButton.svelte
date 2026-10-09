@@ -38,7 +38,8 @@ async function onclick() {
   await publishing.publish();
 }
 
-const connected = $derived(publishing.info?.connected ?? true);
+const canPublish = $derived(publishing.info?.canPublish ?? true);
+const onWebmio = $derived(publishing.info?.provider === "webmio");
 const status = $derived(publishing.status);
 const failure = $derived.by(() => {
   if (status.kind !== "failed") return "";
@@ -56,8 +57,13 @@ const failure = $derived.by(() => {
     icon="upload"
     {size}
     {onclick}
-    disabled={status.kind === "publishing" || !connected || Boolean(blockedReason)}
-    title={blockedReason ?? (connected ? undefined : i18n.t("publish.connectFirst"))}
+    disabled={status.kind === "publishing" || !canPublish || Boolean(blockedReason)}
+    title={blockedReason ??
+      (canPublish
+        ? undefined
+        : onWebmio
+          ? i18n.t("publish.hostingNotSetUp")
+          : i18n.t("publish.connectFirst"))}
   >
     {status.kind === "publishing"
       ? i18n.t("publish.publishing")
@@ -66,8 +72,8 @@ const failure = $derived.by(() => {
         : i18n.t("publish.publish")}
   </Button>
   <span class="publish-status" aria-live="polite">
-    {#if !connected}
-      <a href={paths.publishPage}>{i18n.t("publish.notConnected")}</a>
+    {#if !canPublish}
+      <a href={paths.publishPage}>{onWebmio ? i18n.t("publish.hostingNotSetUp") : i18n.t("publish.notConnected")}</a>
     {:else if status.kind === "published"}
       {i18n.t("publish.published")} · <a href={status.url} target="_blank" rel="noopener">{status.url.replace(/^https:\/\//, "")}</a>
     {:else if status.kind === "failed"}

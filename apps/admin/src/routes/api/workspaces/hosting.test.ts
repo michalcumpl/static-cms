@@ -1,9 +1,13 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { hostingConnections, users } from "$lib/server/db/schema";
 import { newId } from "$lib/server/ids";
 import { addMember } from "$lib/server/members";
 import { type FakeNetlify, startFakeNetlify } from "$lib/server/publishing/fake-netlify";
 import { thrownBy, useTestProject } from "$lib/server/test-project";
+import { load as hostingPage } from "../../w/[workspace]/hosting/+page.server";
 import { DELETE, GET, PUT } from "./[workspace]/hosting/+server";
 import { POST as listTeamsRoute } from "./[workspace]/hosting/teams/+server";
 
@@ -126,5 +130,46 @@ describe("connecting a workspace to Netlify", () => {
     expect(await thrownBy(() => GET(event(base(), project().outsider)))).toMatchObject({
       status: 404,
     });
+  });
+});
+
+describe("on a server with Webmio hosting", () => {
+  type PageEvent = Parameters<typeof hostingPage>[0];
+  const page = async () =>
+    (await hostingPage(
+      project().event(
+        `/w/${project().workspaceId}/hosting`,
+        project().owner,
+      ) as unknown as PageEvent,
+    )) as { webmio: boolean; connection: unknown };
+  let folder: string;
+  beforeEach(() => {
+    folder = mkdtempSync(join(tmpdir(), "webmio-hosting-page-"));
+    process.env.WEBMIO_HOSTING_FAKE_DIR = folder;
+  });
+  afterEach(() => {
+    delete process.env.WEBMIO_HOSTING_FAKE_DIR;
+    rmSync(folder, { recursive: true, force: true });
+  });
+
+  it("Webmio hosting, not connected: hosted by Webmio, nothing to connect", async () => {
+    expect(await page()).toMatchObject({ webmio: true, connection: null });
+    const response = await put({ token: TOKEN, account: "anideti" });
+    expect(response.status).toBe(409);
+    expect((await response.json()).message).toBe(
+      "Websites on this server are hosted by Webmio; there's nothing to connect.",
+    );
+  });
+
+  it("shows a workspace's existing connection, so an owner can disconnect it", async () => {
+    delete process.env.WEBMIO_HOSTING_FAKE_DIR;
+    expect((await put({ token: TOKEN, account: "anideti" })).status).toBe(200);
+    process.env.WEBMIO_HOSTING_FAKE_DIR = folder;
+    expect(await page()).toMatchObject({
+      webmio: true,
+      connection: { accountName: "Aniděti" },
+    });
+    expect((await DELETE(event(base(), project().owner, { method: "DELETE" }))).status).toBe(204);
+    expect((await page()).connection).toBeNull();
   });
 });

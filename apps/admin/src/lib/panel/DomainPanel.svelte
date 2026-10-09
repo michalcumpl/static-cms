@@ -84,6 +84,9 @@ async function disconnectDomain() {
           </tbody>
         </table>
       {/if}
+      {#if info.forwardTo}
+        <p class="forward">{i18n.t("publishing.forward", { domain: info.domain, target: info.forwardTo })}</p>
+      {/if}
       <div class="buttons">
         <Button onclick={checkDomain} disabled={busy}>{i18n.t("publishing.checkAgain")}</Button>
         <Button kind="danger" onclick={disconnectDomain} disabled={busy}>{i18n.t("publishing.disconnect")}</Button>

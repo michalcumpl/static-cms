@@ -4,13 +4,13 @@
 // scheduled jobs.
 import { rmSync } from "node:fs";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
-import type { Said } from "$lib/i18n";
+import { type Said, said } from "$lib/i18n";
 import type { Db } from "./db/index";
 import { projectHosting, projects, users } from "./db/schema";
 import { mediaRoot } from "./import-working-copy";
 import { projectFolder } from "./media";
-import { type NetlifyEnv, publishTarget } from "./publishing/connection";
-import { PublishError, type PublishErrorKind } from "./publishing/target";
+import { type HostingEnv, targetFor } from "./publishing/connection";
+import { hostedSite, PublishError, type PublishErrorKind } from "./publishing/target";
 
 export type DeleteResult =
   | { ok: true }
@@ -18,15 +18,15 @@ export type DeleteResult =
   | { ok: false; reason: PublishErrorKind; message: Said };
 
 /**
- * Deletes a live project: its Netlify site first (which frees its custom domain), then its
- * hosting record, and it's marked deleted. When Netlify fails nothing changes; when the workspace
- * isn't connected any more, the Netlify site is left as it is.
+ * Deletes a live project: its website first (offline at once, its custom domain freed), then its
+ * hosting record, and it's marked deleted. When the hosting fails nothing changes; when a
+ * Netlify site's workspace isn't connected any more, the site is left as it is.
  */
 export async function deleteProject(
   db: Db,
   projectId: string,
   userId: string,
-  options: NetlifyEnv = {},
+  options: HostingEnv = {},
 ): Promise<DeleteResult> {
   const project = db
     .select({ workspaceId: projects.workspaceId })
@@ -35,14 +35,22 @@ export async function deleteProject(
     .get();
   if (!project) return { ok: false, reason: "not-found" };
   const hosting = db
-    .select({ siteId: projectHosting.siteId })
+    .select()
     .from(projectHosting)
     .where(eq(projectHosting.projectId, projectId))
     .get();
-  const connection = hosting ? publishTarget(db, project.workspaceId, options) : undefined;
-  if (hosting && connection) {
+  const chosen = hosting ? targetFor(db, projectId, options) : undefined;
+  if (hosting && !chosen?.ok && hosting.provider === "webmio") {
+    // A website on Webmio hosting can't be left online behind the owner's back.
+    return {
+      ok: false,
+      reason: "unreachable",
+      message: said("server.webmio.unreachable"),
+    };
+  }
+  if (hosting && chosen?.ok) {
     try {
-      await connection.target.deleteSite(hosting.siteId);
+      await chosen.value.target.deleteSite(hosting.siteId, hostedSite(hosting));
     } catch (error) {
       if (error instanceof PublishError) {
         return { ok: false, reason: error.kind, message: error.said };
