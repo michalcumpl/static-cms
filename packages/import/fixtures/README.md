@@ -8,9 +8,16 @@ made up; the example sites' real content stays out of the repository.
   with a group, a page disallowed by `robots.txt` and one only in `sitemap.xml`, lazy and
   `srcset` images with size suffixes, a CSS background photo, an SVG logo and a touch icon, a
   gallery, a row of linked logos, a YouTube embed, `<details>` questions, a form, a map, an email
-  hidden by Cloudflare, literal `*` and `[` in a text, and a skipped heading level.
+  hidden by Cloudflare, literal `*` and `[` in a text, and a skipped heading level. Its contact
+  page shows opening hours in a table (as its structured data gives them), its story three key
+  figures, and its bread page "Jak to funguje" as an ordered list of bold-titled steps.
 - **`studio/`**: a one-page English site in minified, unquoted HTML, with inline styles, a
   percent-encoded email and a link to a Czech version.
+- **`agency/`**: a small Czech travel agency at `https://cestovka-vlna.example/`
+  (import-existing-blocks): a home page with a grid of six article cards (four linking to its trip
+  pages, two to articles it doesn't serve), a Lodgify booking widget under "Rezervace", and three
+  award logos with their names in the footer; a contact page with a Google map naming its address
+  and no address of its own.
 - **`spa/`**: a page built by a script, with an empty `<div id="app">`.
 
 The bakery's files name its address, `https://pekarna-ulipy.cz`, in absolute links. Tests that

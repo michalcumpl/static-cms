@@ -16,6 +16,26 @@ describe("fixture sites", () => {
     expect(hasFixture("bakery", "/admin/")).toBe(false);
   });
 
+  it("the agency's pages parse, and two of its cards link to pages it doesn't serve", () => {
+    const pages = ["/", "/zajezdy/chorvatsko/", "/zajezdy/italie/", "/zajezdy/recko/"];
+    for (const path of [...pages, "/zajezdy/rakousko/", "/kontakt/"]) {
+      const $ = cheerio.load(fixtureText("agency", path));
+      expect($("title").text(), path).toContain("Cestovka Vlna");
+    }
+    const $ = cheerio.load(fixtureText("agency", "/"));
+    expect($(".card").length).toBe(6);
+    const targets = $(".card h3 a")
+      .toArray()
+      .map((a) => $(a).attr("href") ?? "");
+    expect(targets.filter((href) => !hasFixture("agency", href))).toEqual([
+      "/clanky/tipy-na-leto/",
+      "/clanky/jak-se-balit/",
+    ]);
+    for (const img of $("img").toArray()) {
+      expect(hasFixture("agency", $(img).attr("src") ?? ""), $(img).attr("src")).toBe(true);
+    }
+  });
+
   it("the studio is one minified page", () => {
     const $ = cheerio.load(fixtureText("studio", "/"));
     expect($("html").attr("lang")).toBe("en-GB");

@@ -192,6 +192,126 @@ describe("reading a whole site", () => {
   });
 });
 
+describe("structures as Webmio's blocks (import-existing-blocks)", () => {
+  const AGENCY_PAGES = [
+    "/",
+    "/zajezdy/chorvatsko/",
+    "/zajezdy/italie/",
+    "/zajezdy/recko/",
+    "/zajezdy/rakousko/",
+    "/kontakt/",
+  ];
+  const agency = imported("agency", AGENCY_PAGES);
+  const bakery = imported("bakery", BAKERY_PAGES);
+  const blocksOf = (site: ImportedSite, slug: string) => {
+    const nodes = nodesOf(site);
+    const page = Object.values(nodes).find((n) => n.type === "page" && n.slug === slug);
+    return (page.blocks.nodes as string[]).map((id) => nodes[id]);
+  };
+  const types = (site: ImportedSite, slug: string) => blocksOf(site, slug).map((b) => b.type);
+
+  it("maps each structure to its block", () => {
+    expect(types(agency, "uvod")).toEqual([
+      "hero",
+      "rich_text",
+      "cards",
+      "call_to_action",
+      "logos",
+    ]);
+    expect(types(agency, "kontakt")).toEqual(["rich_text", "contact"]);
+    expect(types(bakery, "kontakt")).toContain("opening_hours");
+    expect(types(bakery, "o-nas")).toContain("figures");
+    expect(types(bakery, "nase-pecivo").at(-1)).toBe("steps");
+  });
+
+  it("links cards to the imported pages, and the call to action to the booking service", () => {
+    const nodes = nodesOf(agency);
+    const cards = blocksOf(agency, "uvod").find((b) => b.type === "cards");
+    expect(text(cards.heading)).toBe("Kam vyrazit");
+    const items = (cards.items.nodes as string[]).map((id) => nodes[id]);
+    expect(items).toHaveLength(6);
+    const linked = items.map((card) => (card.target_id ? nodes[card.target_id].slug : card.url));
+    expect(linked).toEqual(["chorvatsko", "italie", "recko", "rakousko", "", ""]);
+    const cta = blocksOf(agency, "uvod").find((b) => b.type === "call_to_action");
+    expect(text(cta.heading)).toBe("Rezervace");
+    expect(text(cta.text)).toBe("Termín zájezdu si zarezervujete přímo v kalendáři.");
+    const action = nodes[(cta.actions.nodes as string[])[0] ?? ""];
+    expect(action).toMatchObject({
+      type: "external_link",
+      url: "https://checkout.lodgify.com/cestovka-vlna/cs/#/123",
+    });
+  });
+
+  it("takes the map's place as the location's link when it has no address", () => {
+    const location = Object.values(nodesOf(agency)).find((n) => n.type === "location");
+    expect(location.map_url).toBe(
+      "https://www.google.com/maps/search/?api=1&query=Masarykova%2012%2C%20Brno",
+    );
+    // The bakery has its address: its map link comes from it.
+    const bakeryLocation = Object.values(nodesOf(bakery)).find((n) => n.type === "location");
+    expect(bakeryLocation.map_url).toBe("");
+  });
+
+  it("validates without errors but images to describe", () => {
+    // The images' sizes come with their upload, in the admin.
+    const later = new Set(["missing-alt", "missing-image-size"]);
+    for (const site of [agency, bakery]) {
+      const errors = validateSite(site.document, { templates: TEMPLATE_RELEASES }).problems.filter(
+        (p) => p.severity === "error" && !later.has(p.code),
+      );
+      expect(errors).toEqual([]);
+    }
+  });
+
+  it("Award logos in the footer: the home page ends with them, named and linked", () => {
+    const nodes = nodesOf(agency);
+    const logos = blocksOf(agency, "uvod").at(-1);
+    const items = (logos.items.nodes as string[]).map((id) => nodes[id]);
+    expect(items.map((i) => [text(i.name), i.url])).toEqual([
+      ["Cestovka roku 2024", ""],
+      ["Zlatý kompas 2023", ""],
+      ["Cena čtenářů", "https://www.example.org/ceny"],
+    ]);
+    // Three, so neither the site's logo nor the Facebook icon beside them; each with its image.
+    expect(items.every((i) => nodes[(i.image.nodes as string[])[0] ?? ""]?.src)).toBe(true);
+    // The bakery's footer has no logos: its home page ends as before.
+    expect(types(bakery, "uvod").at(-1)).not.toBe("logos");
+  });
+
+  it("reads award logos in a block its template calls a footer, with a footer elsewhere", () => {
+    // Mareš Partners: the awards in `.a-footer` inside the article, a copyright `<footer>` below.
+    const award = (file: string, alt: string, words: string) =>
+      `<a href="#" class="external a-footer-award"><img src="/img/awards/${file}" alt="${alt}"><small>${words}</small></a>`;
+    const html = `<html lang="en"><body><article><p>MAREŠ PARTNERS is a leading independent law firm.</p>
+      <div class="a-footer">${award("finmon.png", "Finance Monthly\t", "Legal Awards")}${award("intl.png", "Corporate INTL", "Global Awards 2018")}</div>
+      </article><footer class="f"><p>Copyright</p></footer></body></html>`;
+    const pages = [{ url: "https://www.marespartners.cz/", html, css: [] }];
+    const first = readSite(pages, { languages: LANGUAGES, fallbackLanguage: "en" });
+    const files = new Map(first.images.map((ref, i) => [ref.id, `a-${i + 1}.png`]));
+    const site = readSite(pages, { languages: LANGUAGES, fallbackLanguage: "en", images: files });
+    const nodes = nodesOf(site);
+    const logos = blocksOf(site, "home").at(-1);
+    expect(logos.type).toBe("logos");
+    expect((logos.items.nodes as string[]).map((id) => text(nodes[id].name))).toEqual([
+      "Finance Monthly",
+      "Corporate INTL",
+    ]);
+  });
+
+  it("splits more than 12 cards into blocks of 12", () => {
+    const card = (n: number) =>
+      `<div class="card"><img src="/c${n}.jpg" alt="Karta ${n}" width="400"><h3>Karta ${n}</h3></div>`;
+    const html = `<html lang="cs"><body><main><h1>Vše</h1><h2>Nabídka</h2><div class="grid">${Array.from({ length: 14 }, (_, i) => card(i + 1)).join("")}</div></main></body></html>`;
+    const pages = [{ url: "https://nabidka.example/", html, css: [] }];
+    const first = readSite(pages, { languages: LANGUAGES, fallbackLanguage: "cs" });
+    const files = new Map(first.images.map((ref, i) => [ref.id, `c-${i + 1}.jpg`]));
+    const site = readSite(pages, { languages: LANGUAGES, fallbackLanguage: "cs", images: files });
+    const cards = blocksOf(site, "uvod").filter((b) => b.type === "cards");
+    expect(cards.map((b) => b.items.nodes.length)).toEqual([12, 2]);
+    expect(cards.map((b) => text(b.heading))).toEqual(["Nabídka", ""]);
+  });
+});
+
 describe("other sites", () => {
   it("Logo and photo drawn by CSS: the logo, and the photo for the home page's hero", () => {
     const html = `<!doctype html><html lang="en"><head><title>Mareš Partners</title></head>

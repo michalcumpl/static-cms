@@ -120,12 +120,10 @@ describe("page content", () => {
     expect(JSON.stringify(home.segments)).not.toContain("chleb.jpg");
   });
 
-  it("A contact form, a map and a hidden email: left out and reported", () => {
+  it("A contact form and a hidden email: left out and reported; the map isn't", () => {
     const contact = read("/kontakt.html");
-    expect(contact.leftOut).toEqual([
-      { reason: "form", page: "/kontakt.html", detail: "" },
-      { reason: "embed", page: "/kontakt.html", detail: "www.google.com" },
-    ]);
+    expect(contact.leftOut).toEqual([{ reason: "form", page: "/kontakt.html", detail: "" }]);
+    expect(contact.segments).toContainEqual({ kind: "map", heading: "", place: "" });
     expect(JSON.stringify(contact.segments)).not.toContain("protected");
   });
 

@@ -1,3 +1,4 @@
+import type { Weekday } from "@webmio/model";
 import { load } from "cheerio";
 import { describe, expect, it } from "vitest";
 import { type RetryPagesOptions, readPagesForRetry } from "./retry.js";
@@ -36,6 +37,7 @@ function options(extra: Partial<RetryPagesOptions> = {}): RetryPagesOptions {
       ]),
     ),
     newId: (type) => `r${++n}_${type}`,
+    lang: "cs",
     ...extra,
   };
 }
@@ -96,5 +98,21 @@ describe("reading pages for a retry", () => {
       "media/chleb.jpg",
     ]);
     expect(read.leftOut.filter((l) => l.reason === "image")).toEqual([]);
+  });
+
+  it("maps a retried page's structures to blocks: the map, and the hours the business has", () => {
+    const blocks = (hours: Weekday[]) => {
+      const read = readPagesForRetry(
+        [source("/kontakt.html")],
+        options({ hoursDays: new Set(hours) }),
+      );
+      const [page] = read.pages;
+      const ids = (page?.page.blocks as { nodes: string[] } | undefined)?.nodes ?? [];
+      return ids.map((id) => page?.nodes.find((n) => n.id === id)?.type);
+    };
+    expect(blocks(["mon", "tue", "wed", "thu", "fri", "sat"])).toEqual(
+      expect.arrayContaining(["contact", "opening_hours"]),
+    );
+    expect(blocks([])).not.toContain("opening_hours");
   });
 });
