@@ -128,8 +128,11 @@ interface Inspected {
   height: number;
 }
 
-/** Reads an image's header: its format and upright size, or why it can't be used. */
-async function inspect(
+/**
+ * Reads an image's header: its format and upright size, or why it can't be used. The importer
+ * checks fetched images with it before uploading them (site-import).
+ */
+export async function inspect(
   bytes: Uint8Array,
 ): Promise<{ ok: true; image: Inspected } | { ok: false; status: 413 | 415; message: Said }> {
   let metadata: Metadata;

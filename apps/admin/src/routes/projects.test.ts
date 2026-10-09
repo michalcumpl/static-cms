@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { importsSettled } from "$lib/server/import/job";
 import { addMember, listWorkspaces } from "$lib/server/members";
 import { readSite } from "$lib/server/site-documents";
 import { defined, thrownBy, useTestProject } from "$lib/server/test-project";
@@ -11,7 +12,7 @@ type NewEvent = Parameters<typeof newLoad>[0];
 let workspace = "";
 const project = useTestProject(() => ({ workspace }));
 
-const create = defined(newActions.default);
+const create = defined(newActions.empty);
 
 function createEvent(name: string, user = project().owner) {
   workspace = project().workspaceId;
@@ -67,5 +68,53 @@ describe("/w/[workspace]/new", () => {
     workspace = workspaceId;
     const event = project().event(`/w/${workspaceId}/new`, outsider) as unknown as NewEvent;
     expect(await thrownBy(() => newLoad(event))).toMatchObject({ status: 403 });
+  });
+});
+
+describe("/w/[workspace]/new: start from your current website (site-import)", () => {
+  const start = defined(newActions.import);
+  function importEvent(fields: Record<string, string>, user = project().owner) {
+    workspace = project().workspaceId;
+    const body = new FormData();
+    for (const [key, value] of Object.entries(fields)) body.set(key, value);
+    return project().event(`/w/${workspace}/new`, user, {
+      method: "POST",
+      body,
+    }) as unknown as Parameters<typeof start>[0];
+  }
+
+  it("No confirmation: says so, keeping the address", async () => {
+    expect(await start(importEvent({ address: "pekarna-ulipy.cz" }))).toMatchObject({
+      status: 400,
+      data: {
+        address: "pekarna-ulipy.cz",
+        importError: "Confirm that you may use this website's content.",
+      },
+    });
+  });
+
+  it("Not a web address: refused", async () => {
+    expect(
+      await start(importEvent({ address: "http://192.168.1.10/", confirm: "on" })),
+    ).toMatchObject({
+      status: 400,
+      data: { importError: "Only public web addresses can be imported, such as pekarna.cz." },
+    });
+  });
+
+  it("starts the import and shows its progress", async () => {
+    const thrown = await thrownBy(() =>
+      start(importEvent({ address: "pekarna-ulipy.cz", confirm: "on" })),
+    );
+    expect(thrown?.status).toBe(303);
+    expect(thrown?.location).toMatch(new RegExp(`^/w/${project().workspaceId}/imports/im_`));
+    await importsSettled();
+  });
+
+  it("is only for owners", async () => {
+    const { db, workspaceId, outsider } = project();
+    addMember(db, workspaceId, outsider.id, "editor");
+    const event = importEvent({ address: "pekarna-ulipy.cz", confirm: "on" }, outsider);
+    expect(await thrownBy(() => start(event))).toMatchObject({ status: 403 });
   });
 });

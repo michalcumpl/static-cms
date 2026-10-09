@@ -3,6 +3,63 @@
 *Written 2026-10-07 from migrating the five example sites by hand (`example-sites`). The rules
 `site-import` v1 automates; the parts marked **AI** wait for v2.*
 
+## In code (site-import v1)
+
+The reading is [`@webmio/import`](../packages/import/) (pure, tested on the invented sites in
+`packages/import/fixtures/`); the fetching, the job and the review are in the admin
+(`apps/admin/src/lib/server/import/`).
+
+| Rule | Where | v1 |
+| --- | --- | --- |
+| Browser-like requests, compressed responses, charsets (`windows-1250` included) | `safe-fetch.ts`, `crawl.ts` | done |
+| No internal addresses, size limits, timeouts, `robots.txt` | `safe-fetch.ts`, `robots.ts` | done |
+| Pages from the menu, then `sitemap.xml`, 20 at most | `links.ts`, `crawl.ts` | done |
+| Lazy images, `srcset`, size suffixes, CSS backgrounds | `images.ts`, `blocks.ts` | done |
+| SVG logo and favicon to PNG; other SVGs left out | admin `images.ts` | done |
+| Hidden emails reported, percent-encoded ones decoded | `business.ts` | done |
+| Business from JSON-LD (`@graph` too), microdata, `tel:`/`mailto:`, `<address>` | `business.ts` | done |
+| Social profiles | `links.ts`, `business.ts` | done |
+| Texts, subheadings without skipped levels, lists, tables | `blocks.ts`, `text.ts` | done |
+| Photo beside text, galleries, logo rows, YouTube and Vimeo | `blocks.ts` | done |
+| `<details>` and FAQPage questions into the FAQ collection | `blocks.ts`, `site.ts` | done |
+| Theme: colours, catalogue fonts, contrast | `theme.ts` | done |
+| Each page's old address, redirected when published | `site.ts`, admin `publishing/redirects.ts` | done |
+| Forms, maps and widgets left out and reported | `blocks.ts` | done |
+| Other languages | | reported, not imported |
+| One-page sites split into pages per section | | not yet: imported as one home page |
+| Subpages of one kind as collection items; repeated cards as services or team | | **AI** (v2) |
+| Booking widgets as a call to action | | not yet: reported as an embed |
+| Pages built by JavaScript (headless browser) | `script.ts` | detected and reported, not read |
+| Links to PDFs as documents | | not yet: links to the old site's own files are dropped |
+
+## The examples imported (2026-10-09)
+
+`pnpm admin import-site` on the seven examples, after fixing what the first run showed. Each
+wrong result a v1 rule should handle became a fixture test in `@webmio/import`.
+
+| Example | Pages, images, questions, profiles | What it missed or left out |
+| --- | --- | --- |
+| Aniděti | 1, 18, 14, 5 | One-page site: imported as one home page (the split is not v1). A map embed. |
+| Mareš Partners | 13, 0, 0, 0 | The award logos are in the footer, which isn't read as content. The Czech version reported. |
+| Mortgage Specialist | 20, 29, 0, 0 | 91 blog posts over the page limit; Webnode's SVG icons (in `<embed>`) left out as images; two pages built by a script. |
+| Fond 10X | 5, 9, 0, 1 | The Czech pages reported as another language; an AVIF chart and SVG icons left out; a newsletter form on every page. |
+| Roubenka Svitávka | 3, 13, 7, 3 | The booking widget (Lodgify) and a Wix video reported as embeds; the availability page is built by a script; the English pages reported. |
+| Scénografie | 20, 98, 0, 2 | 327 project pages over the limit and 4 images over 100: projects need the collection (v2). Decorative SVGs left out. |
+| Punk Film | 3, 39, 0, 3 | The SVG logo address answers 404; the clients' SVG logos left out; the references are linked from the Work page, not the menu, so they stay out (projects, v2). |
+
+What the first run taught, now rules with tests:
+- Links to videos aren't social profiles, and profiles are compared without their query and
+  trailing slash (Aniděti listed 25 "profiles", all its videos).
+- A language switcher's link to the imported language isn't another language (Mareš), links to
+  other sites are never language versions (Scénografie's Facebook sat in its switcher), and pages
+  in another language than the home page are left out (Fond 10X, Roubenka).
+- A page with photos isn't "built by a script" however little text it has (Scénografie's
+  galleries).
+- Menus can be plain links in a header or a list in a `.navigation` container (Punk Film).
+- An `<embed>` showing an image is an image (Webnode).
+- FAQPage structured data gives questions (Roubenka's 7).
+- The same thing left out twice on a page is reported once.
+
 ## Fetching
 
 | What we met | Rule |

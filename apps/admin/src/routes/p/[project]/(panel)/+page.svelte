@@ -55,6 +55,12 @@ const editDesign = $derived(`${paths.edit()}?tab=theme`);
     <PublishButton {paths} {publishing} blockedReason={data.valid ? undefined : i18n.t("publish.fixProblems")} />
   </section>
 
+  {#if data.importReview}
+    <Notice kind="info">
+      <p>{i18n.t("imports.overview")} <a href={data.importReview}>{i18n.t("imports.review")}</a></p>
+    </Notice>
+  {/if}
+
   {#if info && !info.connected}
     <Notice kind="attention">
       <p role="status">{i18n.t("publishing.notConnected")}</p>

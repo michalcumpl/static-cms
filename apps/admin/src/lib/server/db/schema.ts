@@ -253,3 +253,61 @@ export const publishDocuments = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.publishId, t.lang] })],
 );
+
+export const importStates = ["running", "done", "failed"] as const;
+
+/** What an import is doing: its phase and how far it is (site-import, "Import progress"). */
+export interface ImportProgress {
+  phase: "pages" | "images" | "building";
+  done: number;
+  total: number;
+}
+
+/**
+ * Imports of a website by its address (site-import design decision 9): the running job, then
+ * the project it made and its review, or why it failed.
+ */
+export const imports = sqliteTable(
+  "imports",
+  {
+    id: text("id").primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+    /** The address the owner gave, with its scheme. */
+    address: text("address").notNull(),
+    state: text("state", { enum: importStates }).notNull(),
+    progress: text("progress", { mode: "json" }).$type<ImportProgress>(),
+    /** Why it failed, in the language of the person who started it. */
+    error: text("error"),
+    projectId: text("project_id").references(() => projects.id, { onDelete: "set null" }),
+    /** What was imported and left out, for the review (`ImportReport` of `@webmio/import`). */
+    report: text("report", { mode: "json" }).$type<unknown>(),
+    reviewDismissed: integer("review_dismissed", { mode: "boolean" }).notNull().default(false),
+    startedAt: integer("started_at", { mode: "timestamp_ms" }).notNull(),
+    finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+  },
+  (t) => [
+    index("imports_workspace_idx").on(t.workspaceId, t.startedAt),
+    index("imports_project_idx").on(t.projectId),
+  ],
+);
+
+/**
+ * Each imported page's path on the old site, redirected to the page's address when published
+ * (site-import design decisions 9 and 10). Keyed by page, so a deleted page's path goes with it.
+ */
+export const pageOrigins = sqliteTable(
+  "page_origins",
+  {
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    lang: text("lang").notNull(),
+    pageId: text("page_id").notNull(),
+    /** The path on the old site, like `/kontakt.html`. */
+    path: text("path").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.projectId, t.lang, t.pageId] })],
+);

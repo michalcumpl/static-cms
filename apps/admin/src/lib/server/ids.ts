@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 
-export type IdPrefix = "u" | "w" | "p" | "d" | "v" | "pb";
+export type IdPrefix = "u" | "w" | "p" | "d" | "v" | "pb" | "im";
 
 /**
  * A random ID with a type prefix, e.g. `p_3kTq9xW1bZcA`: safe in URLs, and never

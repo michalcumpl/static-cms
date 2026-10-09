@@ -127,6 +127,29 @@ export type BlockInput =
       limit?: number;
     };
 
+/**
+ * The characters a backslash escapes in the inline syntax, so a literal `*` or `[` survives
+ * (site-import design decision 3). While a text is parsed, each escaped character stands in as a
+ * private-use character, one character long, which no owner's text contains.
+ */
+const ESCAPED = ["*", "[", "]", "(", ")", "\\"] as const;
+const PLACEHOLDER = (i: number) => String.fromCharCode(0xe000 + i);
+
+function hideEscapes(source: string): string {
+  return source.replace(/\\([*[\]()\\])/g, (_m, char: string) =>
+    PLACEHOLDER(ESCAPED.indexOf(char as (typeof ESCAPED)[number])),
+  );
+}
+
+function showEscapes(text: string): string {
+  return text.replace(/[-]/g, (char) => ESCAPED[char.charCodeAt(0) - 0xe000] ?? "");
+}
+
+/** Text as the inline syntax writes it literally: its markup characters escaped. */
+export function escapeInline(text: string): string {
+  return text.replace(/[*[\]()\\]/g, (char) => `\\${char}`);
+}
+
 /** How the block factory makes nodes and finds pages. */
 export interface BlockFactoryContext {
   /** Stores a node of `type` with `props` (under `id`, or a new ID) and returns its ID. */
@@ -147,7 +170,8 @@ export function blockFactory(ctx: BlockFactoryContext) {
     add(type, { ...props, hidden: false });
 
   /** A text value from the inline syntax, with its marks as nodes. */
-  const text = (source = ""): TextValue => {
+  const text = (input = ""): TextValue => {
+    const source = hideEscapes(input);
     const marks: Mark[] = [];
     let content = "";
     const pattern = /\*\*(.+?)\*\*|\*(.+?)\*|\[(.+?)\]\((.+?)\)/g;
@@ -162,7 +186,7 @@ export function blockFactory(ctx: BlockFactoryContext) {
       if (match[1] !== undefined) nodeId = add("strong", {});
       else if (match[2] !== undefined) nodeId = add("emphasis", {});
       else {
-        const target = match[4] ?? "";
+        const target = showEscapes(match[4] ?? "");
         nodeId = target.startsWith("page:")
           ? add("internal_link", { page_id: pageId(target.slice(5)) })
           : add("link", { href: target });
@@ -171,7 +195,8 @@ export function blockFactory(ctx: BlockFactoryContext) {
       last = (match.index ?? 0) + match[0].length;
     }
     content += source.slice(last);
-    return { content, marks, annotations: [] };
+    // Each placeholder is one character, so the marks' offsets stay right.
+    return { content: showEscapes(content), marks, annotations: [] };
   };
 
   const image = (input: ImageInput | undefined) =>

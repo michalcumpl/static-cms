@@ -20,6 +20,8 @@ export interface ProjectPaths {
   /** The Publish section, and its Versions subpage (`?lang=`). */
   publishPage: string;
   versionsPage: string;
+  /** The review of the import that made the project (site-import). */
+  importReview: string;
   /** The editor: `…/edit/` opens the home page, `…/edit/<page-id>/` a given page. */
   edit(pageId?: string): string;
   /** Base path the preview renders with. */
@@ -77,6 +79,7 @@ export function projectPaths(projectId: string, lang?: string): ProjectPaths {
     domainPage: `${base}website/domain`,
     publishPage: `${base}publish`,
     versionsPage: `${base}publish/versions${query}`,
+    importReview: `${base}import`,
     edit: (pageId = "") => (pageId ? `${base}edit/${pageId}/${query}` : `${base}edit/${query}`),
     preview: `${base}preview/`,
     api: `/api/projects/${projectId}/site${query}`,

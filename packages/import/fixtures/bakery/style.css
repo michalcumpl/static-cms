@@ -1,0 +1,15 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap");
+
+html,body{margin:0;padding:0}
+body{font-family:"Brandon Grotesque",Helvetica,Arial,sans-serif;color:#2b2118;background:#fffaf3;line-height:1.5}
+h1,h2,h3,h4{font-family:"Playfair Display",Georgia,serif;color:#2b2118}
+a{color:#fe3500}
+a:hover{color:#c42a00}
+.btn{display:inline-block;padding:.5em 1em;background:#fe3500;color:#fff;border-radius:4px}
+.site-header{background:#fffaf3;border-bottom:1px solid #eadfce}
+.main-nav a{color:#2b2118}
+.hero{background:#f2e3d0}
+.banner{background-image:url(/images/pec.jpg);background-size:cover;color:#fff}
+.partners img{height:60px}
+footer{background:#2b2118;color:#fffaf3}
+footer a{color:#fffaf3}

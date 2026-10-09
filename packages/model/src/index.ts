@@ -7,6 +7,7 @@ export {
   type BlockNodesContext,
   blockFactory,
   createBlockNodes,
+  escapeInline,
 } from "./block-nodes.js";
 export {
   type BlockInput,

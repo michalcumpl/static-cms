@@ -2,10 +2,11 @@ import type { Redirect } from "@webmio/export";
 import { upgradeSite } from "@webmio/templates";
 import { and, asc, eq } from "drizzle-orm";
 import type { Db } from "../db/index";
-import { publishDocuments, publishes, versions } from "../db/schema";
+import { pageOrigins, publishDocuments, publishes, versions } from "../db/schema";
 
 // Earlier addresses of still-existing pages redirect to their current ones (netlify-publishing
-// design.md decision 5). Pages that no longer exist get no redirect.
+// design.md decision 5), and so do imported pages' paths on the old site (site-import). Pages
+// that no longer exist get no redirect.
 
 type LooseDoc = {
   document_id?: string;
@@ -47,6 +48,29 @@ export function redirectsFrom(earlier: readonly unknown[], current: unknown): Re
     .sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
 }
 
+/**
+ * Redirects from imported pages' paths on the old site to their current addresses (site-import
+ * design decision 10): only for pages that still exist, never for paths with a query, and never
+ * for a path that is now a page's address. `skip` holds paths already redirected.
+ */
+export function redirectsFromOrigins(
+  origins: readonly { pageId: string; path: string }[],
+  current: unknown,
+  skip: ReadonlySet<string> = new Set(),
+): Redirect[] {
+  const now = pageAddresses(current);
+  const taken = new Set(now.values());
+  const redirects = new Map<string, string>();
+  for (const { pageId, path } of origins) {
+    const to = now.get(pageId);
+    if (to === undefined || path.includes("?") || taken.has(path) || skip.has(path)) continue;
+    redirects.set(path, to);
+  }
+  return [...redirects]
+    .map(([from, to]) => ({ from, to }))
+    .sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
+}
+
 /** A language's documents in a project's successful publishes, oldest first. */
 export function publishedDocuments(db: Db, projectId: string, lang: string): unknown[] {
   return db
@@ -78,8 +102,19 @@ export function earlierAddresses(
   basePath = "/",
 ): Redirect[] {
   const prefix = basePath.replace(/\/+$/, "");
-  return redirectsFrom(publishedDocuments(db, projectId, lang), current).map(({ from, to }) => ({
-    from: prefix + from,
+  const earlier = redirectsFrom(publishedDocuments(db, projectId, lang), current).map(
+    ({ from, to }) => ({ from: prefix + from, to: prefix + to }),
+  );
+  // The old site's paths are paths of the whole old site, so they get no language prefix.
+  const origins = db
+    .select({ pageId: pageOrigins.pageId, path: pageOrigins.path })
+    .from(pageOrigins)
+    .where(and(eq(pageOrigins.projectId, projectId), eq(pageOrigins.lang, lang)))
+    .all();
+  const skip = new Set(earlier.map((r) => r.from));
+  const imported = redirectsFromOrigins(origins, current, skip).map(({ from, to }) => ({
+    from,
     to: prefix + to,
   }));
+  return [...earlier, ...imported];
 }

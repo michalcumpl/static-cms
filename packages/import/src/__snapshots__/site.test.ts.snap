@@ -1,0 +1,63 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`reading a whole site > reports what it imported and left out 1`] = `
+{
+  "address": "https://pekarna-ulipy.cz/",
+  "business": {
+    "address": true,
+    "email": false,
+    "hours": true,
+    "name": true,
+    "phone": true,
+  },
+  "images": 12,
+  "leftOut": [
+    {
+      "detail": "https://pekarna-ulipy.cz/en/",
+      "reason": "language",
+    },
+    {
+      "reason": "hidden-email",
+    },
+    {
+      "detail": "",
+      "page": "/kontakt.html",
+      "reason": "form",
+    },
+    {
+      "detail": "www.google.com",
+      "page": "/kontakt.html",
+      "reason": "embed",
+    },
+  ],
+  "pages": [
+    {
+      "oldPath": "/",
+      "slug": "",
+      "title": "Úvod",
+    },
+    {
+      "oldPath": "/nase-pecivo/",
+      "slug": "nase-pecivo",
+      "title": "Naše pečivo",
+    },
+    {
+      "oldPath": "/o-nas/",
+      "slug": "o-nas",
+      "title": "Náš příběh",
+    },
+    {
+      "oldPath": "/akce/",
+      "slug": "akce",
+      "title": "Letošní akce",
+    },
+    {
+      "oldPath": "/kontakt.html",
+      "slug": "kontakt",
+      "title": "Kontakt",
+    },
+  ],
+  "questions": 3,
+  "socialProfiles": 2,
+}
+`;

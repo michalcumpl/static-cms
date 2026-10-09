@@ -1,0 +1,8 @@
+User-agent: Googlebot
+Disallow: /akce/
+
+User-agent: *
+Disallow: /admin/
+Allow: /admin/verejne/
+
+Sitemap: https://pekarna-ulipy.cz/sitemap.xml

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { blocks, siteBuilder } from "./builder.js";
-import { validateSite } from "./index.js";
+import { escapeInline, validateSite } from "./index.js";
 
 // The site builder (example-sites design decision 1).
 
@@ -235,6 +235,31 @@ describe("siteBuilder", () => {
       type: "internal_link",
       page_id: "page_2",
     });
+  });
+
+  it("keeps escaped markup characters as text (site-import)", () => {
+    const site = siteBuilder({ name: "Pekárna", lang: "cs", description: "Pekárna." });
+    site.location({ street: "Lipová 1", city: "Brno" });
+    const literal = "Ceny se *hvězdičkou* [1] platí do (31. 12.) \\ kus";
+    site.page({ title: "Úvod", slug: "uvod" }, [
+      blocks.text(`${escapeInline(literal)} a **${escapeInline("*nově*")}**`),
+      blocks.text("[Akce](https://pekarna.cz/a_(b)) je tu"),
+    ]);
+    const doc = site.build();
+    const nodes = Object.values(doc.nodes) as unknown as {
+      type: string;
+      content?: { content: string; marks: { start_offset: number; end_offset: number }[] };
+      text?: { content: string; marks: { node_id: string }[] };
+      href?: string;
+    }[];
+    const paragraph = nodes.find((n) => n.type === "paragraph")?.content;
+    expect(paragraph?.content).toBe(`${literal} a *nově*`);
+    expect(paragraph?.marks).toEqual([
+      expect.objectContaining({ start_offset: literal.length + 3, end_offset: literal.length + 9 }),
+    ]);
+    // An unescaped link keeps working, its address up to the first closing parenthesis.
+    expect(nodes.find((n) => n.type === "link")?.href).toBe("https://pekarna.cz/a_(b");
+    expect(validateSite(doc).problems.filter((p) => p.severity === "error")).toEqual([]);
   });
 
   it("puts menu pages in the nav and makes the first page home", () => {

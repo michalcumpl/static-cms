@@ -2,7 +2,7 @@
 // Uses the same database settings as the app (DATABASE_PATH, MIGRATIONS_DIR).
 
 import { and, eq } from "drizzle-orm";
-import { createUser } from "../src/lib/server/admin-commands";
+import { createUser, importSiteCommand } from "../src/lib/server/admin-commands";
 import { openDatabase } from "../src/lib/server/db/index";
 import { memberships } from "../src/lib/server/db/schema";
 import { loadSite } from "../src/lib/server/load-site";
@@ -18,7 +18,12 @@ const usage = `Usage:
   pnpm admin load-site <folder> --workspace <workspace id>
       Creates a project in the workspace from a folder: project.json (name, primaryLang,
       languages), a site document per language and its images in images/. Prints every
-      problem and creates nothing when the folder has errors.`;
+      problem and creates nothing when the folder has errors.
+  pnpm admin import-site <workspace id> <address>
+      Imports a public website into a new project of the workspace, as its first owner, with
+      the same rules and limits as "Start from your current website". Prints the progress,
+      what was imported and left out, and the project's address. Use only for content the
+      workspace may use.`;
 
 const [command, ...args] = process.argv.slice(2);
 const origin = process.env.ORIGIN ?? "http://localhost:5173";
@@ -66,6 +71,10 @@ if (command === "create-user" && args.length === 2) {
     process.exit(1);
   }
   console.log(`Loaded: ${origin}/p/${result.projectId}/`);
+} else if (command === "import-site" && args.length === 2) {
+  const [workspaceId = "", address = ""] = args;
+  const result = await importSiteCommand(openDatabase(), workspaceId, address, origin, console.log);
+  process.exit(result.ok ? 0 : 1);
 } else {
   console.error(usage);
   process.exit(command ? 1 : 0);

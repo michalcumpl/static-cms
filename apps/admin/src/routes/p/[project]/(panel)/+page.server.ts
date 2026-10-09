@@ -3,6 +3,7 @@ import { designSummary, siteSummary } from "$lib/panel/summary";
 import { projectPaths } from "$lib/project-paths";
 import { notFound } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
+import { projectImport } from "$lib/server/import/job";
 import { readSite } from "$lib/server/site-documents";
 import type { PageServerLoad } from "./$types";
 
@@ -24,5 +25,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     })),
     summary: siteSummary(doc),
     design: designSummary(doc),
+    // A project made by an import links its review until the owner has done reviewing.
+    importReview: (() => {
+      const made = projectImport(getDb(), params.project);
+      return made?.report && !made.reviewDismissed ? paths.importReview : null;
+    })(),
   };
 };

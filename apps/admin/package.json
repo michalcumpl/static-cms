@@ -26,6 +26,7 @@
     "@fontsource-variable/source-serif-4": "catalog:",
     "@fontsource-variable/work-sans": "catalog:",
     "@webmio/export": "workspace:*",
+    "@webmio/import": "workspace:*",
     "@webmio/model": "workspace:*",
     "@webmio/render": "workspace:*",
     "@webmio/templates": "workspace:*",

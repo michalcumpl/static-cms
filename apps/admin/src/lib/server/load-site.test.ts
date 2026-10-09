@@ -4,6 +4,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
   writeFileSync,
 } from "node:fs";
 import { createRequire } from "node:module";
@@ -14,7 +15,7 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { media, projects } from "./db/schema";
 import { mediaRoot } from "./import-working-copy";
-import { loadSite } from "./load-site";
+import { createSiteProject, loadSite, type SiteToCreate } from "./load-site";
 import { primaryLanguage, projectLanguages, readSite, versionCount } from "./site-documents";
 import { useTestProject } from "./test-project";
 
@@ -137,5 +138,49 @@ describe("loadSite", () => {
       ok: false,
       problems: ["No workspace w_none.", 'project.json: "xx" isn\'t an offered language.'],
     });
+  });
+});
+
+describe("createSiteProject (site-import design decision 8)", () => {
+  /** The English site from memory, its image without a description. */
+  function draft(): SiteToCreate {
+    const doc = site("en") as unknown as { nodes: Record<string, Record<string, unknown>> };
+    const image = Object.values(doc.nodes).find((n) => n.type === "image");
+    if (image) image.alt = "";
+    return {
+      name: "Mortgage Specialist",
+      primaryLang: "en",
+      source: "https://mortgagespecialist.cz/",
+      languages: new Map([["en", { label: "en", doc: doc as never }]]),
+      files: new Map([["prague.png", new Uint8Array(readFileSync(heroPng))]]),
+    };
+  }
+
+  it("refuses a site-rule error unless the draft allows it", async () => {
+    const { db, workspaceId, owner } = project();
+    const refused = await createSiteProject(db, workspaceId, owner.id, draft());
+    expect(refused.ok).toBe(false);
+    const kept = await createSiteProject(db, workspaceId, owner.id, draft(), {
+      allowSiteProblems: true,
+    });
+    if (!kept.ok) throw new Error(kept.problems.join("\n"));
+    const problems = readSite(db, kept.projectId)?.problems ?? [];
+    expect(problems.map((p) => p.code)).toContain("missing-alt");
+  });
+
+  it("refuses a structural problem even for a draft, leaving nothing behind", async () => {
+    const { db, workspaceId, owner } = project();
+    const before = projectsOf().length;
+    const broken = draft();
+    const doc = broken.languages.get("en")?.doc as unknown as {
+      nodes: Record<string, Record<string, unknown>>;
+    };
+    (doc.nodes.page_1?.blocks as { nodes: string[] }).nodes.push("gone");
+    const result = await createSiteProject(db, workspaceId, owner.id, broken, {
+      allowSiteProblems: true,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.problems.join(" ")).toContain("gone");
+    expect(projectsOf()).toHaveLength(before);
   });
 });

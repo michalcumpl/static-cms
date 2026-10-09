@@ -69,6 +69,7 @@ business control panel work; templates, our own hosting and the beta are next. S
 | --- | --- |
 | [`packages/model`](packages/model) | `@webmio/model`: the site document's schema and types, validation, format upgrades, the site builder, test fixtures |
 | [`packages/templates`](packages/templates) | `@webmio/templates`: the templates (design tokens, styles, default looks, layouts), making pages from layouts, template upgrades; see [`docs/templates.md`](docs/templates.md) |
+| [`packages/import`](packages/import) | `@webmio/import`: reading a public website's pages into a site document, its images and a report, for "Start from your current website"; see [`docs/import-mapping.md`](docs/import-mapping.md) |
 | [`packages/render`](packages/render) | `@webmio/render`: the document to HTML, CSS, metadata and structured data, with no UI framework; runs in Node and the browser |
 | [`packages/export`](packages/export) | `@webmio/export`: the published file tree and ZIP, icons, `robots.txt`, sitemap |
 | [`apps/admin`](apps/admin) | the admin: control panel, editor, media library, publishing, accounts |
