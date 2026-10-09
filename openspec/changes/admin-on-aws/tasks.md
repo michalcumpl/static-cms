@@ -21,7 +21,7 @@
 ## 3. Deploys
 
 - [x] 3.1 Add `.github/workflows/deploy.yml` (after CI succeeds on `main`, plus `workflow_dispatch` for `dev`): ARM runner, OIDC, build and push, `webmio-deploy` through SSM, failing when it fails; verify it with `actionlint`
-- [ ] 3.2 Deploy the `dev` stack (`pulumi up`, operator approves) and run the first deploy by `workflow_dispatch`; verify `https://app.dev.webmio.net/healthz` answers 200 over a valid certificate and that HTTP redirects to HTTPS
+- [x] 3.2 Deploy the `dev` stack (`pulumi up`, operator approves) and run the first deploy by `workflow_dispatch`; verify `https://app.dev.webmio.net/healthz` answers 200 over a valid certificate and that HTTP redirects to HTTPS
 
 ## 4. Verification on `dev`
 

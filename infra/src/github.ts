@@ -7,7 +7,10 @@ import * as pulumi from "@pulumi/pulumi";
 import { repository } from "./admin.js";
 import { account, config, name, region, stack } from "./hosting.js";
 
-const githubRepository = "michalcumpl/webmio";
+// The repository as GitHub names it in its tokens' subject: with the owner's and repository's
+// immutable IDs, so a renamed or re-created repository isn't trusted
+// (`gh api repos/michalcumpl/webmio/actions/oidc/customization/sub`).
+const githubRepository = "michalcumpl@134929375/webmio@1394510292";
 const issuer = "token.actions.githubusercontent.com";
 
 // An account has one provider for GitHub. The stack that creates it (githubProvider: create)

@@ -165,7 +165,7 @@ instance role through IMDSv2. In `prod` the IAM user and its access key are not 
      named after the stack, whose variables are the stack's outputs `AWS_DEPLOY_ROLE_ARN` and
      `ECR_REPOSITORY`;
   2. assumes the stack's deploy role through GitHub's OIDC provider. The role trusts only
-     `repo:michalcumpl/webmio:environment:<stack>`, since a job in an environment gets that
+     `repo:michalcumpl@134929375/webmio@1394510292:environment:<stack>` (GitHub names the owner and repository with their immutable IDs), since a job in an environment gets that
      subject rather than its branch. The `prod` environment's branch rule allows only `main`;
      `dev` allows any branch, for testing a branch there.
      - The account has one OIDC provider for GitHub. `dev` creates it and keeps it when
