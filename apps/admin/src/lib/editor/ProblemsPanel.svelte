@@ -1,5 +1,6 @@
 <script lang="ts">
 import { type Problem, validateSite } from "@webmio/model";
+import { TEMPLATE_RELEASES } from "@webmio/templates";
 import { onMount, tick, untrack } from "svelte";
 import { goto } from "$app/navigation";
 import { getI18n } from "$lib/i18n";
@@ -26,7 +27,7 @@ let problems = $state.raw<Problem[]>(untrack(() => editor.savedProblems));
 $effect(() => {
   const doc = editor.session.doc;
   const timer = setTimeout(() => {
-    problems = validateSite(doc).problems;
+    problems = validateSite(doc, { templates: TEMPLATE_RELEASES }).problems;
   }, 300);
   return () => clearTimeout(timer);
 });

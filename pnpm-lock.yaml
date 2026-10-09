@@ -320,6 +320,9 @@ importers:
       '@webmio/render':
         specifier: workspace:*
         version: link:../../packages/render
+      '@webmio/templates':
+        specifier: workspace:*
+        version: link:../../packages/templates
       better-sqlite3:
         specifier: 'catalog:'
         version: 12.11.1
@@ -393,6 +396,9 @@ importers:
       '@webmio/render':
         specifier: workspace:*
         version: link:../render
+      '@webmio/templates':
+        specifier: workspace:*
+        version: link:../templates
       fflate:
         specifier: 'catalog:'
         version: 0.8.3
@@ -433,6 +439,9 @@ importers:
       '@webmio/model':
         specifier: workspace:*
         version: link:../model
+      '@webmio/templates':
+        specifier: workspace:*
+        version: link:../templates
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -443,6 +452,25 @@ importers:
       html-validate:
         specifier: 'catalog:'
         version: 9.7.1(vitest@5.0.2(@types/node@22.20.4)(vite@8.3.1(@types/node@22.20.4)(esbuild@0.28.2)(tsx@4.23.15)))
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.2(@types/node@22.20.4)(vite@8.3.1(@types/node@22.20.4)(esbuild@0.28.2)(tsx@4.23.15))
+
+  packages/templates:
+    dependencies:
+      '@webmio/model':
+        specifier: workspace:*
+        version: link:../model
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.4
+      '@webmio/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

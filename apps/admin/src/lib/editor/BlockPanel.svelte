@@ -21,6 +21,7 @@ import { setProjectsCategory, setProjectsLimit } from "./item-pages";
 import { selectedLookBlock, setBlockLook } from "./looks";
 import { openAfterSaving } from "./screen.svelte";
 import type { EditorState } from "./state.svelte";
+import { selectedVisibility, setBlockHidden } from "./visibility";
 
 // Options of the selected block: which of the business details a contact block shows, and what
 // a collection block shows (business-collections, "Collection block mode").
@@ -67,6 +68,8 @@ const categories = $derived(
 const LIMITS = [0, 3, 4, 6, 8, 9, 12];
 // A hero's, services', team's or gallery's look (block-variants).
 const lookBlock = $derived(selectedLookBlock(editor.session));
+// Whether the block is on the website (template-system).
+const visibility = $derived(selectedVisibility(editor.session));
 
 /** How an item is named in the list of items to add: its first text. */
 function itemLabel(id: string): string {
@@ -108,6 +111,25 @@ function addPicked() {
     {/if}
   {/if}
 {/snippet}
+
+{#if visibility}
+  {@const shown = visibility}
+  <section class="panel" aria-labelledby="visibility-panel-title" data-history-keys>
+    <h2 id="visibility-panel-title">{i18n.t("editor.visibility.title")}</h2>
+    <label class="check">
+      <input
+        type="checkbox"
+        role="switch"
+        checked={!shown.hidden}
+        onchange={(e) => setBlockHidden(editor.session, shown.id, !e.currentTarget.checked)}
+      />
+      {i18n.t("editor.visibility.switch")}
+    </label>
+    {#if shown.hidden}
+      <p class="hint hidden-hint">{i18n.t("editor.visibility.hiddenHint")}</p>
+    {/if}
+  </section>
+{/if}
 
 {#if lookBlock && !collectionBlock}
   <section class="panel" aria-labelledby="look-panel-title" data-history-keys>
@@ -264,6 +286,10 @@ function addPicked() {
 
   .look {
     margin-bottom: 0.75rem;
+  }
+
+  .hint.hidden-hint {
+    margin: 0.5rem 0 0;
   }
 
   .hint {

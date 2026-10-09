@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import {
   applySharedFields,
   copyPageInto,
-  migrateSite,
   type Problem,
   type TranslationPage,
   translationStatus,
@@ -10,6 +9,7 @@ import {
   validateSite,
 } from "@webmio/model";
 import { isLanguageCode, languageName } from "@webmio/render";
+import { TEMPLATE_RELEASES, upgradeSite } from "@webmio/templates";
 import { and, eq, sql } from "drizzle-orm";
 import { type Said, said } from "$lib/i18n";
 import type { Db } from "./db/index";
@@ -46,7 +46,7 @@ function currentDocument(db: Db, projectId: string, lang: string) {
     .innerJoin(versions, eq(versions.id, siteDocuments.currentVersionId))
     .where(and(eq(siteDocuments.projectId, projectId), eq(siteDocuments.lang, lang)))
     .get();
-  return row ? { ...row, document: migrateSite(row.document) } : undefined;
+  return row ? { ...row, document: upgradeSite(row.document) } : undefined;
 }
 
 /** The project's primary language, or undefined when there is no such project. */
@@ -80,7 +80,7 @@ export function readSite(db: Db, projectId: string, lang?: string): SiteSnapshot
     document,
     version: row.version,
     versionId: row.versionId,
-    problems: validateSite(document).problems,
+    problems: validateSite(document, { templates: TEMPLATE_RELEASES }).problems,
   };
 }
 
@@ -99,7 +99,7 @@ export function saveSite(
   lang?: string,
   options: { restoredFrom?: string } = {},
 ): SaveResult {
-  const { problems } = validateSite(document);
+  const { problems } = validateSite(document, { templates: TEMPLATE_RELEASES });
   const broken = problems.filter((p) => p.category === "structure" && p.severity === "error");
   if (broken.length > 0) return { ok: false, reason: "invalid", problems: broken };
   const wanted = lang ?? primaryLanguage(db, projectId);

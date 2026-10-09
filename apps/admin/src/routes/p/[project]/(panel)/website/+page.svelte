@@ -4,13 +4,15 @@ import SectionScreen from "$lib/editor/SectionScreen.svelte";
 import { getI18n } from "$lib/i18n";
 import DeleteWebsite from "$lib/panel/DeleteWebsite.svelte";
 import DesignCard from "$lib/panel/DesignCard.svelte";
+import HomeSections from "$lib/panel/HomeSections.svelte";
 import { designSummary, siteSummary } from "$lib/panel/summary";
 import { projectPaths } from "$lib/project-paths";
 import TabPanel from "$lib/ui/TabPanel.svelte";
 import type { PageProps } from "./$types";
 
 // The Website section (project-page spec, "Website section"): the site's settings, saved like
-// the Business section; the design at a glance; and its subpages, each with a summary.
+// the Business section; the design at a glance; the home page's sections, whose switches the
+// same Save saves; and its subpages, each with a summary.
 let { data }: PageProps = $props();
 const i18n = getI18n();
 
@@ -50,6 +52,7 @@ const editDesign = $derived(`${paths.edit()}${paths.edit().includes("?") ? "&" :
     >
       <div class="side">
         <div class="card"><DesignCard {design} {logoUrl} editHref={editDesign} /></div>
+        <div class="card"><HomeSections /></div>
         <nav class="card subpages" aria-label={i18n.t("panel.website.more")}>
           <ul>
             <li>

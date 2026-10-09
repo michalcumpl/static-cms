@@ -183,6 +183,7 @@ describe("exportSite", () => {
     nodes.videos_1 = {
       id: "videos_1",
       type: "videos",
+      hidden: false,
       heading: { content: "", marks: [], annotations: [] },
       items: { nodes: ["video_1"], marks: [], annotations: [] },
     };
@@ -260,6 +261,7 @@ describe("exportSite", () => {
     nodes.projects_1 = {
       id: "projects_1",
       type: "projects",
+      hidden: false,
       heading: { content: "", marks: [], annotations: [] },
       show: "all",
       chosen: { nodes: [], marks: [], annotations: [] },

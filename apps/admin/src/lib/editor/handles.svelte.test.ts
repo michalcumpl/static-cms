@@ -22,7 +22,12 @@ describe("handleTargets", () => {
   it("finds the service and its services block from inside the service's text", () => {
     const session = setup();
     const { block, item } = handleTargets(session, ["site_1", "services", 2, "description"]);
-    expect(block).toMatchObject({ listPath: home, index: 1, id: "services_1", type: "services" });
+    expect(block).toMatchObject({
+      listPath: home,
+      index: 1,
+      id: "services_1",
+      type: "services",
+    });
     expect(item).toMatchObject({
       listPath: ["site_1", "services"],
       index: 2,

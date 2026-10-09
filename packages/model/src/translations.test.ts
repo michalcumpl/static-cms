@@ -30,6 +30,7 @@ function addCenik(nodes: LooseNodes, inMenu = true) {
   nodes.twi_cenik = {
     id: "twi_cenik",
     type: "text_with_image",
+    hidden: false,
     heading: text("Ceny"),
     body: list(["p_cenik"]),
     image: list(["img_cenik"]),

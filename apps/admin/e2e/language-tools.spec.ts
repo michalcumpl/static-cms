@@ -32,6 +32,7 @@ function addPage(doc: Doc, id: string, title: string, slug: string) {
   doc.nodes[`${id}_text`] = {
     id: `${id}_text`,
     type: "rich_text",
+    hidden: false,
     body: { nodes: [`${id}_p`], marks: [], annotations: [] },
   };
   doc.nodes[`${id}_p`] = {

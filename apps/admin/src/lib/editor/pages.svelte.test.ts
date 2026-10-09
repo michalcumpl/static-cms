@@ -72,6 +72,37 @@ describe("addPage", () => {
     expect(menuLabels(s)).toEqual(["Úvod", "Kontakt"]);
     expect(s.get(id)).toBeUndefined();
   });
+
+  it("Add a page from a layout: the Services layout on a Czech site, undone in one step", () => {
+    const { session: s } = editor();
+    const id = addPage(s, "Služby", "services");
+    if (!id) throw new Error("no page added");
+    expect(node(s, id)).toMatchObject({ title: "Služby", slug: "sluzby", translation_key: id });
+    const blocks = (node(s, id).blocks.nodes as string[]).map((b) => node(s, b));
+    expect(blocks.map((b) => b.type)).toEqual(["rich_text", "services", "call_to_action"]);
+    expect(blocks[1]).toMatchObject({ show: "all", layout: "cards", hidden: false });
+    expect(menuLabels(s).at(-1)).toBe("Služby");
+    expect(errors(s)).toEqual([]);
+    s.undo();
+    expect(pageIds(s)).toEqual(["page_home", "page_contact"]);
+    expect(s.get(id)).toBeUndefined();
+    expect(s.get(blocks[1]?.id)).toBeUndefined();
+  });
+
+  it("fills the hero of the Home layout from the site", () => {
+    const { session: s } = editor();
+    const id = addPage(s, "Úvod 2", "home") as string;
+    const hero = node(s, node(s, id).blocks.nodes[0]);
+    expect(hero.heading.content).toBe(node(s, "site_1").name);
+    expect(errors(s)).toEqual([]);
+  });
+
+  it("adds a blank page for a layout the template doesn't have", () => {
+    const { session: s } = editor();
+    const id = addPage(s, "Ceník", "menu") as string;
+    const blocks = node(s, id).blocks.nodes as string[];
+    expect(blocks.map((b) => node(s, b).type)).toEqual(["rich_text"]);
+  });
 });
 
 describe("deletePage", () => {

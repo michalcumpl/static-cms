@@ -219,14 +219,14 @@ describe("upgrading stored documents", () => {
     const site = readSite(db, projectId);
     if (!site) throw new Error("project has no document");
     const doc = site.document as Doc;
-    expect(doc.nodes.site_1).toMatchObject({ schema_version: 12, home_page_id: "page_home" });
+    expect(doc.nodes.site_1).toMatchObject({ schema_version: 13, home_page_id: "page_home" });
     expect(doc.nodes.page_home.slug).toBe("uvod");
     expect(site.problems).toEqual([]);
     expect(storedDoc(db, projectId)).toEqual(demoSiteV1());
     expect(readSite(db, projectId)?.version).toBe(site.version);
   });
 
-  it("returns a version-2 document upgraded to version 12", () => {
+  it("returns a version-2 document upgraded to version 13", () => {
     const db = openDatabase(":memory:");
     const { workspaceId } = setup(db);
     const v2 = JSON.parse(
@@ -236,10 +236,44 @@ describe("upgrading stored documents", () => {
     const site = readSite(db, projectId);
     if (!site) throw new Error("project has no document");
     const doc = site.document as Doc;
-    expect(doc.nodes.site_1).toMatchObject({ schema_version: 12, allow_ai_training: true });
+    expect(doc.nodes.site_1).toMatchObject({ schema_version: 13, allow_ai_training: true });
     expect(doc.nodes.page_contact.share_image.nodes).toEqual([]);
     expect(doc.nodes.theme_1.font_body).toBe("system-sans");
     expect(site.problems).toEqual([]);
+  });
+
+  it("reads a version-12 document as Standard at release 1, with every block shown", () => {
+    const db = openDatabase(":memory:");
+    const { workspaceId } = setup(db);
+    const v12 = JSON.parse(
+      readFileSync(require.resolve("@webmio/model/fixtures/demo-site-v12.json"), "utf8"),
+    ) as Doc;
+    const projectId = createProject(db, workspaceId, "Pekárna", v12);
+    const site = readSite(db, projectId);
+    if (!site) throw new Error("project has no document");
+    const doc = site.document as Doc;
+    expect(doc.nodes.site_1).toMatchObject({
+      schema_version: 13,
+      template: "standard",
+      template_release: 1,
+    });
+    expect(doc.nodes.hero_1.hidden).toBe(false);
+    expect(site.problems).toEqual([]);
+    expect(storedDoc(db, projectId)).toEqual(v12);
+  });
+
+  it("reports a page that shows nothing, and a template the code doesn't know", () => {
+    const db = openDatabase(":memory:");
+    const { workspaceId } = setup(db);
+    const doc = structuredClone(demoSite()) as Doc;
+    doc.nodes.rich_text_contact.hidden = true;
+    const projectId = createProject(db, workspaceId, "Pekárna", doc);
+    expect(readSite(db, projectId)?.problems.map((p) => [p.severity, p.code])).toEqual([
+      ["warning", "page-shows-nothing"],
+    ]);
+    doc.nodes.site_1.template = "bakery";
+    const other = createProject(db, workspaceId, "Pekárna 2", doc);
+    expect(readSite(db, other)?.problems.map((p) => p.code)).toContain("unknown-template");
   });
 
   it("stores the upgrade with the next save based on the returned version", () => {
@@ -252,7 +286,7 @@ describe("upgrading stored documents", () => {
     const result = saveSite(db, projectId, userId, doc, site.version);
     expect(result.ok).toBe(true);
     const stored = storedDoc(db, projectId);
-    expect(stored.nodes.site_1.schema_version).toBe(12);
+    expect(stored.nodes.site_1.schema_version).toBe(13);
     expect(stored.nodes.hero_1.heading.content).toBe("Nový chléb");
   });
 });

@@ -1,6 +1,7 @@
 // A language's saved versions (version-history design.md decision 1): listing them with their
 // marks, reading one for its preview, and restoring one as a new version.
-import { applySharedFields, migrateSite, type Problem } from "@webmio/model";
+import { applySharedFields, type Problem } from "@webmio/model";
+import { upgradeSite } from "@webmio/templates";
 import { and, desc, eq, inArray, lt, or, sql } from "drizzle-orm";
 import type { Db } from "./db/index";
 import {
@@ -173,7 +174,7 @@ export function readVersion(
 ): { lang: string; document: unknown; savedAt: Date } | undefined {
   const row = storedVersion(db, projectId, versionId);
   if (!row) return undefined;
-  let document = migrateSite(row.document);
+  let document = upgradeSite(row.document);
   if (row.lang !== primaryLanguage(db, projectId)) {
     const primary = readSite(db, projectId);
     if (primary) document = applySharedFields(primary.document, document);
@@ -206,7 +207,7 @@ export function restoreVersion(
     db,
     projectId,
     userId,
-    migrateSite(row.document),
+    upgradeSite(row.document),
     baseVersion ?? current.version,
     row.lang,
     { restoredFrom: versionId },

@@ -10,6 +10,7 @@ import {
   themeFontFiles,
   UNICODE_RANGES,
 } from "@webmio/model";
+import { type Template, TOKEN_NAMES } from "@webmio/templates";
 
 /**
  * Theme tokens as CSS custom properties. Validation restricts every value to hex colors,
@@ -67,7 +68,10 @@ function fontFaces(files: readonly FontFile[], urlPrefix: string): string {
     .join("\n");
 }
 
-/** Layout and block styles. Every themeable value comes from a custom property. */
+/**
+ * Layout and block styles. Every themeable value comes from a custom property, and the type
+ * scale, line heights, gaps and block padding from the template's tokens.
+ */
 export const BASE_CSS = `*,
 *::before,
 *::after {
@@ -85,28 +89,28 @@ body {
   background: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: 1.125rem;
-  line-height: 1.6;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
 }
 
 h1,
 h2,
 h3 {
   font-family: var(--font-heading);
-  line-height: 1.2;
+  line-height: var(--leading-heading);
   margin: 1.5em 0 0.5em;
 }
 
 h1 {
-  font-size: clamp(2rem, 5cqi, 3rem);
+  font-size: var(--text-title);
 }
 
 h2 {
-  font-size: 1.75rem;
+  font-size: var(--text-h2);
 }
 
 h3 {
-  font-size: 1.3rem;
+  font-size: var(--text-h3);
 }
 
 p,
@@ -145,14 +149,14 @@ img {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem 2rem;
+  gap: 0.5rem var(--space-5);
   padding-block: 1rem;
 }
 
 .site-name {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-2);
   max-width: 100%;
   color: var(--color-text);
   font-family: var(--font-heading);
@@ -173,7 +177,7 @@ img {
 .site-nav ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 1.5rem;
+  gap: var(--space-1) var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -186,11 +190,11 @@ img {
 
 .language-switcher ul {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-2);
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.9rem;
+  font-size: var(--text-small);
 }
 
 .language-switcher a {
@@ -247,7 +251,7 @@ img {
 
 .site-nav .menu-group ul {
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-1);
   margin-top: 0.5rem;
   padding: 0.5rem 0 0.5rem 1rem;
   border-left: 2px solid var(--color-secondary);
@@ -268,7 +272,7 @@ img {
 }
 
 .block {
-  padding-block: 2rem;
+  padding-block: var(--block-padding);
 }
 
 .hero {
@@ -277,7 +281,7 @@ img {
 
 .hero-inner {
   display: grid;
-  gap: 2rem;
+  gap: var(--space-5);
   align-items: center;
 }
 
@@ -294,7 +298,7 @@ img {
 }
 
 .block.hero-slideshow {
-  padding-block: 0 2rem;
+  padding-block: 0 var(--block-padding);
 }
 
 .hero-slideshow > .hero-inner {
@@ -359,7 +363,7 @@ img {
   background: linear-gradient(transparent, color-mix(in srgb, var(--color-text) 75%, transparent));
   color: var(--color-background);
   font-family: var(--font-heading);
-  font-size: clamp(1.75rem, 5vw, 3.5rem);
+  font-size: var(--text-hero);
   font-weight: 700;
   line-height: 1.1;
 }
@@ -457,7 +461,7 @@ img {
 
 .hero-cover > .hero-inner {
   align-self: end;
-  padding-block: 2rem;
+  padding-block: var(--block-padding);
 }
 
 .hero-cover .hero-content {
@@ -498,7 +502,7 @@ img {
 .services-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 1rem;
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -535,7 +539,7 @@ img {
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.25rem 1.5rem;
+  gap: var(--space-1) var(--space-4);
   padding: 1rem 0;
   border: 0;
   border-bottom: 1px solid var(--color-secondary);
@@ -567,7 +571,7 @@ img {
 
 .twi-inner {
   display: grid;
-  gap: 2rem;
+  gap: var(--space-5);
   align-items: center;
 }
 
@@ -590,7 +594,7 @@ img {
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  gap: var(--space-3);
 }
 
 .gallery-grid figure {
@@ -600,7 +604,7 @@ img {
 .projects-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 1.5rem;
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -651,7 +655,7 @@ img {
 .project-category {
   margin: 0.5rem 0 0;
   color: var(--color-primary);
-  font-size: 0.9rem;
+  font-size: var(--text-small);
   font-weight: 700;
 }
 
@@ -690,13 +694,13 @@ img {
 
 .project-body {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-4);
   margin-bottom: 2rem;
 }
 
 .project-facts {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-2);
   margin: 0;
 }
 
@@ -757,7 +761,7 @@ img {
 .team-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 2rem;
+  gap: var(--space-5);
 }
 
 .person {
@@ -774,7 +778,7 @@ img {
 .team-as-list .person {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.25rem;
+  gap: var(--space-1);
   padding: 1rem 0;
   border-bottom: 1px solid var(--color-secondary);
   text-align: left;
@@ -813,7 +817,7 @@ img {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 2rem 3rem;
+  gap: var(--space-5) 3rem;
 }
 
 .logo-row img {
@@ -833,7 +837,7 @@ img {
 .cta-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-2);
   margin: 0;
 }
 
@@ -852,7 +856,7 @@ img {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-4);
 }
 
 .testimonial {
@@ -876,7 +880,7 @@ img {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem 0.75rem;
+  gap: var(--space-1) var(--space-2);
 }
 
 .testimonial-photo {
@@ -914,7 +918,7 @@ img {
 
 .job-list {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -951,7 +955,7 @@ img {
 .figure-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem 2rem;
+  gap: var(--space-4) var(--space-5);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -972,7 +976,7 @@ img {
 .video-list {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 1.5rem;
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1051,7 +1055,7 @@ img {
 
 .video figcaption {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--space-1);
   margin-top: 0.5rem;
 }
 
@@ -1063,7 +1067,7 @@ img {
 .card-list {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 1.5rem;
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1190,7 +1194,7 @@ img {
 
 .step-list {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1263,14 +1267,14 @@ img {
 
 .footer-business {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-3);
   margin-bottom: 1.5rem;
 }
 
 .footer-locations {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 1rem;
+  gap: var(--space-3);
   margin-bottom: 1.5rem;
 }
 
@@ -1321,13 +1325,13 @@ img {
 
   .hero-cover > .hero-inner {
     grid-template-columns: minmax(0, 1fr);
-    padding-block: 3rem;
+    padding-block: var(--block-padding-wide);
   }
 
   .team-as-list .person {
     grid-template-columns: 2fr 2fr 3fr;
     align-items: baseline;
-    column-gap: 1.5rem;
+    column-gap: var(--space-4);
   }
 
   .team-as-list .person-role {
@@ -1359,7 +1363,7 @@ img {
   }
 
   .block {
-    padding-block: 3rem;
+    padding-block: var(--block-padding-wide);
   }
 }
 `;
@@ -1376,12 +1380,28 @@ export interface SiteCssOptions {
 }
 
 /**
- * The site stylesheet: `@font-face` rules for the theme's webfonts, the theme's custom
- * properties, then the base styles. Font rules are never scoped; they declare fonts, not styles.
+ * The template's design tokens as CSS custom properties (template-system design decision 3).
+ * The templates' checks restrict every value to CSS lengths and numbers, so they cannot break out
+ * of the declaration.
  */
-export function siteCss(theme: NodeOfType<"theme">, options: SiteCssOptions = {}): string {
+export function templateTokensCss(template: Template): string {
+  const lines = TOKEN_NAMES.map((name) => `  --${name}: ${template.tokens[name]};\n`);
+  return `:root {\n${lines.join("")}}\n`;
+}
+
+/**
+ * The site stylesheet: `@font-face` rules for the theme's webfonts, the theme's custom
+ * properties, the template's tokens, the base styles, then the template's own styles. Font rules
+ * are never scoped; they declare fonts, not styles.
+ */
+export function siteCss(
+  theme: NodeOfType<"theme">,
+  template: Template,
+  options: SiteCssOptions = {},
+): string {
   const fonts = fontFaceCss(theme, options.fontUrlPrefix);
-  const css = `${themeCss(theme)}\n${BASE_CSS}`;
+  const own = template.css === "" ? "" : `\n${template.css}`;
+  const css = `${themeCss(theme)}\n${templateTokensCss(template)}\n${BASE_CSS}${own}`;
   const styles = options.scope ? scopeCss(css, options.scope) : css;
   return fonts ? `${fonts}\n${styles}` : styles;
 }

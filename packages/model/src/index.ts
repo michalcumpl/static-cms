@@ -1,6 +1,13 @@
 // @webmio/model: the site document (schema and types), its validation and format upgrades, the
 // collections, languages and page translation, and the catalogues (fonts, themes, image
 // variants) both rendering and export rely on. Pure TypeScript, no filesystem.
+
+export {
+  type BlockFactoryContext,
+  type BlockNodesContext,
+  blockFactory,
+  createBlockNodes,
+} from "./block-nodes.js";
 export {
   type BlockInput,
   blocks,
@@ -91,6 +98,7 @@ export {
   problem,
   problemCategory,
   type Severity,
+  type ValidateOptions,
   type ValidationResult,
   validateSite,
 } from "./validate/index.js";

@@ -110,6 +110,7 @@ export const cs: Messages = {
       fonts: "Nadpisy písmem {heading}, text písmem {body}",
       logo: "Logo",
       change: "Změnit vzhled",
+      template: "Šablona: {name}",
     },
     deletion: {
       title: "Smazat web",
@@ -125,6 +126,13 @@ export const cs: Messages = {
       confirmLabel: "Pro potvrzení napište {name}",
       confirm: "Smazat web",
       failed: "Web se nepodařilo smazat ({status}). Zkuste to znovu.",
+    },
+    homeSections: {
+      title: "Části úvodní stránky",
+      hint: "Vypnuté části zůstávají v editoru, takže je můžete zase zapnout.",
+      empty: "Úvodní stránka zatím nemá žádné bloky.",
+      edit: "Upravit úvodní stránku",
+      saveFirst: "Změny je třeba před otevřením editoru uložit. Uložit je teď?",
     },
     website: {
       more: "Další části webu",
@@ -438,6 +446,9 @@ export const cs: Messages = {
       title: "Název",
       addPageButton: "Přidat stránku",
       pageTitleMissing: "Zadejte název stránky.",
+      startFrom: "Začít z",
+      blankPage: "Prázdná stránka",
+      blankPageDescription: "Jeden textový blok, do kterého můžete psát.",
       editLink: "Upravit odkaz v menu",
       addLinkTitle: "Přidat odkaz do menu",
       label: "Popisek",
@@ -956,6 +967,15 @@ export const cs: Messages = {
       team: { cards: "Karty", list: "Seznam" },
       gallery: { fill: "Vyplnit dlaždice", whole: "Celé obrázky" },
       coverHint: "Přidejte do úvodního bloku fotku; do té doby se text zobrazuje jako obvykle.",
+    },
+    visibility: {
+      title: "Na webu",
+      switch: "Zobrazit na webu",
+      hide: "Skrýt na webu",
+      show: "Zobrazit na webu",
+      hiddenHint: "Návštěvníci tento blok nevidí. Zůstává tady, takže ho můžete zase zobrazit.",
+      label: "Skryto",
+      labelDetail: "není na webu",
     },
     collectionBlock: {
       show: "Zobrazit",

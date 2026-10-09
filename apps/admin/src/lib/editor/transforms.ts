@@ -2,6 +2,7 @@ import { slideClip, videoEmbed } from "@webmio/model";
 import { siteStrings } from "@webmio/render";
 import type { DocumentPath, Transaction } from "svedit";
 import { checkLinkAddress, type LinkAddressCheck } from "./links";
+import { siteTemplate } from "./template";
 
 type Tr = Transaction;
 type NodeList = { nodes: string[] };
@@ -190,7 +191,14 @@ export function insertCard(tr: Tr): boolean {
 export function insertCards(tr: Tr): boolean {
   const items = [createCard(tr), createCard(tr), createCard(tr)];
   const block = tr.generate_id();
-  tr.create({ id: block, type: "cards", heading: text(), layout: "below", items: list(items) });
+  tr.create({
+    id: block,
+    type: "cards",
+    hidden: false,
+    heading: text(),
+    layout: looksOf(tr).cards,
+    items: list(items),
+  });
   insertAndFocus(tr, block, "items", 0, "title");
   return true;
 }
@@ -213,7 +221,13 @@ export function insertVideo(tr: Tr): boolean {
 /** Videos: an empty heading and one empty video, the caret in its title. */
 export function insertVideos(tr: Tr): boolean {
   const block = tr.generate_id();
-  tr.create({ id: block, type: "videos", heading: text(), items: list([createVideo(tr)]) });
+  tr.create({
+    id: block,
+    type: "videos",
+    hidden: false,
+    heading: text(),
+    items: list([createVideo(tr)]),
+  });
   insertAndFocus(tr, block, "items", 0, "title");
   return true;
 }
@@ -246,7 +260,7 @@ export function insertStep(tr: Tr): boolean {
 export function insertFigures(tr: Tr): boolean {
   const items = [createFigure(tr), createFigure(tr), createFigure(tr)];
   const block = tr.generate_id();
-  tr.create({ id: block, type: "figures", heading: text(), items: list(items) });
+  tr.create({ id: block, type: "figures", hidden: false, heading: text(), items: list(items) });
   insertAndFocus(tr, block, "items", 0, "value");
   return true;
 }
@@ -255,7 +269,13 @@ export function insertFigures(tr: Tr): boolean {
 export function insertSteps(tr: Tr): boolean {
   const items = [createStep(tr), createStep(tr), createStep(tr)];
   const block = tr.generate_id();
-  tr.create({ id: block, type: "steps", heading: text("Jak to funguje"), items: list(items) });
+  tr.create({
+    id: block,
+    type: "steps",
+    hidden: false,
+    heading: text("Jak to funguje"),
+    items: list(items),
+  });
   insertAndFocus(tr, block, "heading");
   return true;
 }
@@ -293,6 +313,7 @@ export function insertJobs(tr: Tr): boolean {
   tr.create({
     id: block,
     type: "jobs",
+    hidden: false,
     heading: text(stringsOf(tr).jobsHeading),
     empty_note: text(),
     items: list([createJob(tr)]),
@@ -322,7 +343,7 @@ export function createRichText(tr: Tr): string {
   const block = tr.generate_id();
   tr.create({ id: heading, type: "subheading", content: text("Nadpis"), level: 2 });
   tr.create({ id: paragraph, type: "paragraph", content: text() });
-  tr.create({ id: block, type: "rich_text", body: list([heading, paragraph]) });
+  tr.create({ id: block, type: "rich_text", hidden: false, body: list([heading, paragraph]) });
   return block;
 }
 
@@ -348,11 +369,19 @@ function insertCollectionBlock(
     const block = tr.generate_id();
     const layout =
       type === "services" || type === "team"
-        ? { layout: "cards" }
+        ? { layout: looksOf(tr)[type] }
         : type === "projects"
           ? { category_id: "", limit: 0 }
           : {};
-    tr.create({ id: block, type, heading: text(heading), show: "all", chosen: list(), ...layout });
+    tr.create({
+      id: block,
+      type,
+      hidden: false,
+      heading: text(heading),
+      show: "all",
+      chosen: list(),
+      ...layout,
+    });
     insertAndFocus(tr, block, "heading");
     return true;
   };
@@ -377,11 +406,12 @@ export function insertHero(tr: Tr): boolean {
   tr.create({
     id: block,
     type: "hero",
+    hidden: false,
     heading: text("Nadpis"),
     text: text(),
     image: list(),
     action: list(),
-    layout: "beside",
+    layout: looksOf(tr).hero,
     slides: list(),
   });
   insertAndFocus(tr, block, "heading");
@@ -396,6 +426,7 @@ export function insertTextWithImage(tr: Tr): boolean {
   tr.create({
     id: block,
     type: "text_with_image",
+    hidden: false,
     heading: text("Nadpis"),
     body: list([paragraph]),
     image: list(),
@@ -409,8 +440,8 @@ export function insertTextWithImage(tr: Tr): boolean {
 function insertItemsBlock(type: "gallery" | "logos", items: "items") {
   return (tr: Tr): boolean => {
     const block = tr.generate_id();
-    const fit = type === "gallery" ? { image_fit: "fill" } : {};
-    tr.create({ id: block, type, heading: text("Nadpis"), [items]: list(), ...fit });
+    const fit = type === "gallery" ? { image_fit: looksOf(tr).gallery } : {};
+    tr.create({ id: block, type, hidden: false, heading: text("Nadpis"), [items]: list(), ...fit });
     insertAndFocus(tr, block, "heading");
     return true;
   };
@@ -420,6 +451,11 @@ export const insertGallery = insertItemsBlock("gallery", "items");
 /** A team block: people are added from the library, so an empty team starts empty. */
 export const insertTeam = insertCollectionBlock("team", "team", "Nadpis");
 export const insertLogos = insertItemsBlock("logos", "items");
+
+/** The default looks of the site's template, for new blocks (template-system decision 9). */
+function looksOf(tr: Tr) {
+  return siteTemplate(tr.doc).looks;
+}
 
 /** Strings in the site's language, for placeholder headings of business blocks. */
 function stringsOf(tr: Tr) {
@@ -433,6 +469,7 @@ export function insertContact(tr: Tr): boolean {
   tr.create({
     id: block,
     type: "contact",
+    hidden: false,
     heading: text(stringsOf(tr).contactHeading),
     show_address: true,
     show_phone: true,
@@ -450,6 +487,7 @@ export function insertOpeningHours(tr: Tr): boolean {
   tr.create({
     id: block,
     type: "opening_hours",
+    hidden: false,
     heading: text(stringsOf(tr).hoursHeading),
     location_id: "",
   });
@@ -466,6 +504,7 @@ export function insertCallToAction(tr: Tr): boolean {
   tr.create({
     id: block,
     type: "call_to_action",
+    hidden: false,
     heading: text("Nadpis"),
     text: text(),
     actions: list([button]),

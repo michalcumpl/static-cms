@@ -57,6 +57,7 @@ function projectsBlock(nodes: LooseNodes, props: Record<string, unknown> = {}) {
   nodes.projects_1 = {
     id: "projects_1",
     type: "projects",
+    hidden: false,
     heading: text("Realizace"),
     show: "all",
     chosen: list(),

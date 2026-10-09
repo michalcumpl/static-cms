@@ -96,7 +96,8 @@ export function usedMediaFiles(doc: unknown): string[] {
     if (typeof id !== "string" || seen.has(id)) return;
     seen.add(id);
     const node = all[id];
-    if (!node || !isNodeType(node.type)) return;
+    // A hidden block isn't on the website, so neither are its images (template-system).
+    if (!node || !isNodeType(node.type) || node.hidden === true) return;
     if (node.type === "image" && typeof node.src === "string" && typeof node.width === "number") {
       for (const w of imageVariants(node.width)) files.add(imageFile(node.src, w));
     }

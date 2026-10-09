@@ -1,5 +1,5 @@
 import type { Redirect } from "@webmio/export";
-import { migrateSite } from "@webmio/model";
+import { upgradeSite } from "@webmio/templates";
 import { and, asc, eq } from "drizzle-orm";
 import type { Db } from "../db/index";
 import { publishDocuments, publishes, versions } from "../db/schema";
@@ -17,7 +17,7 @@ type LooseDoc = {
 
 /** Each page's address in a document: `/` for home, `/<slug>/` for the others. */
 export function pageAddresses(document: unknown): Map<string, string> {
-  const doc = migrateSite(document) as LooseDoc;
+  const doc = upgradeSite(document) as LooseDoc;
   const nodes = doc.nodes ?? {};
   const site = doc.document_id ? nodes[doc.document_id] : undefined;
   const addresses = new Map<string, string>();

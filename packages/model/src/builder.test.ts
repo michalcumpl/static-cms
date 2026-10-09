@@ -271,6 +271,9 @@ describe("siteBuilder", () => {
       "menu_group",
       "page_link",
     ]);
-    expect(validateSite(doc).problems).toEqual([]);
+    // The pages have no blocks, which is all there is to warn about.
+    expect(validateSite(doc).problems.map((p) => p.code)).toEqual(
+      Array(4).fill("page-shows-nothing"),
+    );
   });
 });

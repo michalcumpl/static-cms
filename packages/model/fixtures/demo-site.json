@@ -70,6 +70,7 @@
     "hero_1": {
       "id": "hero_1",
       "type": "hero",
+      "hidden": false,
       "heading": {
         "content": "Čerstvý chléb každé ráno",
         "marks": [],
@@ -191,6 +192,7 @@
     "services_1": {
       "id": "services_1",
       "type": "services",
+      "hidden": false,
       "heading": {
         "content": "Co pečeme",
         "marks": [],
@@ -282,6 +284,7 @@
     "rich_text_about": {
       "id": "rich_text_about",
       "type": "rich_text",
+      "hidden": false,
       "body": {
         "nodes": ["sub_about", "para_about", "list_about"],
         "marks": [],
@@ -415,6 +418,7 @@
     "rich_text_contact": {
       "id": "rich_text_contact",
       "type": "rich_text",
+      "hidden": false,
       "body": {
         "nodes": [
           "sub_address",
@@ -449,7 +453,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 12,
+      "schema_version": 13,
       "name": "Pekárna U Lípy",
       "lang": "cs",
       "base_url": "https://pekarna-ulipy.example",
@@ -475,12 +479,8 @@
       "theme": "theme_1",
       "nav": "nav_1",
       "business": "business_1",
-      "pages": {
-        "nodes": ["page_home", "page_contact"],
-        "marks": [],
-        "annotations": []
-      },
-      "home_page_id": "page_home",
+      "template": "standard",
+      "template_release": 1,
       "services": {
         "nodes": ["service_bread", "service_rolls", "service_cakes"],
         "marks": [],
@@ -512,7 +512,13 @@
         "annotations": []
       },
       "services_page_id": "",
-      "projects_page_id": ""
+      "projects_page_id": "",
+      "pages": {
+        "nodes": ["page_home", "page_contact"],
+        "marks": [],
+        "annotations": []
+      },
+      "home_page_id": "page_home"
     },
     "day_mon": {
       "id": "day_mon",

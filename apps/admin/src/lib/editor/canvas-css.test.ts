@@ -1,3 +1,4 @@
+import { STANDARD } from "@webmio/templates";
 import { describe, expect, it } from "vitest";
 import { demoSite } from "$lib/server/demo";
 import { canvasCss, canvasTheme, STARTING_THEME, withEditLinks } from "./canvas-css";
@@ -21,6 +22,14 @@ describe("withEditLinks", () => {
 
 describe("canvasCss", () => {
   const nodes = (doc: unknown) => (doc as { nodes: Record<string, Record<string, unknown>> }).nodes;
+
+  it("Template's spacing on the canvas", () => {
+    const roomy = { ...STANDARD, tokens: { ...STANDARD.tokens, "block-padding": "5rem" } };
+    const css = canvasCss(canvasTheme(demoSite()), ".site-canvas", roomy);
+    expect(css).toContain("--block-padding: 5rem;");
+    expect(css).toContain(".site-canvas .block {\n  padding-block: var(--block-padding);");
+    expect(canvasCss(canvasTheme(demoSite()), ".site-canvas")).toContain("--block-padding: 2rem;");
+  });
 
   it("scopes the site stylesheet and styles edit-mode links like published links", () => {
     const css = canvasCss(canvasTheme(demoSite()), ".site-canvas");

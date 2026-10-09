@@ -1,7 +1,15 @@
 import { editableDemoSite } from "@webmio/model/testing";
+import { STANDARD } from "@webmio/templates";
 import { describe, expect, it } from "vitest";
 import { RenderContext } from "./context.js";
-import { BASE_CSS, fontFaceCss, fontPreviewCss, siteCss, themeCss } from "./css.js";
+import {
+  BASE_CSS,
+  fontFaceCss,
+  fontPreviewCss,
+  siteCss,
+  templateTokensCss,
+  themeCss,
+} from "./css.js";
 import { renderSite } from "./index.js";
 
 function render(primary: string) {
@@ -79,7 +87,7 @@ describe("theme stylesheet", () => {
   it("loads fonts from another place, unscoped, for the editor canvas", () => {
     const { nodes } = editableDemoSite();
     const theme = { ...nodes.theme_1, font_heading: "lora" };
-    const css = siteCss(theme, { scope: ".site-canvas", fontUrlPrefix: "/fonts/" });
+    const css = siteCss(theme, STANDARD, { scope: ".site-canvas", fontUrlPrefix: "/fonts/" });
     expect(css).toMatch(/^@font-face \{\n {2}font-family: "Lora";/);
     expect(css).toContain(`src: url("/fonts/lora-latin-normal.woff2")`);
     expect(css).not.toContain(".site-canvas @font-face");
@@ -140,11 +148,13 @@ describe("scoped stylesheet", () => {
       .filter((p) => !p.startsWith("@"));
 
   it("leaves the unscoped stylesheet unchanged", () => {
-    expect(siteCss(theme())).toBe(`${themeCss(theme())}\n${BASE_CSS}`);
+    expect(siteCss(theme(), STANDARD)).toBe(
+      `${themeCss(theme())}\n${templateTokensCss(STANDARD)}\n${BASE_CSS}`,
+    );
   });
 
   it("confines every rule to the scope element", () => {
-    const css = siteCss(theme(), { scope: ".site-canvas" });
+    const css = siteCss(theme(), STANDARD, { scope: ".site-canvas" });
     for (const prelude of preludes(css)) {
       for (const selector of prelude.split(",")) {
         expect(selector.trim(), prelude).toMatch(/^\.site-canvas(\s|$)/);
@@ -153,14 +163,14 @@ describe("scoped stylesheet", () => {
   });
 
   it("maps :root, html and body to the scope element itself", () => {
-    const css = siteCss(theme(), { scope: ".site-canvas" });
+    const css = siteCss(theme(), STANDARD, { scope: ".site-canvas" });
     expect(css).toMatch(/^\.site-canvas \{\n {2}--color-primary: #8a4b1f;/);
     expect(css).toContain(".site-canvas {\n  container-type: inline-size;");
     expect(css).not.toMatch(/:root|(^|\s)(html|body)\s*\{/m);
   });
 
   it("scopes rules inside the container query", () => {
-    const css = siteCss(theme(), { scope: ".site-canvas" });
+    const css = siteCss(theme(), STANDARD, { scope: ".site-canvas" });
     expect(css).toMatch(/@container \(min-width: 48rem\) \{\s*\.site-canvas \.site-logo \{/);
     expect(css).toMatch(/\n {2}\.site-canvas \.hero-inner \{/);
   });

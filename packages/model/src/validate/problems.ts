@@ -94,7 +94,11 @@ export type ProblemCode =
   | "video-as-link"
   // Hero slideshow (hero-slideshow)
   | "slideshow-too-short"
-  | "unsupported-clip";
+  | "unsupported-clip"
+  // Templates (template-system)
+  | "unknown-template"
+  | "unknown-template-release"
+  | "page-shows-nothing";
 
 /** `structure`: the document's shape is broken. `site`: the content breaks a site rule. */
 export type ProblemCategory = "structure" | "site";
@@ -183,6 +187,9 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "invalid-social-url": "site",
   "duplicate-social-url": "site",
   "missing-location": "site",
+  "unknown-template": "site",
+  "unknown-template-release": "site",
+  "page-shows-nothing": "site",
 };
 
 export function problemCategory(code: ProblemCode): ProblemCategory {

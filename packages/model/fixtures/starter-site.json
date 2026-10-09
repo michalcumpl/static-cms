@@ -35,6 +35,7 @@
     "hero_1": {
       "id": "hero_1",
       "type": "hero",
+      "hidden": false,
       "heading": {
         "content": "Vítejte",
         "marks": [],
@@ -84,6 +85,7 @@
     "rich_text_about": {
       "id": "rich_text_about",
       "type": "rich_text",
+      "hidden": false,
       "body": {
         "nodes": ["sub_about", "para_about"],
         "marks": [],
@@ -111,7 +113,7 @@
     "site_1": {
       "id": "site_1",
       "type": "site",
-      "schema_version": 12,
+      "schema_version": 13,
       "name": "Můj web",
       "lang": "cs",
       "base_url": "",
@@ -137,12 +139,8 @@
       "theme": "theme_1",
       "nav": "nav_1",
       "business": "business_1",
-      "pages": {
-        "nodes": ["page_home"],
-        "marks": [],
-        "annotations": []
-      },
-      "home_page_id": "page_home",
+      "template": "standard",
+      "template_release": 1,
       "services": {
         "nodes": [],
         "marks": [],
@@ -174,7 +172,13 @@
         "annotations": []
       },
       "services_page_id": "",
-      "projects_page_id": ""
+      "projects_page_id": "",
+      "pages": {
+        "nodes": ["page_home"],
+        "marks": [],
+        "annotations": []
+      },
+      "home_page_id": "page_home"
     },
     "day_mon": {
       "id": "day_mon",

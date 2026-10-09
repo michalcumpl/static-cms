@@ -20,7 +20,8 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@webmio/model": "workspace:*"
+    "@webmio/model": "workspace:*",
+    "@webmio/templates": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

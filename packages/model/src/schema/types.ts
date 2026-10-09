@@ -46,6 +46,10 @@ export interface SiteNode {
   nav: string;
   /** The business the site is for: contact details and opening hours. */
   business: string;
+  /** The ID of the site's template (see `@webmio/templates`), such as `standard`. */
+  template: string;
+  /** The release of the template the site was last upgraded to. */
+  template_release: number;
   /** The collections: `service_item`, `person`, `testimonial` and `faq_item` nodes. */
   services: NodeArrayValue;
   team: NodeArrayValue;
@@ -122,7 +126,7 @@ export interface PageNode {
   blocks: NodeArrayValue;
 }
 
-export interface HeroNode {
+export interface HeroNode extends PageBlock {
   id: string;
   type: "hero";
   heading: TextValue;
@@ -152,7 +156,7 @@ export interface SlideNode {
   url: string;
 }
 
-export interface RichTextNode {
+export interface RichTextNode extends PageBlock {
   id: string;
   type: "rich_text";
   body: NodeArrayValue;
@@ -186,8 +190,14 @@ export interface ListItemNode {
 /** What a collection block shows. */
 export type CollectionShow = "all" | "chosen";
 
+/** What every page block has (template-system design decision 4). */
+interface PageBlock {
+  /** Whether the block is kept off the website; it stays in its page and in the editor. */
+  hidden: boolean;
+}
+
 /** The shape every collection block shares (business-collections design decision 2). */
-interface CollectionBlock {
+interface CollectionBlock extends PageBlock {
   id: string;
   heading: TextValue;
   /** `all`: the whole collection in its order; `chosen`: the items `chosen` points at. */
@@ -215,7 +225,7 @@ export interface ServiceItemNode {
 }
 
 /** Cards with an image, a title, a text and a link each. */
-export interface CardsNode {
+export interface CardsNode extends PageBlock {
   id: string;
   type: "cards";
   heading: TextValue;
@@ -239,7 +249,7 @@ export interface CardNode {
 }
 
 /** YouTube and Vimeo videos, played only when the visitor asks. */
-export interface VideosNode {
+export interface VideosNode extends PageBlock {
   id: string;
   type: "videos";
   heading: TextValue;
@@ -259,7 +269,7 @@ export interface VideoNode {
 }
 
 /** Job openings; `empty_note` shows when there are none. */
-export interface JobsNode {
+export interface JobsNode extends PageBlock {
   id: string;
   type: "jobs";
   heading: TextValue;
@@ -323,7 +333,7 @@ export interface FactNode {
   value: TextValue;
 }
 
-export interface TextWithImageNode {
+export interface TextWithImageNode extends PageBlock {
   id: string;
   type: "text_with_image";
   heading: TextValue;
@@ -334,7 +344,7 @@ export interface TextWithImageNode {
   image_side: "left" | "right";
 }
 
-export interface GalleryNode {
+export interface GalleryNode extends PageBlock {
   id: string;
   type: "gallery";
   heading: TextValue;
@@ -368,7 +378,7 @@ export interface PersonNode {
   image: NodeArrayValue;
 }
 
-export interface LogosNode {
+export interface LogosNode extends PageBlock {
   id: string;
   type: "logos";
   heading: TextValue;
@@ -425,7 +435,7 @@ export interface InternalLinkNode {
 }
 
 /** A band asking visitors to do one thing, with one or two buttons. */
-export interface CallToActionNode {
+export interface CallToActionNode extends PageBlock {
   id: string;
   type: "call_to_action";
   heading: TextValue;
@@ -453,7 +463,7 @@ export interface FaqItemNode {
 }
 
 /** Key figures (figures-and-steps design decision 1). */
-export interface FiguresNode {
+export interface FiguresNode extends PageBlock {
   id: string;
   type: "figures";
   heading: TextValue;
@@ -470,7 +480,7 @@ export interface FigureNode {
 }
 
 /** Numbered steps; the numbers come from the order. */
-export interface StepsNode {
+export interface StepsNode extends PageBlock {
   id: string;
   type: "steps";
   heading: TextValue;
@@ -510,7 +520,7 @@ export interface TestimonialNode {
 }
 
 /** Shows the site's business details; holds none of its own. */
-export interface ContactNode {
+export interface ContactNode extends PageBlock {
   id: string;
   type: "contact";
   heading: TextValue;
@@ -523,7 +533,7 @@ export interface ContactNode {
 }
 
 /** Shows the site's opening hours; holds none of its own. */
-export interface OpeningHoursNode {
+export interface OpeningHoursNode extends PageBlock {
   id: string;
   type: "opening_hours";
   heading: TextValue;

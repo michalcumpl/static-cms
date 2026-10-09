@@ -1,5 +1,5 @@
 import type { AnyNode, NodeOfType } from "@webmio/model";
-import { type CollectionBlockNode, isCollectionBlockType, socialKind } from "@webmio/model";
+import { socialKind } from "@webmio/model";
 import { renderBlock, renderImage, renderLink, siteLogoSizes } from "./blocks.js";
 import { footerBusiness } from "./business.js";
 import type { RenderContext } from "./context.js";
@@ -15,13 +15,8 @@ export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
   const title = isHome ? site.name : `${page.title} – ${site.name}`;
   const own = page.seo_description.trim() !== "" ? page.seo_description : site.description;
   const description = own.trim() === "" ? "" : own;
-  // A collection block with nothing to show renders nothing.
-  const blocks = ctx
-    .children(page.blocks)
-    .filter(
-      (block) =>
-        !isCollectionBlockType(block.type) || ctx.items(block as CollectionBlockNode).length > 0,
-    );
+  // A hidden block, and a collection block with nothing to show, render nothing.
+  const blocks = ctx.visibleBlocks(page);
   const heroIsH1 = blocks[0]?.type === "hero";
 
   const main = html`${

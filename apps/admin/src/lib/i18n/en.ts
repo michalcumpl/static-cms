@@ -105,6 +105,7 @@ export const en = {
       fonts: "Headings in {heading}, text in {body}",
       logo: "Logo",
       change: "Change design",
+      template: "Template: {name}",
     },
     deletion: {
       title: "Delete website",
@@ -120,6 +121,13 @@ export const en = {
       confirmLabel: "Type {name} to confirm",
       confirm: "Delete website",
       failed: "The website couldn't be deleted ({status}). Try again.",
+    },
+    homeSections: {
+      title: "Home page sections",
+      hint: "Sections you turn off stay in the editor, so you can turn them on again.",
+      empty: "The home page has no blocks yet.",
+      edit: "Edit home page",
+      saveFirst: "Your changes have to be saved before the editor opens. Save them now?",
     },
     website: {
       more: "More of the website",
@@ -429,6 +437,9 @@ export const en = {
       title: "Title",
       addPageButton: "Add page",
       pageTitleMissing: "Enter a title for the page.",
+      startFrom: "Start from",
+      blankPage: "Blank page",
+      blankPageDescription: "One text block to write in.",
       editLink: "Edit menu link",
       addLinkTitle: "Add a link to the menu",
       label: "Label",
@@ -940,6 +951,15 @@ export const en = {
       team: { cards: "Cards", list: "List" },
       gallery: { fill: "Fill the tiles", whole: "Whole images" },
       coverHint: "Add a photo to the hero; until then the text shows as usual.",
+    },
+    visibility: {
+      title: "On the website",
+      switch: "Show on website",
+      hide: "Hide on website",
+      show: "Show on website",
+      hiddenHint: "Visitors don't see this block. It stays here, so you can show it again.",
+      label: "Hidden",
+      labelDetail: "not on the website",
     },
     collectionBlock: {
       show: "Show",

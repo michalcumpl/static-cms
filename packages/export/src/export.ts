@@ -210,6 +210,8 @@ function usedImages(doc: SiteDocument) {
     const node = doc.nodes[id];
     if (!node || seen.has(id)) return;
     seen.add(id);
+    // A hidden block isn't on the website, so neither are its images (template-system).
+    if ("hidden" in node && node.hidden) return;
     if (node.type === "image" && !images.has(node.src)) images.set(node.src, node);
     const properties: Record<string, PropertyDef> = siteSchema[node.type].properties;
     for (const [name, def] of Object.entries(properties)) {

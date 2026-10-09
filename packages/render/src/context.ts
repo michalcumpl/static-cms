@@ -3,6 +3,7 @@ import {
   blockItems,
   type CollectionBlockNode,
   type CollectionItemNode,
+  isCollectionBlockType,
   isSafeHref,
   projectsShown,
 } from "@webmio/model";
@@ -200,6 +201,18 @@ export class RenderContext {
   /** Nodes of a node_array, in order. */
   children(ids: { nodes: string[] }): AnyNode[] {
     return ids.nodes.flatMap((id) => this.nodes[id] ?? []);
+  }
+
+  /**
+   * The page's blocks that are on the website: all but the hidden ones (template-system design
+   * decision 8), and the collection blocks with something to show.
+   */
+  visibleBlocks(page: NodeOfType<"page">): AnyNode[] {
+    return this.children(page.blocks).filter(
+      (block) =>
+        !("hidden" in block && block.hidden) &&
+        (!isCollectionBlockType(block.type) || this.items(block as CollectionBlockNode).length > 0),
+    );
   }
 
   /**

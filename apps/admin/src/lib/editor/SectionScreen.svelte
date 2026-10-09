@@ -52,7 +52,10 @@ let {
   focus: string | null;
   /** Which section: Business, the Website section's site settings, What you offer, About you. */
   section: "business" | "site" | "offer" | "about";
-  /** More of the section, outside what Save saves (the Website section's design card). */
+  /**
+   * More of the section beside the settings (the Website section's design and home page cards).
+   * What it edits through the section's editor is part of what Save saves.
+   */
   children?: Snippet;
 } = $props();
 const i18n = getI18n();

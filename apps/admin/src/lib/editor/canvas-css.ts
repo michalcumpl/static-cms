@@ -1,5 +1,6 @@
 import { isFontId, THEME_PRESETS } from "@webmio/model";
 import { siteCss } from "@webmio/render";
+import { STANDARD, type Template } from "@webmio/templates";
 
 type Theme = Parameters<typeof siteCss>[0];
 type ThemeField = Exclude<keyof Theme, "id" | "type">;
@@ -48,20 +49,21 @@ export function canvasTheme(document: unknown, previous: Theme = STARTING_THEME)
 }
 
 /**
- * The site stylesheet confined to `scope`, for `theme` (see `canvasTheme`), with the webfonts
- * loaded from the app's `/fonts/`.
+ * The site stylesheet confined to `scope`, for `theme` (see `canvasTheme`) and `template`, with
+ * the webfonts loaded from the app's `/fonts/`.
  */
-export function canvasCss(theme: Theme, scope: string): string {
+export function canvasCss(theme: Theme, scope: string, template: Template = STANDARD): string {
   // Browsers underline <a> by default; the site CSS relies on that, so `.link` needs it too.
   // It comes first so the site's own link rules (e.g. in the navigation) still win.
   const linkDefaults = `${scope} .link {\n  text-decoration: underline;\n}\n\n`;
-  const css = siteCss(theme, { scope, fontUrlPrefix: "/fonts/" });
+  const css = siteCss(theme, template, { scope, fontUrlPrefix: "/fonts/" });
   return linkDefaults + withEditLinks(css) + editLayout(scope);
 }
 
 /**
  * Svedit wraps every node in an element, so site rules that rely on direct children
  * need an edit-mode equivalent. Svedit marks the first node of each list with `.first`.
+ * A hidden block (marked `data-hidden` by the block handles) is dimmed.
  */
 const editLayout = (scope: string) => `
 ${scope} .rich-text .container > .first > :first-child {
@@ -70,6 +72,10 @@ ${scope} .rich-text .container > .first > :first-child {
 
 ${scope} .image-node img {
   display: block;
+}
+
+${scope} [data-hidden] {
+  opacity: 0.45;
 }
 `;
 

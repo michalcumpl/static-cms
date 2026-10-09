@@ -70,6 +70,7 @@ function storeProjects(options: { block?: boolean; listing?: boolean } = {}): vo
     nodes.projects_eventy = {
       id: "projects_eventy",
       type: "projects",
+      hidden: false,
       heading: text("Eventy"),
       show: "all",
       chosen: list([]),

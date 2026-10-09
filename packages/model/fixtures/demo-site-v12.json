@@ -1,0 +1,623 @@
+{
+  "document_id": "site_1",
+  "nodes": {
+    "theme_1": {
+      "id": "theme_1",
+      "type": "theme",
+      "color_primary": "#8a4b1f",
+      "color_secondary": "#f2e3d0",
+      "color_background": "#fffaf3",
+      "color_text": "#2b2118",
+      "font_heading": "georgia",
+      "font_body": "system-sans",
+      "radius": "0.5rem",
+      "content_width": "64rem"
+    },
+    "nav_home": {
+      "id": "nav_home",
+      "type": "page_link",
+      "label": {
+        "content": "Úvod",
+        "marks": [],
+        "annotations": []
+      },
+      "page_id": "page_home"
+    },
+    "nav_contact": {
+      "id": "nav_contact",
+      "type": "page_link",
+      "label": {
+        "content": "Kontakt",
+        "marks": [],
+        "annotations": []
+      },
+      "page_id": "page_contact"
+    },
+    "nav_1": {
+      "id": "nav_1",
+      "type": "nav",
+      "items": {
+        "nodes": ["nav_home", "nav_contact"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "image_hero": {
+      "id": "image_hero",
+      "type": "image",
+      "src": "hero.png",
+      "alt": "Bochníky kváskového chleba na dřevěném pultu",
+      "decorative": false,
+      "width": 320,
+      "height": 180,
+      "focus_x": 50,
+      "focus_y": 50
+    },
+    "cta_order": {
+      "id": "cta_order",
+      "type": "page_link",
+      "label": {
+        "content": "Objednat pečivo",
+        "marks": [],
+        "annotations": []
+      },
+      "page_id": "page_contact"
+    },
+    "strong_hero": {
+      "id": "strong_hero",
+      "type": "strong"
+    },
+    "hero_1": {
+      "id": "hero_1",
+      "type": "hero",
+      "heading": {
+        "content": "Čerstvý chléb každé ráno",
+        "marks": [],
+        "annotations": []
+      },
+      "text": {
+        "content": "Pečeme z vlastního kvasu, bez zlepšováků a vždy od čtyř ráno.",
+        "marks": [
+          {
+            "start_offset": 7,
+            "end_offset": 24,
+            "node_id": "strong_hero"
+          }
+        ],
+        "annotations": []
+      },
+      "image": {
+        "nodes": ["image_hero"],
+        "marks": [],
+        "annotations": []
+      },
+      "action": {
+        "nodes": ["cta_order"],
+        "marks": [],
+        "annotations": []
+      },
+      "layout": "beside",
+      "slides": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "service_bread": {
+      "id": "service_bread",
+      "type": "service_item",
+      "name": {
+        "content": "Kváskový chléb",
+        "marks": [],
+        "annotations": []
+      },
+      "description": {
+        "content": "Žitno-pšeničný bochník, 1 kg.",
+        "marks": [],
+        "annotations": []
+      },
+      "price": {
+        "content": "89 Kč",
+        "marks": [],
+        "annotations": []
+      },
+      "slug": "",
+      "body": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "service_rolls": {
+      "id": "service_rolls",
+      "type": "service_item",
+      "name": {
+        "content": "Rohlíky a housky",
+        "marks": [],
+        "annotations": []
+      },
+      "description": {
+        "content": "Každé ráno čerstvé, i celozrnné.",
+        "marks": [],
+        "annotations": []
+      },
+      "price": {
+        "content": "od 5 Kč",
+        "marks": [],
+        "annotations": []
+      },
+      "slug": "",
+      "body": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "emphasis_cakes": {
+      "id": "emphasis_cakes",
+      "type": "emphasis"
+    },
+    "service_cakes": {
+      "id": "service_cakes",
+      "type": "service_item",
+      "name": {
+        "content": "Dorty na objednávku",
+        "marks": [],
+        "annotations": []
+      },
+      "description": {
+        "content": "Svatby, narozeniny i firemní akce – ozvěte se nám předem.",
+        "marks": [
+          {
+            "start_offset": 36,
+            "end_offset": 56,
+            "node_id": "emphasis_cakes"
+          }
+        ],
+        "annotations": []
+      },
+      "price": {
+        "content": "",
+        "marks": [],
+        "annotations": []
+      },
+      "slug": "",
+      "body": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "services_1": {
+      "id": "services_1",
+      "type": "services",
+      "heading": {
+        "content": "Co pečeme",
+        "marks": [],
+        "annotations": []
+      },
+      "show": "all",
+      "chosen": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "layout": "cards"
+    },
+    "sub_about": {
+      "id": "sub_about",
+      "type": "subheading",
+      "content": {
+        "content": "O nás",
+        "marks": [],
+        "annotations": []
+      },
+      "level": 2
+    },
+    "strong_about": {
+      "id": "strong_about",
+      "type": "strong"
+    },
+    "internal_contact": {
+      "id": "internal_contact",
+      "type": "internal_link",
+      "page_id": "page_contact"
+    },
+    "para_about": {
+      "id": "para_about",
+      "type": "paragraph",
+      "content": {
+        "content": "Jsme rodinná pekárna v Lipové ulici už od roku 1998. Objednávky přijímáme osobně i telefonicky – vše najdete na stránce Kontakt.",
+        "marks": [
+          {
+            "start_offset": 5,
+            "end_offset": 20,
+            "node_id": "strong_about"
+          },
+          {
+            "start_offset": 112,
+            "end_offset": 127,
+            "node_id": "internal_contact"
+          }
+        ],
+        "annotations": []
+      }
+    },
+    "li_1": {
+      "id": "li_1",
+      "type": "list_item",
+      "content": {
+        "content": "Pečeme denně kromě neděle",
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "li_2": {
+      "id": "li_2",
+      "type": "list_item",
+      "content": {
+        "content": "Mouku bereme z mlýna v Kolíně",
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "li_3": {
+      "id": "li_3",
+      "type": "list_item",
+      "content": {
+        "content": "Pečivo vám rádi odložíme",
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "list_about": {
+      "id": "list_about",
+      "type": "list",
+      "items": {
+        "nodes": ["li_1", "li_2", "li_3"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "rich_text_about": {
+      "id": "rich_text_about",
+      "type": "rich_text",
+      "body": {
+        "nodes": ["sub_about", "para_about", "list_about"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "page_home": {
+      "id": "page_home",
+      "type": "page",
+      "title": "Úvod",
+      "slug": "uvod",
+      "seo_description": "Rodinná pekárna U Lípy – kváskový chléb, rohlíky a dorty na objednávku.",
+      "translation_key": "page_home",
+      "share_image": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "blocks": {
+        "nodes": ["hero_1", "services_1", "rich_text_about"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "sub_address": {
+      "id": "sub_address",
+      "type": "subheading",
+      "content": {
+        "content": "Kde nás najdete",
+        "marks": [],
+        "annotations": []
+      },
+      "level": 2
+    },
+    "para_address": {
+      "id": "para_address",
+      "type": "paragraph",
+      "content": {
+        "content": "Lipová 12\n280 02 Kolín",
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "sub_order": {
+      "id": "sub_order",
+      "type": "subheading",
+      "content": {
+        "content": "Objednávky",
+        "marks": [],
+        "annotations": []
+      },
+      "level": 2
+    },
+    "link_tel": {
+      "id": "link_tel",
+      "type": "link",
+      "href": "tel:+420321123456"
+    },
+    "link_mail": {
+      "id": "link_mail",
+      "type": "link",
+      "href": "mailto:objednavky@pekarna-ulipy.example"
+    },
+    "link_map": {
+      "id": "link_map",
+      "type": "link",
+      "href": "https://www.openstreetmap.org/search?query=Lipov%C3%A1%2012%20Kol%C3%ADn"
+    },
+    "para_order": {
+      "id": "para_order",
+      "type": "paragraph",
+      "content": {
+        "content": "Volejte na +420 321 123 456 nebo pište na objednavky@pekarna-ulipy.example. Cestu vám ukáže mapa.",
+        "marks": [
+          {
+            "start_offset": 11,
+            "end_offset": 27,
+            "node_id": "link_tel"
+          },
+          {
+            "start_offset": 42,
+            "end_offset": 74,
+            "node_id": "link_mail"
+          },
+          {
+            "start_offset": 92,
+            "end_offset": 96,
+            "node_id": "link_map"
+          }
+        ],
+        "annotations": []
+      }
+    },
+    "sub_hours": {
+      "id": "sub_hours",
+      "type": "subheading",
+      "content": {
+        "content": "Otevírací doba",
+        "marks": [],
+        "annotations": []
+      },
+      "level": 3
+    },
+    "li_weekdays": {
+      "id": "li_weekdays",
+      "type": "list_item",
+      "content": {
+        "content": "Po–Pá: 6:00–17:00",
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "li_saturday": {
+      "id": "li_saturday",
+      "type": "list_item",
+      "content": {
+        "content": "So: 7:00–11:00",
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "list_hours": {
+      "id": "list_hours",
+      "type": "list",
+      "items": {
+        "nodes": ["li_weekdays", "li_saturday"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "rich_text_contact": {
+      "id": "rich_text_contact",
+      "type": "rich_text",
+      "body": {
+        "nodes": [
+          "sub_address",
+          "para_address",
+          "sub_order",
+          "para_order",
+          "sub_hours",
+          "list_hours"
+        ],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "page_contact": {
+      "id": "page_contact",
+      "type": "page",
+      "title": "Kontakt",
+      "slug": "kontakt",
+      "seo_description": "Adresa, telefon a otevírací doba pekárny U Lípy v Kolíně.",
+      "translation_key": "page_contact",
+      "share_image": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "blocks": {
+        "nodes": ["rich_text_contact"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "site_1": {
+      "id": "site_1",
+      "type": "site",
+      "schema_version": 12,
+      "name": "Pekárna U Lípy",
+      "lang": "cs",
+      "base_url": "https://pekarna-ulipy.example",
+      "description": "",
+      "favicon": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "share_image": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "logo": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "header_show_name": true,
+      "allow_ai_search": true,
+      "allow_ai_training": true,
+      "theme": "theme_1",
+      "nav": "nav_1",
+      "business": "business_1",
+      "pages": {
+        "nodes": ["page_home", "page_contact"],
+        "marks": [],
+        "annotations": []
+      },
+      "home_page_id": "page_home",
+      "services": {
+        "nodes": ["service_bread", "service_rolls", "service_cakes"],
+        "marks": [],
+        "annotations": []
+      },
+      "team": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "testimonials": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "faqs": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "projects": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "project_categories": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "services_page_id": "",
+      "projects_page_id": ""
+    },
+    "day_mon": {
+      "id": "day_mon",
+      "type": "opening_day",
+      "day": "mon",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_tue": {
+      "id": "day_tue",
+      "type": "opening_day",
+      "day": "tue",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_wed": {
+      "id": "day_wed",
+      "type": "opening_day",
+      "day": "wed",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_thu": {
+      "id": "day_thu",
+      "type": "opening_day",
+      "day": "thu",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_fri": {
+      "id": "day_fri",
+      "type": "opening_day",
+      "day": "fri",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_sat": {
+      "id": "day_sat",
+      "type": "opening_day",
+      "day": "sat",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "day_sun": {
+      "id": "day_sun",
+      "type": "opening_day",
+      "day": "sun",
+      "ranges": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "business_1": {
+      "id": "business_1",
+      "type": "business",
+      "name": "",
+      "business_type": "LocalBusiness",
+      "show_in_footer": true,
+      "social": {
+        "nodes": [],
+        "marks": [],
+        "annotations": []
+      },
+      "locations": {
+        "nodes": ["location_1"],
+        "marks": [],
+        "annotations": []
+      }
+    },
+    "location_1": {
+      "id": "location_1",
+      "type": "location",
+      "name": "",
+      "street": "",
+      "postal_code": "",
+      "city": "",
+      "country": "CZ",
+      "phone": "",
+      "email": "",
+      "map_url": "",
+      "hours_note": "",
+      "days": {
+        "nodes": ["day_mon", "day_tue", "day_wed", "day_thu", "day_fri", "day_sat", "day_sun"],
+        "marks": [],
+        "annotations": []
+      }
+    }
+  }
+}

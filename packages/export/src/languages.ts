@@ -4,6 +4,7 @@
 import type { SiteDocument } from "@webmio/model";
 import { type Problem, validateSite } from "@webmio/model";
 import { escapeHtml, languageName, RenderContext, type SiteLanguage } from "@webmio/render";
+import { TEMPLATE_RELEASES } from "@webmio/templates";
 import { type ExportOptions, type ExportResult, exportSite } from "./export.js";
 
 export interface LanguageDocument {
@@ -33,7 +34,7 @@ export function exportSiteLanguages(
   if (languages.length === 1) return exportSite(primary.document, media, options);
 
   const failed = languages.flatMap(({ lang, document }) =>
-    validateSite(document)
+    validateSite(document, { templates: TEMPLATE_RELEASES })
       .problems.filter((p) => p.severity === "error")
       .map((p) => inLanguage(lang, p)),
   );

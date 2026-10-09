@@ -23,6 +23,7 @@
   "dependencies": {
     "@webmio/model": "workspace:*",
     "@webmio/render": "workspace:*",
+    "@webmio/templates": "workspace:*",
     "fflate": "catalog:"
   },
   "devDependencies": {

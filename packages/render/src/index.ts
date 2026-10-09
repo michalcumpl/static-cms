@@ -1,5 +1,6 @@
 import type { Problem, SiteDocument } from "@webmio/model";
 import { isValidBaseUrl, problem, validateSite } from "@webmio/model";
+import { TEMPLATES, type Template } from "@webmio/templates";
 import { isValidBasePath, type PageRoute, RenderContext, type SiteLanguage } from "./context.js";
 import { siteCss } from "./css.js";
 import { renderItemPage } from "./items.js";
@@ -9,7 +10,7 @@ import { SLIDESHOW_SCRIPT } from "./slideshow-script.js";
 import { VIDEO_SCRIPT } from "./video-script.js";
 
 export { isValidBasePath, type SiteLanguage } from "./context.js";
-export { fontPreviewCss, type SiteCssOptions, siteCss } from "./css.js";
+export { fontPreviewCss, type SiteCssOptions, siteCss, templateTokensCss } from "./css.js";
 
 export interface RenderOptions {
   /** Where the site is served from: `/` (default) or a subdirectory like `/preview/`. */
@@ -29,6 +30,8 @@ export interface RenderOptions {
    * `hreflang` alternates and a language switcher. The rendered document is one of them.
    */
   languages?: readonly SiteLanguage[];
+  /** The templates sites can use: the registry (`TEMPLATES`) by default, a test's own otherwise. */
+  templates?: readonly Template[];
 }
 
 export interface RenderedPage {
@@ -97,7 +100,10 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
       ],
     };
   }
-  const validation = validateSite(input);
+  const templates = options.templates ?? TEMPLATES;
+  const validation = validateSite(input, {
+    templates: new Map(templates.map((t) => [t.id, t.release])),
+  });
   if (!validation.valid) return { ok: false, problems: validation.problems };
 
   const doc = input as SiteDocument;
@@ -128,7 +134,10 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
       html: renderItemPage(id, listingPageId, ctx).value,
     });
   }
-  const css = siteCss(ctx.node(ctx.site.theme, "theme"));
+  // Validation found the template. Its current release styles the site, also when the document
+  // records an older one (templates spec, "Template releases").
+  const template = templates.find((t) => t.id === ctx.site.template) as Template;
+  const css = siteCss(ctx.node(ctx.site.theme, "theme"), template);
   ctx.startPage();
   const notFound = renderNotFound(ctx).value;
   const sources = { video: VIDEO_SCRIPT, slideshow: SLIDESHOW_SCRIPT, menu: MENU_SCRIPT };

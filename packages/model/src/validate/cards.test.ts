@@ -14,6 +14,7 @@ function site(count = 3, props: Record<string, unknown> = {}) {
   nodes.cards_1 = {
     id: "cards_1",
     type: "cards",
+    hidden: false,
     heading: text(""),
     layout: "below",
     items: list(ids),

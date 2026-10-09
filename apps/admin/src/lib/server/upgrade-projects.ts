@@ -1,9 +1,10 @@
 // The one-time project upgrade to document format 7 (business-collections design decision 8).
-// Each language's document is upgraded on its own by `migrateSite`; this adds what only the
+// Each language's document is upgraded on its own by `upgradeSite`; this adds what only the
 // whole project can do: items that exist only in a non-primary language move into the primary,
 // because which items exist is now shared from the primary.
 import { randomUUID } from "node:crypto";
-import { COLLECTION_BLOCK_TYPES, COLLECTIONS, migrateSite, validateSite } from "@webmio/model";
+import { COLLECTION_BLOCK_TYPES, COLLECTIONS, validateSite } from "@webmio/model";
+import { TEMPLATE_RELEASES, upgradeSite } from "@webmio/templates";
 import { eq } from "drizzle-orm";
 import type { Db } from "./db/index";
 import { projects, siteDocuments, versions } from "./db/schema";
@@ -52,7 +53,7 @@ function ownedIds(nodes: Record<string, Node>, id: string): string[] {
  * Throws when an appended item's node IDs are already taken in the primary.
  */
 export function upgradeProjectDocuments(documents: readonly unknown[]): Doc[] {
-  const docs = documents.map((doc) => structuredClone(migrateSite(doc)) as Doc);
+  const docs = documents.map((doc) => structuredClone(upgradeSite(doc)) as Doc);
   const [primary, ...others] = docs;
   if (!primary) return docs;
   const site = (doc: Doc) => doc.nodes[doc.document_id] as Node;
@@ -140,7 +141,7 @@ export function upgradeProjects(db: Db): number {
         ordered.forEach((row, i) => {
           const document = results[i];
           if (JSON.stringify(document) === JSON.stringify(row.document)) return;
-          const broken = validateSite(document).problems.filter(
+          const broken = validateSite(document, { templates: TEMPLATE_RELEASES }).problems.filter(
             (p) => p.category === "structure" && p.severity === "error",
           );
           if (broken.length > 0) {

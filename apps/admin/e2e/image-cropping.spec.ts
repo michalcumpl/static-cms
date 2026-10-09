@@ -226,9 +226,14 @@ test.describe("the focal point", () => {
     const view = focalPoint(page).locator("img");
     const box = await view.boundingBox();
     if (!box) throw new Error("no focal point view");
-    await view.click({ position: { x: box.width / 2, y: box.height * 0.15 } });
-    await expect(value(page)).toHaveText("50 % from the left, 15 % from the top");
-    await expect(heroImage(page)).toHaveCSS("object-position", "50% 15%");
+    // The click lands on a whole pixel and the view may start between two, so the point is
+    // where that pixel falls: about 15 % from the top.
+    const y = Math.round(box.y + box.height * 0.15) - box.y;
+    const top = Math.round((y / box.height) * 100);
+    expect(Math.abs(top - 15)).toBeLessThanOrEqual(1);
+    await view.click({ position: { x: box.width / 2, y } });
+    await expect(value(page)).toHaveText(`50 % from the left, ${top} % from the top`);
+    await expect(heroImage(page)).toHaveCSS("object-position", `50% ${top}%`);
     await undo(page);
     await expect(value(page)).toHaveText("50 % from the left, 50 % from the top");
   });

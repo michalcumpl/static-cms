@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { validateSite } from "@webmio/model";
 import { isLanguageCode } from "@webmio/render";
+import { TEMPLATE_RELEASES } from "@webmio/templates";
 import { eq } from "drizzle-orm";
 import type { Db } from "./db/index";
 import { siteDocuments, versions, workspaces } from "./db/schema";
@@ -81,7 +82,7 @@ function readFolder(
       image.width ||= 1;
       image.height ||= 1;
     }
-    for (const problem of validateSite(sized).problems) {
+    for (const problem of validateSite(sized, { templates: TEMPLATE_RELEASES }).problems) {
       if (problem.severity === "error") problems.push(`${file}: ${problem.message}`);
     }
   }
@@ -155,7 +156,9 @@ export async function loadSite(
     .where(eq(siteDocuments.projectId, projectId))
     .get();
   if (!first) return fail(`${project.primaryLang}: not stored.`);
-  const stillValid = validateSite(primary).problems.filter((p) => p.severity === "error");
+  const stillValid = validateSite(primary, { templates: TEMPLATE_RELEASES }).problems.filter(
+    (p) => p.severity === "error",
+  );
   if (stillValid.length > 0) return fail(`${project.primaryLang}: ${stillValid[0]?.message}`);
   db.update(versions).set({ document: primary }).where(eq(versions.id, first.versionId)).run();
   for (const lang of docs.keys()) {

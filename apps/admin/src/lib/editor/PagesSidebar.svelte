@@ -4,6 +4,7 @@ import { goto } from "$app/navigation";
 import { getI18n } from "$lib/i18n";
 import Button from "$lib/ui/Button.svelte";
 import PopoverMenu, { type MenuEntry as MenuItem } from "$lib/ui/PopoverMenu.svelte";
+import { inLanguage, pageLayouts, titleAfterChoosing } from "./add-page";
 import DeletePageDialog from "./DeletePageDialog.svelte";
 import { pageFieldElementId } from "./locate";
 import {
@@ -30,20 +31,46 @@ import { isUntranslated } from "./translations";
 let { editor, projectName }: { editor: EditorState; projectName: string } = $props();
 const i18n = getI18n();
 
-// Adding a page.
+// Adding a page, blank or from one of the template's layouts (template-system).
 let pageDialog: HTMLDialogElement | undefined = $state();
 let newTitle = $state("");
 let pageError = $state("");
+let layoutId = $state("");
+const layouts = $derived(pageLayouts(editor.session.doc));
+// "Blank page" first, then the layouts, named in the interface language.
+const choices = $derived([
+  {
+    id: "",
+    name: i18n.t("editor.left.blankPage"),
+    description: i18n.t("editor.left.blankPageDescription"),
+  },
+  ...layouts.map((l) => ({
+    id: l.id,
+    name: inLanguage(l.name, i18n.locale),
+    description: inLanguage(l.description, i18n.locale),
+  })),
+]);
+const siteLang = $derived(
+  String((editor.session.get(editor.siteId) as { lang?: string } | undefined)?.lang ?? ""),
+);
 
 function openPageDialog() {
   newTitle = "";
   pageError = "";
+  layoutId = "";
   pageDialog?.showModal();
+}
+
+function chooseLayout(id: string) {
+  const previous = layouts.find((l) => l.id === layoutId);
+  const chosen = layouts.find((l) => l.id === id);
+  newTitle = titleAfterChoosing(newTitle, previous, chosen, siteLang);
+  layoutId = id;
 }
 
 async function submitPage(event: SubmitEvent) {
   event.preventDefault();
-  const id = addPage(editor.session, newTitle);
+  const id = addPage(editor.session, newTitle, layoutId || undefined);
   if (!id) {
     pageError = i18n.t("editor.left.pageTitleMissing");
     return;
@@ -377,6 +404,22 @@ function untranslated(page: EditorPage): boolean {
     <label for="add-page-name">{i18n.t("editor.left.title")}</label>
     <input id="add-page-name" type="text" bind:value={newTitle} />
     {#if pageError}<p class="error" role="alert">{pageError}</p>{/if}
+    <fieldset class="layouts">
+      <legend>{i18n.t("editor.left.startFrom")}</legend>
+      {#each choices as choice (choice.id)}
+        <label class="layout" class:chosen={layoutId === choice.id}>
+          <input
+            type="radio"
+            name="add-page-layout"
+            value={choice.id}
+            checked={layoutId === choice.id}
+            onchange={() => chooseLayout(choice.id)}
+          />
+          <span class="layout-name">{choice.name}</span>
+          <span class="layout-description">{choice.description}</span>
+        </label>
+      {/each}
+    </fieldset>
     <div class="buttons">
       <Button onclick={() => pageDialog?.close()}>{i18n.t("common.cancel")}</Button>
       <Button type="submit" kind="primary">{i18n.t("editor.left.addPageButton")}</Button>
@@ -556,6 +599,52 @@ function untranslated(page: EditorPage): boolean {
   .error {
     color: var(--ui-problem);
     margin: 0;
+  }
+
+  .layouts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: 0.5rem;
+    max-height: 22rem;
+    overflow-y: auto;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .layouts legend {
+    margin-bottom: 0.4rem;
+    padding: 0;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.15rem 0.5rem;
+    align-content: start;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-field);
+    cursor: pointer;
+  }
+
+  .layout.chosen {
+    border-color: var(--ui-focus);
+    background: var(--ui-soft);
+  }
+
+  .layout input {
+    margin: 0.2rem 0 0;
+  }
+
+  .layout-name {
+    font-weight: 600;
+  }
+
+  .layout-description {
+    grid-column: 2;
+    font-size: 0.85rem;
+    color: var(--ui-muted);
   }
 
   .buttons {

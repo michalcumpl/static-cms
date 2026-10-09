@@ -26,6 +26,7 @@ import {
 import { EditorState, setEditor } from "$lib/editor/state.svelte";
 import { canInsertItem, insertItem, isFixedList } from "$lib/editor/structure";
 import ThemeSettings from "$lib/editor/ThemeSettings.svelte";
+import { siteTemplate } from "$lib/editor/template";
 import VideoPanel from "$lib/editor/VideoPanel.svelte";
 import { getI18n } from "$lib/i18n";
 import PublishButton from "$lib/PublishButton.svelte";
@@ -78,7 +79,9 @@ $effect(() => {
     untrack(() => session.doc),
     shownTheme,
   );
-  canvasStyle.textContent = canvasCss(shownTheme, ".site-canvas");
+  // Sites can't change templates in the editor yet, so the template is read with the theme.
+  const template = siteTemplate(untrack(() => session.doc));
+  canvasStyle.textContent = canvasCss(shownTheme, ".site-canvas", template);
 });
 
 // The current page can disappear: deleted, or its addition undone. Show home instead.
