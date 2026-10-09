@@ -1,0 +1,49 @@
+#!/bin/sh
+# Runs another admin image (admin-on-aws design.md decision 6): `webmio-deploy <tag>`. When the
+# new version doesn't answer /healthz within two minutes, the previous one runs again and the
+# deploy fails.
+set -eu
+# shellcheck source=/dev/null
+. /etc/webmio/server.env
+tag=${1:?Usage: webmio-deploy <tag>}
+
+healthy() {
+  deadline=$(($(date +%s) + 120))
+  while [ "$(date +%s)" -lt "$deadline" ]; do
+    if curl -fsS --max-time 2 http://127.0.0.1:3000/healthz >/dev/null 2>&1; then return 0; fi
+    sleep 2
+  done
+  return 1
+}
+
+run() {
+  aws ssm put-parameter --region "$WEBMIO_REGION" --name "$WEBMIO_PARAMETERS/image" \
+    --type String --value "$1" --overwrite >/dev/null
+  systemctl restart webmio-admin
+}
+
+# The tag running now, which the parameter may only know as "newest".
+previous=$(sed 's/.*://' /etc/webmio/admin.image 2>/dev/null || true)
+
+aws ecr get-login-password --region "$WEBMIO_REGION" |
+  docker login --username AWS --password-stdin "${WEBMIO_REPOSITORY%%/*}" >/dev/null
+docker pull --quiet "$WEBMIO_REPOSITORY:$tag" >/dev/null
+
+echo "Starting $tag."
+run "$tag"
+if healthy; then
+  echo "Deployed $tag."
+  exit 0
+fi
+
+echo "$tag didn't answer /healthz within two minutes." >&2
+if [ -n "$previous" ] && [ "$previous" != "$tag" ]; then
+  echo "Going back to $previous." >&2
+  run "$previous"
+  if healthy; then
+    echo "$previous is running again." >&2
+  else
+    echo "$previous doesn't answer /healthz either." >&2
+  fi
+fi
+exit 1

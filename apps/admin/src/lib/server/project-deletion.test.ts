@@ -71,7 +71,7 @@ describe("removing a project for good", () => {
       .all()
       .map((d) => d.id);
     await deleteProject(db, projectId, owner.id);
-    expect(purgeProject(db, workspaceId, projectId)).toBe(true);
+    expect(await purgeProject(db, workspaceId, projectId)).toBe(true);
     expect(db.select().from(projects).where(eq(projects.id, projectId)).all()).toEqual([]);
     expect(db.select().from(media).where(eq(media.projectId, projectId)).all()).toEqual([]);
     for (const id of documentIds) {
@@ -83,9 +83,9 @@ describe("removing a project for good", () => {
 
   it("removes only deleted projects, and copes with a missing image folder", async () => {
     const { db, projectId, owner, workspaceId } = project();
-    expect(purgeProject(db, workspaceId, projectId)).toBe(false);
+    expect(await purgeProject(db, workspaceId, projectId)).toBe(false);
     expect(listed()).toContain(projectId);
     await deleteProject(db, projectId, owner.id);
-    expect(purgeProject(db, workspaceId, projectId, "/nonexistent-media-root")).toBe(true);
+    expect(await purgeProject(db, workspaceId, projectId, "/nonexistent-media-root")).toBe(true);
   });
 });

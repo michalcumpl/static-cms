@@ -1,0 +1,35 @@
+#!/bin/sh
+# Publishes how long the database has had changes the replica doesn't hold yet, as the
+# ReplicaLagSeconds metric (admin-on-aws design.md decision 3); zero when the replica is
+# current. Run every minute by webmio-replica-lag.timer. When Litestream isn't running nothing
+# is published, and the alarm fires on the missing metric.
+set -eu
+# shellcheck source=/dev/null
+. /etc/webmio/server.env
+since=/run/webmio/replica-behind-since
+
+if [ "$(docker inspect -f '{{.State.Running}}' webmio-litestream 2>/dev/null)" != true ]; then
+  echo "Litestream isn't running." >&2
+  exit 1
+fi
+
+# Transaction IDs are hexadecimal; a database or replica without one (Litestream shows "-")
+# counts as 0.
+hex='if type == "string" and test("^[0-9a-f]+$") then . else "0" end'
+local_txid=$(docker exec webmio-litestream litestream status -json /data/app.db |
+  jq -r ".[0].local_txid | $hex")
+replica_txid=$(docker exec webmio-litestream litestream ltx -level all -json /data/app.db |
+  jq -r "map(.max_txid) | max | $hex")
+
+now=$(date +%s)
+mkdir -p /run/webmio
+if [ "$((0x$local_txid))" -gt "$((0x$replica_txid))" ]; then
+  [ -e "$since" ] || echo "$now" >"$since"
+  lag=$((now - $(cat "$since")))
+else
+  rm -f "$since"
+  lag=0
+fi
+
+aws cloudwatch put-metric-data --region "$WEBMIO_REGION" --namespace "Webmio/$WEBMIO_STACK" \
+  --metric-name ReplicaLagSeconds --unit Seconds --value "$lag"

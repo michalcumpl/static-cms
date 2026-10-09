@@ -1,0 +1,15 @@
+# What the admin's image build doesn't need (apps/admin/Dockerfile): local data, builds, caches.
+.git
+.claude
+**/node_modules
+**/dist
+**/.svelte-kit
+**/.turbo
+**/test-results
+**/playwright-report
+apps/admin/data
+packages/export/out
+infra/node_modules
+*.log
+.env
+.env.*

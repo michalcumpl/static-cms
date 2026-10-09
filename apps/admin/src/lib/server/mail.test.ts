@@ -1,9 +1,10 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { SESv2Client, type SendEmailCommand } from "@aws-sdk/client-sesv2";
 import nodemailer from "nodemailer";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createMailer, outboxMailer, readOutbox, transportMailer } from "./mail";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createMailer, outboxMailer, readOutbox, sesMailer, transportMailer } from "./mail";
 
 let dir = "";
 beforeEach(async () => {
@@ -62,5 +63,34 @@ describe("SMTP mailer", () => {
     expect(() => createMailer({ SMTP_URL: "smtp://localhost:2525" })).toThrow(/MAIL_FROM/);
     await createMailer({ OUTBOX_DIR: join(dir, "o") }).send(message);
     expect(readOutbox(join(dir, "o"))).toHaveLength(1);
+  });
+});
+
+describe("SES mailer", () => {
+  it("sends the message through SES from the configured sender", async () => {
+    const sent: SendEmailCommand[] = [];
+    const client = new SESv2Client({ region: "eu-central-1" });
+    vi.spyOn(client, "send").mockImplementation(async (command) => {
+      sent.push(command as SendEmailCommand);
+      return { MessageId: "0102018abc" };
+    });
+    await sesMailer("Webmio <prihlaseni@mail.webmio.net>", client).send(message);
+    expect(sent).toHaveLength(1);
+    const input = sent[0]?.input;
+    expect(input?.FromEmailAddress).toBe("Webmio <prihlaseni@mail.webmio.net>");
+    expect(input?.Destination?.ToAddresses).toEqual([message.to]);
+    const raw = new TextDecoder().decode(input?.Content?.Raw?.Data);
+    expect(raw).toMatch(/^Subject: /m);
+    expect(raw).toContain(`To: ${message.to}`);
+    expect(raw).toContain("From: Webmio <prihlaseni@mail.webmio.net>");
+  });
+
+  it("is chosen by MAIL_TRANSPORT=ses, which needs MAIL_FROM", () => {
+    expect(() => createMailer({ MAIL_TRANSPORT: "ses" })).toThrow(
+      "MAIL_FROM must be set when MAIL_TRANSPORT is ses.",
+    );
+    expect(
+      createMailer({ MAIL_TRANSPORT: "ses", MAIL_FROM: "Webmio <a@mail.webmio.net>" }),
+    ).toBeDefined();
   });
 });

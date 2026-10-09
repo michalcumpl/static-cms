@@ -1,0 +1,20 @@
+[Unit]
+Description=Webmio: Litestream replicating the admin's database
+After=docker.service webmio-restore.service
+Requires=docker.service webmio-restore.service
+StartLimitIntervalSec=0
+
+[Service]
+EnvironmentFile=/etc/webmio/server.env
+ExecStartPre=/usr/local/bin/webmio-render litestream
+ExecStartPre=-/usr/bin/docker rm -f webmio-litestream
+ExecStart=/usr/bin/docker run --rm --name webmio-litestream --user 1000:1000 \
+  -v /var/lib/webmio:/data -v /etc/webmio/litestream.yml:/etc/litestream.yml:ro \
+  --log-driver awslogs --log-opt awslogs-region=${WEBMIO_REGION} \
+  --log-opt awslogs-group=${WEBMIO_LOGS}/litestream ${WEBMIO_LITESTREAM_IMAGE} replicate
+ExecStop=/usr/bin/docker stop webmio-litestream
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

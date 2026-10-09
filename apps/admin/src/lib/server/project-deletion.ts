@@ -2,13 +2,12 @@
 // hides a project and takes its website offline; restoring brings it back unpublished; removing
 // deletes it for good, rows and image files. Removing deleted projects automatically comes with
 // scheduled jobs.
-import { rmSync } from "node:fs";
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { type Said, said } from "$lib/i18n";
 import type { Db } from "./db/index";
 import { projectHosting, projects, users } from "./db/schema";
-import { mediaRoot } from "./import-working-copy";
-import { projectFolder } from "./media";
+import type { MediaPlace } from "./media";
+import { asStore } from "./media-store";
 import { type HostingEnv, targetFor } from "./publishing/connection";
 import { hostedSite, PublishError, type PublishErrorKind } from "./publishing/target";
 
@@ -82,15 +81,15 @@ export function restoreProject(db: Db, workspaceId: string, projectId: string): 
  * Removes a deleted project of the workspace for good: its rows through the foreign keys'
  * cascade, then its image files, after the commit. False when there is no such deleted project.
  */
-export function purgeProject(
+export async function purgeProject(
   db: Db,
   workspaceId: string,
   projectId: string,
-  root = mediaRoot(),
-): boolean {
+  root?: MediaPlace,
+): Promise<boolean> {
   const result = db.delete(projects).where(deletedIn(workspaceId, projectId)).run();
   if (result.changes === 0) return false;
-  rmSync(projectFolder(projectId, root), { recursive: true, force: true });
+  await asStore(root).removePrefix(`${projectId}/`);
   return true;
 }
 

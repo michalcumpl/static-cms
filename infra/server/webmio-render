@@ -1,0 +1,48 @@
+#!/bin/sh
+# Renders a unit's configuration from Parameter Store before it starts (admin-on-aws design.md
+# decision 1): `webmio-render admin|caddy|litestream`.
+set -eu
+# shellcheck source=/dev/null
+. /etc/webmio/server.env
+
+param() {
+  aws ssm get-parameter --region "$WEBMIO_REGION" --name "$WEBMIO_PARAMETERS/$1" \
+    --with-decryption --query Parameter.Value --output text
+}
+
+# Writes stdin to a file only once it is complete, readable by root only.
+save() {
+  umask 077
+  cat >"$1.new"
+  mv "$1.new" "$1"
+}
+
+case "${1:-}" in
+admin)
+  { param env; printf 'SECRET_KEY=%s\n' "$(param secret-key)"; } | save /etc/webmio/admin.env
+  tag=$(param image)
+  if [ "$tag" = newest ]; then
+    tag=$(aws ecr describe-images --region "$WEBMIO_REGION" \
+      --repository-name "${WEBMIO_REPOSITORY#*/}" \
+      --query 'sort_by(imageDetails, &imagePushedAt)[-1].imageTags[0]' --output text)
+  fi
+  if [ -z "$tag" ] || [ "$tag" = None ]; then
+    echo "There is no admin image in $WEBMIO_REPOSITORY yet; deploy one." >&2
+    exit 1
+  fi
+  aws ecr get-login-password --region "$WEBMIO_REGION" |
+    docker login --username AWS --password-stdin "${WEBMIO_REPOSITORY%%/*}" >/dev/null
+  docker pull --quiet "$WEBMIO_REPOSITORY:$tag" >/dev/null
+  echo "$WEBMIO_REPOSITORY:$tag" | save /etc/webmio/admin.image
+  ;;
+caddy) param caddyfile | save /etc/webmio/Caddyfile ;;
+litestream)
+  param litestream | save /etc/webmio/litestream.yml
+  # Litestream runs as the admin's user, which must read its configuration.
+  chown 1000:1000 /etc/webmio/litestream.yml
+  ;;
+*)
+  echo "Usage: webmio-render admin|caddy|litestream" >&2
+  exit 2
+  ;;
+esac

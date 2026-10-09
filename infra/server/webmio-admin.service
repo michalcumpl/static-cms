@@ -1,0 +1,23 @@
+[Unit]
+Description=Webmio admin
+After=docker.service webmio-restore.service
+Requires=docker.service webmio-restore.service
+StartLimitIntervalSec=0
+
+[Service]
+EnvironmentFile=/etc/webmio/server.env
+ExecStartPre=/usr/local/bin/webmio-render admin
+ExecStartPre=-/usr/bin/docker network create webmio
+ExecStartPre=-/usr/bin/docker rm -f webmio-admin
+# Port 3000 is published on the loopback only, for webmio-deploy's health checks.
+ExecStart=/bin/sh -c 'exec /usr/bin/docker run --rm --name webmio-admin --network webmio \
+  -p 127.0.0.1:3000:3000 --env-file /etc/webmio/admin.env -v /var/lib/webmio:/data \
+  --log-driver awslogs --log-opt awslogs-region=${WEBMIO_REGION} \
+  --log-opt awslogs-group=${WEBMIO_LOGS}/admin "$$(cat /etc/webmio/admin.image)"'
+ExecStop=/usr/bin/docker stop webmio-admin
+Restart=always
+RestartSec=10
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

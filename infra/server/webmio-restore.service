@@ -1,0 +1,17 @@
+[Unit]
+Description=Webmio: restore the admin's database before it starts
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/local/bin/webmio-render litestream
+ExecStart=/usr/local/bin/webmio-restore
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

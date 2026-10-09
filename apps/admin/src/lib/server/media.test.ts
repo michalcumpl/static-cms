@@ -541,12 +541,12 @@ describe("cleanupMedia", () => {
     removeFromLibrary(db, projectId, unused.media.key);
     removeFromLibrary(db, projectId, older.media.key);
 
-    expect(cleanupMedia(db, { dryRun: true, root })).toEqual([
+    expect(await cleanupMedia(db, { dryRun: true, root })).toEqual([
       { projectId, key: unused.media.key },
     ]);
     expect(await mediaFile(projectId, `${unused.media.key}-480.webp`, root)).toBeDefined();
 
-    expect(cleanupMedia(db, { root })).toEqual([{ projectId, key: unused.media.key }]);
+    expect(await cleanupMedia(db, { root })).toEqual([{ projectId, key: unused.media.key }]);
     const left = readdirSync(join(root, projectId)).concat(
       readdirSync(join(root, projectId, "originals")),
     );
@@ -554,7 +554,7 @@ describe("cleanupMedia", () => {
     expect(await mediaFile(projectId, `${older.media.key}-600.webp`, root)).toBeDefined();
     expect(await mediaFile(projectId, `${kept.media.key}-600.webp`, root)).toBeDefined();
     expect(listLibrary(db, projectId).map((m) => m.key)).toEqual([kept.media.key]);
-    expect(cleanupMedia(db, { root })).toEqual([]);
+    expect(await cleanupMedia(db, { root })).toEqual([]);
   });
 
   it("Source of a kept crop: kept with the crop, deleted with it", async () => {
@@ -571,7 +571,7 @@ describe("cleanupMedia", () => {
     if (!crop.ok) throw new Error("edit failed");
     saveWithHeroImage(crop.media.key, 400);
     removeFromLibrary(db, projectId, group.media.key);
-    expect(cleanupMedia(db, { root })).toEqual([]);
+    expect(await cleanupMedia(db, { root })).toEqual([]);
     expect(await mediaFile(projectId, `${group.media.key}-800.webp`, root)).toBeDefined();
 
     // Once the crop goes too, so does its source.
@@ -581,11 +581,9 @@ describe("cleanupMedia", () => {
     // Older versions used the crop; forget them, as if they had never been saved.
     db.delete(versions).where(ne(versions.id, site.versionId)).run();
     removeFromLibrary(db, projectId, crop.media.key);
-    expect(
-      cleanupMedia(db, { root })
-        .map((d) => d.key)
-        .sort(),
-    ).toEqual([crop.media.key, group.media.key].sort());
+    expect((await cleanupMedia(db, { root })).map((d) => d.key).sort()).toEqual(
+      [crop.media.key, group.media.key].sort(),
+    );
   });
 
   it("deletes a removed favicon's icon and share files with it, and keeps a used image's", async () => {
@@ -605,7 +603,7 @@ describe("cleanupMedia", () => {
     removeFromLibrary(db, projectId, favicon.media.key);
     removeFromLibrary(db, projectId, used.media.key);
 
-    expect(cleanupMedia(db, { root })).toEqual([{ projectId, key: favicon.media.key }]);
+    expect(await cleanupMedia(db, { root })).toEqual([{ projectId, key: favicon.media.key }]);
     const left = readdirSync(join(root, projectId));
     expect(left.filter((name) => name.startsWith(favicon.media.key))).toEqual([]);
     for (const name of derived(used.media.key)) expect(left, name).toContain(name);

@@ -2,3 +2,10 @@ config:
   aws:region: eu-central-1
   webmio-hosting:sitesDomain: webmio.site
   webmio-hosting:netDomain: webmio.net
+  # The admin's server (admin-on-aws). app.webmio.eu's DNS is at Webglobe, so there is no
+  # adminZone: the operator adds the A record for the adminAddress output (infra/README.md).
+  # adminSecretKey and alertEmail are set once with `pulumi config set --secret <name> --stack prod`.
+  webmio-hosting:adminDomain: app.webmio.eu
+  webmio-hosting:localAdminUser: "false"
+  # The dev stack, in the same account, created GitHub's OIDC provider.
+  webmio-hosting:githubProvider: existing

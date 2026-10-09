@@ -2,8 +2,7 @@
 // the library, and reading the published variant files and the icon and share files made
 // from them.
 
-import { createHash, randomBytes } from "node:crypto";
-import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import {
   ICON_SIZES,
@@ -21,6 +20,10 @@ import { editProblem, type ImageEdit, isIdentity, turnedSize } from "$lib/image-
 import type { Db } from "./db/index";
 import { media, projects, siteDocuments, versions } from "./db/schema";
 import { mediaRoot } from "./import-working-copy";
+import { asStore, type MediaStore } from "./media-store";
+
+/** Where media lives: a store, or a media folder by its path (tests); the server's by default. */
+export type MediaPlace = MediaStore | string | undefined;
 
 // A 40-megapixel decode needs ~160 MB; keep one image in memory at a time on a small server.
 sharp.cache(false);
@@ -86,14 +89,15 @@ export type UploadResult =
   | { ok: true; created: boolean; media: MediaItem }
   | { ok: false; status: 413 | 415; message: Said };
 
+/** A project's media folder on disk, for the folder store (development and tests). */
 export function projectFolder(projectId: string, root = mediaRoot()): string {
   return join(root, projectId);
 }
 
-/** Where a project keeps its metadata-free originals, which are never served. */
-function originalsFolder(projectId: string, root: string): string {
-  return join(projectFolder(projectId, root), "originals");
-}
+/** A project's file next to its variants: `<projectId>/<name>`. */
+const fileKey = (projectId: string, name: string) => `${projectId}/${name}`;
+/** A project's metadata-free original, which is never served: `<projectId>/originals/<name>`. */
+const originalKey = (projectId: string, name: string) => `${projectId}/originals/${name}`;
 
 // Uploads are processed one at a time, in arrival order.
 let queue: Promise<unknown> = Promise.resolve();
@@ -101,13 +105,6 @@ function serially<T>(task: () => Promise<T>): Promise<T> {
   const run = queue.then(task, task);
   queue = run.catch(() => undefined);
   return run;
-}
-
-/** Writes a file under a temporary name and renames it into place, so readers never see half. */
-function writeAtomically(path: string, bytes: Uint8Array): void {
-  const temporary = `${path}.tmp-${randomBytes(6).toString("hex")}`;
-  writeFileSync(temporary, bytes);
-  renameSync(temporary, path);
 }
 
 type MediaRow = typeof media.$inferSelect;
@@ -179,16 +176,12 @@ async function storeImage(
   key: string,
   image: Inspected,
   projectId: string,
-  root: string,
+  store: MediaStore,
   asOriginal = false,
 ): Promise<void> {
   const upright = sharp(bytes, { limitInputPixels: MAX_PIXELS, failOn: "error" }).rotate();
-  const folder = projectFolder(projectId, root);
-  const originals = originalsFolder(projectId, root);
-  mkdirSync(originals, { recursive: true });
-
   const original = asOriginal ? bytes : await encodeOriginal(upright.clone(), image.format);
-  writeAtomically(join(originals, `${key}.${EXTENSIONS[image.format]}`), original);
+  await store.write(originalKey(projectId, `${key}.${EXTENSIONS[image.format]}`), original);
 
   for (const width of imageVariants(image.width)) {
     const variant = await upright
@@ -196,7 +189,7 @@ async function storeImage(
       .resize({ width })
       .webp({ quality: VARIANT_QUALITY })
       .toBuffer();
-    writeAtomically(join(folder, imageFile(key, width)), variant);
+    await store.write(fileKey(projectId, imageFile(key, width)), variant);
   }
 }
 
@@ -225,8 +218,9 @@ export function uploadImage(
   projectId: string,
   userId: string | null,
   upload: { name: string; bytes: Uint8Array },
-  root = mediaRoot(),
+  root?: MediaPlace,
 ): Promise<UploadResult> {
+  const store = asStore(root);
   const { bytes, name } = upload;
   if (bytes.byteLength > MAX_UPLOAD_BYTES) {
     return Promise.resolve({
@@ -248,7 +242,7 @@ export function uploadImage(
     if (!inspected.ok) return inspected;
     const { image } = inspected;
     const key = newKey(db, projectId, name, sha256);
-    await storeImage(bytes, key, image, projectId, root);
+    await storeImage(bytes, key, image, projectId, store);
     const row = {
       projectId,
       key,
@@ -312,8 +306,9 @@ export function editImage(
   userId: string | null,
   key: string,
   edit: ImageEdit,
-  root = mediaRoot(),
+  root?: MediaPlace,
 ): Promise<EditResult> {
+  const store = asStore(root);
   return serially(async (): Promise<EditResult> => {
     const row = mediaRow(db, projectId, key);
     if (!row) return { ok: false, status: 404, message: said("server.media.noSuchImage") };
@@ -325,7 +320,7 @@ export function editImage(
     if (isIdentity(edit, source.width, source.height)) {
       return { ok: true, created: false, media: restored(db, source) };
     }
-    const bytes = derivedSource(projectId, source.key, root);
+    const bytes = await derivedSource(projectId, source.key, store);
     if (!bytes) return { ok: false, status: 404, message: said("server.media.noSource") };
 
     // Without an original the largest variant stands in, which may be smaller than the image.
@@ -369,7 +364,7 @@ export function editImage(
       edit,
     };
     const image = { format: source.format, width: region.width, height: region.height };
-    await storeImage(encoded, newRow.key, image, projectId, root, true);
+    await storeImage(encoded, newRow.key, image, projectId, store, true);
     // Files first, row last, as for uploads.
     db.insert(media).values(newRow).run();
     return { ok: true, created: true, media: toItem({ ...newRow, removedAt: null }, source) };
@@ -412,44 +407,34 @@ export function removeFromLibrary(db: Db, projectId: string, key: string): boole
 }
 
 /** A variant file (`<key>-<width>.webp`) of a project, or undefined when it doesn't exist. */
-function variantFile(
+async function variantFile(
   projectId: string,
   name: string,
-  root: string,
-): Uint8Array<ArrayBuffer> | undefined {
+  store: MediaStore,
+): Promise<Uint8Array<ArrayBuffer> | undefined> {
   if (!VARIANT_FILE.test(name)) return undefined;
-  return readIfExists(join(projectFolder(projectId, root), name));
-}
-
-function readIfExists(path: string): Uint8Array<ArrayBuffer> | undefined {
-  try {
-    return new Uint8Array(readFileSync(path));
-  } catch {
-    return undefined;
-  }
+  return store.read(fileKey(projectId, name));
 }
 
 /**
  * The image a derived file is made from (seo-and-metadata design.md decision 3): its
  * metadata-free original, else the largest of its variants (images used before the library).
  */
-function derivedSource(projectId: string, key: string, root: string): Uint8Array | undefined {
+async function derivedSource(
+  projectId: string,
+  key: string,
+  store: MediaStore,
+): Promise<Uint8Array | undefined> {
   for (const extension of Object.values(EXTENSIONS)) {
-    const original = readIfExists(join(originalsFolder(projectId, root), `${key}.${extension}`));
+    const original = await store.read(originalKey(projectId, `${key}.${extension}`));
     if (original) return original;
   }
-  let names: string[];
-  try {
-    names = readdirSync(projectFolder(projectId, root));
-  } catch {
-    return undefined;
-  }
-  const widths = names.flatMap((name) => {
+  const widths = (await store.list(`${projectId}/`)).flatMap((name) => {
     const match = VARIANT_FILE.exec(name);
     return match?.[1] === key ? [Number(match[2])] : [];
   });
   if (widths.length === 0) return undefined;
-  return variantFile(projectId, imageFile(key, Math.max(...widths)), root);
+  return variantFile(projectId, imageFile(key, Math.max(...widths)), store);
 }
 
 /** Makes a derived file's bytes from its source image. */
@@ -479,22 +464,22 @@ async function makeDerived(source: Uint8Array, kind: DerivedKind): Promise<Buffe
 export async function derivedFile(
   projectId: string,
   name: string,
-  root = mediaRoot(),
+  root?: MediaPlace,
 ): Promise<Uint8Array<ArrayBuffer> | undefined> {
+  const store = asStore(root);
   const match = DERIVED_FILE.exec(name);
   const key = match?.[1];
   if (!match || key === undefined) return undefined;
-  const path = join(projectFolder(projectId, root), name);
-  const kept = readIfExists(path);
+  const kept = await store.read(fileKey(projectId, name));
   if (kept) return kept;
   const kind: DerivedKind = match[2] === undefined ? "share" : (Number(match[2]) as IconSize);
   return serially(async () => {
-    const madeMeanwhile = readIfExists(path);
+    const madeMeanwhile = await store.read(fileKey(projectId, name));
     if (madeMeanwhile) return madeMeanwhile;
-    const source = derivedSource(projectId, key, root);
+    const source = await derivedSource(projectId, key, store);
     if (!source) return undefined;
     const bytes = new Uint8Array(await makeDerived(source, kind));
-    writeAtomically(path, bytes);
+    await store.write(fileKey(projectId, name), bytes);
     return bytes;
   });
 }
@@ -506,20 +491,24 @@ export async function derivedFile(
 export async function mediaFile(
   projectId: string,
   name: string,
-  root = mediaRoot(),
+  root?: MediaPlace,
 ): Promise<Uint8Array<ArrayBuffer> | undefined> {
-  return variantFile(projectId, name, root) ?? (await derivedFile(projectId, name, root));
+  const store = asStore(root);
+  // Only names of a project's own files, never a path into another folder.
+  if (name.includes("/") || name.includes("\\") || name.startsWith(".")) return undefined;
+  return (await variantFile(projectId, name, store)) ?? (await derivedFile(projectId, name, store));
 }
 
 /** The bytes of the given media files that exist, keyed by name (for preview and export). */
 export async function mediaFiles(
   projectId: string,
   names: readonly string[],
-  root = mediaRoot(),
+  root?: MediaPlace,
 ): Promise<Map<string, Uint8Array>> {
+  const store = asStore(root);
   const files = new Map<string, Uint8Array>();
   for (const name of names) {
-    const bytes = await mediaFile(projectId, name, root);
+    const bytes = await mediaFile(projectId, name, store);
     if (bytes) files.set(name, bytes);
   }
   return files;
@@ -533,18 +522,10 @@ export async function mediaFiles(
 export async function registerLegacyMedia(
   db: Db,
   projectId: string,
-  root = mediaRoot(),
+  root?: MediaPlace,
 ): Promise<string[]> {
-  const folder = projectFolder(projectId, root);
-  let names: string[];
-  try {
-    names = readdirSync(folder, { withFileTypes: true })
-      .filter((entry) => entry.isFile())
-      .map((entry) => entry.name)
-      .sort();
-  } catch {
-    return [];
-  }
+  const store = asStore(root);
+  const names = await store.list(`${projectId}/`);
   // Which files are generated variants follows from the library's records, not from file
   // names: an older file can itself be called `jak-pracujeme-0.webp` or `katerina-350.webp`.
   const generated = new Set(
@@ -564,7 +545,8 @@ export async function registerLegacyMedia(
       .where(and(eq(media.projectId, projectId), eq(media.key, name)))
       .get();
     if (known) continue;
-    const bytes = new Uint8Array(readFileSync(join(folder, name)));
+    const bytes = await store.read(fileKey(projectId, name));
+    if (!bytes) continue;
     const sha256 = createHash("sha256").update(bytes).digest("hex");
     const duplicate = db
       .select({ key: media.key })
@@ -574,7 +556,7 @@ export async function registerLegacyMedia(
     if (duplicate) continue;
     const inspected = await inspect(bytes);
     if (!inspected.ok) continue;
-    await serially(() => storeImage(bytes, name, inspected.image, projectId, root));
+    await serially(() => storeImage(bytes, name, inspected.image, projectId, store));
     for (const w of imageVariants(inspected.image.width)) generated.add(imageFile(name, w));
     db.insert(media)
       .values({
@@ -598,11 +580,12 @@ export async function registerLegacyMedia(
 /** Registers files from before the library in every project; returns `projectId: keys`. */
 export async function registerAllLegacyMedia(
   db: Db,
-  root = mediaRoot(),
+  root?: MediaPlace,
 ): Promise<Map<string, string[]>> {
+  const store = asStore(root);
   const registered = new Map<string, string[]>();
   for (const { id } of db.select({ id: projects.id }).from(projects).all()) {
-    const keys = await registerLegacyMedia(db, id, root);
+    const keys = await registerLegacyMedia(db, id, store);
     if (keys.length > 0) registered.set(id, keys);
   }
   return registered;
@@ -622,11 +605,11 @@ function imageSources(document: unknown): string[] {
  * image it keeps was made by editing them (image-cropping design decision 6). Images still
  * in the library are never touched. With `dryRun`, only reports what it would delete.
  */
-export function cleanupMedia(
+export async function cleanupMedia(
   db: Db,
-  options: { dryRun?: boolean; root?: string } = {},
-): { projectId: string; key: string }[] {
-  const root = options.root ?? mediaRoot();
+  options: { dryRun?: boolean; root?: MediaPlace } = {},
+): Promise<{ projectId: string; key: string }[]> {
+  const store = asStore(options.root);
   const removed = db.select().from(media).where(isNotNull(media.removedAt)).all();
   const referenced = new Map<string, Set<string>>();
   const referencedIn = (projectId: string): Set<string> => {
@@ -664,15 +647,13 @@ export function cleanupMedia(
   for (const row of doomed.values()) {
     deleted.push({ projectId: row.projectId, key: row.key });
     if (options.dryRun) continue;
-    const folder = projectFolder(row.projectId, root);
-    for (const width of imageVariants(row.width)) {
-      rmSync(join(folder, imageFile(row.key, width)), { force: true });
-    }
-    for (const size of ICON_SIZES) rmSync(join(folder, iconFile(row.key, size)), { force: true });
-    rmSync(join(folder, shareFile(row.key)), { force: true });
-    rmSync(join(originalsFolder(row.projectId, root), `${row.key}.${EXTENSIONS[row.format]}`), {
-      force: true,
-    });
+    const files = (name: string) => fileKey(row.projectId, name);
+    await store.remove([
+      ...imageVariants(row.width).map((width) => files(imageFile(row.key, width))),
+      ...ICON_SIZES.map((size) => files(iconFile(row.key, size))),
+      files(shareFile(row.key)),
+      originalKey(row.projectId, `${row.key}.${EXTENSIONS[row.format]}`),
+    ]);
     db.delete(media)
       .where(and(eq(media.projectId, row.projectId), eq(media.key, row.key)))
       .run();

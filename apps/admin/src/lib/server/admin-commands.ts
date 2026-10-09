@@ -1,5 +1,7 @@
 // What `pnpm admin …` does (specs/accounts: "Admin command"). Relative imports only, so the
 // command can run outside SvelteKit.
+import { type Dirent, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { and, eq, isNull } from "drizzle-orm";
 import { sayIn } from "../i18n/translate";
 import { createLoginLink, normalizeEmail } from "./auth";
@@ -9,6 +11,7 @@ import { newId } from "./ids";
 import { importsSettled, readImport, startImport } from "./import/job";
 import type { SafeFetchOptions } from "./import/safe-fetch";
 import { DEFAULT_WORKSPACE_NAME } from "./import-working-copy";
+import type { MediaStore } from "./media-store";
 import { addMember, createWorkspace } from "./members";
 
 export type CreateUserResult =
@@ -120,4 +123,45 @@ export async function importSiteCommand(
   }
   log(`Project: ${origin}/p/${row.projectId}/`);
   return { ok: true, projectId: row.projectId };
+}
+
+/** Every file under a folder, as media keys (`<projectId>/<name>`), leaving out temporary files. */
+function mediaKeysIn(root: string, prefix = ""): string[] {
+  let entries: Dirent[];
+  try {
+    entries = readdirSync(join(root, prefix), { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries.flatMap((entry) => {
+    const key = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) return mediaKeysIn(root, key);
+    return entry.isFile() && !entry.name.includes(".tmp-") ? [key] : [];
+  });
+}
+
+/**
+ * Copies a media folder into a store under the same keys (admin-on-aws design.md decision 9),
+ * skipping files the store already has with the same size, so it can run again after an
+ * interruption. Prints each file it copies.
+ */
+export async function uploadMediaFolder(
+  root: string,
+  to: MediaStore,
+  log: Log,
+): Promise<{ copied: number; skipped: number }> {
+  let copied = 0;
+  let skipped = 0;
+  for (const key of mediaKeysIn(root).sort()) {
+    const bytes = new Uint8Array(readFileSync(join(root, ...key.split("/"))));
+    if ((await to.size(key)) === bytes.byteLength) {
+      skipped++;
+      continue;
+    }
+    await to.write(key, bytes);
+    log(`Copied ${key}`);
+    copied++;
+  }
+  log(`${copied} copied, ${skipped} already there.`);
+  return { copied, skipped };
 }

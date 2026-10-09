@@ -3,4 +3,13 @@ config:
   # Subdomains of the production domains, delegated to this stack's zones (infra/README.md).
   webmio-hosting:sitesDomain: dev.webmio.site
   webmio-hosting:netDomain: dev.webmio.net
+  # The admin's server (admin-on-aws). Its record goes in the dev.webmio.net zone above.
+  webmio-hosting:adminDomain: app.dev.webmio.net
+  webmio-hosting:adminZone: dev.webmio.net
+  # Keeps the IAM user for running the admin on a laptop against this stack.
+  webmio-hosting:localAdminUser: "true"
+  webmio-hosting:adminSecretKey:
+    secure: v1:JPdLC2n2cpAPwFx4:jDuNSpfokJu9SoMHPBAQ0eNZS4rSby7I1PdSZxK1jPf6uIXv6QSH+cESLxXkjaf4RAjN5WX3iQvHqKszjdy4TtKzuEHVvOoOPtvHGD6wM4M=
+  webmio-hosting:alertEmail:
+    secure: v1:8Oo0ef++zo+qU4xE:iUqIBVEHGaSwbzVsi93bzTP9B5GRopqc6p78mnr+Jwc7pzzelGQ=
 encryptionsalt: v1:S4JeMkcis1w=:v1:70lw8XW/I2sRZxfD:Mro81w2AFHGtSZBTgyQOQc1bXmU4XQ==

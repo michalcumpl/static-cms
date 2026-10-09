@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import nodemailer, { type Transporter } from "nodemailer";
 
 export interface MailMessage {
@@ -61,8 +62,27 @@ export function outboxDir(): string {
   return process.env.OUTBOX_DIR ?? resolve("data/outbox");
 }
 
-/** SMTP when `SMTP_URL` is set (sending from `MAIL_FROM`), otherwise the outbox. */
+/**
+ * Amazon SES (admin-on-aws design.md decision 5): nodemailer's SES transport over the SESv2
+ * API, with the server's own AWS credentials (its instance role).
+ */
+export function sesMailer(from: string, client: SESv2Client = new SESv2Client({})): Mailer {
+  return transportMailer(
+    nodemailer.createTransport({ SES: { sesClient: client, SendEmailCommand } }),
+    from,
+  );
+}
+
+/**
+ * SES when `MAIL_TRANSPORT=ses`, SMTP when `SMTP_URL` is set (both sending from `MAIL_FROM`),
+ * otherwise the outbox.
+ */
 export function createMailer(env: NodeJS.ProcessEnv = process.env): Mailer {
+  if (env.MAIL_TRANSPORT === "ses") {
+    const from = env.MAIL_FROM;
+    if (!from) throw new Error("MAIL_FROM must be set when MAIL_TRANSPORT is ses.");
+    return sesMailer(from);
+  }
   if (env.SMTP_URL) {
     const from = env.MAIL_FROM;
     if (!from) throw new Error("MAIL_FROM must be set when SMTP_URL is set.");

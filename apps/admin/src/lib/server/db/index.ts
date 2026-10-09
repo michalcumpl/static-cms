@@ -1,5 +1,7 @@
-import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import Database from "better-sqlite3";
+import { sql } from "drizzle-orm";
 import { type BetterSQLite3Database, drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import * as schema from "./schema";
@@ -31,6 +33,20 @@ export function openDatabase(path = databasePath()): Db {
   const db = drizzle(sqlite, { schema });
   migrate(db, { migrationsFolder: migrationsFolder() });
   return db;
+}
+
+/**
+ * Whether every migration the admin ships has been applied to `db` (admin-on-aws, "Health
+ * endpoint"): the journal's entries against the migrations table drizzle keeps.
+ */
+export function migrationsApplied(db: Db): boolean {
+  const journal = JSON.parse(
+    readFileSync(join(migrationsFolder(), "meta", "_journal.json"), "utf8"),
+  ) as { entries: unknown[] };
+  const row = db.get<{ applied: number }>(
+    sql`select count(*) as applied from "__drizzle_migrations"`,
+  );
+  return (row?.applied ?? 0) >= journal.entries.length;
 }
 
 export { schema };

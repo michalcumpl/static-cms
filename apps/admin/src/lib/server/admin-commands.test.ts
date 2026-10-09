@@ -1,10 +1,14 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createUser, importSiteCommand } from "./admin-commands";
+import { createUser, importSiteCommand, uploadMediaFolder } from "./admin-commands";
 import { consumeLoginToken } from "./auth";
 import { type Db, openDatabase } from "./db/index";
 import { workspaces } from "./db/schema";
 import { newId } from "./ids";
 import { startFixtureServer } from "./import/fixture-server";
+import { memoryStore } from "./media-store";
 import { listWorkspaces } from "./members";
 import { createProject } from "./site-documents";
 
@@ -92,5 +96,34 @@ describe("importSiteCommand (site-import)", () => {
       "No workspace w_none with an owner.",
       "Only public web addresses can be imported, such as pekarna.cz.",
     ]);
+  });
+});
+
+describe("uploadMediaFolder", () => {
+  it("copies a media folder under the same keys, and skips what is already there", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "media-upload-"));
+    try {
+      mkdirSync(join(folder, "p_1", "originals"), { recursive: true });
+      writeFileSync(join(folder, "p_1", "hero-320.webp"), "variant");
+      writeFileSync(join(folder, "p_1", "originals", "hero.jpg"), "original");
+      writeFileSync(join(folder, "p_1", "half.webp.tmp-abc"), "x");
+      const store = memoryStore();
+      const lines: string[] = [];
+      expect(await uploadMediaFolder(folder, store, (l) => lines.push(l))).toEqual({
+        copied: 2,
+        skipped: 0,
+      });
+      expect(store.keys()).toEqual(["p_1/hero-320.webp", "p_1/originals/hero.jpg"]);
+      expect(lines).toEqual([
+        "Copied p_1/hero-320.webp",
+        "Copied p_1/originals/hero.jpg",
+        "2 copied, 0 already there.",
+      ]);
+
+      writeFileSync(join(folder, "p_1", "hero-320.webp"), "a longer variant");
+      expect(await uploadMediaFolder(folder, store, () => {})).toEqual({ copied: 1, skipped: 1 });
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
   });
 });

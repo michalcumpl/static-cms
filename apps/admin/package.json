@@ -19,6 +19,7 @@
     "@aws-sdk/client-cloudfront": "catalog:",
     "@aws-sdk/client-cloudfront-keyvaluestore": "catalog:",
     "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/client-sesv2": "catalog:",
     "@aws-sdk/signature-v4a": "catalog:",
     "@fontsource-variable/dm-sans": "catalog:",
     "@fontsource-variable/inter": "catalog:",

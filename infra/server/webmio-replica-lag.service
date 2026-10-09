@@ -1,0 +1,6 @@
+[Unit]
+Description=Webmio: publish the replica's lag behind the admin's database
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/webmio-replica-lag

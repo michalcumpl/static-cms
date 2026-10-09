@@ -1,0 +1,23 @@
+[Unit]
+Description=Webmio: Caddy serving the admin over HTTPS
+After=docker.service
+Requires=docker.service
+StartLimitIntervalSec=0
+
+[Service]
+EnvironmentFile=/etc/webmio/server.env
+ExecStartPre=/usr/local/bin/webmio-render caddy
+ExecStartPre=-/usr/bin/docker network create webmio
+ExecStartPre=-/usr/bin/docker rm -f webmio-caddy
+# Its certificates are kept in /var/lib/caddy across restarts.
+ExecStart=/usr/bin/docker run --rm --name webmio-caddy --network webmio \
+  -p 80:80 -p 443:443 -p 443:443/udp \
+  -v /etc/webmio/Caddyfile:/etc/caddy/Caddyfile:ro -v /var/lib/caddy:/data \
+  --log-driver awslogs --log-opt awslogs-region=${WEBMIO_REGION} \
+  --log-opt awslogs-group=${WEBMIO_LOGS}/caddy ${WEBMIO_CADDY_IMAGE}
+ExecStop=/usr/bin/docker stop webmio-caddy
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

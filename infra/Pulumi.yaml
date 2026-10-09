@@ -15,3 +15,21 @@ config:
   netDomain:
     type: string
     description: Webmio's own domain; websites' CNAME targets are <name>.sites.<netDomain>.
+  adminDomain:
+    type: string
+    description: The admin's address, served by its server over HTTPS.
+  adminZone:
+    type: string
+    default: ""
+    description: The Route 53 zone for adminDomain's A record; empty when its DNS is elsewhere.
+  alertEmail:
+    type: string
+    description: Where alarms are emailed.
+  githubProvider:
+    type: string
+    default: create
+    description: "create, or existing when another stack in the account created GitHub's OIDC provider."
+  localAdminUser:
+    type: boolean
+    default: false
+    description: Whether to create the IAM user for running the admin locally against this stack.

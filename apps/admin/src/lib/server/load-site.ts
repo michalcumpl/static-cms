@@ -186,7 +186,7 @@ export async function createSiteProject(
   );
   const fail = async (problem: string): Promise<LoadResult> => {
     await deleteProject(db, projectId, userId ?? "");
-    purgeProject(db, workspaceId, projectId);
+    await purgeProject(db, workspaceId, projectId);
     return { ok: false, problems: [problem] };
   };
 

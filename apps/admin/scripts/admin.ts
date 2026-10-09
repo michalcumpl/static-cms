@@ -2,11 +2,13 @@
 // Uses the same database settings as the app (DATABASE_PATH, MIGRATIONS_DIR).
 
 import { and, eq } from "drizzle-orm";
-import { createUser, importSiteCommand } from "../src/lib/server/admin-commands";
+import { createUser, importSiteCommand, uploadMediaFolder } from "../src/lib/server/admin-commands";
 import { openDatabase } from "../src/lib/server/db/index";
 import { memberships } from "../src/lib/server/db/schema";
+import { mediaRoot } from "../src/lib/server/import-working-copy";
 import { loadSite } from "../src/lib/server/load-site";
 import { cleanupMedia } from "../src/lib/server/media";
+import { s3Store } from "../src/lib/server/media-store";
 
 const usage = `Usage:
   pnpm admin create-user <email> "<workspace name>"
@@ -23,7 +25,10 @@ const usage = `Usage:
       Imports a public website into a new project of the workspace, as its first owner, with
       the same rules and limits as "Start from your current website". Prints the progress,
       what was imported and left out, and the project's address. Use only for content the
-      workspace may use.`;
+      workspace may use.
+  pnpm admin media-upload
+      Copies the media folder (MEDIA_DIR) into the media bucket (MEDIA_BUCKET) under the same
+      names, skipping files the bucket already has with the same size. Safe to run again.`;
 
 const [command, ...args] = process.argv.slice(2);
 const origin = process.env.ORIGIN ?? "http://localhost:5173";
@@ -47,7 +52,7 @@ if (command === "create-user" && args.length === 2) {
   console.log(`Sign in (valid 15 minutes): ${result.link}`);
 } else if (command === "media-cleanup" && (args.length === 0 || args[0] === "--dry-run")) {
   const dryRun = args[0] === "--dry-run";
-  const deleted = cleanupMedia(openDatabase(), { dryRun });
+  const deleted = await cleanupMedia(openDatabase(), { dryRun });
   for (const { projectId, key } of deleted) {
     console.log(`${dryRun ? "Would delete" : "Deleted"} ${key} (project ${projectId})`);
   }
@@ -75,6 +80,13 @@ if (command === "create-user" && args.length === 2) {
   const [workspaceId = "", address = ""] = args;
   const result = await importSiteCommand(openDatabase(), workspaceId, address, origin, console.log);
   process.exit(result.ok ? 0 : 1);
+} else if (command === "media-upload" && args.length === 0) {
+  const bucket = process.env.MEDIA_BUCKET;
+  if (!bucket) {
+    console.error("Set MEDIA_BUCKET to the media bucket to copy the media folder into.");
+    process.exit(1);
+  }
+  await uploadMediaFolder(mediaRoot(), s3Store(bucket), console.log);
 } else {
   console.error(usage);
   process.exit(command ? 1 : 0);
