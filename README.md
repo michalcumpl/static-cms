@@ -1,4 +1,4 @@
-<h1 align="center"><img src="docs/assets/webmio-logo.svg" alt="Webmio" width="420"></h1>
+<h1 align="center"><img src="docs/assets/webmio-logo.svg" alt="Webmio" width="360"></h1>
 
 > **Your business has a website. You shouldn't have to manage a website.**
 
