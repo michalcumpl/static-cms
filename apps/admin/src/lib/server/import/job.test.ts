@@ -12,6 +12,7 @@ import {
   importsSettled,
   readImport,
   startImport,
+  workspaceImports,
 } from "./job";
 
 const project = useTestProject();
@@ -221,6 +222,52 @@ describe("the import job", () => {
     const row = await importFixture("bakery");
     const { db, outsider } = project();
     expect(readImport(db, row?.id ?? "", outsider.id)).toBeUndefined();
+  });
+});
+
+describe("a workspace's imports on the projects page", () => {
+  it("lists the person's running and recently failed imports, and reviews still open", () => {
+    const { db, workspaceId, owner, outsider, projectId } = project();
+    const now = new Date("2026-10-09T12:00:00Z");
+    const hour = 60 * 60_000;
+    const row = (
+      id: string,
+      state: "running" | "done" | "failed",
+      extra: Partial<typeof imports.$inferInsert> = {},
+    ) =>
+      db
+        .insert(imports)
+        .values({
+          id,
+          workspaceId,
+          userId: owner.id,
+          address: `https://${id}.example/`,
+          state,
+          startedAt: new Date(now.getTime() - 2 * hour),
+          ...extra,
+        })
+        .run();
+    row("running", "running");
+    row("failed-now", "failed", {
+      error: "The website didn't answer.",
+      finishedAt: new Date(now.getTime() - hour),
+    });
+    row("failed-old", "failed", { error: "Old.", finishedAt: new Date(now.getTime() - 25 * hour) });
+    row("done", "done", { projectId });
+    row("someone-else", "running", { userId: outsider.id });
+    expect(workspaceImports(db, workspaceId, owner.id, now)).toEqual({
+      running: [{ id: "running", address: "https://running.example/" }],
+      failed: [
+        {
+          id: "failed-now",
+          address: "https://failed-now.example/",
+          error: "The website didn't answer.",
+        },
+      ],
+      toReview: [projectId],
+    });
+    db.update(imports).set({ reviewDismissed: true }).where(eq(imports.id, "done")).run();
+    expect(workspaceImports(db, workspaceId, owner.id, now).toReview).toEqual([]);
   });
 });
 

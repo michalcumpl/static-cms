@@ -69,6 +69,11 @@ export const en = {
     members: "Members",
     netlify: "Netlify",
     deletedNote: "{name} was deleted. You can restore it under Deleted websites.",
+    importing: "Importing {address}…",
+    showProgress: "Show progress",
+    importFailed: "The import of {address} failed: {error}",
+    importAgain: "Start again",
+    toReview: "Import to review",
     deleted: {
       title: "Deleted websites",
       when: "Deleted on {date} by {person}",

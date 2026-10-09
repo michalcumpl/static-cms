@@ -70,6 +70,11 @@ export const cs: Messages = {
     members: "Členové",
     netlify: "Netlify",
     deletedNote: "{name} je smazaný. Obnovit ho můžete v části Smazané weby.",
+    importing: "Převádíme {address}…",
+    showProgress: "Zobrazit průběh",
+    importFailed: "Převod webu {address} se nepodařil: {error}",
+    importAgain: "Začít znovu",
+    toReview: "Převod ke kontrole",
     deleted: {
       title: "Smazané weby",
       when: "Smazáno {date}, {person}",
