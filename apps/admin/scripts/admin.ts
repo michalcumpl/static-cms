@@ -1,4 +1,6 @@
-// Server administration. Run from apps/admin: `pnpm admin <command>`.
+// Server administration. Run from apps/admin: `pnpm admin <command>`. The build bundles it into
+// dist/cli/admin.js (vite.cli.config.ts); on the server:
+// `docker exec webmio-admin node dist/cli/admin.js <command>`.
 // Uses the same database settings as the app (DATABASE_PATH, MIGRATIONS_DIR).
 
 import { and, eq } from "drizzle-orm";

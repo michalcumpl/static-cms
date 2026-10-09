@@ -206,6 +206,12 @@ instance role through IMDSv2. In `prod` the IAM user and its access key are not 
   - `CMD ["node", "dist"]`;
   - a `HEALTHCHECK` on `/healthz`.
 
+The admin command (`pnpm admin`) runs from TypeScript source with development packages, which
+the image doesn't have. The admin's build therefore also bundles it into `dist/cli/admin.js`
+(`vite.cli.config.ts`), and on the server it runs as
+`docker exec webmio-admin node dist/cli/admin.js <command>`. That is how the first account is
+created on a new installation.
+
 A `.dockerignore` keeps `node_modules`, `data/`, `.svelte-kit` and test output out of the build
 context. The image takes no secrets at build time.
 
