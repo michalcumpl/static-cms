@@ -1161,7 +1161,10 @@ export const en = {
       postalCode: "Postcode",
       city: "Town or city",
       hours: "Opening hours",
-      hoursHint: "Leave a day empty when you're closed.",
+      hoursHint:
+        "Filled in with typical hours for your kind of business; adjust them, and leave a day empty when you're closed.",
+      country: "Country",
+      copyMonday: "Copy Monday to Tuesday–Friday",
     },
     services: {
       intro: "What you offer, up to 12. You can add more later in What you offer.",
@@ -1170,6 +1173,7 @@ export const en = {
       description: "Short description",
       price: "Price",
       priceHint: "Optional, like “from 400 Kč”.",
+      add: "Add a service",
     },
     photos: {
       intro: "Your logo and up to 12 photos. The main photo opens your home page.",
@@ -1178,7 +1182,9 @@ export const en = {
       photos: "Photos",
       choose: "Add photos",
       alt: "What is in the photo",
-      altHint: "For people who can't see it, and for search engines.",
+      decorative: "Decorative, no description needed",
+      decorativeHint:
+        "Screen readers skip decorative photos. Untick a photo that shows something visitors should know about, and describe it.",
       main: "Main photo",
       remove: "Remove",
       uploading: "Uploading {name}…",

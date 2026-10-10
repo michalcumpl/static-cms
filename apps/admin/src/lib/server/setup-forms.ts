@@ -17,6 +17,17 @@ function rows<T>(read: (i: number) => T | undefined): T[] {
   return out;
 }
 
+/** The phone countries the setup offers, flag and prefix (Czechia only for now). */
+export const PHONE_COUNTRIES = [{ code: "CZ", flag: "🇨🇿", prefix: "+420" }] as const;
+
+/** A number with the chosen country's prefix, unless it gives its own (`+…` or `00…`). */
+export function withPrefix(prefix: string, number: string): string {
+  const trimmed = number.trim();
+  if (!trimmed || /^(\+|00)/.test(trimmed)) return trimmed;
+  const known = PHONE_COUNTRIES.find((c) => c.prefix === prefix);
+  return known ? `${known.prefix} ${trimmed}` : trimmed;
+}
+
 /** A step's form as its answers, or undefined for a step without a form. */
 export function stepInput(step: number, form: FormData): StepInput | undefined {
   switch (step) {
@@ -36,7 +47,8 @@ export function stepInput(step: number, form: FormData): StepInput | undefined {
       }
       return {
         step,
-        phone: text(form, "phone"),
+        // The number after the country's prefix, unless it gives its own.
+        phone: withPrefix(text(form, "phone_country"), text(form, "phone")),
         email: text(form, "email"),
         street: text(form, "street"),
         postal_code: text(form, "postal_code"),
@@ -60,7 +72,10 @@ export function stepInput(step: number, form: FormData): StepInput | undefined {
     case 5: {
       const photo = (prefix: string): SetupPhoto | undefined => {
         const key = text(form, `${prefix}.key`);
-        return key ? { key, alt: text(form, `${prefix}.alt`) } : undefined;
+        if (!key) return undefined;
+        // A decorative photo needs no description.
+        const decorative = form.get(`${prefix}.decorative`) === "on";
+        return { key, alt: decorative ? "" : text(form, `${prefix}.alt`), decorative };
       };
       const photos = rows((i) => photo(`photos.${i}`));
       // The main photo goes first: the hero takes the first.

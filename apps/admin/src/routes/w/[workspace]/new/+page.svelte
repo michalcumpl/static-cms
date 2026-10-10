@@ -59,7 +59,17 @@ const nameMissing = $derived(Boolean(form && "missing" in form && form.missing))
         <div><Button type="submit" kind="primary" icon="globe">{i18n.t("newProject.import")}</Button></div>
       </form>
     </Card>
-    <details class="empty" open={nameMissing}>
+    <!-- Open only when its name was missing; a static attribute, so hydration never closes it
+         under a click that came first. -->
+    {#if nameMissing}
+      <details class="empty" open>{@render empty()}</details>
+    {:else}
+      <details class="empty">{@render empty()}</details>
+    {/if}
+  </div>
+</Page>
+
+{#snippet empty()}
       <summary>{i18n.t("newProject.empty")}</summary>
       <form method="POST" action="?/empty" aria-label={i18n.t("newProject.empty")}>
         <div class="field">
@@ -79,9 +89,7 @@ const nameMissing = $derived(Boolean(form && "missing" in form && form.missing))
         </div>
         <div><Button type="submit" icon="plus">{i18n.t("newProject.create")}</Button></div>
       </form>
-    </details>
-  </div>
-</Page>
+{/snippet}
 
 <style>
   .ways {

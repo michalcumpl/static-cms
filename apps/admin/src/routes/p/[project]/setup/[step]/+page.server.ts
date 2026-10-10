@@ -6,7 +6,7 @@ import { notFound, requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { mediaItem } from "$lib/server/media";
 import { finishSetup, readSetup, SETUP_STEPS, saveStep } from "$lib/server/setup";
-import { stepInput } from "$lib/server/setup-forms";
+import { PHONE_COUNTRIES, stepInput } from "$lib/server/setup-forms";
 import { primaryLanguage, versionCount } from "$lib/server/site-documents";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -41,6 +41,9 @@ export const load: PageServerLoad = async (event) => {
     preview: `/p/${project.id}/setup/preview/`,
     edited: step === SETUP_STEPS && versionCount(db, project.id) > 1,
     types: SETUP_TYPES.map((t) => ({ id: t.id, name: pick(t.name) })),
+    // The contact step: the type's typical hours until the owner gives theirs, and phone prefixes.
+    typicalHours: type.hours,
+    phoneCountries: PHONE_COUNTRIES,
     // The design step: the templates suiting the type first (spec, "Design step").
     templates: [...TEMPLATES]
       .sort(

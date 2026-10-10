@@ -9,6 +9,7 @@ import {
   setupPhone,
   setupUnfinished,
 } from "./setup";
+import { withPrefix } from "./setup-forms";
 import { readSite } from "./site-documents";
 import { useTestProject } from "./test-project";
 
@@ -138,5 +139,15 @@ describe("the guided setup", () => {
     expect(setupUnfinished(db, projectId)).toBe(false);
     expect(finishSetup(db, projectId, owner.id)).toEqual({ ok: false, reason: "finished" });
     expect(saveStep(db, projectId, { step: 2, template: "standard" }, "cs").ok).toBe(false);
+  });
+});
+
+describe("the setup's forms", () => {
+  it("puts the chosen country's prefix before a number without its own", () => {
+    expect(withPrefix("+420", "777 123 456")).toBe("+420 777 123 456");
+    expect(withPrefix("+420", "+421 905 123 456")).toBe("+421 905 123 456");
+    expect(withPrefix("+420", "00421905123456")).toBe("00421905123456");
+    expect(withPrefix("+420", " ")).toBe("");
+    expect(setupPhone(withPrefix("+420", "777 123 456"), "en")).toBe("+420777123456");
   });
 });

@@ -141,6 +141,25 @@ describe("the site the answers make", () => {
     expect(errors).toEqual([]);
   });
 
+  it("marks decorative photos so, without a description, and still valid", () => {
+    const photos = (CAFE.photos ?? []).map((p) => ({ ...p, alt: "", decorative: true }));
+    const { doc, pages, blocks, errors } = made({ ...CAFE, photos });
+    const hero = blocks(pages[0]).find((b) => b.type === "hero") as Node;
+    expect(doc.nodes[(hero.image as List).nodes[0] ?? ""]).toMatchObject({
+      alt: "",
+      decorative: true,
+    });
+    expect(errors).toEqual([]);
+  });
+
+  it("suggests every type's typical hours, valid and opening before closing", () => {
+    for (const type of SETUP_TYPES) {
+      const days = Object.values(type.hours).flat();
+      expect(days.length, type.id).toBeGreaterThanOrEqual(5);
+      for (const [opens, closes] of days) expect(opens < closes, type.id).toBe(true);
+    }
+  });
+
   it("puts the other photos in a gallery on Home without About us", () => {
     const { pages, blocks, errors } = made({ ...CAFE, pages: ["home", "contact"] });
     expect(pages.map((p) => p.slug)).toEqual(["uvod", "kontakt"]);

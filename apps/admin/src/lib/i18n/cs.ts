@@ -1198,7 +1198,10 @@ export const cs: Messages = {
       postalCode: "PSČ",
       city: "Obec",
       hours: "Otevírací doba",
-      hoursHint: "Den, kdy máte zavřeno, nechte prázdný.",
+      hoursHint:
+        "Předvyplnili jsme obvyklou dobu pro váš druh podniku; upravte ji a den, kdy máte zavřeno, nechte prázdný.",
+      country: "Země",
+      copyMonday: "Zkopírovat pondělí na úterý až pátek",
     },
     services: {
       intro: "Co nabízíte, nejvýš 12. Další můžete přidat později v části Co nabízíte.",
@@ -1207,6 +1210,7 @@ export const cs: Messages = {
       description: "Krátký popis",
       price: "Cena",
       priceHint: "Nepovinné, například „od 400 Kč“.",
+      add: "Přidat službu",
     },
     photos: {
       intro: "Vaše logo a nejvýš 12 fotek. Hlavní fotka otevře úvodní stránku.",
@@ -1215,7 +1219,9 @@ export const cs: Messages = {
       photos: "Fotky",
       choose: "Přidat fotky",
       alt: "Co je na fotce",
-      altHint: "Pro lidi, kteří ji nevidí, i pro vyhledávače.",
+      decorative: "Dekorativní, bez popisu",
+      decorativeHint:
+        "Čtečky obrazovky dekorativní fotky přeskakují. U fotky, která ukazuje něco, co mají návštěvníci vědět, zaškrtnutí zrušte a popište ji.",
       main: "Hlavní fotka",
       remove: "Odebrat",
       uploading: "Nahrává se {name}…",

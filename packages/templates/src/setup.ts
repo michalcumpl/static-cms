@@ -22,53 +22,98 @@ export interface SetupType {
   name: Localized;
   /** The layouts it suggests, Home first. */
   pages: readonly string[];
+  /** Typical opening hours, filled in for the owner to adjust. */
+  hours: HoursInput;
 }
 
 const FOOD = ["home", "services", "about", "contact"] as const;
 const SALON = ["home", "services", "team", "contact"] as const;
 
-/** The setup's business types (guided-setup spec, "Pages step"). */
+/** Hours from Monday to Friday, then Saturday's and Sunday's when open. */
+function week(
+  weekdays: [string, string],
+  saturday?: [string, string],
+  sunday?: [string, string],
+): HoursInput {
+  const hours: HoursInput = {};
+  for (const day of ["mon", "tue", "wed", "thu", "fri"] as const) hours[day] = [weekdays];
+  if (saturday) hours.sat = [saturday];
+  if (sunday) hours.sun = [sunday];
+  return hours;
+}
+
+/** The setup's business types (guided-setup spec, "Pages step" and "Contact step"). */
 export const SETUP_TYPES: readonly SetupType[] = [
-  { id: "cafe", schemaType: "CafeOrCoffeeShop", name: { cs: "Kavárna", en: "Café" }, pages: FOOD },
-  { id: "bakery", schemaType: "Bakery", name: { cs: "Pekárna", en: "Bakery" }, pages: FOOD },
+  {
+    id: "cafe",
+    schemaType: "CafeOrCoffeeShop",
+    name: { cs: "Kavárna", en: "Café" },
+    pages: FOOD,
+    hours: week(["07:00", "19:00"], ["08:00", "18:00"], ["08:00", "18:00"]),
+  },
+  {
+    id: "bakery",
+    schemaType: "Bakery",
+    name: { cs: "Pekárna", en: "Bakery" },
+    pages: FOOD,
+    hours: week(["06:00", "18:00"], ["07:00", "12:00"]),
+  },
   {
     id: "restaurant",
     schemaType: "Restaurant",
     name: { cs: "Restaurace", en: "Restaurant" },
     pages: FOOD,
+    hours: week(["11:00", "22:00"], ["11:00", "22:00"], ["11:00", "21:00"]),
   },
-  { id: "shop", schemaType: "Store", name: { cs: "Obchod", en: "Shop" }, pages: FOOD },
+  {
+    id: "shop",
+    schemaType: "Store",
+    name: { cs: "Obchod", en: "Shop" },
+    pages: FOOD,
+    hours: week(["09:00", "18:00"], ["09:00", "12:00"]),
+  },
   {
     id: "hair",
     schemaType: "HairSalon",
     name: { cs: "Kadeřnictví", en: "Hair salon" },
     pages: SALON,
+    hours: week(["09:00", "18:00"], ["09:00", "12:00"]),
   },
   {
     id: "beauty",
     schemaType: "BeautySalon",
     name: { cs: "Kosmetický salon", en: "Beauty salon" },
     pages: SALON,
+    hours: week(["09:00", "18:00"], ["09:00", "12:00"]),
   },
   {
     id: "professional",
     schemaType: "ProfessionalService",
     name: { cs: "Odborné služby", en: "Professional services" },
     pages: ["home", "services", "about", "team", "contact", "faq"],
+    hours: week(["09:00", "17:00"]),
   },
   {
     id: "health",
     schemaType: "MedicalBusiness",
     name: { cs: "Zdravotnictví", en: "Healthcare" },
     pages: ["home", "services", "team", "contact", "faq"],
+    hours: week(["07:00", "15:00"]),
   },
   {
     id: "sports",
     schemaType: "SportsActivityLocation",
     name: { cs: "Sport", en: "Sports" },
     pages: ["home", "services", "about", "contact", "faq"],
+    hours: week(["07:00", "21:00"], ["09:00", "18:00"], ["09:00", "18:00"]),
   },
-  { id: "other", schemaType: "LocalBusiness", name: { cs: "Jiné", en: "Other" }, pages: FOOD },
+  {
+    id: "other",
+    schemaType: "LocalBusiness",
+    name: { cs: "Jiné", en: "Other" },
+    pages: FOOD,
+    hours: week(["09:00", "17:00"]),
+  },
 ];
 
 /** A photo in the project's media library, as the setup uses it. */
@@ -76,6 +121,8 @@ export interface SetupPhoto {
   /** The media key the documents name. */
   key: string;
   alt: string;
+  /** Skipped by screen readers: the photo only sets a mood. */
+  decorative?: boolean;
 }
 
 /** What the owner told the guided setup. Every field but the type and name may be missing. */
@@ -140,7 +187,8 @@ export function siteFromSetup(
   const contact = answers.contact ?? {};
   const image = (photo: SetupPhoto) => ({
     src: photo.key,
-    alt: photo.alt,
+    alt: photo.decorative ? "" : photo.alt,
+    decorative: photo.decorative === true,
     width: sizes.get(photo.key)?.width,
     height: sizes.get(photo.key)?.height,
   });
@@ -226,7 +274,7 @@ export function siteFromSetup(
       type: "image",
       src: photo.src,
       alt: photo.alt,
-      decorative: false,
+      decorative: photo.decorative,
       width: photo.width ?? 0,
       height: photo.height ?? 0,
       focus_x: 50,

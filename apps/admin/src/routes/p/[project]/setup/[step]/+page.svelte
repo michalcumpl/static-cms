@@ -13,10 +13,6 @@ const i18n = getI18n();
 const MAX_ITEMS = 12;
 const DAYS: Weekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const TITLES = ["business", "design", "contact", "services", "photos", "pages", "preview"];
-const CONTACT_FIELDS: { name: "phone" | "email"; label: MessageKey; type: string }[] = [
-  { name: "phone", label: "setup.contact.phone", type: "tel" },
-  { name: "email", label: "setup.contact.email", type: "email" },
-];
 
 const errors = $derived<Record<string, string>>(form?.errors ?? {});
 const answers = $derived(data.answers);
@@ -37,16 +33,35 @@ const intro = $derived(
   )[data.step],
 );
 const contact = $derived(answers.contact ?? {});
-const hourOf = (day: Weekday, end: 0 | 1) =>
-  values.hours?.[day]?.[0]?.[end] ?? contact.hours?.[day]?.[0]?.[end] ?? "";
-const services = $derived.by(() => {
-  const saved = values.services ?? answers.services ?? [];
-  const rows = Math.min(MAX_ITEMS, Math.max(saved.length + 1, 3));
-  return Array.from(
-    { length: rows },
-    (_, i) => saved[i] ?? { name: "", description: "", price: "" },
-  );
+// The phone's number after its country's prefix, as the field shows it.
+const prefix = $derived(data.phoneCountries[0]?.prefix ?? "");
+const phoneNumber = $derived.by(() => {
+  const phone: string = values.phone ?? contact.phone ?? "";
+  return phone.startsWith(prefix) ? phone.slice(prefix.length).trim() : phone;
 });
+// The hours as given, else the type's typical ones, so most owners only adjust them.
+const startHours = () => {
+  const given = values.hours ?? contact.hours ?? data.typicalHours;
+  return Object.fromEntries(
+    DAYS.map((day) => [day, [given[day]?.[0]?.[0] ?? "", given[day]?.[0]?.[1] ?? ""]]),
+  ) as Record<Weekday, [string, string]>;
+};
+// svelte-ignore state_referenced_locally
+let hours = $state(startHours());
+/** Monday's hours on the other weekdays. */
+function copyMonday() {
+  for (const day of ["tue", "wed", "thu", "fri"] as const) hours[day] = [...hours.mon];
+}
+const savedServices = $derived(values.services ?? answers.services ?? []);
+// One service to start with; Add a service makes room for another.
+// svelte-ignore state_referenced_locally
+let serviceRows = $state(Math.max(1, savedServices.length));
+const services = $derived(
+  Array.from(
+    { length: Math.min(MAX_ITEMS, serviceRows) },
+    (_, i) => savedServices[i] ?? { name: "", description: "", price: "" },
+  ),
+);
 const photo = (p: { key: string; alt: string } | undefined) =>
   p ? { ...p, width: data.widths[p.key] ?? 480 } : undefined;
 const ticked = (id: string) =>
@@ -84,20 +99,38 @@ const ticked = (id: string) =>
       {/each}
     </fieldset>
   {:else if data.step === 3}
-    {#each CONTACT_FIELDS as { name, label, type } (name)}
-      <div class="field">
-        <label for={name}>{i18n.t(label)}</label>
+    <div class="field">
+      <label for="phone">{i18n.t("setup.contact.phone")}</label>
+      <div class="phone">
+        <select name="phone_country" aria-label={i18n.t("setup.contact.country")}>
+          {#each data.phoneCountries as country (country.code)}
+            <option value={country.prefix}>{country.flag} {country.prefix}</option>
+          {/each}
+        </select>
         <input
-          id={name}
-          {name}
-          {type}
-          value={values[name] ?? contact[name] ?? ""}
-          aria-invalid={errors[name] ? "true" : undefined}
-          aria-describedby={errors[name] ? `${name}-error` : undefined}
+          id="phone"
+          name="phone"
+          type="tel"
+          autocomplete="tel-national"
+          value={phoneNumber}
+          aria-invalid={errors.phone ? "true" : undefined}
+          aria-describedby={errors.phone ? "phone-error" : undefined}
         />
-        {#if errors[name]}<p id={`${name}-error`} class="error">{errors[name]}</p>{/if}
       </div>
-    {/each}
+      {#if errors.phone}<p id="phone-error" class="error">{errors.phone}</p>{/if}
+    </div>
+    <div class="field">
+      <label for="email">{i18n.t("setup.contact.email")}</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        value={values.email ?? contact.email ?? ""}
+        aria-invalid={errors.email ? "true" : undefined}
+        aria-describedby={errors.email ? "email-error" : undefined}
+      />
+      {#if errors.email}<p id="email-error" class="error">{errors.email}</p>{/if}
+    </div>
     <div class="field">
       <label for="street">{i18n.t("setup.contact.street")}</label>
       <input id="street" name="street" autocomplete="street-address" value={values.street ?? contact.street ?? ""} />
@@ -122,7 +155,7 @@ const ticked = (id: string) =>
           <input
             type="time"
             name={`hours.${day}.opens`}
-            value={hourOf(day, 0)}
+            bind:value={hours[day][0]}
             aria-label={i18n.t("editor.hours.opens", { day: dayName })}
             aria-invalid={errors[`hours.${day}`] ? "true" : undefined}
           />
@@ -130,10 +163,13 @@ const ticked = (id: string) =>
           <input
             type="time"
             name={`hours.${day}.closes`}
-            value={hourOf(day, 1)}
+            bind:value={hours[day][1]}
             aria-label={i18n.t("editor.hours.closes", { day: dayName })}
             aria-invalid={errors[`hours.${day}`] ? "true" : undefined}
           />
+          {#if day === "mon"}
+            <button type="button" class="link" onclick={copyMonday}>{i18n.t("setup.contact.copyMonday")}</button>
+          {/if}
           {#if errors[`hours.${day}`]}<p class="error">{dayName}: {errors[`hours.${day}`]}</p>{/if}
         </div>
       {/each}
@@ -164,6 +200,9 @@ const ticked = (id: string) =>
       </fieldset>
     {/each}
     <p id="price-hint" class="hint">{i18n.t("setup.services.priceHint")}</p>
+    {#if serviceRows < MAX_ITEMS}
+      <button type="button" class="add" onclick={() => (serviceRows += 1)}>+ {i18n.t("setup.services.add")}</button>
+    {/if}
   {:else if data.step === 5}
     <PhotosStep
       projectId={data.project.id}
@@ -261,6 +300,45 @@ const ticked = (id: string) =>
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-field);
     background: var(--ui-surface);
+  }
+
+  .phone {
+    display: flex;
+    gap: var(--ui-space-2);
+  }
+
+  .phone input {
+    flex: 1;
+  }
+
+  .phone select {
+    font: inherit;
+    padding: var(--ui-space-2);
+    border: 1px solid var(--ui-border-strong);
+    border-radius: var(--ui-radius-field);
+    background: var(--ui-surface);
+  }
+
+  .link {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--ui-link);
+    text-decoration: underline;
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--ui-text-sm);
+  }
+
+  .add {
+    align-self: flex-start;
+    font: inherit;
+    padding: var(--ui-space-2) var(--ui-space-3);
+    border: 1px dashed var(--ui-border-strong);
+    border-radius: var(--ui-radius-field);
+    background: none;
+    color: var(--ui-link);
+    cursor: pointer;
   }
 
   .visually-hidden {

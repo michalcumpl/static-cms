@@ -205,7 +205,11 @@ function checked(input: StepInput, lang: string): StepResult & { answers?: Parti
     case 5: {
       if (input.photos.length > MAX_SETUP_ITEMS) errors.photos = said("setup.errors.tooMany");
       if (Object.keys(errors).length > 0) return { ok: false, errors };
-      const clean = (p: SetupPhoto) => ({ key: p.key, alt: p.alt.trim() });
+      const clean = (p: SetupPhoto) => ({
+        key: p.key,
+        alt: p.decorative ? "" : p.alt.trim(),
+        ...(p.decorative ? { decorative: true } : {}),
+      });
       return {
         ok: true,
         answers: {

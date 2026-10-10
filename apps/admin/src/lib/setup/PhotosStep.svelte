@@ -5,7 +5,7 @@ import { projectPaths } from "$lib/project-paths";
 // The guided setup's photos step (guided-setup design decision 5): each file uploads into the
 // project's media library at once, through the library's own API and checks; the form then
 // carries the media keys, the descriptions and which photo is the main one.
-type Photo = { key: string; alt: string; width: number };
+type Photo = { key: string; alt: string; width: number; decorative?: boolean };
 let {
   projectId,
   logo: initialLogo,
@@ -41,7 +41,8 @@ async function upload(file: File): Promise<Photo | undefined> {
     ];
     return undefined;
   }
-  return { key: answer.key, alt: "", width: answer.width };
+  // Decorative to start with: the owner describes the photos that carry information.
+  return { key: answer.key, alt: "", width: answer.width, decorative: true };
 }
 
 async function chooseLogo(event: Event) {
@@ -94,10 +95,16 @@ const thumbnail = (photo: Photo) => paths.image(photo.key, photo.width, "thumbna
         <img src={thumbnail(photo)} alt="" />
         <div class="fields">
           <input type="hidden" name={`photos.${i}.key`} value={photo.key} />
-          <label class="field">
-            {i18n.t("setup.photos.alt")}
-            <input name={`photos.${i}.alt`} bind:value={photo.alt} aria-describedby="alt-hint" />
+          <label class="main">
+            <input type="checkbox" name={`photos.${i}.decorative`} bind:checked={photo.decorative} />
+            {i18n.t("setup.photos.decorative")}
           </label>
+          {#if !photo.decorative}
+            <label class="field">
+              {i18n.t("setup.photos.alt")}
+              <input name={`photos.${i}.alt`} bind:value={photo.alt} aria-describedby="alt-hint" />
+            </label>
+          {/if}
           <label class="main">
             <input type="radio" name="main" value={i} bind:group={main} />
             {i18n.t("setup.photos.main")}
@@ -107,7 +114,7 @@ const thumbnail = (photo: Photo) => paths.image(photo.key, photo.width, "thumbna
       </li>
     {/each}
   </ul>
-  <p id="alt-hint" class="hint">{i18n.t("setup.photos.altHint")}</p>
+  <p id="alt-hint" class="hint">{i18n.t("setup.photos.decorativeHint")}</p>
   {#if photos.length < max}
     <label class="upload">
       {i18n.t("setup.photos.choose")}

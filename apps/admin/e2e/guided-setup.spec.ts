@@ -28,15 +28,19 @@ test("Finishing the café: every step, leaving and coming back, the preview, the
   await expect(page.getByLabel(/Standard/)).toBeChecked();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  // 3. Contact and hours; a wrong answer first.
-  await page.getByLabel("Phone").fill("+420 777 123 456");
+  // 3. Contact and hours: the café's typical hours are filled in; a wrong answer first.
+  await expect(page.getByLabel("Country")).toHaveValue("+420");
+  await page.getByLabel("Phone").fill("777 123 456");
   await page.getByLabel("Town or city").fill("Praha");
+  await expect(page.getByLabel("Saturday opens")).toHaveValue("08:00");
   await page.getByLabel("Monday opens").fill("18:00");
   await page.getByLabel("Monday closes").fill("09:00");
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText("Monday: Closing must come after opening.")).toBeVisible();
   await page.getByLabel("Monday opens").fill("08:00");
-  await page.getByLabel("Monday closes").fill("18:00");
+  await page.getByLabel("Monday closes").fill("17:00");
+  await page.getByRole("button", { name: "Copy Monday to Tuesday–Friday" }).click();
+  await expect(page.getByLabel("Friday closes")).toHaveValue("17:00");
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page).toHaveURL(/\/setup\/4$/);
 
@@ -49,8 +53,10 @@ test("Finishing the café: every step, leaving and coming back, the preview, the
     .click();
   await expect(page).toHaveURL(new RegExp(`/p/${projectId}/setup/4$`));
 
-  // 4. Services.
+  // 4. One service to start with, another added.
+  await expect(page.getByRole("group", { name: /^Service \d+$/ })).toHaveCount(1);
   await page.getByRole("group", { name: "Service 1" }).getByLabel("Name").fill("Výběrová káva");
+  await page.getByRole("button", { name: "Add a service" }).click();
   await page.getByRole("group", { name: "Service 2" }).getByLabel("Name").fill("Domácí dorty");
   await page.getByRole("button", { name: "Continue" }).click();
 
@@ -70,9 +76,13 @@ test("Finishing the café: every step, leaving and coming back, the preview, the
       { name: "kavarna.jpg", mimeType: "image/jpeg", buffer: image("galerie-1.jpg") },
       { name: "dort.jpg", mimeType: "image/jpeg", buffer: image("chleb.jpg") },
     ]);
-  await expect(page.getByLabel("What is in the photo")).toHaveCount(2);
-  await page.getByLabel("What is in the photo").first().fill("Kavárna u okna");
-  await page.getByLabel("What is in the photo").last().fill("Dort s jahodami");
+  // Decorative to start with; the first photo gets a description instead.
+  const decorative = page.getByLabel("Decorative, no description needed");
+  await expect(decorative).toHaveCount(2);
+  await expect(decorative.last()).toBeChecked();
+  await expect(page.getByLabel("What is in the photo")).toHaveCount(0);
+  await decorative.first().uncheck();
+  await page.getByLabel("What is in the photo").fill("Kavárna u okna");
   await page.getByRole("button", { name: "Continue" }).click();
 
   // 6. Pages: the café's suggestion.
