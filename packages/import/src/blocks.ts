@@ -421,7 +421,8 @@ function takeHeroImage(items: Item[]): ImageUse | undefined {
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
     if (item?.kind === "heading" && ++headings > 1) return undefined;
-    if (item?.kind === "image") {
+    // An SVG in the content is an icon (it's never imported), not the hero's photo.
+    if (item?.kind === "image" && !/\.svg([?#]|$)/i.test(item.image.ref)) {
       items.splice(i, 1);
       return item.image;
     }

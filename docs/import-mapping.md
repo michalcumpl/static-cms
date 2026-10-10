@@ -35,6 +35,7 @@ The reading is [`@webmio/import`](../packages/import/) (pure, tested on the inve
 | Imported images without a description marked decorative in one step | admin `import/decorative.ts` | done (`import-review-actions`) |
 | A logo drawn by CSS (a background on the logo element); a photo filling a panel of the home page (`background-size: cover`) as the hero's photo | `css.ts`, `site.ts` | done (Mareš: the logo and the painting of the office) |
 | A site without a colour of its own keeps a black-and-white theme (each stylesheet read once; a fallback colour must repeat); the home page's first paragraph as the site description without a meta description | `theme.ts`, `site.ts` | done (Mareš) |
+| The site's name beside the logo only when the old header showed it as text (not an image-only logo, nor a CSS logo with off-screen text) | `content.ts`, `site.ts` | done (`import-logo-name`: Mareš showed its name twice); text hidden for screen readers isn't content, and an SVG icon is never the hero's photo |
 | A gallery or logo row without its images keeps its heading; smaller subheadings first on a page fixed in one step | `site.ts`, admin `heading-levels.ts` | done (`import-review-actions`) |
 
 ## The examples imported (2026-10-09)

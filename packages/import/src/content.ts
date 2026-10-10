@@ -4,6 +4,20 @@ import type { AnyNode } from "domhandler";
 // The part of a page that holds its content (site-import design decision 6): `<main>`, or else
 // the body without the header, navigation, footer and everything that isn't shown.
 
+/** Elements not shown: hidden, or visible to screen readers only (import-logo-name). */
+export const HIDDEN = [
+  "[hidden]",
+  "[aria-hidden=true]",
+  "[style*='display:none']",
+  "[style*='display: none']",
+  ".offscreen",
+  ".sr-only",
+  ".visually-hidden",
+  ".screen-reader-text",
+  ".screenreader",
+  ".hide-text",
+].join(",");
+
 /** Elements that are never content. */
 const NOT_CONTENT = [
   "script",
@@ -12,10 +26,7 @@ const NOT_CONTENT = [
   "template",
   // Inline icons; an SVG logo is read from the header, not from the content.
   "svg",
-  "[hidden]",
-  "[aria-hidden=true]",
-  "[style*='display:none']",
-  "[style*='display: none']",
+  HIDDEN,
 ].join(",");
 
 /** Elements around the content: the site's frame. */

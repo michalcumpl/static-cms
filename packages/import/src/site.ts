@@ -10,11 +10,12 @@ import {
   type Weekday,
 } from "@webmio/model";
 import { STANDARD } from "@webmio/templates";
-import { load } from "cheerio";
+import { type Cheerio, load } from "cheerio";
+import type { AnyNode } from "domhandler";
 import { oldPath, pageKey, resolve, sameSite, withoutFragment } from "./addresses.js";
 import { readPage, type Segment } from "./blocks.js";
 import { readBusiness } from "./business.js";
-import { collapse, contentArea } from "./content.js";
+import { collapse, contentArea, HIDDEN } from "./content.js";
 import { backgroundRules } from "./css.js";
 import { candidateList, ImageCollector, type ImageReference } from "./images.js";
 import { type MenuEntry, menuLinks, profile } from "./links.js";
@@ -112,12 +113,13 @@ export function versionHome(home: SourcePage, lang: string): VersionHome {
 
 /**
  * The home page's logo candidates (structured data's, else the header's image or a logo drawn by
- * CSS) and a photo filling one of its panels (`background-size: cover`), from its stylesheets.
+ * CSS), the visible text of the logo's element (its link, or the element a CSS logo is drawn on;
+ * undefined without one) and a photo filling one of its panels (`background-size: cover`).
  */
 export function homeImages(
   home: SourcePage,
   businessLogo: readonly string[],
-): { logoCandidates: string[]; backdrop?: string } {
+): { logoCandidates: string[]; logoText?: string; backdrop?: string } {
   const homeUrl = new URL(home.url);
   const $home = load(home.html);
   const headerLogo = $home("header a img, [class*=logo] img, img[class*=logo], #logo img").first();
@@ -132,12 +134,38 @@ export function homeImages(
     }
   });
   // The last matching rule is usually the most specific (`.pg-index .logo` after `.logo`).
-  const cssLogo = shown.filter((rule) => /logo/i.test(rule.selector)).at(-1)?.url;
+  const cssRule = shown.filter((rule) => /logo/i.test(rule.selector)).at(-1);
+  const cssLogo = cssRule?.url;
   const logoCandidates = businessLogo.length
     ? [...businessLogo]
     : candidateList([headerLogo.attr("src") ?? cssLogo], homeUrl);
   const backdrop = shown.find((rule) => rule.cover && !/logo/i.test(rule.selector))?.url;
-  return { logoCandidates, backdrop };
+  // The logo's element: the header image's link (or parent), or the element a CSS logo is on.
+  const element = headerLogo.length
+    ? headerLogo.closest("a").length
+      ? headerLogo.closest("a")
+      : headerLogo.parent()
+    : cssRule
+      ? $home(cssRule.selector).first()
+      : undefined;
+  const logoText = element?.length ? visibleText(element) : undefined;
+  return { logoCandidates, logoText, backdrop };
+}
+
+/** Text folded for comparing: lowercase, without diacritics or extra spaces. */
+const folded = (text: string) =>
+  collapse(text.normalize("NFD").replace(/\p{M}/gu, "")).toLowerCase();
+
+/** Whether `text` contains `name`, whatever its case, diacritics and spaces. */
+function mentions(text: string, name: string): boolean {
+  return folded(name) !== "" && folded(text).includes(folded(name));
+}
+
+/** An element's text as shown: without images, icons and text hidden from sight. */
+function visibleText(element: Cheerio<AnyNode>): string {
+  const copy = element.clone();
+  copy.find(`img, picture, svg, script, style, ${HIDDEN}`).remove();
+  return collapse(copy.text());
 }
 
 /** A page's title: its `<h1>`, or its `<title>` without the site's name. */
@@ -248,7 +276,7 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
 
   // The logo and favicon.
   const $home = load(home.html);
-  const { logoCandidates, backdrop } = homeImages(home, business.logo);
+  const { logoCandidates, logoText, backdrop } = homeImages(home, business.logo);
   const logoRef = images.add(logoCandidates, name, "logo", oldPath(homeUrl));
   // A photo filling a panel of the home page (a painting beside the text), for the hero when
   // the content has none.
@@ -291,7 +319,8 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
   }
   site.location(location);
   const logo = image(logoRef, name);
-  if (logo) site.logo(logo);
+  // The name beside the logo only when the old header showed it as text (import-logo-name).
+  if (logo) site.logo(logo, { showName: logoText === undefined || mentions(logoText, name) });
   const favicon = image(faviconRef, "");
   if (favicon) site.favicon({ src: favicon.src, decorative: true });
 

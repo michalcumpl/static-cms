@@ -3,7 +3,14 @@ import type { LooseNodes } from "@webmio/model/testing";
 import { TEMPLATE_RELEASES } from "@webmio/templates";
 import { load } from "cheerio";
 import { describe, expect, it } from "vitest";
-import { type ImportedSite, readSite, type SourcePage, siteLanguage, summary } from "./site.js";
+import {
+  homeImages,
+  type ImportedSite,
+  readSite,
+  type SourcePage,
+  siteLanguage,
+  summary,
+} from "./site.js";
 import { FIXTURE_ORIGINS, type FixtureSite, fixtureText } from "./testing.js";
 
 const LANGUAGES = ["cs", "sk", "en", "de"];
@@ -463,5 +470,98 @@ describe("other sites", () => {
     expect(siteLanguage('<html lang="pl">', LANGUAGES, "cs")).toBe("cs");
     expect(siteLanguage('<html lang="DE-at">', LANGUAGES, "cs")).toBe("de");
     expect(siteLanguage("<html>", LANGUAGES, "en")).toBe("en");
+  });
+});
+
+describe("the logo's visible text (import-logo-name)", () => {
+  const home = (html: string, css: string[] = []) => ({
+    url: "https://pekarna-ulipy.cz/",
+    html,
+    css,
+  });
+
+  it("is empty for an image-only logo, and for a CSS logo with off-screen text", () => {
+    const bakery = sourcePages("bakery", ["/"])[0];
+    if (!bakery) throw new Error("no bakery");
+    expect(homeImages(bakery, []).logoText).toBe("");
+    const mares = home(
+      '<header class="h"><h1 class="logo"><strong class="offscreen">Mareš Partners</strong></h1></header><main><p>Text.</p></main>',
+      [".logo { background: url(img/logo.png) no-repeat; width: 200px; height: 60px; }"],
+    );
+    expect(homeImages(mares, []).logoText).toBe("");
+  });
+
+  it("is the name beside the logo's emblem, and undefined without a logo element", () => {
+    const named = home(
+      '<header><a href="/"><img src="/emblem.png" alt=""><span>Pekárna U Lípy</span></a></header>',
+    );
+    expect(homeImages(named, []).logoText).toBe("Pekárna U Lípy");
+    expect(homeImages(home("<header><nav><a href='/'>Úvod</a></nav></header>"), []).logoText).toBe(
+      undefined,
+    );
+  });
+});
+
+describe("the name beside an imported logo (import-logo-name)", () => {
+  const showName = (site: ImportedSite) =>
+    (nodesOf(site)[site.document.document_id] as { header_show_name?: boolean }).header_show_name;
+  const read = (html: string, css: string[] = []) => {
+    const pages = [{ url: "https://pekarna-ulipy.cz/", html, css }];
+    const first = readSite(pages, { languages: LANGUAGES, fallbackLanguage: "cs" });
+    const files = new Map(first.images.map((ref, i) => [ref.id, `image-${i + 1}.png`]));
+    return readSite(pages, { languages: LANGUAGES, fallbackLanguage: "cs", images: files });
+  };
+
+  it("A logo that is the name: the bakery's header shows it alone", () => {
+    expect(showName(imported("bakery", ["/"]))).toBe(false);
+  });
+
+  it("A logo drawn by CSS, its name hidden from sight", () => {
+    const site = read(
+      '<html lang="cs"><head><title>Mareš Partners</title></head><body><header class="h"><h1 class="logo"><strong class="offscreen">Mareš Partners</strong></h1></header><main><p>Advokátní kancelář.</p></main></body></html>',
+      [".logo { background: url(/img/logo.png) no-repeat; }"],
+    );
+    expect(
+      nodesOf(site)[
+        String(
+          (nodesOf(site)[site.document.document_id] as { logo?: { nodes: string[] } }).logo
+            ?.nodes[0],
+        )
+      ],
+    ).toBeDefined();
+    expect(showName(site)).toBe(false);
+  });
+
+  it("The name beside the logo, in any case and with or without diacritics", () => {
+    const beside = (text: string) =>
+      read(
+        `<html lang="cs"><head><title>Pekárna U Lípy</title></head><body><header><a href="/"><img src="/emblem.png" alt=""><span>${text}</span></a></header><main><p>Chléb.</p></main></body></html>`,
+      );
+    expect(showName(beside("Pekárna U Lípy"))).toBe(true);
+    expect(showName(beside("PEKARNA  U LIPY"))).toBe(true);
+    expect(showName(beside("Od roku 1923"))).toBe(false);
+  });
+});
+
+describe("the home page's hero photo", () => {
+  it("is never an SVG icon of the content: the photo filling a panel is taken instead", () => {
+    const html = `<html lang="en"><head><title>Mareš Partners</title></head><body>
+      <header><a href="/"><img src="/img/logo.png" alt="Mareš Partners"></a></header>
+      <article class="a"><div class="panel"></div><p>A leading independent law firm.</p>
+      <img src="/img/icons/ico-menu-pos.svg" alt=""><p>Our expertise.</p></article></body></html>`;
+    const pages = [
+      {
+        url: "https://www.marespartners.cz/",
+        html,
+        css: [".panel { background: url(/img/dusni.jpg) center / cover; }"],
+      },
+    ];
+    const first = readSite(pages, { languages: LANGUAGES, fallbackLanguage: "en" });
+    const files = new Map(first.images.map((ref) => [ref.id, ref.id.split("/").at(-1) ?? ""]));
+    const site = readSite(pages, { languages: LANGUAGES, fallbackLanguage: "en", images: files });
+    const nodes = nodesOf(site);
+    const hero = Object.values(nodes).find((n) => n.type === "hero");
+    const heroImage = nodes[(hero?.image as { nodes: string[] } | undefined)?.nodes[0] ?? ""];
+    expect(heroImage?.src).toBe("dusni.jpg");
   });
 });
