@@ -34,7 +34,10 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
   Phase 5 is done: every publish
   checks links, verifies the live website and keeps the previous version on failure. Our
   hosting runs in the `dev` stack; `prod` is deployed before the beta.
-- **Private beta** (phase 7) when phases 3–6 work with at least two launch templates.
+- **Private beta** (phase 7) when phases 3–6 work with at least two launch templates. It is the
+  validation pilot from the 2026-10-10 strategy refresh: ten owner conversations, five real
+  websites set up for their owners, and a go or no-go on paying customers. The conversations
+  need no code and can start now.
 
 ## Phases
 
@@ -134,8 +137,10 @@ Blocks the example sites need come first, because the templates render them
 | --- | --- | --- |
 | [`admin-on-aws`](../openspec/changes/archive/2026-10-10-admin-on-aws/) | the admin on one small EU server at `app.webmio.eu`, media in S3, Litestream backups, deploys from `main`, alarms; running on `dev`, `prod` set up before the beta | Done |
 | [`bare-domain-redirect`](../openspec/changes/archive/2026-10-10-bare-domain-redirect/) | `https://<domain>` redirects to `https://www.<domain>` with a valid certificate and the same path, from a tiny redirect server of its own; customers set `@ A` to its address instead of their registrar's forwarding; running on `dev` | Done |
+| `content-export` | the owner downloads their business content and media (next to the static website's ZIP), so nothing is trapped in Webmio | Planned |
 | `presentation-site` | `webmio.cz` and `webmio.eu`, built and published with Webmio | Planned |
-| `operator-console` | the operator's own part of the admin: an overview and stats, customers and their websites, inviting users, deleting websites and accounts, plan status, renewal dates, manual invoices | Planned |
+| `operator-console` | the operator's own part of the admin: an overview and stats, customers and their websites, setting up a website for an owner and handing it over, inviting users, deleting websites and accounts, plan status, renewal dates, manual invoices | Planned |
+| `pilot` | not a code change: the demonstration, ten owner conversations, five pilot websites and the go or no-go (strategy, "Validation before more features") | Planned |
 | `legal-documents` | terms, privacy policy, data processing agreement, cookie statement, complaints procedure | Planned |
 
 ### 8. After the beta
@@ -150,6 +155,7 @@ Blocks the example sites need come first, because the templates render them
 | `site-import` version 2 | AI sorts imported texts into services, team, testimonials and FAQs | After the beta |
 | `import-insights` | each import records what it couldn't map (embeds, forms, section patterns, layouts) with a snapshot; the operator console groups them across imports as candidates for new blocks, looks and templates | After the beta |
 | `template-local-services`, `template-hospitality`, `template-personal-professional` | the templates after launch | After the beta |
+| `other-hosts` | publishing a copy to the owner's own Cloudflare Pages or Netlify, only if customers or agencies ask | After the beta |
 
 ## Decisions
 
@@ -179,6 +185,18 @@ Product (2026-10, from the strategy refresh):
 - **Images are WebP, lazy below the first screen;** the hero image isn't lazy (it would hurt LCP).
 - **Example sites stay local:** their content belongs to the businesses, and the repository is
   public. Templates are checked automatically on fixture sites with invented content.
+
+Product (2026-10-10 refresh):
+
+- **Compete on the combination, not on static quality:** business data, templates per trade,
+  managed publishing and hosting, little friction, reliable updates. Publii, Decap Turbo and
+  EmDash already cover static output, SEO and managed CMS infrastructure.
+- **The first setup is done for the owner** (phase A), then the owner updates the site
+  (phase B). The import, the guided setup and the operator console serve phase A.
+- **Validate before adding features:** the beta is a pilot with go or no-go thresholds; the
+  price (€79) is a hypothesis tested against a higher one.
+- **Portability without multi-host:** content and media export and the ZIP download before the
+  beta; publishing to other hosts only after validation, on demand.
 
 ## Plans for the open phases
 
@@ -264,7 +282,18 @@ Product (2026-10, from the strategy refresh):
 
 ### 7. Private beta
 
-Invite-only, small and cheap, for friends.
+Invite-only, small and cheap, for friends, and run as the validation pilot (strategy,
+"Validation before more features"):
+
+- **`pilot`:** a demonstration of the whole experience (a complete site, changing a service or
+  hours, preview, publish, *Live*); ten conversations with owners of simple or missing
+  websites; five real websites set up for their owners (phase A), partly by hand. Track per
+  site our setup time, the fields owners always need, requests for custom design, support after
+  launch and publishes that needed help. Go or no-go: at least 3 to 5 owners willing to pay,
+  under 60 minutes of our work per standard site, at least 95 % of publishes without help.
+  Offer two prices (€79 and a higher one) to learn willingness to pay.
+- **`content-export`:** a download of the business content (the site documents and
+  collections) and the original media, next to the static website's ZIP.
 
 - **`admin-on-aws`:** one small EU server, deploy pipeline, monitoring and alerts; media in S3;
   SQLite with Litestream to S3.
@@ -292,8 +321,9 @@ Invite-only, small and cheap, for friends.
 - **`legal-documents`:** Czech and English, reviewed by a lawyer before taking money.
 - **`operator-console`** (minimum) and **emails:** renewal reminders, publish failures, health
   alerts.
-  - **What the console covers:** an overview with stats, every customer and website, inviting
-    users, and deleting websites and accounts. It replaces the server commands (`create-user`
+  - **What the console covers:** an overview with stats, every customer and website, setting
+    up a website for an owner and handing it over (phase A), inviting users, and deleting
+    websites and accounts. It replaces the server commands (`create-user`
     and the others) for everyday work.
   - **Where it lives:** the same app on the same server, but behind its own address (such as
     `ops.webmio.eu`), its own route group and an operator role with a second sign-in factor.

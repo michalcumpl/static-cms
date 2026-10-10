@@ -1,6 +1,7 @@
 # Product strategy
 
-*Why we build Webmio and what it is. Refreshed 2026-10-03; launch templates and layouts decided
+*Why we build Webmio and what it is. Refreshed 2026-10-03 and 2026-10-10 (competitors, what we
+compete on, the managed first setup, validation); launch templates and layouts decided
 2026-10-07; Exhibitions and Creative production examples chosen 2026-10-08. What we build and
 when, with each change's status: [`roadmap.md`](roadmap.md). Open questions:
 [`tasks.md`](tasks.md).*
@@ -13,9 +14,18 @@ Webmio is **a managed website service for small businesses**. Internally we stop
 CMS: the editor, the static build and the hosting are implementation details. The customer tells
 us what their business is; we keep the website running.
 
+The product answers four questions a business owner has; everything else is secondary:
+
+1. Can I get a professional website without hiring a developer?
+2. Can I change my opening hours, prices, services or photos myself?
+3. Will my website keep working without me managing technical updates?
+4. Will I know when my changes are actually live?
+
 Slogans to test:
 
 - *Small business web. Solved!* (fits the thesis; the lead candidate)
+- *Your business website, taken care of.* (the customer-facing promise from the 2026-10-10
+  refresh; says "managed" without saying it)
 - *Easy websites for AI age!* (catchy, but AI is out of the MVP, so it promises something we
   don't ship yet; keep it for when the AI features land)
 - *Tell us what your business is, and we'll keep the website running.* (the thesis as a line)
@@ -24,14 +34,37 @@ Czech versions still to write (in [`tasks.md`](tasks.md)); the Czech market come
 
 ## Where we sit
 
-| Product | What it says |
-| --- | --- |
-| WordPress | Build anything. |
-| Wix, Squarespace | Design anything. |
-| Sveltia, Decap | Manage your site's content in Git. |
-| TinaCMS | Give developers powerful visual editing. |
-| CloudCannon | Run your professional static-site infrastructure. |
-| **Webmio** | **Tell us what your business is, and we'll keep the website running.** |
+| Product | What it does well | Where Webmio differs |
+| --- | --- | --- |
+| WordPress | build anything: flexible content, plugins, a broad ecosystem | fewer capabilities, no routine technical upkeep |
+| Wix, Squarespace | design anything | facts, not design; no design project |
+| Publii | desktop editing, static output, templates, SEO, several hosts | the admin is hosted, and we own publishing and hosting |
+| Sveltia, Decap (and Decap Turbo) | your site's content in Git, now with managed infrastructure | a business data model and a complete website service instead of a Git workflow |
+| Pages CMS | friendly hosted editing of content in a GitHub repository | the owner manages business information, not a configured repository |
+| TinaCMS | visual editing that developers build into a website | a fixed, business-focused product, not an editing system |
+| CloudCannon | professional static-site infrastructure, workflows, agencies | the owner directly, with almost no setup |
+| EmDash (Cloudflare) | modern CMS infrastructure, sandboxed plugins, APIs and an MCP server for AI agents | a ready website for one kind of business, not a CMS foundation |
+| **Webmio** | **Tell us what your business is, and we'll keep the website running.** | |
+
+The field moved in the weeks before the 2026-10-10 refresh: Publii 0.48.1 (9 October) already
+ships static HTML, semantic markup, structured data, image optimisation, templates and several
+publishing targets; Decap Turbo opened as a public preview (14 September) with hosted sign-in,
+permissions, media storage, activity logs and publish notifications; Cloudflare released EmDash
+1.0 (28 September). CloudCannon keeps investing in editorial workflows, forms and agencies,
+TinaCMS in its editor and media, and Sveltia aims for 1.0 in late 2026. So **static-site quality
+alone is not a differentiator**, and a managed layer around a static CMS is a real competitor,
+not a theoretical one.
+
+**We don't compete on** fast pages, semantic HTML, static output, basic SEO, image optimisation,
+a nice admin, or AI by itself. We do all of them, but competitors have them or can add them.
+**We compete on the combination:**
+
+1. **A business data model:** one record for every important business fact.
+2. **Opinionated templates per trade:** a professional result without a design project.
+3. **Managed publishing and hosting:** no technical operations for the owner.
+4. **Little friction:** the owner thinks about their business, not the website's internals.
+5. **Reliable updates:** validated, published, confirmed and recoverable.
+6. **Later, agencies:** many client websites without a stack per client.
 
 Hosting is turning into a commodity; the opportunity is in the product abstraction. Decap Turbo
 (€19/month for hosted auth, database-backed content and roles around free Decap) shows people
@@ -74,6 +107,29 @@ SMBs"**, because that still sells the mental model of a CMS. We build the layer 
    already do). Phase two: an agency sets up a client's site, and the client gets the simple
    admin. CloudCannon's partner-only plan ($10/month next to $49 Standard) shows agencies are a
    customer of their own.
+
+## The first setup is done for the owner
+
+The biggest risk isn't technical: owners may not want another tool for their website, but
+someone to take care of it. A self-service admin doesn't solve the first setup: writing service
+descriptions, finding photos and choosing a design feel like a project. So the service has two
+phases:
+
+- **Phase A, we get your website ready.** The owner sends basic information and photos (or their
+  current website's address); we turn them into a complete site with the import, the guided
+  setup and our own hands.
+- **Phase B, you update it yourself.** Once it's live, the owner changes details, services and
+  photos in the control panel without us.
+
+Phase A is also where we learn which parts of onboarding to automate. If pilot owners want the
+result but keep refusing self-service and expecting personal help, the fallback is a
+service-led model or a higher-priced managed tier; if they happily maintain their business
+information, the self-service direction holds.
+
+The 2026-10-10 refresh names small service businesses with simple websites (trades, repairs,
+cleaners, consultants) as the first customers. Our launch templates instead follow seven real
+businesses we can migrate; whether the pilot also needs a Local Services site is open in
+[`tasks.md`](tasks.md).
 
 ## Templates
 
@@ -142,6 +198,17 @@ registers one separately. No feature matrix, storage tiers, page limits, bandwid
 
 > **One website. One price. No maintenance.**
 
+Also included: reasonable traffic under a fair-use policy, and support with a clearly defined
+scope (not bespoke design work). Not included: business email hosting, e-commerce, bookings.
+
+**The price is a hypothesis.** At this price the economics depend on how much human help each
+customer needs: if every site needs custom design, repeated content entry and individual
+support, Webmio becomes a cheap web agency, not a platform. That's why onboarding and the
+template system matter as much as hosting costs. The pilot tests €79 against a higher price (the
+refresh suggests €120 and €180 a year): a lower price isn't automatically better for a service
+that removes technical responsibility. An agency plan waits until the cost of running many sites
+is known.
+
 We don't sell "€10/month static hosting" (a commodity) and we don't compete with WordPress.com's
 $4 plan: its real cost grows with plugins and upkeep. Our buyer asks *"Can I have a good website
 without becoming responsible for a website?"* For reference, Squarespace starts around $16/month,
@@ -156,10 +223,16 @@ Wix around $17, GoDaddy around $10.
 | Templates | 7 (Education, Law, Financial advisory, Investment management, Short-term rentals, Exhibitions, Creative production), mobile-first, layouts, template switching |
 | Publishing | preview, static build, validation, deploy, rollback, custom domain, SSL |
 | Reliability | backups, version history, health checks |
+| Ownership | hosted sign-in; content and media export; the complete static website as a download |
 | Pricing | €79 / 1 899 Kč a year excl. VAT, one plan, free until the first publish |
 
 **Explicitly out:** e-commerce, appointments, memberships, blogging, plugins, marketplace,
-AI agents, advanced analytics, free-form layout (columns, nesting, CSS).
+AI agents, advanced analytics, free-form layout (columns, nesting, CSS), custom HTML, full
+agency management and white-labelling, publishing to other hosts.
+
+**Portability is real but not overbuilt:** content isn't trapped in a proprietary page format,
+and the owner can export it and download the website. Publishing to the owner's own Cloudflare
+Pages or Netlify comes after validation, if customers ask.
 
 ### Where the MVP meets what's already built
 
@@ -185,6 +258,37 @@ Decided 2026-10-05:
   FAQs. Only content the owner may use is imported, never the design.
 - **Netlify publishing: keep it until own hosting replaces it.** Customers never choose a
   publishing target.
+
+## Validation before more features
+
+The next milestone isn't more architecture or features: it's **five real business websites and
+evidence that owners will pay** to have them managed this way. Adapted from the refresh's 30-day
+plan:
+
+1. **A convincing demonstration:** one complete website, the control panel, changing a service
+   or an opening hour, previewing, publishing and seeing that it's live. The whole customer
+   experience, not editor screens.
+2. **Ten conversations** with businesses that have a simple website or no effective one: who
+   updates it, when it was last updated, what happens when prices or hours change, what they pay
+   for hosting and upkeep, what they dislike, whether they'd rather change things themselves.
+   Compliments aren't evidence of willingness to pay.
+3. **A concierge pilot:** five real websites set up in phase A, partly by hand where the admin
+   isn't ready. Watch how much the owner provides unaided, which fields are always needed, which
+   template fits, how often they ask for custom layouts and how much support they need after
+   launch.
+4. **Go or no-go** against these first thresholds (ours, not industry benchmarks):
+
+| Metric | Target |
+| --- | --- |
+| Businesses interviewed | 10 |
+| Real pilot websites | 5 |
+| Owners willing to pay around the launch price | at least 3 to 5 |
+| Our work to prepare a standard site once the content is complete | under 60 minutes |
+| Publishes that succeed without manual help | at least 95 % |
+| Requests for custom design outside the templates | rare enough to stay standardised |
+
+The private beta is this pilot ([`roadmap.md`](roadmap.md), phase 7). The scheduled strategy
+reviews stopped with the 2026-10-10 refresh: customer evidence comes next, not another recap.
 
 ## Brand and domains
 

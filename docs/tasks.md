@@ -6,8 +6,15 @@ here becomes a change, move it to the roadmap and delete it here.
 
 ## To confirm
 
-- [ ] **Slogan:** "Small business web. Solved!" as the lead (see [`strategy.md`](strategy.md));
-  write the Czech versions.
+- [ ] **Slogan:** "Small business web. Solved!" as the lead, or "Your business website, taken
+  care of." (see [`strategy.md`](strategy.md)); write the Czech versions.
+- [ ] **First customers:** the 2026-10-10 refresh starts with small service businesses (trades,
+  repairs, cleaners) and four template families; we chose seven templates from real example
+  businesses. Decide whether the pilot's five websites are the example businesses, and whether
+  Local Services moves before the beta.
+- [ ] **The higher price to test** next to €79 / 1 899 Kč (the refresh suggests €120 and €180 a
+  year), and how the pilot asks it.
+- [ ] **Pilot candidates:** list the ten businesses to talk to and the five to set up.
 
 ## Loose ends
 
@@ -26,5 +33,5 @@ here becomes a change, move it to the roadmap and delete it here.
 
 - [ ] **ChatGPT sites:** how OpenAI's website creation works; where it overlaps the guided setup
   and the AI plans, and what it can't do (hosting, domains, health, keeping a site maintained).
-- [ ] **Competitors:** check the notes in the strategy (Publii themes, Decap Turbo, CloudCannon
-  pricing) again before the beta.
+- [ ] **Competitors:** check the notes in the strategy (Publii, Decap Turbo, Pages CMS, EmDash,
+  CloudCannon pricing) again before the beta; try EmDash and Decap Turbo hands-on.
