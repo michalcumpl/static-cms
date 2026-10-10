@@ -214,6 +214,13 @@ export const projectHosting = sqliteTable(
       enum: ["waiting-for-dns", "issuing-certificate", "ready"],
     }),
     domainCheckedAt: integer("domain_checked_at", { mode: "timestamp_ms" }),
+    /**
+     * Webmio hosting with a redirect server: the bare domain's own state (bare-domain-redirect
+     * design.md decision 5); null for a subdomain, Netlify, or no redirect server.
+     */
+    apexState: text("apex_state", {
+      enum: ["waiting-for-dns", "issuing-certificate", "redirecting"],
+    }),
     /** Webmio hosting: the CloudFront tenant serving the domain (own-hosting decision 11). */
     domainTenantId: text("domain_tenant_id"),
     livePublishId: text("live_publish_id"),

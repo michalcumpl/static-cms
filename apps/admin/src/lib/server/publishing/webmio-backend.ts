@@ -11,6 +11,8 @@ export interface WebmioHostingConfig {
   sitesDomain: string;
   /** Websites' CNAME targets are `<name>.<cnameDomain>`. */
   cnameDomain: string;
+  /** The redirect server bare domains point at (bare-domain-redirect); none without one. */
+  redirectAddress?: string;
   region?: string;
 }
 
@@ -33,6 +35,7 @@ export function webmioHostingConfig(
     connectionGroupId,
     sitesDomain: env.WEBMIO_SITES_DOMAIN || "webmio.site",
     cnameDomain: env.WEBMIO_CNAME_DOMAIN || "sites.webmio.net",
+    ...(env.WEBMIO_REDIRECT_ADDRESS ? { redirectAddress: env.WEBMIO_REDIRECT_ADDRESS } : {}),
     ...(env.AWS_REGION ? { region: env.AWS_REGION } : {}),
   };
 }
@@ -52,6 +55,8 @@ export type CertificateState = "pending" | "issued" | "failed";
 export interface HostingBackend {
   readonly sitesDomain: string;
   readonly cnameDomain: string;
+  /** The redirect server's address, which bare domains' A records name; none without one. */
+  readonly redirectAddress?: string;
 
   putObject(key: string, body: Uint8Array, metadata: ObjectMetadata): Promise<void>;
   /** Copies an object with its metadata; the bytes don't leave the bucket. */

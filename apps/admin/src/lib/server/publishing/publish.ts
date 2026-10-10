@@ -210,6 +210,7 @@ async function ensureSite(
         defaultUrl: created.defaultUrl,
         domain: null,
         domainState: null,
+        apexState: null,
         domainCheckedAt: null,
         domainTenantId: null,
         livePublishId: null,
@@ -579,6 +580,7 @@ export function publishingState(db: Db, projectId: string) {
     defaultUrl: hosting?.defaultUrl ?? null,
     domain: hosting?.domain ?? null,
     domainState: hosting?.domainState ?? null,
+    apexState: hosting?.apexState ?? null,
     ...instructionsFor(hosting),
     publishes: history,
   };

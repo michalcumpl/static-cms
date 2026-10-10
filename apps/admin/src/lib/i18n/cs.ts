@@ -402,6 +402,13 @@ export const cs: Messages = {
     dnsRecords: "Záznamy DNS, které nastavíte u registrátora",
     forward:
       "U registrátora také přesměrujte {domain} na {target} (často se tomu říká přesměrování nebo URL forwarding), aby web fungoval i bez www.",
+    apexRecords:
+      "Záznam A patří samotné doméně {domain}: registrátoři jeho název zapisují jako @, nebo ho nechávají prázdný. U registrátora zrušte přesměrování {domain} a smažte ostatní záznamy A a AAAA pro ni, aby se každý návštěvník dostal k Webmiu.",
+    apexState: {
+      "waiting-for-dns": "{domain} bez www: čeká se na záznam A (a jen ten jeden).",
+      "issuing-certificate": "{domain} bez www: DNS je nastavené; vydává se certifikát.",
+      redirecting: "{domain} bez www: přesměrovává na {target}.",
+    },
     name: "Název",
     type: "Typ",
     value: "Hodnota",

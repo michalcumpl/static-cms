@@ -107,9 +107,9 @@ function resetWebmio(): void {
   testDb().delete(projectHosting).where(eq(projectHosting.projectId, projectId)).run();
 }
 
-/** Switches the dev server's Webmio hosting on for this test, empty. */
-export function useWebmioHosting(): void {
-  resetFakeHosting(webmioDir(), true);
+/** Switches the dev server's Webmio hosting on for this test, empty, with a redirect server or not. */
+export function useWebmioHosting(options: { redirectAddress?: string } = {}): void {
+  resetFakeHosting(webmioDir(), true, options);
 }
 
 /** While on, the fake edge keeps serving each website's previous publish, so verification fails. */

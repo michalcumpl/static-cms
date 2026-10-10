@@ -13,11 +13,11 @@
 
 ## 3. The admin
 
-- [ ] 3.1 Read `WEBMIO_REDIRECT_ADDRESS` into `webmioBackend` as `redirectAddress`; verify a connection test with and without it
-- [ ] 3.2 Add `GET /hosting/bare-domain?domain=` (design decision 4); verify route tests: 200 for a connected bare domain on Webmio hosting in any state, including uppercase and a trailing dot; 404 for an unknown domain, a subdomain, a Netlify website's domain and a missing parameter; no session needed
-- [ ] 3.3 Add the `apex_state` column with its Drizzle migration; verify the migration applies to a copy of an existing database and existing rows read as null
-- [ ] 3.4 Extend `domainInstructions` and `checkDomain` (design decision 5): the A record, `forwardTo` only without a redirect address, the DNS check (exactly the address, no AAAA), the `https://<domain>/` request, and `apex_state`; leave `domainState` and the free address's redirect to `www.`; verify unit tests with fake DNS and a fake fetch covering every scenario of the publishing spec's "Custom domain", plus a TLS failure and a timeout reading as issuing the certificate
-- [ ] 3.5 Show the A record, the request to remove the forwarding and other `@` records, and the bare domain's state in `DomainPanel.svelte`, in English and Czech, checking again on opening while either state isn't final; verify the panel tests and the i18n tests, and an end-to-end test with fake hosting showing the records with and without a redirect address
+- [x] 3.1 Read `WEBMIO_REDIRECT_ADDRESS` into `webmioBackend` as `redirectAddress`; verify a connection test with and without it
+- [x] 3.2 Add `GET /hosting/bare-domain?domain=` (design decision 4); verify route tests: 200 for a connected bare domain on Webmio hosting in any state, including uppercase and a trailing dot; 404 for an unknown domain, a subdomain, a Netlify website's domain and a missing parameter; no session needed
+- [x] 3.3 Add the `apex_state` column with its Drizzle migration; verify the migration applies to a copy of an existing database and existing rows read as null
+- [x] 3.4 Extend `domainInstructions` and `checkDomain` (design decision 5): the A record, `forwardTo` only without a redirect address, the DNS check (exactly the address, no AAAA), the `https://<domain>/` request, and `apex_state`; leave `domainState` and the free address's redirect to `www.`; verify unit tests with fake DNS and a fake fetch covering every scenario of the publishing spec's "Custom domain", plus a TLS failure and a timeout reading as issuing the certificate
+- [x] 3.5 Show the A record, the request to remove the forwarding and other `@` records, and the bare domain's state in `DomainPanel.svelte`, in English and Czech, checking again on opening while either state isn't final; verify the panel tests and the i18n tests, and an end-to-end test with fake hosting showing the records with and without a redirect address
 
 ## 4. Checks before `dev`
 

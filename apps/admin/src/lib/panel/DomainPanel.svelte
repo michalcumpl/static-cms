@@ -12,6 +12,10 @@ import Notice from "$lib/ui/Notice.svelte";
 let { paths, publishing }: { paths: ProjectPaths; publishing: Publishing } = $props();
 const i18n = getI18n();
 const info = $derived(publishing.info);
+// A bare domain with the redirect server has a state of its own (bare-domain-redirect design.md
+// decision 5): its records stay listed until it redirects too.
+const apexPending = $derived(info?.apexState != null && info.apexState !== "redirecting");
+const showRecords = $derived(info?.domainState !== "ready" || apexPending);
 
 let domainInput = $state("");
 let domainError = $state("");
@@ -20,7 +24,9 @@ let busy = $state(false);
 onMount(async () => {
   await publishing.refresh();
   // Pick up DNS and certificate changes since the last visit.
-  if (publishing.info?.domain && publishing.info.domainState !== "ready") await checkDomain();
+  const current = publishing.info;
+  const apexPending = current?.apexState != null && current.apexState !== "redirecting";
+  if (current?.domain && (current.domainState !== "ready" || apexPending)) await checkDomain();
 });
 
 async function send(url: string, method: string, body?: unknown): Promise<string | undefined> {
@@ -67,7 +73,12 @@ async function disconnectDomain() {
           <p role="status">{i18n.t(`publishing.state.${info.domainState}`)}</p>
         </Notice>
       {/if}
-      {#if info.domainState !== "ready"}
+      {#if info.apexState}
+        <Notice kind={info.apexState === "redirecting" ? "success" : "attention"}>
+          <p role="status">{i18n.t(`publishing.apexState.${info.apexState}`, { domain: info.domain, target: `https://www.${info.domain}` })}</p>
+        </Notice>
+      {/if}
+      {#if showRecords}
         <table>
           <caption>{i18n.t("publishing.dnsRecords")}</caption>
           <thead>
@@ -83,6 +94,9 @@ async function disconnectDomain() {
             {/each}
           </tbody>
         </table>
+        {#if info.dnsRecords.some((record) => record.type === "A") && info.provider === "webmio"}
+          <p class="hint">{i18n.t("publishing.apexRecords", { domain: info.domain })}</p>
+        {/if}
       {/if}
       {#if info.forwardTo}
         <p class="forward">{i18n.t("publishing.forward", { domain: info.domain, target: info.forwardTo })}</p>
@@ -112,6 +126,11 @@ async function disconnectDomain() {
   }
 
   .muted {
+    color: var(--ui-muted);
+  }
+
+  .hint {
+    font-size: var(--ui-text-sm);
     color: var(--ui-muted);
   }
 

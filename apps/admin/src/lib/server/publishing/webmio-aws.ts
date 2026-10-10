@@ -131,6 +131,7 @@ export function awsHosting(config: WebmioHostingConfig): HostingBackend {
   return {
     sitesDomain: config.sitesDomain,
     cnameDomain: config.cnameDomain,
+    ...(config.redirectAddress ? { redirectAddress: config.redirectAddress } : {}),
 
     async putObject(key, body: Uint8Array, metadata: ObjectMetadata) {
       try {

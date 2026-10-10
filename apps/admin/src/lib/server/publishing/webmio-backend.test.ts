@@ -40,4 +40,11 @@ describe("webmioHostingConfig", () => {
       cnameDomain: "sites.dev.webmio.net",
     });
   });
+
+  it("takes the redirect server's address when there is one", () => {
+    expect(webmioHostingConfig(complete)).not.toHaveProperty("redirectAddress");
+    expect(
+      webmioHostingConfig({ ...complete, WEBMIO_REDIRECT_ADDRESS: "203.0.113.7" }),
+    ).toMatchObject({ redirectAddress: "203.0.113.7" });
+  });
 });

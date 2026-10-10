@@ -42,8 +42,10 @@ export interface PublishingInfo {
   defaultUrl: string | null;
   domain: string | null;
   domainState: "waiting-for-dns" | "issuing-certificate" | "ready" | null;
+  /** Webmio hosting, bare domain, redirect server: the bare domain's own state. */
+  apexState: "waiting-for-dns" | "issuing-certificate" | "redirecting" | null;
   dnsRecords: DnsRecord[];
-  /** Webmio hosting, bare domain: where to forward it at the registrar. */
+  /** Webmio hosting, bare domain, no redirect server: where to forward it at the registrar. */
   forwardTo: string | null;
   publishes: PublishSummary[];
 }

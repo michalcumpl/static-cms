@@ -45,6 +45,8 @@ interface FakeState {
   previous: Record<string, string>;
   /** While on, the edge keeps serving each website's previous deploy, as if a switch hung. */
   stale: boolean;
+  /** End-to-end runs: the redirect server's address, switched per test like `disabled`. */
+  redirectAddress?: string;
 }
 
 export interface FakeHosting extends HostingBackend {
@@ -109,15 +111,22 @@ export function fakeHostingEnabled(dir: string): boolean {
  * Empties the fake in `dir` and switches Webmio hosting on or off: the end-to-end tests start
  * each test without it, so the Netlify flows run as on a server that has none.
  */
-export function resetFakeHosting(dir: string, enabled: boolean): void {
+export function resetFakeHosting(
+  dir: string,
+  enabled: boolean,
+  options: { redirectAddress?: string } = {},
+): void {
   rmSync(join(dir, "objects"), { recursive: true, force: true });
   mkdirSync(join(dir, "objects"), { recursive: true });
-  writeFileSync(statePath(dir), JSON.stringify({ ...EMPTY, disabled: !enabled }, null, 2));
+  writeFileSync(
+    statePath(dir),
+    JSON.stringify({ ...EMPTY, disabled: !enabled, ...options }, null, 2),
+  );
 }
 
 export function fakeHosting(
   dir: string,
-  domains: { sitesDomain?: string; cnameDomain?: string } = {},
+  domains: { sitesDomain?: string; cnameDomain?: string; redirectAddress?: string } = {},
 ): FakeHosting {
   mkdirSync(join(dir, "objects"), { recursive: true });
   let failing: RegExp | undefined;
@@ -137,10 +146,13 @@ export function fakeHosting(
     return state;
   }
 
+  const redirectAddress = domains.redirectAddress ?? readState(dir).redirectAddress;
+
   return {
     dir,
     sitesDomain: domains.sitesDomain ?? "webmio.site",
     cnameDomain: domains.cnameDomain ?? "sites.webmio.net",
+    ...(redirectAddress ? { redirectAddress } : {}),
 
     async putObject(key, body, metadata) {
       reachable();

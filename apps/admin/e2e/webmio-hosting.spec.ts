@@ -108,3 +108,56 @@ test("the workspace's hosting page has nothing to connect", async ({ page }) => 
   await expect(page.getByText("Pekárna U Lípy's websites are hosted by Webmio.")).toBeVisible();
   await expect(page.getByLabel("Netlify personal access token")).toHaveCount(0);
 });
+
+/** Publishes from the Publish page and connects `domain` on the Domain page. */
+async function connectDomain(page: Page, domain: string) {
+  await page.goto(paths().publishPage);
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await expect(
+    page
+      .getByRole("region", { name: "Address" })
+      .getByRole("link", { name: /webmio\.site/ })
+      .first(),
+  ).toBeVisible({ timeout: 15_000 });
+  await page.goto(paths().domainPage);
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("Your domain").fill(domain);
+  await page.getByRole("button", { name: "Connect" }).click();
+  const region = page.getByRole("region", { name: "Domain" });
+  return {
+    region,
+    rows: region
+      .getByRole("table", { name: "DNS records to set at your registrar" })
+      .getByRole("row"),
+  };
+}
+
+// Bare domains (bare-domain-redirect): an A record for the redirect server where there is one,
+// forwarding at the registrar where there isn't.
+test("a bare domain points its A record at the redirect server", async ({ page }) => {
+  useWebmioHosting({ redirectAddress: "203.0.113.7" });
+  const { region, rows } = await connectDomain(page, "pekarna.example");
+  await expect(rows).toHaveCount(3);
+  await expect(rows.nth(1)).toContainText("www.pekarna.example");
+  await expect(rows.nth(1)).toContainText("pekarna-u-lipy.sites.webmio.net");
+  await expect(rows.nth(2)).toContainText("pekarna.example");
+  await expect(rows.nth(2)).toContainText("203.0.113.7");
+  await expect(
+    region.getByText(/Remove your registrar's forwarding of pekarna\.example/),
+  ).toBeVisible();
+  await expect(
+    region.getByText(/pekarna\.example without www: waiting for its A record/),
+  ).toBeVisible();
+  await expect(region.getByText(/Also forward/)).toHaveCount(0);
+});
+
+test("without a redirect server, a bare domain is forwarded at the registrar", async ({ page }) => {
+  const { region, rows } = await connectDomain(page, "pekarna.example");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(1)).toContainText("www.pekarna.example");
+  await expect(
+    region.getByText(/Also forward pekarna\.example to https:\/\/www\.pekarna\.example/),
+  ).toBeVisible();
+  await expect(region.getByText(/without www:/)).toHaveCount(0);
+});

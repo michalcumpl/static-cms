@@ -28,6 +28,7 @@ function publishing(info: Partial<PublishingInfo>): Publishing {
     defaultUrl: "https://pekarna-u-lipy.webmio.site",
     domain: null,
     domainState: null,
+    apexState: null,
     dnsRecords: [],
     forwardTo: null,
     publishes: [],
@@ -85,6 +86,53 @@ describe("Domain panel on Webmio hosting", () => {
       "U registrátora také přesměrujte pekarna.cz na https://www.pekarna.cz",
     );
     expect(markup).toContain("vydává se certifikát");
+  });
+});
+
+describe("Domain panel with the redirect server", () => {
+  const records = [
+    { type: "CNAME" as const, name: "www.pekarna.cz", value: "pekarna-u-lipy.sites.webmio.net" },
+    { type: "A" as const, name: "pekarna.cz", value: "203.0.113.7" },
+  ];
+  const panel = (info: Partial<PublishingInfo>, locale: Locale = "en") =>
+    html(
+      DomainPanel,
+      {
+        paths: projectPaths("p_1"),
+        publishing: publishing({ domain: "pekarna.cz", dnsRecords: records, ...info }),
+      },
+      locale,
+    );
+
+  it("shows the A record, asks to remove the forwarding and other records, and the bare domain's state", () => {
+    const markup = panel({ domainState: "waiting-for-dns", apexState: "waiting-for-dns" });
+    expect(markup).toContain("<code>pekarna.cz</code>");
+    expect(markup).toContain("<code>203.0.113.7</code>");
+    expect(markup).toContain("registrars call its name @ or leave it empty");
+    expect(markup).toContain("Remove your registrar's forwarding of pekarna.cz");
+    expect(markup).toContain("pekarna.cz without www: waiting for its A record");
+    expect(markup).not.toContain("Also forward");
+  });
+
+  it("keeps the records listed while only the bare domain is pending", () => {
+    const markup = panel({ domainState: "ready", apexState: "issuing-certificate" });
+    expect(markup).toContain("Ready: the site is served at this domain.");
+    expect(markup).toContain(
+      "pekarna.cz without www: DNS is set; its certificate is being issued.",
+    );
+    expect(markup).toContain("<code>203.0.113.7</code>");
+  });
+
+  it("hides the records once both are done", () => {
+    const markup = panel({ domainState: "ready", apexState: "redirecting" });
+    expect(markup).toContain("pekarna.cz without www: redirects to https://www.pekarna.cz.");
+    expect(markup).not.toContain("<code>203.0.113.7</code>");
+  });
+
+  it("says it in Czech", () => {
+    const markup = panel({ domainState: "waiting-for-dns", apexState: "waiting-for-dns" }, "cs");
+    expect(markup).toContain("registrátoři jeho název zapisují jako @");
+    expect(markup).toContain("pekarna.cz bez www: čeká se na záznam A");
   });
 });
 

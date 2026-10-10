@@ -388,6 +388,13 @@ export const en = {
     dnsRecords: "DNS records to set at your registrar",
     forward:
       "Also forward {domain} to {target} at your registrar (often called a redirect or URL forwarding), so the site works without www too.",
+    apexRecords:
+      "The A record is for {domain} itself: registrars call its name @ or leave it empty. Remove your registrar's forwarding of {domain} and any other A or AAAA records for it, so every visitor reaches Webmio.",
+    apexState: {
+      "waiting-for-dns": "{domain} without www: waiting for its A record (and only that one).",
+      "issuing-certificate": "{domain} without www: DNS is set; its certificate is being issued.",
+      redirecting: "{domain} without www: redirects to {target}.",
+    },
     name: "Name",
     type: "Type",
     value: "Value",

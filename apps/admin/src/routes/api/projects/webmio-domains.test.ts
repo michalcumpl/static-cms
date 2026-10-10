@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { projectHosting } from "$lib/server/db/schema";
-import { dns } from "$lib/server/publishing/domains";
+import { dns, probe } from "$lib/server/publishing/domains";
 import { publishesSettled, startPublish } from "$lib/server/publishing/publish";
 import { type FakeHosting, fakeHosting, serveFake } from "$lib/server/publishing/webmio-fake";
 import { useTestProject } from "$lib/server/test-project";
@@ -20,6 +20,7 @@ let folder: string;
 let hosting: FakeHosting;
 let cnames: Record<string, string[]>;
 const original = { ...dns };
+const originalProbe = { ...probe };
 const project = useTestProject(() => ({
   project: project().projectId,
   workspace: project().workspaceId,
@@ -32,9 +33,15 @@ beforeEach(() => {
   cnames = {};
   dns.resolveCname = (async (name: string) => cnames[name] ?? []) as typeof dns.resolveCname;
   dns.resolve4 = (async () => []) as typeof dns.resolve4;
+  dns.resolve6 = (async () => []) as typeof dns.resolve6;
+  probe.fetch = async () => {
+    throw new Error("No redirect server in this test");
+  };
 });
 afterEach(async () => {
   Object.assign(dns, original);
+  Object.assign(probe, originalProbe);
+  delete process.env.WEBMIO_REDIRECT_ADDRESS;
   await publishesSettled();
   delete process.env.WEBMIO_HOSTING_FAKE_DIR;
   rmSync(folder, { recursive: true, force: true });
@@ -211,6 +218,132 @@ describe("custom domains on Webmio hosting", () => {
     expect((await visit("/", "www.pekarna.cz")).status).toBe(404);
     expect(hosting.tenants()).toEqual([]);
     expect((await state()).address).toBe("https://pekarna-u-lipy.webmio.site");
+  });
+});
+
+describe("bare domains with the redirect server", () => {
+  const address = "203.0.113.7";
+  let a: Record<string, string[]>;
+  let aaaa: Record<string, string[]>;
+  let probes: { url: string; redirect: RequestRedirect | undefined }[];
+  let redirectServer: (url: string) => Promise<Response>;
+
+  beforeEach(() => {
+    process.env.WEBMIO_REDIRECT_ADDRESS = address;
+    a = {};
+    aaaa = {};
+    probes = [];
+    dns.resolve4 = (async (name: string) => a[name] ?? []) as typeof dns.resolve4;
+    dns.resolve6 = (async (name: string) => aaaa[name] ?? []) as typeof dns.resolve6;
+    // The redirect server as it answers once it has the domain's certificate.
+    redirectServer = async (url) =>
+      new Response(null, {
+        status: 301,
+        headers: { location: url.replace("https://", "https://www.") },
+      });
+    probe.fetch = async (url, init) => {
+      probes.push({ url, redirect: init.redirect });
+      return redirectServer(url);
+    };
+  });
+
+  const apexState = async () => (await state()).apexState;
+
+  it("Connect a bare domain: the CNAME for www and an A record for the redirect server", async () => {
+    await publish();
+    await put("pekarna.cz");
+    expect(await state()).toMatchObject({
+      domainState: "waiting-for-dns",
+      apexState: "waiting-for-dns",
+      dnsRecords: [
+        { type: "CNAME", name: "www.pekarna.cz", value: "pekarna-u-lipy.sites.webmio.net" },
+        { type: "A", name: "pekarna.cz", value: address },
+      ],
+      forwardTo: null,
+    });
+  });
+
+  it("Bare domain redirecting: its own address only, and https:// sends visitors to www.", async () => {
+    await publish();
+    await put("pekarna.cz");
+    a["pekarna.cz"] = [address];
+    expect(await checkNow()).toBe("waiting-for-dns");
+    expect(probes).toEqual([{ url: "https://pekarna.cz/", redirect: "manual" }]);
+    expect(await apexState()).toBe("redirecting");
+  });
+
+  it("Bare domain with a leftover record: an A or AAAA record besides the server's", async () => {
+    await publish();
+    await put("pekarna.cz");
+    a["pekarna.cz"] = [address, "62.109.151.80"];
+    await checkNow();
+    expect(await apexState()).toBe("waiting-for-dns");
+    a["pekarna.cz"] = [address];
+    aaaa["pekarna.cz"] = ["2a01:5e0::1"];
+    await checkNow();
+    expect(await apexState()).toBe("waiting-for-dns");
+    expect(probes).toEqual([]);
+  });
+
+  it("issuing the certificate while the redirect server fails the handshake or doesn't answer in time", async () => {
+    await publish();
+    await put("pekarna.cz");
+    a["pekarna.cz"] = [address];
+    redirectServer = async () => {
+      throw new TypeError("fetch failed");
+    };
+    await checkNow();
+    expect(await apexState()).toBe("issuing-certificate");
+    redirectServer = async () => {
+      throw new DOMException("The operation was aborted due to timeout", "TimeoutError");
+    };
+    await checkNow();
+    expect(await apexState()).toBe("issuing-certificate");
+    redirectServer = async () => new Response("<h1>Parked</h1>", { status: 200 });
+    await checkNow();
+    expect(await apexState()).toBe("issuing-certificate");
+  });
+
+  it("Bare domain still forwarded at the registrar: the website is ready at www. regardless", async () => {
+    await publish();
+    await put("pekarna.cz");
+    cnames["www.pekarna.cz"] = ["pekarna-u-lipy.sites.webmio.net"];
+    hosting.setCertificate("www.pekarna.cz", "issued");
+    a["pekarna.cz"] = ["62.109.151.80"];
+    expect(await checkNow()).toBe("ready");
+    expect(await state()).toMatchObject({
+      address: "https://www.pekarna.cz",
+      apexState: "waiting-for-dns",
+    });
+    expect(await visit("/menu/")).toEqual({
+      status: 301,
+      location: "https://www.pekarna.cz/menu/",
+    });
+  });
+
+  it("Connect a subdomain: no A record and no state of its own", async () => {
+    await publish();
+    await put("web.anideti.cz");
+    a["web.anideti.cz"] = [address];
+    await checkNow();
+    expect(await state()).toMatchObject({
+      dnsRecords: [
+        { type: "CNAME", name: "web.anideti.cz", value: "pekarna-u-lipy.sites.webmio.net" },
+      ],
+      apexState: null,
+    });
+    expect(probes).toEqual([]);
+  });
+
+  it("forgets the bare domain's state when the domain is disconnected", async () => {
+    await publish();
+    await put("pekarna.cz");
+    a["pekarna.cz"] = [address];
+    await checkNow();
+    await answer(() =>
+      disconnect(project().event(path("domain"), project().owner, { method: "DELETE" }) as never),
+    );
+    expect(await state()).toMatchObject({ domain: null, apexState: null, dnsRecords: [] });
   });
 });
 

@@ -1,0 +1,1 @@
+ALTER TABLE `project_hosting` ADD `apex_state` text;

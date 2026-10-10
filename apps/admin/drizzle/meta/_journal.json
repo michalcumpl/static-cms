@@ -57,6 +57,13 @@
       "when": 1791635152912,
       "tag": "0007_contact_form",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1791652915187,
+      "tag": "0008_bare_domain_state",
+      "breakpoints": true
     }
   ]
 }

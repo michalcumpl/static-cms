@@ -172,6 +172,7 @@ export function webmioBackend(options: HostingEnv = {}): HostingBackend | undefi
     return fakeHosting(env.WEBMIO_HOSTING_FAKE_DIR, {
       ...(env.WEBMIO_SITES_DOMAIN ? { sitesDomain: env.WEBMIO_SITES_DOMAIN } : {}),
       ...(env.WEBMIO_CNAME_DOMAIN ? { cnameDomain: env.WEBMIO_CNAME_DOMAIN } : {}),
+      ...(env.WEBMIO_REDIRECT_ADDRESS ? { redirectAddress: env.WEBMIO_REDIRECT_ADDRESS } : {}),
     });
   }
   const config = webmioHostingConfig(env);
