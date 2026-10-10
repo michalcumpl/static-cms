@@ -21,7 +21,7 @@
 
 ## 4. Checks before `dev`
 
-- [ ] 4.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the end-to-end suite from the root; verify all pass
+- [x] 4.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm test` and the end-to-end suite from the root; verify all pass
 
 ## 5. Verification on `dev`
 
