@@ -11,11 +11,17 @@ test("Finishing the café: every step, leaving and coming back, the preview, the
   page,
 }) => {
   test.setTimeout(90_000);
+  // Each step is used once its script has taken over: answers given before that are lost when
+  // the page hydrates, and uploads go nowhere. Slow runners (CI's) show it.
+  const step = async (n: number) => {
+    await expect(page.getByText(`Step ${n} of 7`)).toBeVisible();
+    await page.waitForLoadState("networkidle");
+  };
   await page.goto(`/w/${state().workspaceId}/new`);
   await page.getByRole("link", { name: "Start", exact: true }).click();
 
   // 1. The business.
-  await expect(page.getByText("Step 1 of 7")).toBeVisible();
+  await step(1);
   await page.getByLabel("Café").check();
   await page.getByLabel("Its name").fill("Kavárna U Mostu");
   await page.getByLabel("Describe it in one sentence").fill("Výběrová káva a domácí dorty.");
@@ -24,11 +30,12 @@ test("Finishing the café: every step, leaving and coming back, the preview, the
   const projectId = /\/p\/(p_[\w-]+)\//.exec(page.url())?.[1] ?? "";
 
   // 2. The design: Standard, suggested.
-  await expect(page.getByText("Step 2 of 7")).toBeVisible();
+  await step(2);
   await expect(page.getByLabel(/Standard/)).toBeChecked();
   await page.getByRole("button", { name: "Continue" }).click();
 
   // 3. Contact and hours: the café's typical hours are filled in; a wrong answer first.
+  await step(3);
   await expect(page.getByLabel("Country")).toHaveValue("+420");
   await page.getByLabel("Phone").fill("777 123 456");
   await page.getByLabel("Town or city").fill("Praha");
@@ -54,6 +61,7 @@ test("Finishing the café: every step, leaving and coming back, the preview, the
   await expect(page).toHaveURL(new RegExp(`/p/${projectId}/setup/4$`));
 
   // 4. One service to start with, another added.
+  await step(4);
   await expect(page.getByRole("group", { name: /^Service \d+$/ })).toHaveCount(1);
   await page.getByRole("group", { name: "Service 1" }).getByLabel("Name").fill("Výběrová káva");
   await page.getByRole("button", { name: "Add a service" }).click();
@@ -61,6 +69,7 @@ test("Finishing the café: every step, leaving and coming back, the preview, the
   await page.getByRole("button", { name: "Continue" }).click();
 
   // 5. Photos, uploaded at once.
+  await step(5);
   await page
     .getByText("Choose a logo")
     .locator("input")
@@ -77,7 +86,7 @@ test("Finishing the café: every step, leaving and coming back, the preview, the
       { name: "dort.jpg", mimeType: "image/jpeg", buffer: image("chleb.jpg") },
     ]);
   // Decorative to start with; the first photo gets a description instead. The photos appear
-  // once processed, which takes longer on CI's runners, as in the other upload tests.
+  // once uploaded and processed, so this waits as long as the other upload tests.
   const decorative = page.getByLabel("Decorative, no description needed");
   await expect(decorative).toHaveCount(2, { timeout: 20_000 });
   await expect(decorative.last()).toBeChecked();
@@ -87,11 +96,13 @@ test("Finishing the café: every step, leaving and coming back, the preview, the
   await page.getByRole("button", { name: "Continue" }).click();
 
   // 6. Pages: the café's suggestion.
+  await step(6);
   await expect(page.getByLabel("About us")).toBeChecked();
   await expect(page.getByLabel("Team")).not.toBeChecked();
   await page.getByRole("button", { name: "Continue" }).click();
 
   // 7. The preview, then the site.
+  await step(7);
   const preview = page.frameLocator("iframe");
   await expect(preview.getByText("Kavárna U Mostu").first()).toBeVisible();
   await page.getByRole("button", { name: "Create my website" }).click();
