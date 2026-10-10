@@ -76,9 +76,10 @@ test("Finishing the café: every step, leaving and coming back, the preview, the
       { name: "kavarna.jpg", mimeType: "image/jpeg", buffer: image("galerie-1.jpg") },
       { name: "dort.jpg", mimeType: "image/jpeg", buffer: image("chleb.jpg") },
     ]);
-  // Decorative to start with; the first photo gets a description instead.
+  // Decorative to start with; the first photo gets a description instead. The photos appear
+  // once processed, which takes longer on CI's runners, as in the other upload tests.
   const decorative = page.getByLabel("Decorative, no description needed");
-  await expect(decorative).toHaveCount(2);
+  await expect(decorative).toHaveCount(2, { timeout: 20_000 });
   await expect(decorative.last()).toBeChecked();
   await expect(page.getByLabel("What is in the photo")).toHaveCount(0);
   await decorative.first().uncheck();
