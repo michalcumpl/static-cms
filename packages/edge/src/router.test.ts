@@ -47,7 +47,7 @@ describe("route", () => {
     expect(await get("/kontakt", undefined, "a=1")).toMatchObject({
       kind: "respond",
       status: 301,
-      headers: { location: "/kontakt/?a=1" },
+      headers: { location: "/kontakt/?a=1", "cache-control": "public, max-age=3600" },
     });
   });
 
@@ -76,6 +76,12 @@ describe("route", () => {
       kind: "respond",
       status: 301,
       headers: { location: "https://www.anideti.cz/menu/?x=1" },
+    });
+  });
+
+  it("doesn't let browsers keep the redirect to the domain, which ends with the domain", async () => {
+    expect(await get("/", "anideti.webmio.site")).toMatchObject({
+      headers: { "cache-control": "no-store" },
     });
   });
 

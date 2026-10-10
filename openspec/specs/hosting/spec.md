@@ -79,7 +79,7 @@ Every file of a publish SHALL be cached at the edge for as long as the publish i
 - **THEN** the browser gets the new stylesheet
 
 ### Requirement: Free address redirects to the custom domain
-Once a website's custom domain is ready, requests to its free address SHALL redirect permanently (301) to the same path on the custom domain. While the website has no ready domain, the free address SHALL serve the website itself.
+Once a website's custom domain is ready, requests to its free address SHALL redirect permanently (301) to the same path on the custom domain. Browsers SHALL NOT keep the redirect, so it ends as soon as the domain is no longer ready or is disconnected. While the website has no ready domain, the free address SHALL serve the website itself.
 
 #### Scenario: Domain ready
 - **WHEN** `www.pekarna.cz` is ready for the website and a visitor opens `https://pekarna-u-lipy.webmio.site/menu/`
@@ -87,7 +87,7 @@ Once a website's custom domain is ready, requests to its free address SHALL redi
 
 #### Scenario: Domain disconnected
 - **WHEN** the custom domain is disconnected
-- **THEN** the free address serves the website again
+- **THEN** the free address serves the website again, also to visitors who were redirected before
 
 ### Requirement: Bare domains redirect to www
 Webmio hosting SHALL answer a website's bare custom domain from a redirect server with a permanent address. The server SHALL answer every request to `http://<domain>/<path>` and `https://<domain>/<path>` with a permanent redirect (301) to `https://www.<domain>/<path>`, keeping the path and query, in one step. Over HTTPS it SHALL use a valid certificate for the domain, which it gets when the domain is first requested. It SHALL get or renew a certificate only for a bare domain that is connected to a website on Webmio hosting, as the admin confirms at that moment. Redirects of domains that already have a certificate SHALL keep working while the admin is down. A domain that isn't connected SHALL get no certificate. Over HTTP the server SHALL redirect any hostname to its `www.` in the same way, without asking the admin, so HTTP redirects don't depend on the admin either. A request by the server's address instead of a hostname SHALL get the "No website here" page with status 404.

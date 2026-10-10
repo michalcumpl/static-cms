@@ -46,13 +46,14 @@ export function noWebsite() {
 
 /**
  * @param {string} location
+ * @param {string} cacheControl
  * @returns {Routed}
  */
-function permanentRedirect(location) {
+function permanentRedirect(location, cacheControl) {
   return {
     kind: "respond",
     status: 301,
-    headers: { location: location, "cache-control": "public, max-age=3600" },
+    headers: { location: location, "cache-control": cacheControl },
   };
 }
 
@@ -121,7 +122,10 @@ export async function route(request, lookup) {
   const parts = entry.split(" ");
   const siteId = parts[0];
   const redirectHost = parts[1];
-  if (redirectHost) return permanentRedirect(`https://${redirectHost}${request.uri}${query}`);
+  // Not kept by browsers: the redirect ends as soon as the domain stops being ready.
+  if (redirectHost) {
+    return permanentRedirect(`https://${redirectHost}${request.uri}${query}`, "no-store");
+  }
   const deployId = await lookup(`s:${siteId}`);
   if (!deployId) return noWebsite();
 
@@ -133,7 +137,9 @@ export async function route(request, lookup) {
     path += "index.html";
   } else {
     const name = path.slice(path.lastIndexOf("/") + 1);
-    if (name.indexOf(".") === -1) return permanentRedirect(`${request.uri}/${query}`);
+    if (name.indexOf(".") === -1) {
+      return permanentRedirect(`${request.uri}/${query}`, "public, max-age=3600");
+    }
   }
   return { kind: "fetch", uri: prefix + encodePath(path) };
 }
