@@ -11,6 +11,12 @@ made up; the example sites' real content stays out of the repository.
   hidden by Cloudflare, literal `*` and `[` in a text, and a skipped heading level. Its contact
   page shows opening hours in a table (as its structured data gives them), its story three key
   figures, and its bread page "Jak to funguje" as an ordered list of bold-titled steps.
+  Its English version under `/en/` (import-languages) isn't in the sitemap: a home page with its
+  own business name and phone and the home's three questions in English, "Our bread" (named as
+  the alternate of "Naše pečivo"), "Contact" (naming "Kontakt" as its alternate, with two
+  questions "Kontakt" doesn't have) and "Wholesale" (no Czech counterpart, with a photo of its
+  own and a Czech photo without a description); the last two link the Czech home in their
+  switcher. "O nás" and "Akce" have no English counterpart.
 - **`studio/`**: a one-page English site in minified, unquoted HTML, with inline styles, a
   percent-encoded email and a link to a Czech version.
 - **`agency/`**: a small Czech travel agency at `https://cestovka-vlna.example/`

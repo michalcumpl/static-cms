@@ -34,7 +34,8 @@ describe("GET /api/projects/[project]/import-retry", () => {
           id: "rt_2",
           importId: "im_1",
           userId: owner.id,
-          kind: "next",
+          kind: "language",
+          lang: "en",
           state: "running",
           progress: { phase: "pages", done: 3, total: 20 },
           startedAt: new Date(2),
@@ -44,7 +45,8 @@ describe("GET /api/projects/[project]/import-retry", () => {
     expect(await (await call(owner)).json()).toEqual({
       retry: {
         id: "rt_2",
-        kind: "next",
+        kind: "language",
+        lang: "en",
         state: "running",
         progress: { phase: "pages", done: 3, total: 20 },
         error: null,

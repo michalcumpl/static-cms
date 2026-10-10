@@ -16,6 +16,7 @@ import { newId } from "../ids";
 import { createSiteProject } from "../load-site";
 import { type CrawlFailure, crawl } from "./crawl";
 import { fetchImages } from "./images";
+import { languagesOnOffer } from "./language";
 import { isPublicAddress, type SafeFetchOptions } from "./safe-fetch";
 
 // The import as a background job (site-import spec, "Import progress"; design decision 9): one
@@ -36,7 +37,8 @@ export interface StartImport {
 
 export type StartResult = { ok: true; importId: string } | { ok: false; message: Said };
 
-const FAILURES: Record<CrawlFailure, Said> = {
+/** What a failed crawl says. */
+export const FAILURES: Record<CrawlFailure, Said> = {
   blocked: said("server.import.blocked"),
   unreachable: said("server.import.unreachable"),
   "not-html": said("server.import.notHtml"),
@@ -180,11 +182,23 @@ async function runImport(
     });
     progress({ phase: "building", done: 0, total: 1 });
     const site = readSite(crawled.pages, { ...readOptions, images: fetched.byReference });
-    const report = withImageLimit(
+    const limited = withImageLimit(
       site.report,
       references.slice(references.length - fetched.overLimit),
       fetched.overLimit,
     );
+    // The other languages the review offers, each left-out language named where it was found.
+    const home = crawled.pages[0];
+    const languages = home
+      ? await languagesOnOffer(home, site.lang, fetching)
+      : { offers: [], langOf: new Map<string, string>() };
+    const report: ImportReport = {
+      ...limited,
+      leftOut: limited.leftOut.map((l) => {
+        const lang = l.reason === "language" && !l.lang && languages.langOf.get(l.detail ?? "");
+        return lang ? { ...l, lang } : l;
+      }),
+    };
 
     const created = await createSiteProject(
       db,
@@ -241,7 +255,12 @@ async function runImport(
           return key ? [[id, key]] : [];
         }),
       ),
-      pages: origins.map((o) => ({ url: new URL(o.path, homeUrl).href, pageId: o.pageId })),
+      pages: origins.map((o) => ({
+        url: new URL(o.path, homeUrl).href,
+        pageId: o.pageId,
+        alternates: o.alternates,
+      })),
+      languages: languages.offers,
     };
     db.update(imports)
       .set({

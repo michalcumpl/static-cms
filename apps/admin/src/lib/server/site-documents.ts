@@ -354,32 +354,46 @@ export function addLanguage(
     ...doc,
     nodes: { ...doc.nodes, [doc.document_id]: { ...doc.nodes[doc.document_id], lang } },
   };
+  db.transaction((tx) => createLanguage(tx, projectId, lang, userId, copy));
+  return { ok: true };
+}
+
+/**
+ * Inserts a language, hidden, with `document` as its first version (import-languages design
+ * decision 5), in the caller's transaction, and returns that version's ID. The caller checks the
+ * language is offered and new.
+ */
+export function createLanguage(
+  tx: Pick<Db, "insert">,
+  projectId: string,
+  lang: string,
+  userId: string | null,
+  document: unknown,
+): string {
   const documentId = newId("d");
   const versionId = newId("v");
   const version = randomUUID();
-  db.transaction((tx) => {
-    tx.insert(siteDocuments)
-      .values({
-        id: documentId,
-        projectId,
-        lang,
-        published: false,
-        version,
-        currentVersionId: versionId,
-      })
-      .run();
-    tx.insert(versions)
-      .values({
-        id: versionId,
-        documentId,
-        version,
-        document: copy,
-        createdAt: new Date(),
-        createdBy: userId,
-      })
-      .run();
-  });
-  return { ok: true };
+  tx.insert(siteDocuments)
+    .values({
+      id: documentId,
+      projectId,
+      lang,
+      published: false,
+      version,
+      currentVersionId: versionId,
+    })
+    .run();
+  tx.insert(versions)
+    .values({
+      id: versionId,
+      documentId,
+      version,
+      document,
+      createdAt: new Date(),
+      createdBy: userId,
+    })
+    .run();
+  return versionId;
 }
 
 /** Publishes or hides a language other than the primary. */

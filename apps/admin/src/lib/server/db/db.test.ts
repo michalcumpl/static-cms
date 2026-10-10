@@ -65,6 +65,11 @@ describe("openDatabase", () => {
     db.run(
       sql`insert into import_retries (id, import_id, kind, state, started_at) values ('rt_1', 'i_1', 'again', 'done', 0)`,
     );
+    // import-languages: the language a retry imports, none for the other kinds.
+    expect(db.get(sql`select kind, lang from import_retries`)).toEqual({
+      kind: "again",
+      lang: null,
+    });
     db.run(sql`delete from imports where id = 'i_1'`);
     expect(db.all(sql`select * from import_retries`)).toEqual([]);
   });

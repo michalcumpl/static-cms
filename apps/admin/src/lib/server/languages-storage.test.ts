@@ -6,6 +6,7 @@ import { demoSite } from "./demo";
 import { newId } from "./ids";
 import {
   addLanguage,
+  createLanguage,
   createProject,
   primaryLanguage,
   projectLanguages,
@@ -13,6 +14,7 @@ import {
   removeLanguage,
   saveSite,
   setLanguagePublished,
+  versionCount,
 } from "./site-documents";
 
 // biome-ignore lint/suspicious/noExplicitAny: tests edit nodes freely.
@@ -48,6 +50,23 @@ function edit(lang: string | undefined, change: (doc: Doc) => void) {
 }
 
 describe("project languages", () => {
+  it("creates a language from a given document, hidden, as its first version (import-languages)", () => {
+    const doc = structuredClone(documentOf()) as Doc & { document_id: string };
+    const site = doc.nodes[doc.document_id];
+    site.lang = "en";
+    site.name = "Kolín Bakery";
+    db.transaction((tx) => createLanguage(tx, projectId, "en", userId, doc));
+    expect(projectLanguages(db, projectId).map((l) => [l.lang, l.published])).toEqual([
+      ["cs", true],
+      ["en", false],
+    ]);
+    const english = readSite(db, projectId, "en");
+    expect((english?.document as Doc | undefined)?.nodes[doc.document_id].name).toBe(
+      "Kolín Bakery",
+    );
+    expect(versionCount(db, projectId)).toBe(2);
+  });
+
   it("are Czech, primary and published, for an existing project", () => {
     expect(projectLanguages(db, projectId)).toEqual([
       { lang: "cs", name: "Čeština", primary: true, published: true },

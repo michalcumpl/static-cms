@@ -51,14 +51,17 @@ export function redirectsFrom(earlier: readonly unknown[], current: unknown): Re
 /**
  * Redirects from imported pages' paths on the old site to their current addresses (site-import
  * design decision 10): only for pages that still exist, never for paths with a query, and never
- * for a path that is now a page's address. `skip` holds paths already redirected.
+ * for a path that is now a page's address. `skip` holds paths already redirected. `prefix` is the
+ * language's base path without its trailing slash (`/en`): the old paths are the whole old site's,
+ * so they are compared with the pages' addresses under it (import-languages).
  */
 export function redirectsFromOrigins(
   origins: readonly { pageId: string; path: string }[],
   current: unknown,
   skip: ReadonlySet<string> = new Set(),
+  prefix = "",
 ): Redirect[] {
-  const now = pageAddresses(current);
+  const now = new Map([...pageAddresses(current)].map(([id, address]) => [id, prefix + address]));
   const taken = new Set(now.values());
   const redirects = new Map<string, string>();
   for (const { pageId, path } of origins) {
@@ -112,9 +115,5 @@ export function earlierAddresses(
     .where(and(eq(pageOrigins.projectId, projectId), eq(pageOrigins.lang, lang)))
     .all();
   const skip = new Set(earlier.map((r) => r.from));
-  const imported = redirectsFromOrigins(origins, current, skip).map(({ from, to }) => ({
-    from,
-    to: prefix + to,
-  }));
-  return [...earlier, ...imported];
+  return [...earlier, ...redirectsFromOrigins(origins, current, skip, prefix)];
 }

@@ -16,6 +16,17 @@ describe("fixture sites", () => {
     expect(hasFixture("bakery", "/admin/")).toBe(false);
   });
 
+  it("the bakery's English version has its own pages, and isn't in the sitemap", () => {
+    for (const path of ["/en/", "/en/our-bread/", "/en/contact.html", "/en/wholesale/"]) {
+      const $ = cheerio.load(fixtureText("bakery", path));
+      expect($("html").attr("lang"), path).toBe("en");
+      expect($("title").text(), path).toContain("U Lípy Bakery");
+    }
+    expect(cheerio.load(fixtureText("bakery", "/en/"))("details").length).toBe(3);
+    expect(hasFixture("bakery", "/images/velkoobchod.jpg")).toBe(true);
+    expect(fixtureText("bakery", "/sitemap.xml")).not.toContain("/en/our-bread/");
+  });
+
   it("the agency's pages parse, and two of its cards link to pages it doesn't serve", () => {
     const pages = ["/", "/zajezdy/chorvatsko/", "/zajezdy/italie/", "/zajezdy/recko/"];
     for (const path of [...pages, "/zajezdy/rakousko/", "/kontakt/"]) {

@@ -27,7 +27,7 @@ describe("crawling a site", () => {
     ]);
     expect(result.leftOut).toEqual([
       { reason: "disallowed", page: "/admin/" },
-      { reason: "language", page: "/en/", detail: `${origin}/en/` },
+      { reason: "language", page: "/en/", detail: `${origin}/en/`, lang: "en" },
       { reason: "unreachable", page: "/cenik.pdf", detail: "404" },
     ]);
     expect(server?.hits.get("/admin/")).toBeUndefined();

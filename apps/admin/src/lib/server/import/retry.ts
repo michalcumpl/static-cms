@@ -10,6 +10,7 @@ import {
   readPagesForRetry,
 } from "@webmio/import";
 import { blockFactory, escapeInline, type NodeType, type Weekday } from "@webmio/model";
+import { languageName } from "@webmio/render";
 import { upgradeSite } from "@webmio/templates";
 import { and, desc, eq } from "drizzle-orm";
 import { sayIn } from "../../i18n/translate";
@@ -28,10 +29,11 @@ import {
 } from "../db/schema";
 import { newId } from "../ids";
 import { mediaItem, uploadImage } from "../media";
-import { primaryLanguage, readSite, saveSite } from "../site-documents";
+import { primaryLanguage, projectLanguages, readSite, saveSite } from "../site-documents";
 import { fetchPage, siteRobots, withStyles } from "./crawl";
 import { fetchImages } from "./images";
 import { IMPORT_DEADLINE_MS, onImportQueue, projectImport } from "./job";
+import { runLanguageImport } from "./language";
 import type { SafeFetchOptions } from "./safe-fetch";
 
 // Retrying what an import left out (import-review-actions design decisions 2 and 3): fetch what
@@ -82,13 +84,27 @@ export function startRetry(
   userId: string,
   kind: RetryKind,
   options: RetryOptions = {},
+  /** For `language`: the language to import. */
+  lang = "",
 ): StartRetryResult {
   const imp = projectImport(db, projectId);
   if (imp?.state !== "done") return { ok: false, message: said("server.import.retryNothing") };
   if (imp.reviewDismissed) return { ok: false, message: said("server.import.retryClosed") };
-  const offers = retryOffers(imp.retryState);
-  if (kind === "again" ? !offers.again : offers.next === 0) {
-    return { ok: false, message: said("server.import.retryNothing") };
+  if (kind === "language") {
+    if (projectLanguages(db, projectId).some((l) => l.lang === lang)) {
+      return {
+        ok: false,
+        message: said("server.languages.alreadyHas", { language: languageName(lang) }),
+      };
+    }
+    if (!imp.retryState?.languages?.some((l) => l.lang === lang)) {
+      return { ok: false, message: said("server.import.retryNothing") };
+    }
+  } else {
+    const offers = retryOffers(imp.retryState);
+    if (kind === "again" ? !offers.again : offers.next === 0) {
+      return { ok: false, message: said("server.import.retryNothing") };
+    }
   }
   const running = db
     .select({ id: importRetries.id })
@@ -104,20 +120,25 @@ export function startRetry(
       importId: imp.id,
       userId,
       kind,
+      lang: kind === "language" ? lang : null,
       state: "running",
       progress: { phase: "pages", done: 0, total: 1 },
       startedAt: new Date(),
     })
     .run();
-  onImportQueue(() => runRetry(db, retryId, imp.id, kind, options));
+  onImportQueue(() =>
+    kind === "language"
+      ? runLanguageImport(db, retryId, imp.id, lang, options)
+      : runRetry(db, retryId, imp.id, kind, options),
+  );
   return { ok: true, retryId };
 }
 
-type Node = { id: string; type: string; [key: string]: unknown };
-type Doc = { document_id: string; nodes: Record<string, Node> };
-type List = { nodes: string[]; marks: unknown[]; annotations: unknown[] };
+export type Node = { id: string; type: string; [key: string]: unknown };
+export type Doc = { document_id: string; nodes: Record<string, Node> };
+export type List = { nodes: string[]; marks: unknown[]; annotations: unknown[] };
 
-const listOf = (node: Node | undefined, field: string): List => {
+export const listOf = (node: Node | undefined, field: string): List => {
   const value = node?.[field] as List | undefined;
   if (value && Array.isArray(value.nodes)) return value;
   const created = { nodes: [], marks: [], annotations: [] };
@@ -126,11 +147,11 @@ const listOf = (node: Node | undefined, field: string): List => {
 };
 
 /** A node list's IDs, without adding the list when the node has none. */
-const idsOf = (node: Node | undefined, field: string): string[] =>
+export const idsOf = (node: Node | undefined, field: string): string[] =>
   (node?.[field] as List | undefined)?.nodes ?? [];
 
 /** The days the main location's hours name: a schedule naming them shows the hours. */
-function hoursDays(doc: Doc, site: Node): Set<Weekday> {
+export function hoursDays(doc: Doc, site: Node): Set<Weekday> {
   const business = doc.nodes[String(site.business)];
   const location = doc.nodes[idsOf(business, "locations")[0] ?? ""];
   return new Set(
@@ -142,7 +163,7 @@ function hoursDays(doc: Doc, site: Node): Set<Weekday> {
 }
 
 /** New node IDs the document doesn't have, tagged so they never meet an editor's. */
-function idMaker(doc: Doc): (type: NodeType) => string {
+export function idMaker(doc: Doc): (type: NodeType) => string {
   const tag = Math.random().toString(36).slice(2, 8);
   let n = 0;
   return (type) => {
@@ -154,7 +175,12 @@ function idMaker(doc: Doc): (type: NodeType) => string {
 }
 
 /** A node and the nodes it owns (through node lists and marks), except `keep`. */
-function owned(doc: Doc, id: string, keep: ReadonlySet<string>, out = new Set<string>()) {
+export function owned(
+  doc: Doc,
+  id: string,
+  keep: ReadonlySet<string>,
+  out = new Set<string>(),
+): Set<string> {
   const node = doc.nodes[id];
   if (!node || out.has(id) || keep.has(id)) return out;
   out.add(id);
@@ -463,10 +489,16 @@ async function runRetry(
     const triedImages = new Set(tried.map((r) => r.candidates[0] ?? r.id));
     const kept = (report?.leftOut ?? []).filter(
       (l) =>
-        !(kind === "again" && l.reason === "unreachable" && triedPaths.has(l.page ?? "")) &&
-        !(kind === "again" && l.reason === "image" && triedImages.has(l.detail ?? "")) &&
-        !(kind === "again" && l.reason === "images-over-limit") &&
-        !(kind === "next" && l.reason === "over-limit"),
+        // What another language left out isn't retried (import-languages).
+        !(
+          kind === "again" &&
+          !l.lang &&
+          l.reason === "unreachable" &&
+          triedPaths.has(l.page ?? "")
+        ) &&
+        !(kind === "again" && !l.lang && l.reason === "image" && triedImages.has(l.detail ?? "")) &&
+        !(kind === "again" && l.reason === "images-over-limit" && !l.lang) &&
+        !(kind === "next" && l.reason === "over-limit" && !l.lang),
     );
     const reported = new Set<string>();
     const nextLeftOut = [...kept, ...leftOut].filter((item) => {

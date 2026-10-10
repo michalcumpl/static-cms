@@ -68,7 +68,7 @@ An accepted save SHALL change the project's document and add its version in one 
 - **THEN** exactly one is accepted and the other is rejected as a conflict
 
 ### Requirement: Saved document is the source for preview and export
-A project's preview and its ZIP download SHALL use the project's saved document. They SHALL still require a fully valid document and SHALL show the validation problems instead of output when it is not.
+A project's preview and its ZIP download SHALL use the project's saved document. They SHALL still require a fully valid document and SHALL show the validation problems instead of output when it is not. When the project has more than one language, the preview SHALL name each problem's language, and each problem SHALL link to where it is fixed in that language's editor or section.
 
 #### Scenario: Preview shows saved edits
 - **WHEN** a member changes the hero heading and saves
@@ -77,6 +77,11 @@ A project's preview and its ZIP download SHALL use the project's saved document.
 #### Scenario: Preview with site-rule problems
 - **WHEN** the saved document has an empty heading
 - **THEN** the project's preview shows the problems instead of the page
+
+#### Scenario: A problem in a hidden language
+- **WHEN** the hidden Czech language's home photo has no description
+- **THEN** the preview shows the problem as Czech's, linking to that image in the Czech editor
+
 
 ### Requirement: Upgrading stored documents
 Whenever the server reads a stored document (for the editor, the preview, the ZIP download, or the import of the earlier working copy), it SHALL upgrade a version-1 document to version 2 before validating or returning it. The stored document and its versions SHALL NOT be rewritten by reading; the upgraded document SHALL be stored by the next accepted save. The version value returned with an upgraded document SHALL be the stored version, so the next save based on it is accepted.

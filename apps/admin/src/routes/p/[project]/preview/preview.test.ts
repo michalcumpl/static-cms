@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { siteDocuments, versions } from "$lib/server/db/schema";
 import { listLibrary, removeFromLibrary } from "$lib/server/media";
-import { readSite, saveSite } from "$lib/server/site-documents";
+import { addLanguage, readSite, saveSite } from "$lib/server/site-documents";
 import { thrownBy, useTestProject } from "$lib/server/test-project";
 import { GET } from "./[...path]/+server";
 
@@ -168,6 +168,20 @@ describe("/p/[project]/preview/[...path]", () => {
     expect(html).toContain("<code>empty-heading</code>");
     expect(html).toContain(`href="/p/${project().projectId}/edit/"`);
     expect(html).not.toContain("<script>");
+  });
+
+  it("A problem in a hidden language: named by it, linking to its place in its editor", async () => {
+    const { db, projectId, owner } = project();
+    addLanguage(db, projectId, "en", owner.id);
+    const english = readSite(db, projectId, "en");
+    if (!english) throw new Error("no English");
+    const doc = structuredClone(english.document) as Doc;
+    doc.nodes.sub_about.content.content = "";
+    saveSite(db, projectId, owner.id, doc, english.version, "en");
+    const response = await get("");
+    expect(response.status).toBe(422);
+    const html = await response.text();
+    expect(html).toMatch(/<code>empty-heading<\/code> <a href="[^"]*lang=en[^"]*">English: /);
   });
 
   it("renders a project stored in the version-1 format from the upgraded document", async () => {

@@ -1224,6 +1224,20 @@ export const cs: Messages = {
         "{count} obrázků je v knihovně médií: jejich stránky se od převodu změnily, umístěte je sami.",
     },
     retryNothingNew: "Nic nového nepřišlo; co dál selhává, je uvedeno níže.",
+    language: "Jazyk",
+    otherLanguages: "Další jazyky webu",
+    languageVersion: "{language}, nepřevedeno: {address}",
+    importLanguage: "Převést jazykovou verzi {language}",
+    importLanguageHint:
+      "Přidá jazyk {language}, skrytý, dokud ho nezveřejníte. Jeho stránky se spárují s odpovídajícími stránkami tady; firemní údaje, otevírací doba a vzhled zůstanou ve všech jazycích stejné.",
+    importingLanguage: "Převádíme jazyk {language}…",
+    languageAdded: {
+      one: "Jazyk {language} přibyl s {count} stránkou, skrytý, dokud ho nezveřejníte.",
+      few: "Jazyk {language} přibyl s {count} stránkami, skrytý, dokud ho nezveřejníte.",
+      other: "Jazyk {language} přibyl s {count} stránkami, skrytý, dokud ho nezveřejníte.",
+    },
+    checkLanguages: "Zkontrolujte ho v Jazycích",
+    languageOverLimit: "{language}: až {detail} dalších stránek nad limit 20.",
     decorative: {
       one: "Označit obrázek jako dekorativní",
       few: "Označit tyto obrázky jako dekorativní ({count})",

@@ -1185,6 +1185,19 @@ export const en = {
         "{count} images went to your media library: their pages changed since the import, so place them yourself.",
     },
     retryNothingNew: "Nothing new arrived; what still fails is listed below.",
+    language: "Language",
+    otherLanguages: "Other languages of the website",
+    languageVersion: "{language}, not imported: {address}",
+    importLanguage: "Import the {language} version",
+    importLanguageHint:
+      "Adds {language} as a new language, hidden until you publish it. Its pages are paired with the matching pages here; the business details, opening hours and look stay the same in every language.",
+    importingLanguage: "Importing {language}…",
+    languageAdded: {
+      one: "{language} added with {count} page, hidden until you publish it.",
+      other: "{language} added with {count} pages, hidden until you publish it.",
+    },
+    checkLanguages: "Check it in Languages",
+    languageOverLimit: "{language}: up to {detail} more pages over the limit of 20.",
     decorative: {
       one: "Mark this image as decorative",
       other: "Mark these images as decorative ({count})",

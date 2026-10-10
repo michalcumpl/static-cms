@@ -16,6 +16,7 @@ export const GET: RequestHandler = (event) => {
       ? {
           id: row.id,
           kind: row.kind,
+          lang: row.lang,
           state: row.state,
           progress: row.progress,
           error: row.error,

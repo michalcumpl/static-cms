@@ -1,7 +1,9 @@
+import { languageName } from "@webmio/render";
+import { problemHref } from "$lib/panel/problems";
 import { projectPaths } from "$lib/project-paths";
 import { notFound, requireMember } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
-import { servePreview } from "$lib/server/preview";
+import { problemsPage, servePreview } from "$lib/server/preview";
 import { readLanguages } from "$lib/server/site-documents";
 import type { RequestHandler } from "./$types";
 
@@ -19,6 +21,18 @@ export const GET: RequestHandler = async (event) => {
   const sites = readLanguages(getDb(), params.project, "all");
   if (sites.length === 0) notFound(event);
   const paths = projectPaths(params.project);
+  // Each language's errors, named by it and leading to where they're fixed (import-languages).
+  const errors = sites.flatMap((site) => {
+    const where = projectPaths(params.project, site.primary ? undefined : site.lang);
+    return site.problems
+      .filter((p) => p.severity === "error")
+      .map((p) => ({
+        ...p,
+        message: sites.length > 1 ? `${languageName(site.lang)}: ${p.message}` : p.message,
+        href: problemHref(where, site.document as never, p),
+      }));
+  });
+  if (errors.length > 0) return problemsPage(errors, paths.edit());
   return servePreview(
     params.project,
     sites.map(({ lang, document, primary }) => ({ lang, document, primary })),

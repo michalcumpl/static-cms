@@ -251,3 +251,42 @@ test("A finished import: its project leads to the review until it is dismissed",
   await page.goto("/");
   await expect(card.getByRole("link", { name: "Import to review" })).toHaveCount(0);
 });
+
+test("Import the English version: its pages listed, English hidden, the Czech-only pages missing", async ({
+  page,
+}) => {
+  await importBakery(page);
+  const review = page.url();
+  const leftOut = page.getByRole("region", { name: "What was left out" });
+  await expect(leftOut.getByText(/English, not imported: .*\/en\//)).toBeVisible();
+  await leftOut.getByRole("button", { name: "Import the English version" }).click();
+  await expect(
+    page.getByText("English added with 4 pages, hidden until you publish it."),
+  ).toBeVisible({ timeout: 30_000 });
+  const table = page.getByRole("table", { name: "Pages, with their old and new addresses" });
+  await expect(
+    table.getByRole("row", { name: /Contact English \/en\/contact\.html \/en\/contact\// }),
+  ).toBeVisible();
+  await expect(table.getByRole("row", { name: /Kontakt Čeština \/kontakt\.html/ })).toBeVisible();
+  // English is no longer offered.
+  await expect(page.getByRole("button", { name: "Import the English version" })).toHaveCount(0);
+
+  // Its problems are listed as English ones, leading into the English editor, and marking the
+  // imported images decorative covers its photo too.
+  const todo = page.getByRole("region", { name: "Before you publish" });
+  await expect(
+    todo.getByRole("link", { name: /^English: An image on "Wholesale" needs a description/ }),
+  ).toHaveAttribute("href", /lang=en/);
+  await todo.getByRole("button", { name: /Mark these images as decorative/ }).click();
+  await expect(todo.getByText(/needs a description/)).toHaveCount(0);
+
+  await page.goto(review.replace(/import$/, "website/languages"));
+  const row = page
+    .getByRole("region", { name: "Languages" })
+    .getByRole("listitem")
+    .filter({ hasText: "English" })
+    .first();
+  await expect(row).toContainText("Hidden");
+  await expect(row.getByRole("link", { name: "Letošní akce" })).toBeVisible();
+  await expect(row).toContainText("missing: copy it from Čeština");
+});

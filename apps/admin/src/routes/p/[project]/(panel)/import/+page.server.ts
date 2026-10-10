@@ -1,4 +1,5 @@
 import { fail, redirect } from "@sveltejs/kit";
+import { languageName } from "@webmio/render";
 import { said, sayIn } from "$lib/i18n";
 import { groupProblems, problemHref } from "$lib/panel/problems";
 import { projectPaths } from "$lib/project-paths";
@@ -7,12 +8,17 @@ import { getDb } from "$lib/server/app";
 import { fixHeadingLevels, headingLevelFixes } from "$lib/server/heading-levels";
 import {
   markImportedImagesDecorative,
-  undescribedImportedImages,
+  undescribedImportedByLanguage,
 } from "$lib/server/import/decorative";
 import { dismissReview, projectImport } from "$lib/server/import/job";
 import { projectRetry, retryOffers, startRetry } from "$lib/server/import/retry";
 import { testHosts } from "$lib/server/import/test-hosts";
-import { readSite } from "$lib/server/site-documents";
+import {
+  primaryLanguage,
+  projectLanguages,
+  readLanguages,
+  readSite,
+} from "$lib/server/site-documents";
 import type { Actions, PageServerLoad } from "./$types";
 
 /**
@@ -24,26 +30,66 @@ export const load: PageServerLoad = async ({ params, locals, parent }) => {
   const row = projectImport(getDb(), params.project);
   const site = readSite(getDb(), params.project);
   if (!row?.report || !site) notFound({ locals });
-  const paths = projectPaths(params.project);
-  // biome-ignore lint/suspicious/noExplicitAny: the saved document, read to locate problems.
-  const doc = site.document as any;
   const retry = projectRetry(getDb(), params.project);
+  // Other languages to import: those the old site has and the project doesn't (import-languages).
+  const has = new Set(projectLanguages(getDb(), params.project).map((l) => l.lang));
+  const languages = row.reviewDismissed
+    ? []
+    : (row.retryState?.languages ?? [])
+        .filter((l) => !has.has(l.lang))
+        .map((l) => ({ ...l, name: languageName(l.lang) }));
+  const primary = primaryLanguage(getDb(), params.project) ?? "";
+  const languageSites = readLanguages(getDb(), params.project, "all");
+  const several = languageSites.length > 1;
+  const named = new Set([
+    primary,
+    ...row.report.pages.flatMap((p) => p.lang ?? []),
+    ...row.report.leftOut.flatMap((l) => l.lang ?? []),
+  ]);
   return {
     report: row.report,
+    primaryLang: primary,
+    /** Each language the report names, by its own name (English, Deutsch). */
+    languageNames: Object.fromEntries([...named].map((lang) => [lang, languageName(lang)])),
     dismissed: row.reviewDismissed,
     // What a retry can do (import-review-actions spec, "Retrying what was left out").
-    offers: row.reviewDismissed ? { again: false, next: 0 } : retryOffers(row.retryState),
+    offers: {
+      ...(row.reviewDismissed ? { again: false, next: 0 } : retryOffers(row.retryState)),
+      languages,
+    },
     retry: retry
-      ? { state: retry.state, progress: retry.progress, error: retry.error, added: retry.added }
+      ? {
+          kind: retry.kind,
+          lang: retry.lang,
+          state: retry.state,
+          progress: retry.progress,
+          error: retry.error,
+          added: retry.added,
+        }
       : null,
-    decorative: undescribedImportedImages(getDb(), params.project).length,
-    headingLevels: headingLevelFixes(getDb(), params.project),
-    // The same problem on many pages is one item (import-review-actions).
-    problems: groupProblems(
-      paths,
-      doc,
-      site.problems.map((problem) => ({ ...problem, href: problemHref(paths, doc, problem) })),
+    decorative: undescribedImportedByLanguage(getDb(), params.project).reduce(
+      (count, l) => count + l.ids.length,
+      0,
     ),
+    headingLevels: headingLevelFixes(getDb(), params.project),
+    // The same problem on many pages is one item (import-review-actions), each language's on
+    // their own, leading into that language (import-languages design decision 7).
+    problems: languageSites.flatMap((language) => {
+      const lang = language.primary ? undefined : language.lang;
+      const where = projectPaths(params.project, lang);
+      // biome-ignore lint/suspicious/noExplicitAny: the saved document, read to locate problems.
+      const document = language.document as any;
+      const name = several ? languageName(language.lang) : undefined;
+      return groupProblems(
+        where,
+        document,
+        language.problems.map((problem) => ({
+          ...problem,
+          message: name ? `${name}: ${problem.message}` : problem.message,
+          href: problemHref(where, document, problem),
+        })),
+      ).map((group) => (name ? { ...group, language: name } : group));
+    }),
   };
 };
 
@@ -63,6 +109,22 @@ export const actions: Actions = {
       locale: event.locals.locale,
       allowHosts: testHosts(),
     });
+    if (!started.ok) return fail(409, { message: sayIn(event.locals.locale, started.message) });
+    return { started: true };
+  },
+  /** Starts importing another language version of the old site: `lang`. */
+  importLanguage: async (event) => {
+    const { user } = requireMember(event, event.params.project);
+    const form = await event.request.formData();
+    const lang = String(form.get("lang") ?? "");
+    const started = startRetry(
+      getDb(),
+      event.params.project,
+      user.id,
+      "language",
+      { locale: event.locals.locale, allowHosts: testHosts() },
+      lang,
+    );
     if (!started.ok) return fail(409, { message: sayIn(event.locals.locale, started.message) });
     return { started: true };
   },

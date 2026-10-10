@@ -63,11 +63,21 @@ function respond(bytes: Uint8Array, type: string, status: number, banner?: strin
 const ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, (c) => ESCAPES[c] ?? c);
 
-/** Shown instead of the site while the saved document can't be published. */
-export function problemsPage(problems: Problem[], editorHref: string): Response {
+/**
+ * Shown instead of the site while the saved document can't be published; a problem with an
+ * `href` links to where it is fixed.
+ */
+export function problemsPage(
+  problems: readonly (Problem & { href?: string })[],
+  editorHref: string,
+): Response {
   const items = problems
     .filter((p) => p.severity === "error")
-    .map((p) => `<li><code>${escapeHtml(p.code)}</code> ${escapeHtml(p.message)}</li>`)
+    .map((p) => {
+      const message = escapeHtml(p.message);
+      const text = p.href ? `<a href="${escapeHtml(p.href)}">${message}</a>` : message;
+      return `<li><code>${escapeHtml(p.code)}</code> ${text}</li>`;
+    })
     .join("\n");
   const html = `<!doctype html>
 <html lang="en">

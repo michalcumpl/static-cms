@@ -1,0 +1,1 @@
+ALTER TABLE `import_retries` ADD `lang` text;

@@ -1,4 +1,5 @@
 import {
+  absoluteCssUrls,
   type LeftOut,
   looksBuiltByScript,
   menuLinks,
@@ -112,7 +113,7 @@ export async function fetchPage(
   // Only the home page's language is imported (site-import spec, "Language").
   const lang = pageLanguage(html);
   if (site.homeLang && lang && lang !== site.homeLang) {
-    return left({ reason: "language", page, detail: final.href });
+    return left({ reason: "language", page, detail: final.href, lang });
   }
   if (looksBuiltByScript(html)) return left({ reason: "script-built", page });
   return { ok: true, url: final, html };
@@ -131,7 +132,9 @@ export async function withStyles(
     for (const url of linked) {
       if (!stylesheets.has(url) && stylesheets.size < MAX_STYLESHEETS) {
         const result = await safeFetch(url, "text", options);
-        stylesheets.set(url, result.ok ? decodeText(result.body, result.contentType) : "");
+        // Its addresses are relative to it, not to the pages using it.
+        const text = result.ok ? decodeText(result.body, result.contentType) : "";
+        stylesheets.set(url, absoluteCssUrls(text, url));
       }
       css.push(stylesheets.get(url) ?? "");
     }

@@ -22,17 +22,41 @@ const report = $derived(data.report);
 const allProblems = $derived(data.problems.flatMap((g) => g.problems));
 const errors = $derived(allProblems.filter((p) => p.severity === "error"));
 
+const nameOf = (lang: string) => data.languageNames[lang] ?? lang;
+/** Whether the report has pages of more than one language (import-languages). */
+const multilingual = $derived(report.pages.some((p) => p.lang));
+/** The other languages of the old site, one item each: its home's when the report has it. */
+const languageItems = $derived.by(() => {
+  const versions = new Map<string, LeftOut>();
+  for (const item of report.leftOut) {
+    if (item.reason !== "language") continue;
+    const key = item.lang || item.detail || "";
+    const known = versions.get(key);
+    if (!known || (known.page && !item.page)) versions.set(key, item);
+  }
+  return [...versions].map(([key, item]) => ({
+    key,
+    item,
+    offer: data.offers.languages.find((o) => o.lang === item.lang),
+  }));
+});
 /** What was left out, page by page: the site-wide ones first. */
 const leftOutByPage = $derived.by(() => {
   const groups = new Map<string, LeftOut[]>();
   for (const item of report.leftOut) {
+    if (item.reason === "language") continue;
     const key = item.page ?? "";
     groups.set(key, [...(groups.get(key) ?? []), item]);
   }
   return [...groups].sort(([a], [b]) => (a === "" ? -1 : b === "" ? 1 : 0));
 });
 const reason = (item: LeftOut) =>
-  i18n.t(`imports.reason.${item.reason}` as MessageKey, { detail: item.detail ?? "" });
+  item.reason === "over-limit" && item.lang
+    ? i18n.t("imports.languageOverLimit", {
+        language: nameOf(item.lang),
+        detail: item.detail ?? "",
+      })
+    : i18n.t(`imports.reason.${item.reason}` as MessageKey, { detail: item.detail ?? "" });
 // A running retry's progress, polled every second; the page's data reloads when it ends
 // (import-review-actions design decision 5).
 let live = $state<(typeof data)["retry"] | undefined>();
@@ -67,9 +91,15 @@ const fraction = $derived.by(() => {
   if (!progress || progress.phase === "building" || progress.total === 0) return undefined;
   return progress.done / progress.total;
 });
+/** What a running retry is: trying again, or importing a language. */
+const doing = $derived(
+  retry?.kind === "language" && retry.lang
+    ? i18n.t("imports.importingLanguage", { language: nameOf(retry.lang) })
+    : i18n.t("imports.retrying"),
+);
 const step = $derived.by(() => {
   const progress = retry?.progress;
-  if (!progress) return i18n.t("imports.retrying");
+  if (!progress) return "";
   if (progress.phase === "pages")
     return i18n.t("imports.pages", { done: progress.done, total: progress.total });
   if (progress.phase === "images")
@@ -78,7 +108,7 @@ const step = $derived.by(() => {
 });
 /** What the last retry added, as sentences. */
 const added = $derived.by(() => {
-  const result = retry?.state === "done" ? retry.added : null;
+  const result = retry?.state === "done" && retry.kind !== "language" ? retry.added : null;
   if (!result) return [];
   const said = [
     result.pages ? i18n.t("imports.retryPages", { count: result.pages }) : "",
@@ -87,7 +117,19 @@ const added = $derived.by(() => {
   ].filter(Boolean);
   return said.length ? said : [i18n.t("imports.retryNothingNew")];
 });
+/** The language a finished language import added, with its pages. */
+const languageAdded = $derived(
+  retry?.state === "done" && retry.kind === "language" && retry.lang
+    ? i18n.t("imports.languageAdded", {
+        language: nameOf(retry.lang),
+        count: retry.added?.pages ?? 0,
+      })
+    : "",
+);
 const formMessage = $derived(form && "message" in form ? form.message : undefined);
+/** A page's new address, under its language's path when it isn't the primary's. */
+const newAddress = (page: { slug: string; lang?: string }) =>
+  `${page.lang ? `/${page.lang}` : ""}${page.slug ? `/${page.slug}/` : "/"}`;
 
 const found = $derived(
   (["name", "phone", "email", "address", "hours"] as const).map((key) => ({
@@ -119,11 +161,13 @@ const found = $derived(
   {/if}
   {#if running}
     <Notice kind="info">
-      <span role="status">{i18n.t("imports.retrying")} {step}</span>
-      <div class="retry-bar"><ProgressBar value={fraction} label={i18n.t("imports.retrying")} /></div>
+      <span role="status">{doing} {step}</span>
+      <div class="retry-bar"><ProgressBar value={fraction} label={doing} /></div>
     </Notice>
   {:else if retry?.state === "failed"}
     <Notice kind="problem">{retry.error}</Notice>
+  {:else if languageAdded}
+    <Notice kind="success">{languageAdded} <a href={paths.websiteLanguages}>{i18n.t("imports.checkLanguages")}</a></Notice>
   {:else if added.length > 0}
     <Notice kind="success">{added.join(" ")}</Notice>
   {/if}
@@ -145,11 +189,21 @@ const found = $derived(
     <table>
       <caption>{i18n.t("imports.pagesCaption")}</caption>
       <thead>
-        <tr><th scope="col">{i18n.t("imports.page")}</th><th scope="col">{i18n.t("imports.oldAddress")}</th><th scope="col">{i18n.t("imports.newAddress")}</th></tr>
+        <tr>
+          <th scope="col">{i18n.t("imports.page")}</th>
+          {#if multilingual}<th scope="col">{i18n.t("imports.language")}</th>{/if}
+          <th scope="col">{i18n.t("imports.oldAddress")}</th>
+          <th scope="col">{i18n.t("imports.newAddress")}</th>
+        </tr>
       </thead>
       <tbody>
         {#each report.pages as page (page.oldPath)}
-          <tr><td>{page.title}</td><td><code>{page.oldPath}</code></td><td><code>{page.slug ? `/${page.slug}/` : "/"}</code></td></tr>
+          <tr>
+            <td>{page.title}</td>
+            {#if multilingual}<td>{nameOf(page.lang ?? data.primaryLang)}</td>{/if}
+            <td><code>{page.oldPath}</code></td>
+            <td><code>{newAddress(page)}</code></td>
+          </tr>
         {/each}
       </tbody>
     </table>
@@ -175,6 +229,30 @@ const found = $derived(
           {/if}
         </div>
         {#if data.offers.again}<p class="hint">{i18n.t("imports.tryAgainHint")}</p>{/if}
+      {/if}
+      {#if languageItems.length > 0}
+        <h4>{i18n.t("imports.otherLanguages")}</h4>
+        <ul class="left-out">
+          {#each languageItems as { key, item, offer } (key)}
+            <li>
+              {item.lang
+                ? i18n.t("imports.languageVersion", {
+                    language: nameOf(item.lang),
+                    address: offer?.url ?? item.detail ?? "",
+                  })
+                : reason(item)}
+              {#if offer}
+                <form method="POST" action="?/importLanguage" class="language">
+                  <input type="hidden" name="lang" value={offer.lang} />
+                  <Button type="submit" icon="download" disabled={running}>
+                    {i18n.t("imports.importLanguage", { language: offer.name })}
+                  </Button>
+                  <p class="hint">{i18n.t("imports.importLanguageHint", { language: offer.name })}</p>
+                </form>
+              {/if}
+            </li>
+          {/each}
+        </ul>
       {/if}
       {#each leftOutByPage as [page, items] (page)}
         <h4>{page ? i18n.t("imports.onPage", { page }) : i18n.t("imports.wholeSite")}</h4>
@@ -218,7 +296,7 @@ const found = $derived(
               <a href={group.href}>{group.problems[0]?.message}</a>
             {:else}
               {#if group.code === "no-description"}
-                <a href={group.href}>{i18n.t("imports.noDescriptionGroup", { count: group.problems.length })}</a>
+                <a href={group.href}>{group.language ? `${group.language}: ` : ""}{i18n.t("imports.noDescriptionGroup", { count: group.problems.length })}</a>
               {/if}
               <details>
                 <summary>
@@ -258,6 +336,14 @@ const found = $derived(
     flex-wrap: wrap;
     gap: var(--ui-space-2);
     margin-bottom: var(--ui-space-5);
+  }
+
+  .language {
+    margin: var(--ui-space-2) 0 var(--ui-space-3);
+  }
+
+  .language .hint {
+    margin-top: var(--ui-space-2);
   }
 
   .retry-bar {

@@ -1,19 +1,30 @@
 import {
   type BlockInput,
   blockFactory,
+  blocks,
+  escapeInline,
   type ImageInput,
   type NodeType,
   slugify,
   uniqueSlug,
   type Weekday,
 } from "@webmio/model";
+import { STANDARD } from "@webmio/templates";
 import { load } from "cheerio";
 import { oldPath, pageKey, sameSite, withoutFragment } from "./addresses.js";
 import { readPage } from "./blocks.js";
+import { readBusiness } from "./business.js";
 import { collapse } from "./content.js";
-import { ImageCollector, type ImageReference } from "./images.js";
+import { candidateList, ImageCollector, type ImageReference } from "./images.js";
 import type { ImportedPageSummary, LeftOut } from "./report.js";
-import { pageTitle, type SourcePage, segmentBlocks, slugFromPath } from "./site.js";
+import {
+  footerLogos,
+  homeImages,
+  pageTitle,
+  type SourcePage,
+  segmentBlocks,
+  slugFromPath,
+} from "./site.js";
 import { externalTarget } from "./text.js";
 
 // Pages read for a retry of an import (import-review-actions design decision 3): the pages the
@@ -46,6 +57,18 @@ export interface RetryPagesOptions {
   lang: string;
   /** The days the main location's hours name: a schedule naming them shows the hours. */
   hoursDays?: ReadonlySet<Weekday>;
+  /**
+   * For another language (import-languages design decision 4): the FAQ items a page's N-th
+   * question block translates, in order, or undefined to make its questions text. With it, no
+   * FAQ items are made: the questions that exist are the primary language's.
+   */
+  questions?: (url: string, index: number, count: number) => readonly string[] | undefined;
+  /**
+   * The home page among the sources, for another language: titled `title`, its slug from that,
+   * and a hero with the site's name and description and the page's first photo, as the import
+   * makes the home page.
+   */
+  home?: { url: string; title: string; heading: string; text: string };
 }
 
 export interface RetryPage {
@@ -57,6 +80,8 @@ export interface RetryPage {
   nodes: Node[];
   /** The FAQ items the page's questions became, for the FAQ collection. */
   questions: string[];
+  /** Existing FAQ items in this language's words (with `questions`), to replace theirs. */
+  translated: Node[];
 }
 
 export interface RetryPages {
@@ -78,6 +103,7 @@ export function readPagesForRetry(
   options: RetryPagesOptions,
 ): RetryPages {
   const homeUrl = new URL(options.homeUrl);
+  const home = options.home ? new URL(options.home.url) : undefined;
   const taken = [...options.takenSlugs];
   const targets = new Map<string, { pageId: string; slug: string }>();
   for (const [address, page] of options.knownPages) targets.set(pageKey(new URL(address)), page);
@@ -87,15 +113,21 @@ export function readPagesForRetry(
     const url = withoutFragment(new URL(source.url));
     if (source.existing) {
       targets.set(pageKey(url), source.existing);
-      return { source, url, ...source.existing };
+      return { source, url, isHome: false, ...source.existing };
     }
+    const isHome = home !== undefined && pageKey(url) === pageKey(home);
     const h1 = collapse(load(source.html)("h1").first().text());
-    const title = pageTitle(h1, source.html, options.siteName) || options.siteName;
-    const slug = uniqueSlug(slugFromPath(url) || slugify(title) || "stranka", taken);
+    const title = isHome
+      ? (options.home?.title ?? "")
+      : pageTitle(h1, source.html, options.siteName) || options.siteName;
+    const slug = uniqueSlug(
+      (isHome ? "" : slugFromPath(url)) || slugify(title) || "stranka",
+      taken,
+    );
     taken.push(slug);
     const page = { pageId: options.newId("page"), slug };
     targets.set(pageKey(url), page);
-    return { source, url, title, ...page };
+    return { source, url, title, isHome, ...page };
   });
   const bySlug = new Map([...targets.values()].map((t) => [t.slug, t.pageId]));
 
@@ -106,7 +138,7 @@ export function readPagesForRetry(
     return src ? { src, alt } : undefined;
   };
   const leftOut: LeftOut[] = [];
-  const pages = read.map(({ source, url, title, pageId, slug }): RetryPage => {
+  const pages = read.map(({ source, url, title, isHome, pageId, slug }): RetryPage => {
     const content = readPage(source.html, {
       ctx: {
         base: url,
@@ -118,11 +150,22 @@ export function readPagesForRetry(
       },
       images,
       css: source.css,
-      hero: false,
+      hero: isHome,
       page: oldPath(url),
       hoursDays: options.hoursDays,
     });
     leftOut.push(...content.leftOut);
+    // The home page's photo filling a panel and its footer's logos, as the import reads them.
+    let backdropRef: string | undefined;
+    let awards: ReturnType<typeof footerLogos>;
+    if (isHome && options.home) {
+      const business = readBusiness([source], options.lang, []);
+      const { logoCandidates, backdrop } = homeImages(source, business.logo);
+      if (backdrop && !content.heroImage) {
+        backdropRef = images.add(candidateList([backdrop], url), "", "content", oldPath(url));
+      }
+      awards = footerLogos(source.html, url, logoCandidates, images);
+    }
 
     const nodes: Node[] = [];
     const add = (type: NodeType, props: Record<string, unknown>, id = options.newId(type)) => {
@@ -138,8 +181,22 @@ export function readPagesForRetry(
       },
     });
     const questions: string[] = [];
-    const inputs: BlockInput[] = content.segments.flatMap((segment) =>
-      segmentBlocks(
+    const translated: Node[] = [];
+    let questionBlocks = 0;
+    const inputs: BlockInput[] = content.segments.flatMap((segment) => {
+      if (segment.kind === "faq" && options.questions) {
+        const ids = options.questions(url.href, questionBlocks++, segment.items.length);
+        if (ids && ids.length === segment.items.length) {
+          segment.items.forEach((q, i) => {
+            const id = ids[i] ?? "";
+            const question = factory.text(q.question);
+            translated.push({ id, type: "faq_item", question, answer: factory.text(q.answer) });
+          });
+          return [blocks.faq(segment.heading, [...ids])];
+        }
+        return [blocks.text(questionsAsText(segment.heading, segment.items))];
+      }
+      return segmentBlocks(
         segment,
         image,
         (q) => {
@@ -151,8 +208,21 @@ export function readPagesForRetry(
           return id;
         },
         options.lang,
-      ),
-    );
+      );
+    });
+    if (isHome && options.home) {
+      inputs.unshift(
+        blocks.hero({
+          heading: escapeInline(options.home.heading),
+          text: escapeInline(options.home.text),
+          image: content.heroImage
+            ? image(content.heroImage.ref, content.heroImage.alt)
+            : image(backdropRef, ""),
+          layout: STANDARD.looks.hero,
+        }),
+      );
+      if (awards) inputs.push(...segmentBlocks(awards, image, () => "", options.lang));
+    }
     const blockIds = inputs.map(factory.block);
     const page: Node = {
       id: pageId,
@@ -164,7 +234,7 @@ export function readPagesForRetry(
       share_image: list(),
       blocks: list(blockIds),
     };
-    return { url: url.href, page, nodes, questions };
+    return { url: url.href, page, nodes, questions, translated };
   });
 
   const references = [...images.references.values()];
@@ -178,4 +248,14 @@ export function readPagesForRetry(
     .filter((r) => !r.source.existing)
     .map((r) => ({ title: r.title, oldPath: oldPath(r.url), slug: r.slug }));
   return { pages, images: references, summaries, leftOut };
+}
+
+/** Questions as a text: the heading, then each question as a smaller subheading and its answer. */
+function questionsAsText(
+  heading: string,
+  items: readonly { question: string; answer: string }[],
+): string {
+  const parts = heading ? [`## ${heading}`] : [];
+  for (const q of items) parts.push(`### ${escapeInline(q.question)}`, q.answer);
+  return parts.join("\n\n");
 }

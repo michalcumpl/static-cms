@@ -96,3 +96,19 @@ export function backgroundRules(css: string): { selector: string; url: string; c
       d.urls.map((url) => ({ selector: d.selector, url, cover: covered.has(d.selector) })),
     );
 }
+
+/**
+ * A stylesheet with its relative `url(…)` values made absolute against its own address, since
+ * they are relative to the stylesheet, not to the page using it (`img/a.jpg` in `/css/s.css` is
+ * `/css/img/a.jpg` on every page). Data URIs and absolute addresses stay.
+ */
+export function absoluteCssUrls(css: string, sheetUrl: string): string {
+  return css.replace(/url\(\s*(['"]?)([^'")]*)\1\s*\)/gi, (whole, quote: string, href: string) => {
+    if (!href || /^(data:|[a-z][a-z0-9+.-]*:|#)/i.test(href)) return whole;
+    try {
+      return `url(${quote}${new URL(href, sheetUrl).href}${quote})`;
+    } catch {
+      return whole;
+    }
+  });
+}

@@ -404,6 +404,7 @@ describe("other sites", () => {
     expect(studio.report.leftOut).toContainEqual({
       reason: "language",
       detail: "https://northlight.example/cs/",
+      lang: "cs",
     });
   });
 
@@ -413,6 +414,34 @@ describe("other sites", () => {
     expect(bakery.report.leftOut).toContainEqual({
       reason: "language",
       detail: "https://pekarna-ulipy.cz/en/",
+      lang: "en",
+    });
+  });
+
+  it("reports each other language once, and keeps each page's links to other languages", () => {
+    const html = `<html lang="cs"><head><link rel="alternate" hreflang="en" href="/en/"></head>
+      <body><header><nav><a href="/">Úvod</a></nav>
+      <div class="lang"><a href="/en/kontakt/" hreflang="en">EN</a><a href="/hu/">HU</a></div></header>
+      <main><h1>Pekárna</h1><p>Text.</p></main></body></html>`;
+    const site = readSite([{ url: "https://pekarna-ulipy.cz/", html, css: [] }], {
+      languages: LANGUAGES,
+      fallbackLanguage: "cs",
+    });
+    const languages = site.report.leftOut.filter((l) => l.reason === "language");
+    expect(languages).toHaveLength(2);
+    expect(languages).toEqual(
+      expect.arrayContaining([
+        { reason: "language", detail: "https://pekarna-ulipy.cz/en/", lang: "en" },
+        { reason: "language", detail: "https://pekarna-ulipy.cz/hu/" },
+      ]),
+    );
+
+    const bakery = imported("bakery", ["/", "/nase-pecivo/", "/kontakt.html"]);
+    const alternates = Object.fromEntries(bakery.origins.map((o) => [o.path, o.alternates]));
+    expect(alternates).toEqual({
+      "/": ["https://pekarna-ulipy.cz/en/"],
+      "/nase-pecivo/": ["https://pekarna-ulipy.cz/en/our-bread/"],
+      "/kontakt.html": [],
     });
   });
 

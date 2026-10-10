@@ -53,6 +53,8 @@ export interface ProblemGroup {
   /** Where the whole group is fixed at once, when one place does (a site's description). */
   href: string;
   problems: LinkedProblem[];
+  /** The language's name, when the problems are listed for several (import-languages). */
+  language?: string;
 }
 
 /**

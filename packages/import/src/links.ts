@@ -20,8 +20,19 @@ export interface Navigation {
   /** Links to profiles the site document recognises (Facebook, Instagram…). */
   social: string[];
   /** Links to the site in other languages (a language switcher, `hreflang` alternates). */
-  languages: string[];
+  languages: LanguageLink[];
 }
+
+/** A link to another language version of a page. */
+export interface LanguageLink {
+  url: string;
+  /** Its `hreflang`'s primary subtag (`en`), or `""` without one. */
+  lang: string;
+}
+
+/** An `hreflang`'s primary subtag, lowercased: `en-GB` → `en`. */
+const hreflangOf = (el: Cheerio<Element>) =>
+  (el.attr("hreflang") ?? "").split(/[-_]/)[0]?.trim().toLowerCase() ?? "";
 
 /** Whether an element sits in a language switcher. */
 const inLanguageSwitcher = (el: Cheerio<Element>) =>
@@ -69,7 +80,14 @@ export function menuLinks(html: string, baseUrl: URL | string): Navigation {
   const base = new URL(baseUrl);
   const $ = load(html);
   const social = new Set<string>();
-  const languages = new Set<string>();
+  // One link per language version, by address; the first naming its language wins.
+  const languages = new Map<string, LanguageLink>();
+  const addLanguage = (url: URL, el: Cheerio<Element>) => {
+    const key = pageKey(url);
+    const known = languages.get(key);
+    if (!known) languages.set(key, { url: withoutFragment(url).href, lang: hreflangOf(el) });
+    else if (!known.lang) known.lang = hreflangOf(el);
+  };
   const seen = new Set<string>();
 
   /** A link of the site, or undefined after setting aside social and language links. */
@@ -85,7 +103,7 @@ export function menuLinks(html: string, baseUrl: URL | string): Navigation {
     }
     // Another language version of this site.
     if (inLanguageSwitcher(a)) {
-      languages.add(withoutFragment(url).href);
+      addLanguage(url, a);
       return undefined;
     }
     const key = pageKey(url);
@@ -132,12 +150,10 @@ export function menuLinks(html: string, baseUrl: URL | string): Navigation {
       const found = el.is("a") ? profile(url) : undefined;
       if (found) social.add(found);
     } else if (el.attr("hreflang") !== undefined || (el.is("a") && inLanguageSwitcher(el))) {
-      languages.add(withoutFragment(url).href);
+      addLanguage(url, el as Cheerio<Element>);
     }
   }
-  // One address per language version.
-  const versions = new Map([...languages].map((href) => [pageKey(new URL(href)), href]));
-  return { menu, social: [...social], languages: [...versions.values()] };
+  return { menu, social: [...social], languages: [...languages.values()] };
 }
 
 /** A page's stylesheets: the addresses of its linked ones, and the text of its `<style>` elements. */

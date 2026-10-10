@@ -14,6 +14,7 @@ exports[`reading a whole site > reports what it imported and left out 1`] = `
   "leftOut": [
     {
       "detail": "https://pekarna-ulipy.cz/en/",
+      "lang": "en",
       "reason": "language",
     },
     {

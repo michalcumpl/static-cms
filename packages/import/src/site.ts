@@ -52,8 +52,11 @@ export interface ImportedSite {
   document: SiteDocument;
   /** Every image the site shows, logo and favicon included, to fetch. */
   images: ImageReference[];
-  /** Each page's path on the old site, by its page ID. */
-  origins: { pageId: string; path: string }[];
+  /**
+   * Each page's path on the old site, by its page ID, with the addresses of its links to other
+   * language versions (for pairing a language imported later).
+   */
+  origins: { pageId: string; path: string; alternates: string[] }[];
   report: ImportReport;
 }
 
@@ -75,6 +78,66 @@ function siteName(home: string, businessName: string): string {
   const og = collapse($('meta[property="og:site_name"]').attr("content") ?? "");
   if (og) return og;
   return collapse($("title").text()).split(/\s+[|–—-]\s+/)[0] ?? "";
+}
+
+/** What another language version's home page says of the site (import-languages decision 4). */
+export interface VersionHome {
+  /** The site's name in this language. */
+  name: string;
+  description: string;
+  /** Its meta description alone, for the home page's hero. */
+  tagline: string;
+  /** The business name its structured data gives, or `""`. */
+  businessName: string;
+  /** The home page's title: the Home layout's name in the language. */
+  homeTitle: string;
+}
+
+/** The site's name, description and business name as a language version's home page gives them. */
+export function versionHome(home: SourcePage, lang: string): VersionHome {
+  const nav = menuLinks(home.html, home.url);
+  const business = readBusiness([home], lang, nav.social);
+  const metaDescription = collapse(
+    load(home.html)('meta[name="description"]').attr("content") ?? "",
+  );
+  return {
+    name: siteName(home.html, business.name),
+    description: metaDescription || summary(home.html),
+    tagline: metaDescription,
+    businessName: business.name,
+    homeTitle:
+      (czech(lang) ? STANDARD.layouts[0]?.name.cs : STANDARD.layouts[0]?.name.en) ?? "Home",
+  };
+}
+
+/**
+ * The home page's logo candidates (structured data's, else the header's image or a logo drawn by
+ * CSS) and a photo filling one of its panels (`background-size: cover`), from its stylesheets.
+ */
+export function homeImages(
+  home: SourcePage,
+  businessLogo: readonly string[],
+): { logoCandidates: string[]; backdrop?: string } {
+  const homeUrl = new URL(home.url);
+  const $home = load(home.html);
+  const headerLogo = $home("header a img, [class*=logo] img, img[class*=logo], #logo img").first();
+  // Backgrounds of the home page's elements: a logo drawn by CSS, a photo filling a panel.
+  const shown = home.css.flatMap(backgroundRules).filter((rule) => {
+    // States and generated content (`:hover`, `::before`) don't show the image.
+    if (/:/.test(rule.selector)) return false;
+    try {
+      return $home(rule.selector).length > 0;
+    } catch {
+      return false;
+    }
+  });
+  // The last matching rule is usually the most specific (`.pg-index .logo` after `.logo`).
+  const cssLogo = shown.filter((rule) => /logo/i.test(rule.selector)).at(-1)?.url;
+  const logoCandidates = businessLogo.length
+    ? [...businessLogo]
+    : candidateList([headerLogo.attr("src") ?? cssLogo], homeUrl);
+  const backdrop = shown.find((rule) => rule.cover && !/logo/i.test(rule.selector))?.url;
+  return { logoCandidates, backdrop };
 }
 
 /** A page's title: its `<h1>`, or its `<title>` without the site's name. */
@@ -101,14 +164,26 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
   const lang = siteLanguage(home.html, options.languages, options.fallbackLanguage);
   const nav = menuLinks(home.html, homeUrl);
   const leftOut: LeftOut[] = [...(options.leftOut ?? [])];
-  // Other language versions; the one imported (the home page, or `/<lang>/`) isn't one.
-  for (const language of nav.languages) {
-    const url = resolve(language, homeUrl);
+  // Other language versions, one per language, named by its shortest address (`/en/` before
+  // `/en/kontakt/`); the one imported (the home page, or `/<lang>/`) isn't one.
+  const pathLength = (href: string) => resolve(href, homeUrl)?.pathname.length ?? 0;
+  const byPath = [...nav.languages].sort((a, b) => pathLength(a.url) - pathLength(b.url));
+  for (const language of byPath) {
+    const url = resolve(language.url, homeUrl);
     const first = url?.pathname.split("/").filter(Boolean)[0]?.toLowerCase();
-    const known = leftOut.some((l) => l.reason === "language" && l.detail === url?.href);
-    if (url && pageKey(url) !== pageKey(homeUrl) && first !== lang && !known) {
-      leftOut.push({ reason: "language", detail: url.href });
-    }
+    // A page of the version the crawl left out (`page` set) doesn't stand for its home.
+    const known = leftOut.some(
+      (l) =>
+        l.reason === "language" &&
+        (l.detail === url?.href || (!l.page && language.lang !== "" && l.lang === language.lang)),
+    );
+    if (!url || pageKey(url) === pageKey(homeUrl) || known) continue;
+    if (first === lang || language.lang === lang) continue;
+    leftOut.push({
+      reason: "language",
+      detail: url.href,
+      ...(language.lang ? { lang: language.lang } : {}),
+    });
   }
 
   // Pages: home first, then the menu's pages in its order, then the others.
@@ -173,26 +248,10 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
 
   // The logo and favicon.
   const $home = load(home.html);
-  const headerLogo = $home("header a img, [class*=logo] img, img[class*=logo], #logo img").first();
-  // Backgrounds of the home page's elements: a logo drawn by CSS, a photo filling a panel.
-  const shown = home.css.flatMap(backgroundRules).filter((rule) => {
-    // States and generated content (`:hover`, `::before`) don't show the image.
-    if (/:/.test(rule.selector)) return false;
-    try {
-      return $home(rule.selector).length > 0;
-    } catch {
-      return false;
-    }
-  });
-  // The last matching rule is usually the most specific (`.pg-index .logo` after `.logo`).
-  const cssLogo = shown.filter((rule) => /logo/i.test(rule.selector)).at(-1)?.url;
-  const logoCandidates = business.logo.length
-    ? business.logo
-    : candidateList([headerLogo.attr("src") ?? cssLogo], homeUrl);
+  const { logoCandidates, backdrop } = homeImages(home, business.logo);
   const logoRef = images.add(logoCandidates, name, "logo", oldPath(homeUrl));
   // A photo filling a panel of the home page (a painting beside the text), for the hero when
   // the content has none.
-  const backdrop = shown.find((rule) => rule.cover && !/logo/i.test(rule.selector))?.url;
   const backdropRef =
     backdrop && !final.get(home)?.heroImage
       ? images.add(candidateList([backdrop], homeUrl), "", "content", oldPath(homeUrl))
@@ -309,6 +368,7 @@ export function readSite(pages: readonly SourcePage[], options: ReadSiteOptions)
   const origins = ordered.map((page) => ({
     pageId: pageIds.get(page) ?? "",
     path: oldPath(withoutFragment(new URL(page.url))),
+    alternates: menuLinks(page.html, page.url).languages.map((l) => l.url),
   }));
 
   // Images that were to be fetched but weren't.
@@ -529,7 +589,7 @@ const LOGO_NAME = 80;
  * (import-existing-blocks design decision 7): two or more images with a name, not the site's
  * logo, not an icon, not a link to a social profile.
  */
-function footerLogos(
+export function footerLogos(
   html: string,
   homeUrl: URL,
   siteLogo: readonly string[],

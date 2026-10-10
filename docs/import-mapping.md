@@ -26,7 +26,7 @@ The reading is [`@webmio/import`](../packages/import/) (pure, tested on the inve
 | Each page's old address, redirected when published | `site.ts`, admin `publishing/redirects.ts` | done |
 | Contact forms as contact form blocks; other forms and widgets left out and reported | `forms.ts`, `blocks.ts`, `site.ts` | done (`contact-form`) |
 | Cards, key figures, steps, opening hours, maps, booking widgets and footer logos as Webmio's blocks | `structures.ts`, `booking.ts`, `site.ts` | done (`import-existing-blocks`) |
-| Other languages | | reported, not imported |
+| Other languages: named by `hreflang` or their page's `lang`, imported from the review as a new hidden language, pages paired by their `hreflang`/switcher links | `links.ts`, `site.ts`, `retry.ts`, admin `import/language.ts` | done (`import-languages`) |
 | One-page sites split into pages per section | | not yet: imported as one home page |
 | Subpages of one kind as collection items; repeated cards as services or team | | **AI** (v2) |
 | Pages built by JavaScript (headless browser) | `script.ts` | detected and reported, not read |
@@ -180,3 +180,32 @@ text block and a one-photo gallery, as the hero block must be first).
   one saved version.
 - What the import keeps for a retry is `imports.retry_state`; imports made before it offer no
   retry, and marking decorative uses the project's first version as the import's.
+
+## Other languages (`import-languages`)
+
+- The import notes each language version the old home page links (a switcher, `hreflang`
+  alternates), named by its `hreflang` or else by the `lang` of the page it leads to, at its
+  shortest address. Those the admin offers, other than the primary, get **Import the English
+  version** in the review; others are only named.
+- The version is crawled from its own home page with the import's rules and the 20-page limit;
+  the primary's pages its sitemap lists are dropped by their `lang`. It becomes a new language,
+  hidden, saved as its first version: the primary's document with its pages and menu replaced.
+- Pages pair by address: the homes always, others when either page's `hreflang` or switcher
+  links the other; a switcher link to the primary's home pairs nothing. Unpaired pages get their
+  own translation key; the primary's pages without a counterpart aren't copied, so the Languages
+  page lists them as missing.
+- The version's home page gives the site name, description and business name; everything shared
+  (theme, logo, address, phone, hours) stays the primary's. Questions on a paired page translate
+  the counterpart's question block when both have as many; otherwise they become text. Images
+  the import brought are reused by address.
+- Its old addresses are redirected under the language's path; one that is a page's own new
+  address isn't redirected to itself.
+- Not handled: versions on another host (`en.example.cz`), retrying a version's left-out pages,
+  and importing into a language the owner already added.
+- **Mareš Partners (2026-10-10):** the root is English, so Czech (`/cs/`) is the language on
+  offer. All 13 Czech pages paired with their English ones through their `hreflang` alternates,
+  the menu kept its "Specializace" group, and the old `/cs/specializace/…` addresses redirect to
+  the new ones. Two fixes came of it: the version's home page now gets the import's home-page
+  rules (the painting from a CSS background as the hero's photo, the award logos in the footer),
+  and a stylesheet's `url(…)` is resolved against the stylesheet, not the page (the Czech home at
+  `/cs/` had looked for `/cs/img/dusni.jpg`).

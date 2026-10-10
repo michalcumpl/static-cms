@@ -151,6 +151,23 @@ describe("the import job", () => {
     ]);
   });
 
+  it("keeps the other languages on offer and each page's links to them (import-languages)", async () => {
+    const row = await importFixture("bakery");
+    const origin = server?.origin ?? "";
+    const { db } = project();
+    const state = db
+      .select()
+      .from(imports)
+      .where(eq(imports.id, row?.id ?? ""))
+      .get()?.retryState;
+    expect(state?.languages).toEqual([{ lang: "en", url: `${origin}/en/` }]);
+    const bread = state?.pages.find((p) => p.url === `${origin}/nase-pecivo/`);
+    expect(bread?.alternates).toEqual([`${origin}/en/our-bread/`]);
+    expect(row?.report?.leftOut.filter((l) => l.reason === "language")).toEqual([
+      expect.objectContaining({ detail: `${origin}/en/`, lang: "en" }),
+    ]);
+  });
+
   it("imports the agency's structures as Webmio's blocks (import-existing-blocks)", async () => {
     const row = await importFixture("agency");
     expect(row?.state).toBe("done");

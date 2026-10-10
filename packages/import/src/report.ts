@@ -30,6 +30,11 @@ export interface LeftOut {
   /** The page it was on, or the page itself, as its path on the old site. */
   page?: string;
   detail?: string;
+  /**
+   * For `language`: the version's language (`en`), when known. For anything else: the language
+   * version it was left out of, when it isn't the primary's (import-languages).
+   */
+  lang?: string;
 }
 
 export interface ImportedPageSummary {
@@ -38,6 +43,8 @@ export interface ImportedPageSummary {
   oldPath: string;
   /** Its new slug; `""` for the home page. */
   slug: string;
+  /** Its language, when it isn't the primary's (import-languages). */
+  lang?: string;
 }
 
 export interface ImportReport {

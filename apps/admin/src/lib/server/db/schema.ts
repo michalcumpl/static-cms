@@ -317,13 +317,24 @@ export interface RetryState {
   failedImages: RetryImage[];
   /** Images that arrived: reference ID to media key. */
   media: Record<string, string>;
-  /** Each page read: its address on the old site and its page ID. */
-  pages: { url: string; pageId: string }[];
+  /**
+   * Each page read: its address on the old site, its page ID, and the addresses of its links to
+   * other language versions (import-languages design decision 3; none for older imports).
+   */
+  pages: { url: string; pageId: string; alternates?: string[] }[];
   /** Image node IDs retries placed: imported images, as those of the import's version are. */
   importedImages?: string[];
+  /**
+   * Other language versions the old home page links that the review offers to import: language
+   * code and the version's home address (import-languages design decision 1; none for older
+   * imports).
+   */
+  languages?: { lang: string; url: string }[];
+  /** The version each language import saved: its images are that language's imported ones. */
+  languageVersions?: Record<string, string>;
 }
 
-export const retryKinds = ["again", "next"] as const;
+export const retryKinds = ["again", "next", "language"] as const;
 
 /**
  * Imports of a website by its address (site-import design decision 9): the running job, then
@@ -389,7 +400,8 @@ export interface RetryAdded {
 
 /**
  * Retries of an import's left-out pages and images (import-review-actions design decision 2):
- * "again" for what failed, "next" for the pages over the limit.
+ * "again" for what failed, "next" for the pages over the limit, "language" for another language
+ * version of the old site (import-languages design decision 2).
  */
 export const importRetries = sqliteTable(
   "import_retries",
@@ -400,6 +412,8 @@ export const importRetries = sqliteTable(
       .references(() => imports.id, { onDelete: "cascade" }),
     userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
     kind: text("kind", { enum: retryKinds }).notNull(),
+    /** For `language`: the language imported. */
+    lang: text("lang"),
     state: text("state", { enum: importStates }).notNull(),
     progress: text("progress", { mode: "json" }).$type<ImportProgress>(),
     error: text("error"),

@@ -38,7 +38,18 @@ describe("the menu", () => {
       "https://www.facebook.com/pekarnaulipy",
       "https://www.instagram.com/pekarnaulipy",
     ]);
-    expect(nav.languages).toEqual([`${bakery}/en/`]);
+    expect(nav.languages).toEqual([{ url: `${bakery}/en/`, lang: "en" }]);
+  });
+
+  it("names each language version by its hreflang's primary subtag", () => {
+    const html = `<head><link rel="alternate" hreflang="de-AT" href="/de/"></head>
+      <header><nav><a href="/kontakt/">Kontakt</a></nav>
+      <div class="lang"><a href="/en/" hreflang="EN-gb">EN</a><a href="/pl/">PL</a><a href="/de/">DE</a></div></header>`;
+    expect(menuLinks(html, `${bakery}/`).languages).toEqual([
+      { url: `${bakery}/en/`, lang: "en" },
+      { url: `${bakery}/pl/`, lang: "" },
+      { url: `${bakery}/de/`, lang: "de" },
+    ]);
   });
 
   it("reads a www. twin as the same site", () => {
@@ -49,7 +60,7 @@ describe("the menu", () => {
   it("takes no anchors of a one-page site as pages", () => {
     const nav = menuLinks(fixtureText("studio", "/"), `${FIXTURE_ORIGINS.studio}/`);
     expect(nav.menu).toEqual([]);
-    expect(nav.languages).toEqual([`${FIXTURE_ORIGINS.studio}/cs/`]);
+    expect(nav.languages).toEqual([{ url: `${FIXTURE_ORIGINS.studio}/cs/`, lang: "cs" }]);
   });
 
   it("finds a menu of plain links in the header, without a list or a nav element", () => {
@@ -83,7 +94,7 @@ describe("the menu", () => {
       "https://www.facebook.com/pekarna",
       "https://www.youtube.com/@pekarna",
     ]);
-    expect(nav.languages).toEqual([`${bakery}/en/`]);
+    expect(nav.languages).toEqual([{ url: `${bakery}/en/`, lang: "" }]);
   });
 
   it("names an image link by its alt text, and keeps the first of two links to one page", () => {
