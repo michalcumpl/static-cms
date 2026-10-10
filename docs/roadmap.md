@@ -130,7 +130,7 @@ Blocks the example sites need come first, because the templates render them
 | Change | What | Status |
 | --- | --- | --- |
 | `admin-on-aws` | the admin on one small EU server at `app.webmio.eu`, media in S3, Litestream backups | Planned |
-| `bare-domain-redirect` | `https://<domain>` redirects to `https://www.<domain>` with a valid certificate and the same path, from the admin server's Caddy; customers set `@ A` to its address instead of their registrar's forwarding | Planned |
+| `bare-domain-redirect` | `https://<domain>` redirects to `https://www.<domain>` with a valid certificate and the same path, from a tiny redirect server of its own; customers set `@ A` to its address instead of their registrar's forwarding | Planned |
 | `presentation-site` | `webmio.cz` and `webmio.eu`, built and published with Webmio | Planned |
 | `operator-console` | the operator's own part of the admin: an overview and stats, customers and their websites, inviting users, deleting websites and accounts, plan status, renewal dates, manual invoices | Planned |
 | `legal-documents` | terms, privacy policy, data processing agreement, cookie statement, complaints procedure | Planned |
@@ -140,7 +140,6 @@ Blocks the example sites need come first, because the templates render them
 | Change | What | Status |
 | --- | --- | --- |
 | `billing` | card payments from the first publish, renewals, invoices with VAT, open sign-up | After the beta |
-| `redirect-server` | the bare-domain redirect moves to its own tiny server (≈ €7 a month), so admin deploys and outages don't affect it; customers' `@ A` record stays the same | After the beta |
 | `google-sign-in` | Google sign-in next to magic links | After the beta |
 | `owner-statistics` | privacy-friendly visit counts from CDN logs, in the panel and a monthly email | After the beta |
 | `agencies` | an agency account sets up client websites; clients get the simple panel | After the beta |
@@ -262,19 +261,17 @@ Invite-only, small and cheap, for friends.
 - **`admin-on-aws`:** one small EU server, deploy pipeline, monitoring and alerts; media in S3;
   SQLite with Litestream to S3.
 - **`bare-domain-redirect`:** CloudFront serves only `www.<domain>`, and registrars' forwarding
-  (Webglobe's, for one) can't do HTTPS. So the admin server's Caddy answers bare domains:
+  (Webglobe's, for one) can't do HTTPS. So a tiny server of its own (a `t4g.nano` with an
+  Elastic IP, ≈ €7 a month) answers bare domains with Caddy:
   - It gets a certificate on demand, after asking the admin whether the domain belongs to a
-    connected website.
+    connected website. It asks only when it first issues a certificate, so admin deploys and
+    outages don't affect redirects.
   - It redirects 301 to `https://www.<domain>`, keeping the path.
   - The Domain page shows `@ A <address>` and the domain check verifies it.
-  - Cost and risk: one server keeps costs down during the beta. While the admin server is
-    down, bare domains don't redirect; `www` keeps working.
-  - Later steps:
-    - **`redirect-server`, after the beta:** its own tiny server (≈ €7 a month).
-    - **CloudFront's Anycast static IPs:** 3 IPs for every customer's bare domain, but a fixed
-      fee reported as $3,000 a month per list. Worth it only at several hundred websites with
-      bare domains. The website moves to a connection group with static IPs, and customers
-      change their `@ A` record once.
+  - **Later, CloudFront's Anycast static IPs:** 3 IPs for every customer's bare domain, but a
+    fixed fee reported as $3,000 a month per list. Worth it only at several hundred websites
+    with bare domains. The website moves to a connection group with static IPs, and customers
+    change their `@ A` record once.
 - **`presentation-site`:** what you get, €79 / 1 899 Kč a year excl. VAT (free until the first
   publish), FAQ, *Request access* form; Czech on `webmio.cz`, English on `webmio.eu`.
 - **`legal-documents`:** Czech and English, reviewed by a lawyer before taking money.
