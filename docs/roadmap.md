@@ -133,7 +133,7 @@ Blocks the example sites need come first, because the templates render them
 | Change | What | Status |
 | --- | --- | --- |
 | [`admin-on-aws`](../openspec/changes/archive/2026-10-10-admin-on-aws/) | the admin on one small EU server at `app.webmio.eu`, media in S3, Litestream backups, deploys from `main`, alarms; running on `dev`, `prod` set up before the beta | Done |
-| `bare-domain-redirect` | `https://<domain>` redirects to `https://www.<domain>` with a valid certificate and the same path, from a tiny redirect server of its own; customers set `@ A` to its address instead of their registrar's forwarding | Planned |
+| `bare-domain-redirect` | `https://<domain>` redirects to `https://www.<domain>` with a valid certificate and the same path, from a tiny redirect server of its own; customers set `@ A` to its address instead of their registrar's forwarding; running on `dev` | Next |
 | `presentation-site` | `webmio.cz` and `webmio.eu`, built and published with Webmio | Planned |
 | `operator-console` | the operator's own part of the admin: an overview and stats, customers and their websites, inviting users, deleting websites and accounts, plan status, renewal dates, manual invoices | Planned |
 | `legal-documents` | terms, privacy policy, data processing agreement, cookie statement, complaints procedure | Planned |
@@ -277,10 +277,12 @@ Invite-only, small and cheap, for friends.
   (Webglobe's, for one) can't do HTTPS. So a tiny server of its own (a `t4g.nano` with an
   Elastic IP, ≈ €7 a month) answers bare domains with Caddy:
   - It gets a certificate on demand, after asking the admin whether the domain belongs to a
-    connected website. It asks only when it first issues a certificate, so admin deploys and
-    outages don't affect redirects.
-  - It redirects 301 to `https://www.<domain>`, keeping the path.
-  - The Domain page shows `@ A <address>` and the domain check verifies it.
+    connected website. It asks only when it issues or renews one, so admin deploys and outages
+    don't affect redirects. HTTP redirects never ask.
+  - It redirects 301 to `https://www.<domain>`, keeping the path and query, cached for a day.
+  - The Domain page shows `@ A <address>` and asks to remove the registrar's forwarding. The
+    domain check verifies that the bare domain has only that address and that it redirects; the
+    website's readiness still depends on `www.` alone.
   - **Later, CloudFront's Anycast static IPs:** 3 IPs for every customer's bare domain, but a
     fixed fee reported as $3,000 a month per list. Worth it only at several hundred websites
     with bare domains. The website moves to a connection group with static IPs, and customers

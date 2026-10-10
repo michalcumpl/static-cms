@@ -25,8 +25,8 @@
 
 ## 5. Verification on `dev`
 
-- [ ] 5.1 `pulumi up --stack dev` (operator approves); verify the server answers `http://<redirectAddress>/healthz` with 200, the admin's environment has `WEBMIO_REDIRECT_ADDRESS` after the next deploy, and `/hosting/bare-domain?domain=cumpl.cz` answers 200
-- [ ] 5.2 With the operator, on `cumpl.cz`: connect it again, set `@ A <redirectAddress>` at Ignum, remove Webglobe's forwarding, and check on the Domain page; verify `https://cumpl.cz/some/path?q=1` and `http://cumpl.cz/some/path` redirect in one step to `https://www.cumpl.cz/some/path…` with a valid certificate, and the page shows "redirecting"
-- [ ] 5.3 Replace the redirect server (`pulumi up --replace` on the instance); verify the address stays, `cumpl.cz` redirects again after its next check, and record how long bare domains were down
-- [ ] 5.4 Stop Caddy on the server through SSM for four minutes; verify the `redirect-down` alarm emails the operator and clears once Caddy is started again
+- [x] 5.1 `pulumi up --stack dev` (operator approves); verify the server answers `http://<redirectAddress>/healthz` with 200, the admin's environment has `WEBMIO_REDIRECT_ADDRESS` after the next deploy, and `/hosting/bare-domain?domain=cumpl.cz` answers 200
+- [x] 5.2 With the operator, on `cumpl.cz`: connect it again, set `@ A <redirectAddress>` at Ignum, remove Webglobe's forwarding, and check on the Domain page; verify `https://cumpl.cz/some/path?q=1` and `http://cumpl.cz/some/path` redirect in one step to `https://www.cumpl.cz/some/path…` with a valid certificate, and the page shows "redirecting"
+- [x] 5.3 Replace the redirect server (`pulumi up --replace` on the instance); verify the address stays, `cumpl.cz` redirects again after its next check, and record how long bare domains were down (2026-10-10: the address stayed `3.127.16.170`; `https://cumpl.cz/` was down 1 min 45 s, from the address moving to the new instance until its Caddy had a new certificate, which the first visit got without a domain check)
+- [x] 5.4 Stop Caddy on the server through SSM for four minutes; verify the `redirect-down` alarm emails the operator and clears once Caddy is started again (2026-10-10: fired 2 min 47 s after Caddy stopped, cleared 4 min 23 s after it started; SNS delivered both emails)
 - [ ] 5.5 Mark `bare-domain-redirect` Next, then Done on archiving, in `docs/roadmap.md`, and replace the forwarding advice in the roadmap's phase 7 note; verify the links resolve
