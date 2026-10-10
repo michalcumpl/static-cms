@@ -1,6 +1,6 @@
 import { type ImportReport, type LeftOut, pageLanguage, readSite } from "@webmio/import";
 import { LANGUAGES } from "@webmio/render";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { sayIn } from "../../i18n/translate";
 import { type Locale, type Said, said } from "../../i18n/types";
 import type { Db } from "../db/index";
@@ -306,6 +306,54 @@ export function readImport(db: Db, importId: string, userId: string): ImportRow 
 export function projectImport(db: Db, projectId: string): ImportRow | undefined {
   const row = db.select().from(imports).where(eq(imports.projectId, projectId)).get();
   return row ? { ...row, report: row.report as ImportReport | null } : undefined;
+}
+
+/** How long a failed import stays on the projects page. */
+const FAILED_SHOWN_MS = 24 * 60 * 60_000;
+
+export interface WorkspaceImports {
+  /** The person's imports still running, to go back to their progress. */
+  running: { id: string; address: string }[];
+  /** The person's imports that failed in the last day, with why. */
+  failed: { id: string; address: string; error: string }[];
+  /** Projects made by an import whose review isn't dismissed yet. */
+  toReview: string[];
+}
+
+/**
+ * A workspace's imports for its projects page (site-import spec, "Import progress": the owner can
+ * leave an import and come back to it): the person's running and recently failed imports, and the
+ * projects whose import review is still open.
+ */
+export function workspaceImports(
+  db: Db,
+  workspaceId: string,
+  userId: string,
+  now = new Date(),
+): WorkspaceImports {
+  const rows = db
+    .select()
+    .from(imports)
+    .where(eq(imports.workspaceId, workspaceId))
+    .orderBy(desc(imports.startedAt))
+    .all();
+  const mine = rows.filter((r) => r.userId === userId);
+  return {
+    running: mine
+      .filter((r) => r.state === "running")
+      .map((r) => ({ id: r.id, address: r.address })),
+    failed: mine
+      .filter(
+        (r) =>
+          r.state === "failed" &&
+          r.finishedAt !== null &&
+          now.getTime() - r.finishedAt.getTime() < FAILED_SHOWN_MS,
+      )
+      .map((r) => ({ id: r.id, address: r.address, error: r.error ?? "" })),
+    toReview: rows.flatMap((r) =>
+      r.state === "done" && r.projectId && !r.reviewDismissed ? [r.projectId] : [],
+    ),
+  };
 }
 
 /** Dismisses a project's import review. */

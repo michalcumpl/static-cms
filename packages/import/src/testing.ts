@@ -9,6 +9,7 @@ export const FIXTURE_ORIGINS = {
   bakery: "https://pekarna-ulipy.cz",
   studio: "https://northlight.example",
   spa: "https://kavarna.example",
+  agency: "https://cestovka-vlna.example",
 } as const;
 
 export type FixtureSite = keyof typeof FIXTURE_ORIGINS;

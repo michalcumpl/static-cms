@@ -1,4 +1,4 @@
-<h1 align="center"><img src="docs/assets/webmio-logo.svg" alt="Webmio" width="420"></h1>
+<h1 align="center"><img src="docs/assets/webmio-logo.svg" alt="Webmio" width="360"></h1>
 
 > **Your business has a website. You shouldn't have to manage a website.**
 
@@ -15,6 +15,10 @@ business control panel work; templates, our own hosting and the beta are next. S
 
 **For business owners**
 
+- **Two ways to a first website:** a guided setup that asks about the business (its type,
+  contact, opening hours, services, photos and pages) and builds the site from the template's
+  layouts, previewed before it is created; or starting from the owner's current website, whose
+  pages, texts, photos and business details are imported and reviewed before anything goes live.
 - **A business control panel:** Business (company, locations, opening hours, contact, social
   profiles), What you offer (services, questions), About you (team, testimonials), Website
   (pages and menu, languages, domain) and Publish.
@@ -161,5 +165,5 @@ the end-to-end runs use it, since their fake hosting answers at once.
 - [Tasks](docs/tasks.md): open questions and loose ends without a change yet.
 - [Layouts](docs/layouts.md): page recipes and the blocks the example sites need.
 - [Import mapping](docs/import-mapping.md): how an existing website maps onto Webmio's data,
-  for the planned importer.
+  and what the importer does with it.
 - [Specs](openspec/specs): what the system does today, capability by capability.

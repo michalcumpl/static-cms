@@ -5,6 +5,7 @@ import {
   type NodeType,
   slugify,
   uniqueSlug,
+  type Weekday,
 } from "@webmio/model";
 import { load } from "cheerio";
 import { oldPath, pageKey, sameSite, withoutFragment } from "./addresses.js";
@@ -41,6 +42,10 @@ export interface RetryPagesOptions {
   newId: (type: NodeType) => string;
   /** The fetched images: reference ID to the `src` the documents name. Without it: none yet. */
   images?: ReadonlyMap<string, string>;
+  /** The site's language, for the words of blocks the import names (a booking block's). */
+  lang: string;
+  /** The days the main location's hours name: a schedule naming them shows the hours. */
+  hoursDays?: ReadonlySet<Weekday>;
 }
 
 export interface RetryPage {
@@ -115,6 +120,7 @@ export function readPagesForRetry(
       css: source.css,
       hero: false,
       page: oldPath(url),
+      hoursDays: options.hoursDays,
     });
     leftOut.push(...content.leftOut);
 
@@ -133,14 +139,19 @@ export function readPagesForRetry(
     });
     const questions: string[] = [];
     const inputs: BlockInput[] = content.segments.flatMap((segment) =>
-      segmentBlocks(segment, image, (q) => {
-        const id = add("faq_item", {
-          question: factory.text(q.question),
-          answer: factory.text(q.answer),
-        });
-        questions.push(id);
-        return id;
-      }),
+      segmentBlocks(
+        segment,
+        image,
+        (q) => {
+          const id = add("faq_item", {
+            question: factory.text(q.question),
+            answer: factory.text(q.answer),
+          });
+          questions.push(id);
+          return id;
+        },
+        options.lang,
+      ),
     );
     const blockIds = inputs.map(factory.block);
     const page: Node = {

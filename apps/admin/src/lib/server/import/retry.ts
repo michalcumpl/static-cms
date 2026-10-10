@@ -9,7 +9,7 @@ import {
   type RetrySource,
   readPagesForRetry,
 } from "@webmio/import";
-import { blockFactory, escapeInline, type NodeType } from "@webmio/model";
+import { blockFactory, escapeInline, type NodeType, type Weekday } from "@webmio/model";
 import { upgradeSite } from "@webmio/templates";
 import { and, desc, eq } from "drizzle-orm";
 import { sayIn } from "../../i18n/translate";
@@ -125,6 +125,22 @@ const listOf = (node: Node | undefined, field: string): List => {
   return created;
 };
 
+/** A node list's IDs, without adding the list when the node has none. */
+const idsOf = (node: Node | undefined, field: string): string[] =>
+  (node?.[field] as List | undefined)?.nodes ?? [];
+
+/** The days the main location's hours name: a schedule naming them shows the hours. */
+function hoursDays(doc: Doc, site: Node): Set<Weekday> {
+  const business = doc.nodes[String(site.business)];
+  const location = doc.nodes[idsOf(business, "locations")[0] ?? ""];
+  return new Set(
+    idsOf(location, "days")
+      .map((id) => doc.nodes[id])
+      .filter((day) => idsOf(day, "ranges").length > 0)
+      .map((day) => day?.day as Weekday),
+  );
+}
+
 /** New node IDs the document doesn't have, tagged so they never meet an editor's. */
 function idMaker(doc: Doc): (type: NodeType) => string {
   const tag = Math.random().toString(36).slice(2, 8);
@@ -239,6 +255,8 @@ async function runRetry(
         }),
       ),
       newId: idMaker(doc),
+      lang: String(site.lang ?? lang),
+      hoursDays: hoursDays(doc, site),
     };
     const newRefs = readPagesForRetry(newSources, base).images;
 

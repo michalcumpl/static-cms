@@ -27,8 +27,10 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
   block types with their looks, from key figures to the hero slideshow; the seven example
   sites, loaded locally; cropping and turning images, and a focal point for each use of an
   image; templates (the Standard template, layouts for new pages, blocks hidden from the
-  website); importing a website from its address.
-- **Next:** `guided-setup` and the rest of phase 4 (templates). Phase 5 is done: every publish
+  website); importing a website from its address; the guided setup, which builds a first site
+  from the owner's answers.
+- **Next:** the rest of phase 3 (`import-languages`, `banner-block`) and phase 4 (templates).
+  Phase 5 is done: every publish
   checks links, verifies the live website and keeps the previous version on failure. Our
   hosting runs in the `dev` stack; `prod` is deployed before the beta.
 - **Private beta** (phase 7) when phases 3–6 work with at least two launch templates.
@@ -76,11 +78,11 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
 | [`project-deletion`](../openspec/changes/archive/2026-10-07-project-deletion/) | deleting a website (offline at once), restoring it, removing it for good | Done |
 | [`example-sites`](../openspec/changes/archive/2026-10-08-example-sites/) | `pnpm admin load-site`; the seven launch examples loaded locally | Done |
 | [`image-cropping`](../openspec/changes/archive/2026-10-08-image-cropping/) | crop, focal point and rotation in the media library | Done |
-| `guided-setup` | the "Tell us about your business" wizard | Planned |
+| [`guided-setup`](../openspec/changes/archive/2026-10-10-guided-setup/) | the "Tell us about your business" wizard: type, design, contact and hours, services, photos and pages, previewed, building the first site from the layouts | Done |
 | [`site-import`](../openspec/changes/archive/2026-10-09-site-import/) | import a public website by its address (version 1, no AI), reviewed before publishing; see [`import-mapping.md`](import-mapping.md) | Done |
 | [`import-review-actions`](../openspec/changes/archive/2026-10-09-import-review-actions/) | the import review's retry (failed pages and images, the next pages) and fixes (images marked decorative, subheading levels); the same problem grouped ("13 pages have no description", leading to the site's description); and import fixes found on marespartners.cz (a logo and photo drawn by CSS, a black-and-white theme for a site without colours, the site description from the first paragraph) | Done |
 | `import-languages` | "Import the Czech version": another language version of the old site as a project language, pages paired through the language switcher's links; and choosing which language is primary before importing | Planned |
-| `import-existing-blocks` | the import fills blocks Webmio already has: grids of repeated cards (image, title, text, link) as a `cards` block instead of one gallery per card (found on vroomagazine, a stress test, not a target site), key figures, numbered steps, map embeds, booking buttons, opening hours, and award or partner logos in the footer as a logos block (Mareš's awards) | Planned |
+| [`import-existing-blocks`](../openspec/changes/archive/2026-10-09-import-existing-blocks/) | the import fills blocks Webmio already has: grids of repeated cards (image, title, text, link) as a `cards` block instead of one gallery per card (found on vroomagazine, a stress test, not a target site), key figures, numbered steps, map embeds, booking buttons, opening hours, and award or partner logos in the footer as a logos block (Mareš's awards) | Done |
 | `banner-block` | a full-width image with a heading, text and a button anywhere on a page (the hero is first only); the import maps mid-page "hero" bands to it | Planned |
 ### 4. Templates as website systems · In progress
 
@@ -121,7 +123,7 @@ Blocks the example sites need come first, because the templates render them
 | Change | What | Status |
 | --- | --- | --- |
 | `domain-guides` | DNS guides per registrar with a live record check | Planned |
-| `contact-form` | a form endpoint, email to the owner, spam protection | Planned |
+| `contact-form` | **v1:** an interactive contact form block that emails each message to the owner: "Contact us" and "Let us call you back" (name, phone or email, a message), which owners use in campaigns to collect contacts; spam protection without third-party scripts; the import maps old sites' forms to it | Planned |
 | `scheduled-jobs` | recurring server jobs in one place; the first removes deleted websites after 30 days | Planned |
 | `website-health` | daily checks, *Website healthy*, alerts | Planned |
 
@@ -249,8 +251,13 @@ Product (2026-10, from the strategy refresh):
 - **`website-health`:** a daily check (SSL, domain, pages published, broken links, images,
   contact form, required business information, sitemap, structured data) shown as *Website
   healthy* or a list of what to fix, and emailed when something breaks.
-- **`contact-form`:** submissions to a small endpoint, emailed to the owner, spam-protected
-  without third-party scripts.
+- **`contact-form`** (v1, before the beta): a contact form block in two kinds, "Contact us" (name,
+  email or phone, a message) and "Let us call you back" (name and phone, a good time to call),
+  that owners place on pages and link from campaigns to collect contacts. Submissions go to a
+  small endpoint on our hosting, are emailed to the owner (and listed in the panel), and are
+  spam-protected without third-party scripts (a honeypot field, a time check, rate limits). The
+  guided setup can add it to the Contact page, and the import maps an old site's contact form to
+  it instead of leaving it out.
 - Later: registering domains from the admin (Route 53 Domains; a Czech registrar's API for
   `.cz`), other DNS records editable in the admin.
 
