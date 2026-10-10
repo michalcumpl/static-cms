@@ -67,9 +67,11 @@ The operator SHALL be told by email when:
 - the admin doesn't answer its health endpoint over HTTPS for three minutes;
 - the server's status checks fail;
 - the server's disk is more than 80 % full;
-- database replication hasn't completed for more than five minutes.
+- database replication hasn't completed for more than five minutes;
+- the redirect server for bare domains doesn't answer for three minutes;
+- the redirect server's status checks fail.
 
-They SHALL be told again when it recovers. A server whose status checks fail SHALL be recovered automatically.
+They SHALL be told again when it recovers. A server whose status checks fail, the admin's or the redirect server, SHALL be recovered automatically.
 
 #### Scenario: The admin is down
 - **WHEN** the admin stops answering for three minutes
@@ -78,6 +80,10 @@ They SHALL be told again when it recovers. A server whose status checks fail SHA
 #### Scenario: Backups stop
 - **WHEN** replication of the database fails for more than five minutes
 - **THEN** the operator gets an email saying backups are falling behind
+
+#### Scenario: The redirect server is down
+- **WHEN** the redirect server stops answering for three minutes
+- **THEN** the operator gets an email saying bare domains aren't redirecting, and another once it answers again
 
 ### Requirement: Sending mail
 In production the admin SHALL send sign-in links and invitations from an address at `mail.webmio.net`. The domain SHALL be authenticated, so receiving servers can check that the mail is Webmio's (DKIM, SPF and DMARC). The address SHALL accept no incoming mail.
