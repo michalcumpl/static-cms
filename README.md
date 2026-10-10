@@ -92,8 +92,28 @@ pnpm dev                                                                      # 
 
 In development the admin keeps its database, media and outgoing emails under `apps/admin/data/`
 (emails are written to `data/outbox/` unless `SMTP_URL` and `MAIL_FROM` are set), and generates
-its own `SECRET_KEY` for encrypting publishing tokens. In production set `SECRET_KEY`, `ORIGIN`,
-`DATABASE_PATH`, `MEDIA_DIR`, `SMTP_URL`, `MAIL_FROM` and `BODY_SIZE_LIMIT=25M`.
+its own `SECRET_KEY` for encrypting publishing tokens.
+
+### Production
+
+Production runs on AWS: one server with the admin's Docker image (`apps/admin/Dockerfile`),
+media in S3, the database replicated to S3 by Litestream, and mail through Amazon SES. Every
+push to `main` that passes CI is deployed. [`infra/README.md`](infra/README.md) is the operator
+guide, covering setting up, deploys, restoring and alarms.
+
+The server sets the admin's environment from Parameter Store:
+
+| Variable | What it is |
+| --- | --- |
+| `ORIGIN` | the admin's address, such as `https://app.webmio.eu` |
+| `SECRET_KEY` | encrypts hosting tokens at rest |
+| `DATABASE_PATH`, `MIGRATIONS_DIR` | set by the image: `/data/app.db`, `/app/drizzle` |
+| `MEDIA_BUCKET` | images go to this S3 bucket; without it, to the folder `MEDIA_DIR` |
+| `MAIL_TRANSPORT=ses`, `MAIL_FROM` | mail through SES; `SMTP_URL` with `MAIL_FROM` sends through SMTP instead |
+| `ADDRESS_HEADER=X-Forwarded-For`, `XFF_DEPTH=1` | the visitor's address behind Caddy |
+| `WEBMIO_*`, `AWS_REGION` | Webmio hosting, below; the server's role supplies AWS credentials |
+
+`GET /healthz` answers 200 once the database is open and migrated, and 503 otherwise.
 
 ### Webmio hosting
 
@@ -112,7 +132,7 @@ environment:
 | `WEBMIO_HOSTING_CONNECTION_GROUP_ID` | the connection group custom domains' tenants join |
 | `WEBMIO_SITES_DOMAIN` | the free addresses' domain (default `webmio.site`) |
 | `WEBMIO_CNAME_DOMAIN` | where websites' CNAME targets live, `<name>.<this>` (default `sites.webmio.net`) |
-| `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | the admin's AWS access, from the stack's IAM user |
+| `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | a local admin's AWS access, from the stack's IAM user; the server uses its role instead |
 
 Webmio hosting counts as configured when the first four are set. The end-to-end tests use
 `WEBMIO_HOSTING_FAKE_DIR`, a folder that stands in for AWS; it is ignored in production.
@@ -131,7 +151,7 @@ the end-to-end runs use it, since their fake hosting answers at once.
 | `pnpm --filter @webmio/admin test:e2e` | Playwright end-to-end tests |
 | `pnpm typecheck` · `pnpm lint` | types, and Biome's checks |
 | `pnpm build-demo` | renders the demo site into `packages/export/out/website.zip` |
-| `pnpm --filter @webmio/admin admin <command>` | server administration: `create-user`, `media-cleanup`, `load-site` |
+| `pnpm --filter @webmio/admin admin <command>` | server administration: `create-user`, `media-cleanup`, `load-site`, `import-site`, `media-upload`; on the server `docker exec webmio-admin node dist/cli/admin.js <command>` |
 
 ## Documentation
 

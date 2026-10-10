@@ -1,8 +1,15 @@
-# Webmio hosting infrastructure
+# Webmio infrastructure
 
-The AWS resources that serve every published website (own-hosting design.md decision 13), as a
-[Pulumi](https://www.pulumi.com) program in TypeScript. One stack per environment: `dev` and
-`prod`, in the same AWS account.
+Webmio's AWS resources, as a [Pulumi](https://www.pulumi.com) program in TypeScript. One stack
+per environment, `dev` and `prod`, in the same AWS account. The program has three parts:
+
+- **`src/hosting.ts`:** Webmio hosting, which serves every published website (own-hosting
+  design.md decision 13).
+- **`src/admin.ts`:** the admin's server (admin-on-aws). The files the server runs are in
+  `server/`.
+- **`src/github.ts`:** deploys from GitHub Actions.
+
+## Webmio hosting
 
 | Resource | What it does |
 | --- | --- |
@@ -13,12 +20,41 @@ The AWS resources that serve every published website (own-hosting design.md deci
 | Multi-tenant distribution, connection group | serves everything; custom domains join as tenants, created by the admin |
 | Tenant `webmio-<stack>-free-addresses` | `*.<sitesDomain>`, with an ACM wildcard certificate |
 | Route 53 zones `<sitesDomain>`, `<netDomain>` | `*.<sitesDomain>` and `*.sites.<netDomain>` point at the connection group |
-| IAM user `webmio-<stack>-admin` | the admin's access: the bucket's `sites/`, the key-value store, tenants |
+| IAM user `webmio-<stack>-admin` | a local admin's access to the hosting: the bucket's `sites/`, the key-value store, tenants; only with `localAdminUser` |
 
-| Stack | `sitesDomain` | `netDomain` |
+## The admin's server
+
+| Resource | What it does |
+| --- | --- |
+| EC2 `webmio-<stack>-server` (`t4g.small`, Amazon Linux 2023) and its Elastic IP | runs the admin, Litestream and Caddy as Docker containers under systemd (`server/`) |
+| Role `webmio-<stack>-server` | the server's access: hosting, its buckets, SES, its parameters, ECR, logs, metrics, Session Manager |
+| S3 `webmio-<stack>-media-…` | every project's images, under `<projectId>/` |
+| S3 `webmio-<stack>-backups-…` | Litestream's replica under `admin/`; `seed/app.db` when moving in; versioned, 30 days |
+| ECR `webmio-<stack>-admin` | the admin's images, tagged with their commit; the newest 20 are kept |
+| Parameters `/webmio/<stack>/admin/` | `env`, `secret-key`, `caddyfile`, `litestream`, and `image` (the tag running, set by deploys) |
+| SES identity `mail.<netDomain>` | sign-in and invitation mail, with DKIM, MAIL FROM `bounce.mail.<netDomain>` and DMARC |
+| SNS `webmio-<stack>-alerts` (both regions), Route 53 health check, CloudWatch alarms | email when the admin is down, the server fails, the disk is over 80 %, or the backup lags |
+| Log groups `/webmio/<stack>/admin`, `/litestream`, `/caddy` | the containers' logs, 30 days |
+| OIDC provider, role `webmio-<stack>-deploy` | GitHub Actions pushes images and runs `webmio-deploy` |
+
+## Stacks
+
+| Setting | `dev` | `prod` |
 | --- | --- | --- |
-| `dev` | `dev.webmio.site` | `dev.webmio.net` |
-| `prod` | `webmio.site` | `webmio.net` |
+| `sitesDomain` | `dev.webmio.site` | `webmio.site` |
+| `netDomain` | `dev.webmio.net` | `webmio.net` |
+| `adminDomain` | `app.dev.webmio.net` | `app.webmio.eu` |
+| `adminZone` | `dev.webmio.net` | none: its DNS is at Webglobe |
+| `localAdminUser` | `true` | `false` |
+| `githubProvider` | `create` | `existing` |
+| `adminSecretKey`, `alertEmail` | secrets, set once | secrets, set once |
+
+The secrets stay out of the repository, which is public:
+
+```sh
+openssl rand -base64 48 | pulumi config set --secret adminSecretKey --stack prod
+pulumi config set --secret alertEmail you@example.com --stack prod
+```
 
 ## What you need
 
@@ -80,38 +116,209 @@ parent answers with them:
 dig +norec NS dev.webmio.site @ns1.webglobe.cz
 ```
 
-Then deploy the rest. The wildcard certificate validates through the delegated zone, so this
-waits until the delegation is live; CloudFront takes a few minutes more.
+Then set the stack's secrets (Stacks, above) and deploy the rest. The wildcard certificate
+validates through the delegated zone, so this waits until the delegation is live; CloudFront
+takes a few minutes more.
 
 ```sh
 pulumi up --stack dev
 ```
 
-## The admin's environment
+### After the first deploy
 
-The stack's outputs are the admin's variables (README, "Webmio hosting"):
+1. **Alerts:** AWS sends `alertEmail` two subscription emails, one per region. Confirm both, or
+   no alarm reaches you.
+2. **The admin's address:**
+   - `dev` creates the A record for `app.dev.webmio.net` itself.
+   - For `prod`, add an A record for `app.webmio.eu` at Webglobe, pointing at
+     `pulumi stack output adminAddress --stack prod`.
+
+   Caddy gets the certificate on the first request once DNS points at the server.
+3. **GitHub:** create the environment named after the stack, and give it the stack's outputs:
+
+   ```sh
+   gh api -X PUT repos/michalcumpl/webmio/environments/prod
+   gh variable set AWS_DEPLOY_ROLE_ARN --env prod --body "$(pulumi stack output AWS_DEPLOY_ROLE_ARN --stack prod)"
+   gh variable set ECR_REPOSITORY --env prod --body "$(pulumi stack output ECR_REPOSITORY --stack prod)"
+   gh variable set DEPLOY_STACKS --body '["dev","prod"]'
+   ```
+
+   - In the repository's settings, limit the `prod` environment's deployment branches to `main`.
+   - The deploy role trusts only the GitHub environment named after its stack. GitHub names
+     the repository with immutable IDs in its tokens:
+     `repo:michalcumpl@134929375/webmio@1394510292:environment:<stack>`. Check the form with
+     `gh api repos/michalcumpl/webmio/actions/oidc/customization/sub`.
+4. **The first image:** run the Deploy workflow by hand (`gh workflow run deploy.yml -f stack=prod`).
+   - Until the first deploy, the server keeps retrying; it starts the newest image in the
+     repository.
+   - Without a replica or `seed/app.db` (Moving in, below), it starts with an empty database.
+5. **The first account,** on the server (Running a command on the server, below):
+
+   ```sh
+   docker exec webmio-admin node dist/cli/admin.js create-user you@example.com "Your workspace"
+   ```
+
+   This prints a sign-in link. Webmio is invite-only: the sign-in page sends links only to
+   existing accounts, and says "sent" either way.
+6. **Mail out of the SES sandbox:** until AWS grants production access, SES sends only to
+   verified addresses.
+   - Request it in the SES console (Account dashboard → Request production access): transactional
+     mail, sign-in links and invitations.
+   - Meanwhile, verify a tester's address with
+     `aws sesv2 create-email-identity --region eu-central-1 --email-identity them@example.com`;
+     they confirm it by email.
+   - Google and others mail daily DMARC reports to `alertEmail`; a filter can archive them.
+
+## Running the admin
+
+### Deploys
+
+- **Automatic:** every push to `main` whose CI passes is deployed to the stacks in the
+  repository variable `DEPLOY_STACKS` (`.github/workflows/deploy.yml`).
+- **By hand,** any branch to one stack:
+  `gh workflow run deploy.yml --ref <branch> -f stack=dev`. Testing a branch on `dev` is
+  allowed; `prod` takes only `main`.
+- **What a deploy does:**
+  1. It builds `apps/admin/Dockerfile` for arm64 and pushes it to ECR as `<commit>`.
+  2. It runs `/usr/local/bin/webmio-deploy <commit>` on the server through SSM.
+  3. The server starts the new image and waits up to two minutes for `/healthz`.
+  4. If `/healthz` doesn't answer, it starts the previous image again, and the workflow fails.
+  5. Migrations run when the admin starts. They only add, so going back is safe.
+
+### Running a command on the server
+
+There is no SSH. Open a shell through Session Manager (`aws ssm start-session --target
+"$(pulumi stack output adminServer --stack dev)"`, with the Session Manager plugin), or run one
+command:
+
+```sh
+aws ssm send-command --instance-ids "$(pulumi stack output adminServer --stack dev)" \
+  --document-name AWS-RunShellScript --parameters 'commands=["systemctl is-active webmio-admin"]'
+```
+
+On the server:
+
+- **The admin command:** `docker exec webmio-admin node dist/cli/admin.js <command>`, the same
+  commands as `pnpm admin` (`create-user`, `media-cleanup`, `load-site`, `import-site`).
+- **Units:** `webmio-restore` (once at boot), `webmio-admin`, `webmio-litestream`,
+  `webmio-caddy`, and the `webmio-replica-lag` timer. `systemctl status <unit>`;
+  `journalctl -u <unit>` for what they printed before the containers started.
+- **Logs:** the containers' logs are in CloudWatch:
+  `aws logs tail /webmio/dev/admin --region eu-central-1 --since 1h`.
+- **Configuration:** each unit renders its configuration from the parameters under
+  `/webmio/<stack>/admin/` when it starts. After `pulumi up` changes a parameter, restart the
+  unit: `systemctl restart webmio-admin`.
+
+### Replacing the server
+
+The server is disposable. A replacement restores the database from the replica and the media
+are in S3. It comes up by itself only for a hardware fault (EC2 recover). After a terminated or
+broken server, or to take a newer Amazon Linux:
+
+```sh
+pulumi up --stack dev --refresh
+```
+
+- **What happens:** the old server is deleted before the new one is created, so two servers
+  never write to the replica.
+- **The `dev` drill:** the admin was down for 2½ to 3¼ minutes, and no writes were lost, even
+  with the server terminated 5 seconds after a write.
+- **Changing a file in `server/`** also replaces the server on the next `pulumi up`.
+
+### Restoring an earlier moment
+
+Litestream keeps 30 days. To put the database back to a moment, on the server:
+
+```sh
+cd /var/lib/webmio
+ls="docker run --rm --user 1000:1000 -v /var/lib/webmio:/data -v /etc/webmio/litestream.yml:/etc/litestream.yml:ro litestream/litestream:0.5.17"
+
+# 1. The moment, in UTC, into a separate file; check it before going on.
+$ls restore -timestamp 2026-10-09T13:44:00Z -o /data/earlier.db /data/app.db
+dnf install -y sqlite && sqlite3 -readonly earlier.db 'select email from users'
+
+# 2. Swap it in, with the admin and Litestream stopped; the current database is kept aside.
+systemctl stop webmio-admin webmio-litestream
+mkdir before-restore && mv app.db app.db-wal app.db-shm before-restore/
+mv earlier.db app.db && chown -R 1000:1000 /var/lib/webmio
+$ls reset /data/app.db
+systemctl start webmio-litestream webmio-admin
+```
+
+- **Why the reset:** it clears Litestream's local records of the database that was replaced, so
+  it starts afresh from the restored one. It logs "detected database behind replica" and goes
+  on from the replica's latest transaction number. This is the procedure that was tested; it
+  wasn't tried without the reset.
+- **Afterwards:** it replicates the restored database as the latest state.
+- **Going back:** swap `before-restore/` in the same way.
+- **On `dev`:** restoring 13:44 gave the admin exactly what it held then, and swapping back
+  restored today.
+
+### Moving an installation in
+
+To start a new server with an existing installation's data:
+
+1. **The database:** before the server first boots, put it where the restore looks when there
+   is no replica:
+
+   ```sh
+   sqlite3 apps/admin/data/app.db ".backup /tmp/app.db"
+   aws s3 cp /tmp/app.db "s3://$(pulumi stack output adminBackupsBucket --stack prod)/seed/app.db"
+   ```
+
+2. **The media:** copy the media folder into the bucket, under the same names. It's safe to
+   run again, and skips files already there with the same size.
+
+   ```sh
+   cd apps/admin
+   MEDIA_DIR=data/media AWS_REGION=eu-central-1 \
+     MEDIA_BUCKET="$(pulumi stack output adminMediaBucket --stack prod --cwd ../../infra)" \
+     pnpm admin media-upload
+   ```
+
+   It uses your AWS credentials, which need write access to the bucket.
+
+### Alarms
+
+Each alarm emails `alertEmail`, and again when it recovers. In the `dev` check:
+
+| Alarm | Fires on | Fired after |
+| --- | --- | --- |
+| `admin-down` (`us-east-1`) | `https://<adminDomain>/healthz` failing for 3 minutes, checked from three regions | about 5 minutes |
+| `server-disk` | the disk over 80 % | about 4 minutes |
+| `replica-lag` | the replica more than 5 minutes behind, or its metric missing (Litestream stopped) | about 8½ minutes |
+| `server-system-check` | a hardware fault; EC2 also moves the server to other hardware | |
+| `server-instance-check` | the operating system not responding | |
+
+All recovered within 4 minutes of the fix.
+
+## Running the admin locally against `dev`
+
+With `localAdminUser`, the stack has an IAM user for a local admin. Its outputs are the
+variables a local admin needs (README, "Webmio hosting"):
 
 ```sh
 pulumi stack output --stack dev --show-secrets --shell
 ```
 
-prints `WEBMIO_HOSTING_BUCKET=…`, `WEBMIO_HOSTING_KVS_ARN=…`, `WEBMIO_HOSTING_DISTRIBUTION_ID=…`,
-`WEBMIO_HOSTING_CONNECTION_GROUP_ID=…`, `WEBMIO_SITES_DOMAIN=…`, `WEBMIO_CNAME_DOMAIN=…`,
-`AWS_REGION=…`, `AWS_ACCESS_KEY_ID=…` and `AWS_SECRET_ACCESS_KEY=…`, plus the zones' name
-servers. Put the `WEBMIO_*` and `AWS_*` lines in the server's environment and restart it. For a
-local admin against `dev`, put them in `apps/admin/.env`, which git ignores.
+This prints `WEBMIO_HOSTING_*`, `WEBMIO_SITES_DOMAIN`, `WEBMIO_CNAME_DOMAIN` and `AWS_*` lines,
+among the other outputs. Put them in `apps/admin/.env`, which git ignores.
 
 ## Changes and maintenance
 
 - **Edge code:** after changing `packages/edge`, rebuild and `pulumi up`. The function is
   published at once; the Lambda@Edge function gets a new version, and CloudFront takes a few
   minutes to roll it out.
-- **Rotating the admin's key:** `pulumi up --replace 'urn:pulumi:<stack>::webmio-hosting::aws:iam/accessKey:AccessKey::webmio-<stack>-admin'`,
-  then set the new outputs in the admin's environment and restart it.
+- **Rotating the local admin's key:** `pulumi up --replace 'urn:pulumi:<stack>::webmio-hosting::aws:iam/accessKey:AccessKey::webmio-<stack>-admin'`,
+  then put the new outputs in `apps/admin/.env`. The server needs no key: it uses its role.
+- **The images Caddy and Litestream run** are pinned in `src/admin.ts`. A new version takes
+  effect with the next `pulumi up`, which replaces the server.
 - **Moving one website:** add a Route 53 record for its CNAME target
   (`<name>.sites.<netDomain>`) pointing elsewhere; it takes precedence over the wildcard, and
   the website's owner changes nothing.
 - **Tearing a stack down:** `pulumi destroy --stack dev`. Delete the admin's custom domain
-  tenants first (disconnect the domains in the admin). AWS deletes Lambda@Edge replicas hours
+  tenants first (disconnect the domains in the admin). The `prod` stack's buckets and image
+  repository refuse to be deleted while they hold anything; `dev`'s are emptied. GitHub's OIDC
+  provider stays for the other stack. AWS deletes Lambda@Edge replicas hours
   after the distribution, so the function's deletion can fail at first: run `pulumi destroy`
   again later.

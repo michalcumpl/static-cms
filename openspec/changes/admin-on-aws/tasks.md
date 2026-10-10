@@ -29,10 +29,10 @@
 - [x] 4.2 Deploy a version whose `/healthz` never answers (a temporary branch, `workflow_dispatch`); verify the previous version is running again and the workflow failed; then deploy `main` again
 - [x] 4.3 Restore drill: terminate the `dev` instance and let Pulumi (`pulumi up`) or the recover action bring a new one; verify the admin starts with the data from before, and record how long it took and how many seconds of writes were lost
 - [x] 4.4 Restore an earlier moment with `litestream restore -timestamp` as the guide describes; verify the admin shows what it held then
-- [ ] 4.5 Trigger each alarm (stop the admin container, fill the disk past 80 % with a temporary file, stop Litestream); verify each email arrives and its recovery email follows
+- [x] 4.5 Trigger each alarm (stop the admin container, fill the disk past 80 % with a temporary file, stop Litestream); verify each email arrives and its recovery email follows
 
 ## 5. Documentation and `prod`
 
 - [ ] 5.1 Write the operator guide in `infra/README.md`: first deploy, seeding an existing installation (`seed/app.db`, `media-upload`), restoring an earlier moment, replacing the server, SES production access, the `app.webmio.eu` A record; update the README's production section and the roadmap's phase 7 row; verify every command in the guide ran during group 4
-- [ ] 5.2 Run `pnpm lint`, `pnpm typecheck` and `pnpm test` from the root and the end-to-end suite; verify all pass
+- [x] 5.2 Run `pnpm lint`, `pnpm typecheck` and `pnpm test` from the root and the end-to-end suite; verify all pass
 - [ ] 5.3 Deploy `prod` with the operator: `own-hosting`'s delegations of `webmio.site` and `webmio.net`, `pulumi up --stack prod`, the `app.webmio.eu` A record, the SES production access request, the first deploy; verify `https://app.webmio.eu/healthz` and a sign-in email

@@ -129,7 +129,7 @@ Blocks the example sites need come first, because the templates render them
 
 | Change | What | Status |
 | --- | --- | --- |
-| `admin-on-aws` | the admin on one small EU server at `app.webmio.eu`, media in S3, Litestream backups | Planned |
+| `admin-on-aws` | the admin on one small EU server at `app.webmio.eu`, media in S3, Litestream backups; running on `dev` | Next |
 | `bare-domain-redirect` | `https://<domain>` redirects to `https://www.<domain>` with a valid certificate and the same path, from a tiny redirect server of its own; customers set `@ A` to its address instead of their registrar's forwarding | Planned |
 | `presentation-site` | `webmio.cz` and `webmio.eu`, built and published with Webmio | Planned |
 | `operator-console` | the operator's own part of the admin: an overview and stats, customers and their websites, inviting users, deleting websites and accounts, plan status, renewal dates, manual invoices | Planned |
