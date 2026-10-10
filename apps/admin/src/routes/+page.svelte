@@ -16,6 +16,14 @@ const i18n = getI18n();
 // A lone owner's workspace isn't named until there is more than one.
 const showWorkspaces = $derived(data.workspaces.length > 1);
 const total = $derived(data.workspaces.reduce((sum, w) => sum + w.projects.length, 0));
+/** An imported site's address as people know it: its host. */
+const host = (address: string) => {
+  try {
+    return new URL(address).host;
+  } catch {
+    return address;
+  }
+};
 
 // Deleted websites: Restore, or Delete now after a confirmation (project-deletion decision 5).
 let purgeDialog: Dialog | undefined = $state();
@@ -64,6 +72,22 @@ async function purgeNow() {
           </div>
         {/if}
       </div>
+      {#each workspace.imports.running as running (running.id)}
+        <Notice kind="info">
+          <p>
+            {i18n.t("projects.importing", { address: host(running.address) })}
+            <a href={`/w/${workspace.id}/imports/${running.id}`}>{i18n.t("projects.showProgress")}</a>
+          </p>
+        </Notice>
+      {/each}
+      {#each workspace.imports.failed as failed (failed.id)}
+        <Notice kind="attention">
+          <p>
+            {i18n.t("projects.importFailed", { address: host(failed.address), error: failed.error })}
+            <a href={`/w/${workspace.id}/new`}>{i18n.t("projects.importAgain")}</a>
+          </p>
+        </Notice>
+      {/each}
       {#if workspace.projects.length === 0}
         <EmptyState title={i18n.t("projects.empty")} icon="globe">
           <p>{i18n.t("projects.emptyText")}</p>
@@ -78,7 +102,10 @@ async function purgeNow() {
                   <Button href={projectPaths(project.id).edit()} kind="primary" icon="pencil" size="sm">{i18n.t("common.edit")}</Button>
                 </div>
                 {#if workspace.setups[project.id]}
-                  <a class="setup" href={`/p/${project.id}/setup/${workspace.setups[project.id]}`}>{i18n.t("projects.finishSetup")}</a>
+                  <a class="note" href={`/p/${project.id}/setup/${workspace.setups[project.id]}`}>{i18n.t("projects.finishSetup")}</a>
+                {/if}
+                {#if workspace.imports.toReview.includes(project.id)}
+                  <a class="note" href={projectPaths(project.id).importReview}>{i18n.t("projects.toReview")}</a>
                 {/if}
               </Card>
             </li>
@@ -174,7 +201,7 @@ async function purgeNow() {
     text-decoration: underline;
   }
 
-  .setup {
+  .note {
     display: inline-block;
     margin-top: var(--ui-space-2);
     font-size: var(--ui-text-sm);

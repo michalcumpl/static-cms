@@ -71,6 +71,11 @@ export const cs: Messages = {
     netlify: "Netlify",
     deletedNote: "{name} je smazaný. Obnovit ho můžete v části Smazané weby.",
     finishSetup: "Dokončit nastavení",
+    importing: "Převádíme {address}…",
+    showProgress: "Zobrazit průběh",
+    importFailed: "Převod webu {address} se nepodařil: {error}",
+    importAgain: "Začít znovu",
+    toReview: "Převod ke kontrole",
     deleted: {
       title: "Smazané weby",
       when: "Smazáno {date}, {person}",

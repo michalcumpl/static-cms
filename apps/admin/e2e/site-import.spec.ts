@@ -210,3 +210,45 @@ test("Pages without a description: one item leading to the site's description", 
   await expect(link).toHaveAttribute("href", /\/website\?focus=/);
   await expect(todo.getByText("Show each (5)")).toBeVisible();
 });
+
+// Coming back to an import from the projects page (site-import spec, "Import progress").
+test("Leaving a running import: the projects page leads back to its progress", async ({ page }) => {
+  // `/slow` answers after 20 seconds: the import is still reading it, until its 15-second limit.
+  test.setTimeout(90_000);
+  await startImport(page, `${bakery}/slow`);
+  await expect(page).toHaveURL(/\/imports\/im_/);
+  const progress = page.url();
+  await page.goto("/");
+  await expect(page.getByText(`Importing 127.0.0.1:${bakeryPort}…`)).toBeVisible();
+  await page.getByRole("link", { name: "Show progress" }).first().click();
+  await expect(page).toHaveURL(progress);
+  // It fails (`/slow` is no web page); the projects page then says why.
+  const alert = page.getByRole("alert");
+  await expect(alert).toBeVisible({ timeout: 40_000 });
+  const reason = (await alert.textContent())?.trim() ?? "";
+  await page.goto("/");
+  await expect(
+    page.getByText(`The import of 127.0.0.1:${bakeryPort} failed: ${reason}`).first(),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Start again" }).first()).toHaveAttribute(
+    "href",
+    newProject(),
+  );
+});
+
+test("A finished import: its project leads to the review until it is dismissed", async ({
+  page,
+}) => {
+  await importBakery(page);
+  const review = page.url();
+  const projectId = /\/p\/(p_[\w-]+)\//.exec(review)?.[1] ?? "";
+  await page.goto("/");
+  const card = page
+    .getByRole("listitem")
+    .filter({ has: page.locator(`a[href="/p/${projectId}/"]`) });
+  await card.getByRole("link", { name: "Import to review" }).click();
+  await expect(page).toHaveURL(review);
+  await page.getByRole("button", { name: "Done reviewing" }).click();
+  await page.goto("/");
+  await expect(card.getByRole("link", { name: "Import to review" })).toHaveCount(0);
+});
