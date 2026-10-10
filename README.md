@@ -140,6 +140,7 @@ environment:
 | `WEBMIO_HOSTING_CONNECTION_GROUP_ID` | the connection group custom domains' tenants join |
 | `WEBMIO_SITES_DOMAIN` | the free addresses' domain (default `webmio.site`) |
 | `WEBMIO_CNAME_DOMAIN` | where websites' CNAME targets live, `<name>.<this>` (default `sites.webmio.net`) |
+| `WEBMIO_REDIRECT_ADDRESS` | the redirect server's address (`redirectAddress`), which bare domains' A records point at; without it, the Domain page asks to forward a bare domain at the registrar |
 | `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | a local admin's AWS access, from the stack's IAM user; the server uses its role instead |
 
 Webmio hosting counts as configured when the first four are set. The end-to-end tests use

@@ -1,0 +1,21 @@
+[Unit]
+Description=Webmio: Caddy redirecting bare domains to www
+After=docker.service
+Requires=docker.service
+StartLimitIntervalSec=0
+
+[Service]
+EnvironmentFile=/etc/webmio/server.env
+ExecStartPre=-/usr/bin/docker rm -f webmio-redirect
+# Its certificates are kept in /var/lib/caddy across restarts, not across replacements.
+ExecStart=/usr/bin/docker run --rm --name webmio-redirect \
+  -p 80:80 -p 443:443 -p 443:443/udp \
+  -v /etc/webmio/Caddyfile:/etc/caddy/Caddyfile:ro -v /var/lib/caddy:/data \
+  --log-driver awslogs --log-opt awslogs-region=${WEBMIO_REGION} \
+  --log-opt awslogs-group=${WEBMIO_LOGS}/caddy ${WEBMIO_CADDY_IMAGE}
+ExecStop=/usr/bin/docker stop webmio-redirect
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

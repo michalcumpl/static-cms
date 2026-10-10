@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import { alertEmail, alerts, alertsUsEast1 } from "./alerts.js";
 import {
   account,
   bucket,
@@ -21,10 +22,10 @@ import {
   store,
   usEast1,
 } from "./hosting.js";
+import { redirect } from "./redirect.js";
 
 export const adminDomain = config.require("adminDomain");
 const adminZone = config.get("adminZone") ?? "";
-const alertEmail = config.requireSecret("alertEmail");
 const adminSecretKey = config.requireSecret("adminSecretKey");
 const mailDomain = `mail.${netDomain}`;
 const keep = stack === "prod";
@@ -112,6 +113,10 @@ const parameter = (key: string, value: pulumi.Input<string>, description: string
     description,
   });
 
+// Where bare domains' A records point (bare-domain-redirect design.md decision 6).
+const redirectAddress = redirect
+  ? pulumi.interpolate`WEBMIO_REDIRECT_ADDRESS=${redirect.address.publicIp}\n`
+  : "";
 /** The admin's environment, apart from SECRET_KEY. */
 const environment = pulumi.interpolate`ORIGIN=https://${adminDomain}
 ADDRESS_HEADER=X-Forwarded-For
@@ -126,7 +131,7 @@ WEBMIO_HOSTING_DISTRIBUTION_ID=${distribution.id}
 WEBMIO_HOSTING_CONNECTION_GROUP_ID=${connectionGroup.id}
 WEBMIO_SITES_DOMAIN=${sitesDomain}
 WEBMIO_CNAME_DOMAIN=${cnameDomain}
-`;
+${redirectAddress}`;
 parameter("env", environment, "The admin's environment, apart from SECRET_KEY");
 
 new aws.ssm.Parameter(name("admin-secret-key"), {
@@ -452,21 +457,7 @@ if (adminZone) {
   });
 }
 
-// Alerts by email (design.md decision 8), from both regions: Route 53's health check metrics
-// exist only in us-east-1. The operator confirms each subscription once.
-const alertTopic = (provider?: aws.Provider) => {
-  const suffix = provider ? "-us-east-1" : "";
-  const topic = new aws.sns.Topic(name(`alerts${suffix}`), { name: name("alerts") }, { provider });
-  new aws.sns.TopicSubscription(
-    name(`alerts${suffix}`),
-    { topic: topic.arn, protocol: "email", endpoint: alertEmail },
-    { provider },
-  );
-  return topic.arn;
-};
-const alerts = alertTopic();
-const alertsUsEast1 = alertTopic(usEast1);
-
+// Alerts by email (design.md decision 8), on the topics in alerts.ts.
 const healthCheck = new aws.route53.HealthCheck(name("admin"), {
   type: "HTTPS",
   fqdn: adminDomain,

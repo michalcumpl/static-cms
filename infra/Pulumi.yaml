@@ -29,6 +29,10 @@ config:
     type: string
     default: create
     description: "create, or existing when another stack in the account created GitHub's OIDC provider."
+  redirectServer:
+    type: boolean
+    default: true
+    description: Whether to run the redirect server that answers customers' bare domains.
   localAdminUser:
     type: boolean
     default: false

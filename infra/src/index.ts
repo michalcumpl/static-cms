@@ -23,6 +23,7 @@ import {
   sitesZone,
   store,
 } from "./hosting.js";
+import { redirect } from "./redirect.js";
 
 /** The admin's environment (README, "Webmio hosting"). */
 export const WEBMIO_HOSTING_BUCKET = bucket.bucket;
@@ -47,6 +48,10 @@ export const adminServer = server.id;
 /** The GitHub environment's variables for the deploy workflow (infra/README.md). */
 export const AWS_DEPLOY_ROLE_ARN = deployRole.arn;
 export const ECR_REPOSITORY = repository.repositoryUrl;
+
+/** Where customers' bare domains point (infra/README.md, "The redirect server"). */
+export const redirectAddress = redirect?.address.publicIp;
+export const redirectServer = redirect?.server.id;
 
 /** Where to delegate the two domains (infra/README.md). */
 export const sitesNameServers = sitesZone.nameServers;

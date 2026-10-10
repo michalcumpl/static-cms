@@ -2,14 +2,14 @@
 
 ## 1. The redirect server's Caddy configuration
 
-- [ ] 1.1 Add `infra/server/redirect/Caddyfile.template` (design decision 3: on-demand TLS with `ask`, HTTPS and HTTP redirects to `https://www.{host}{uri}` with `Cache-Control: max-age=86400`, `/healthz`, the "No website here" page by address) and the `webmio-redirect-caddy.service` unit; verify with `shellcheck` where scripts apply and `docker run caddy:2.11.4 caddy validate` on the rendered file
-- [ ] 1.2 Test the Caddyfile locally with Docker: a stub `ask` endpoint allowing one domain, Caddy's internal CA in place of Let's Encrypt, and `curl --resolve`; verify a 301 to `www.` keeping path and query over HTTPS and HTTP, a failed handshake for a domain the stub refuses, 404 by address, 200 on `/healthz`, and that redirects keep working once the stub is stopped; record in design.md's open question when Caddy asks again for a renewal
+- [x] 1.1 Add `infra/server/redirect/Caddyfile` (design decision 3: on-demand TLS with `ask`, HTTPS and HTTP redirects to `https://www.{host}{uri}` with `Cache-Control: max-age=86400`, `/healthz`, the "No website here" page by address) the `webmio-redirect.service` unit and `bootstrap.sh`; verify `bootstrap.sh` with `shellcheck` and `docker run caddy:2.11.4 caddy validate` on the rendered file
+- [x] 1.2 Test the Caddyfile locally with Docker: a stub `ask` endpoint allowing one domain, Caddy's internal CA in place of Let's Encrypt, and `curl --resolve`; verify a 301 to `www.` keeping path and query over HTTPS and HTTP, a failed handshake for a domain the stub refuses, 404 by address, 200 on `/healthz`, and that redirects keep working once the stub is stopped; record in design.md's open question when Caddy asks again for a renewal
 
 ## 2. Infrastructure (`infra/`)
 
-- [ ] 2.1 Move the alert topics into `infra/src/alerts.ts`, imported by `admin.ts`; verify `pulumi preview --stack dev` shows no changes
-- [ ] 2.2 Add `infra/src/redirect.ts` (design decisions 1, 2, 6 and 7): the `redirectServer` setting in `Pulumi.yaml`, the protected Elastic IP with its association, the security group, the role (SSM and its log group), the log group, the gzipped user data with the Caddyfile and unit, the `t4g.nano` instance, the health check and the three alarms; export `redirectAddress` from `index.ts`, and add `WEBMIO_REDIRECT_ADDRESS` to the admin's environment parameter; verify `pulumi preview --stack dev` creates only these and changes only the environment parameter
-- [ ] 2.3 Document the redirect server in `infra/README.md` (what it does, its address and why it must never be released, replacing it, its alarms, the cost) and add `redirectAddress` to the README's environment table; verify every command in the new section runs against `dev` in group 5
+- [x] 2.1 Move the alert topics into `infra/src/alerts.ts`, imported by `admin.ts`; verify `pulumi preview --stack dev` shows no changes
+- [x] 2.2 Add `infra/src/redirect.ts` (design decisions 1, 2, 6 and 7): the `redirectServer` setting in `Pulumi.yaml`, the protected Elastic IP with its association, the security group, the role (SSM and its log group), the log group, the gzipped user data with the Caddyfile and unit, the `t4g.nano` instance, the health check and the three alarms; export `redirectAddress` from `index.ts`, and add `WEBMIO_REDIRECT_ADDRESS` to the admin's environment parameter; verify `pulumi preview --stack dev` creates only these and changes only the environment parameter
+- [x] 2.3 Document the redirect server in `infra/README.md` (what it does, its address and why it must never be released, replacing it, its alarms, the cost) and add `redirectAddress` to the README's environment table; verify every command in the new section runs against `dev` in group 5
 
 ## 3. The admin
 

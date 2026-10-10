@@ -202,11 +202,16 @@ http:// {
    record, and check on the Domain page.
 4. `prod` gets the redirect server when it's set up before the beta.
 
-**Rollback:** the owner points `@` back at the registrar's forwarding. `redirectServer: false`
-removes the server but keeps the protected IP, and the admin falls back to the forwarding
-sentence when the variable is gone.
+**Rollback:** the owner points `@` back at the registrar's forwarding. On a stack that has the
+server, `redirectServer: false` stops at the protected address: `pulumi up` refuses to delete
+it until the operator runs `pulumi state unprotect` on purpose, and then releases it from
+Pulumi's state while keeping it in AWS (`retainOnDelete`). Without the variable, the admin
+falls back to the forwarding sentence.
 
 ## Open Questions
 
 - **Whether Caddy 2.11's renewal `ask`** happens at renewal time or only when a handshake
-  needs a renewed certificate. Either is fine for decision 4; the local Caddy test records which.
+  needs a renewed certificate. Either is fine for decision 4. The local test (task 1.2) couldn't
+  show it: Caddy asked once per domain, at the first handshake, and the internal CA's
+  certificates last 12 hours. `dev`'s Caddy log will show it at the first renewal, about 60
+  days in.

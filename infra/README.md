@@ -1,12 +1,15 @@
 # Webmio infrastructure
 
 Webmio's AWS resources, as a [Pulumi](https://www.pulumi.com) program in TypeScript. One stack
-per environment, `dev` and `prod`, in the same AWS account. The program has three parts:
+per environment, `dev` and `prod`, in the same AWS account. The program has these parts:
 
 - **`src/hosting.ts`:** Webmio hosting, which serves every published website (own-hosting
   design.md decision 13).
 - **`src/admin.ts`:** the admin's server (admin-on-aws). The files the server runs are in
   `server/`.
+- **`src/redirect.ts`:** the redirect server for customers' bare domains (bare-domain-redirect).
+  Its files are in `server/redirect/`.
+- **`src/alerts.ts`:** the alert topics both servers' alarms email through.
 - **`src/github.ts`:** deploys from GitHub Actions.
 
 ## Webmio hosting
@@ -37,6 +40,51 @@ per environment, `dev` and `prod`, in the same AWS account. The program has thre
 | Log groups `/webmio/<stack>/admin`, `/litestream`, `/caddy` | the containers' logs, 30 days |
 | OIDC provider, role `webmio-<stack>-deploy` | GitHub Actions pushes images and runs `webmio-deploy` |
 
+## The redirect server
+
+Webmio hosting serves a custom domain at `www.<domain>`. A bare domain's A record points at
+this server instead, which redirects every request to `https://www.<domain>/<path>` with a 301,
+keeping the path and query. Its Caddy gets each bare domain's certificate on the first visit,
+after asking the admin (`GET /hosting/bare-domain?domain=`) whether the domain is connected to
+a website. Redirects that already have a certificate keep working while the admin is down, and
+HTTP redirects never ask.
+
+| Resource | What it does |
+| --- | --- |
+| EC2 `webmio-<stack>-redirect` (`t4g.nano`, Amazon Linux 2023) | runs Caddy as a Docker container under systemd (`server/redirect/`) |
+| Elastic IP `webmio-<stack>-redirect` | the address customers' `@` A records name; the `redirectAddress` output |
+| Role `webmio-<stack>-redirect` | Session Manager and its log group, nothing else |
+| Route 53 health check, CloudWatch alarms | email when it stops answering or fails its status checks |
+| Log group `/webmio/<stack>/redirect/caddy` | Caddy's log (certificates, errors; not each request), 30 days |
+
+It costs about €7 a month. Things to know:
+
+- **Never release its address.** Every customer's bare domain names it. Pulumi protects it:
+  `pulumi destroy`, turning `redirectServer` off, or a change that would replace it stops with
+  an error. Releasing it on purpose takes `pulumi state unprotect` first.
+- **Its configuration is in its user data,** so a change to `server/redirect/` or to its Caddy
+  version replaces the server. The address moves to the new one, and bare domains don't
+  answer for the two minutes or so that takes; `www.` keeps working. The new server has no
+  certificates yet: each bare domain gets its own again on its next visit, or when its domain
+  check runs (the Domain page in the admin).
+- **Replacing it** by hand:
+
+  ```sh
+  pulumi up --stack dev --replace 'urn:pulumi:dev::webmio-hosting::aws:ec2/instance:Instance::webmio-dev-redirect'
+  ```
+
+- **Checking it:**
+
+  ```sh
+  curl -i "http://$(pulumi stack output redirectAddress --stack dev)/healthz"   # 200
+  curl -sI http://cumpl.cz/kontakt/                                            # 301 to https://www.cumpl.cz/kontakt/
+  aws logs tail /webmio/dev/redirect/caddy --since 1h
+  ```
+
+- **Running a command on it:** as on the admin's server, through Session Manager with
+  `--target "$(pulumi stack output redirectServer --stack dev)"`. Caddy runs as
+  `webmio-redirect.service`.
+
 ## Stacks
 
 | Setting | `dev` | `prod` |
@@ -47,6 +95,7 @@ per environment, `dev` and `prod`, in the same AWS account. The program has thre
 | `adminZone` | `dev.webmio.net` | none: its DNS is at Webglobe |
 | `localAdminUser` | `true` | `false` |
 | `githubProvider` | `create` | `existing` |
+| `redirectServer` | `true` | `true` |
 | `adminSecretKey`, `alertEmail` | secrets, set once | secrets, set once |
 
 The secrets stay out of the repository, which is public:
@@ -289,6 +338,9 @@ Each alarm emails `alertEmail`, and again when it recovers. In the `dev` check:
 | `replica-lag` | the replica more than 5 minutes behind, or its metric missing (Litestream stopped) | about 8½ minutes |
 | `server-system-check` | a hardware fault; EC2 also moves the server to other hardware | |
 | `server-instance-check` | the operating system not responding | |
+| `redirect-down` (`us-east-1`) | `http://<redirectAddress>/healthz` failing for 3 minutes, checked from three regions | |
+| `redirect-system-check` | the redirect server's hardware fault; EC2 also moves it to other hardware | |
+| `redirect-instance-check` | the redirect server's operating system not responding | |
 
 All recovered within 4 minutes of the fix.
 
@@ -313,6 +365,7 @@ among the other outputs. Put them in `apps/admin/.env`, which git ignores.
   then put the new outputs in `apps/admin/.env`. The server needs no key: it uses its role.
 - **The images Caddy and Litestream run** are pinned in `src/admin.ts`. A new version takes
   effect with the next `pulumi up`, which replaces the server.
+  The redirect server's Caddy is pinned in `src/redirect.ts`, and replaced the same way.
 - **Moving one website:** add a Route 53 record for its CNAME target
   (`<name>.sites.<netDomain>`) pointing elsewhere; it takes precedence over the wildcard, and
   the website's owner changes nothing.
@@ -321,4 +374,5 @@ among the other outputs. Put them in `apps/admin/.env`, which git ignores.
   repository refuse to be deleted while they hold anything; `dev`'s are emptied. GitHub's OIDC
   provider stays for the other stack. AWS deletes Lambda@Edge replicas hours
   after the distribution, so the function's deletion can fail at first: run `pulumi destroy`
-  again later.
+  again later. The redirect server's address is protected: run `pulumi state unprotect` on it
+  first, and release it in the EC2 console afterwards, since Pulumi leaves it in AWS.
