@@ -203,6 +203,7 @@ export const siteSchema = {
           "videos",
           "jobs",
           "contact_form",
+          "banner",
         ],
         default_node_type: "rich_text",
       },
@@ -219,6 +220,20 @@ export const siteSchema = {
       layout: { type: "string", values: HERO_LAYOUTS, default: "beside" },
       /** The slides of the `slideshow` look (hero-slideshow design decision 1). */
       slides: { type: "node_array", node_types: ["slide"], default_node_type: "slide" },
+    },
+  },
+  /**
+   * A full-width photo band with a heading, a line of text and a button, anywhere on a page
+   * (banner-block design decision 1): the hero's fields, without its looks or its place at the top.
+   */
+  banner: {
+    kind: "block",
+    properties: {
+      ...PAGE_BLOCK,
+      heading: { type: "text", allow_newlines: false },
+      text: { type: "text", mark_types: ["strong", "emphasis"], allow_newlines: false },
+      image: { type: "node_array", node_types: ["image"] },
+      action: { type: "node_array", node_types: LINK_TYPES },
     },
   },
   /** A slide of a hero slideshow: a photo, a title and a link, like a card's. */

@@ -1059,6 +1059,28 @@ function checkPageBlocks(
         }
       }
     }
+    // A banner: the hero's fields anywhere on the page (banner-block design decision 2).
+    const banner = get(blockId, "banner");
+    if (banner) {
+      if (isBlank(banner.heading)) {
+        problems.error(
+          "empty-heading",
+          banner.id,
+          `A banner on ${pageLabel(page)} needs a heading.`,
+          "heading",
+        );
+      }
+      for (const prop of ["image", "action"] as const) {
+        if (banner[prop].nodes.length > 1) {
+          problems.error(
+            "too-many-items",
+            banner.id,
+            `A banner can have at most one ${prop}.`,
+            prop,
+          );
+        }
+      }
+    }
     checkImageBlock(blockId, page, get, problems);
     checkContentBlock(blockId, page, get, problems);
     checkFiguresAndSteps(blockId, page, get, problems);
@@ -1077,6 +1099,7 @@ function checkPageBlocks(
       "cards",
       "videos",
       "jobs",
+      "banner",
     ] as const) {
       const block = get(blockId, type);
       if (block && !isBlank(block.heading)) hasH2 = true;

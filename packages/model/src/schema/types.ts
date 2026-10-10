@@ -268,6 +268,18 @@ export interface VideoNode {
   poster: NodeArrayValue;
 }
 
+/** A full-width photo band anywhere on a page; without a photo, a band in the primary colour. */
+export interface BannerNode extends PageBlock {
+  id: string;
+  type: "banner";
+  heading: TextValue;
+  text: TextValue;
+  /** Zero or one `image` node. */
+  image: NodeArrayValue;
+  /** Zero or one `page_link` / `external_link` node: the button. */
+  action: NodeArrayValue;
+}
+
 /** A contact form: a message (`contact`) or a callback request (`callback`). */
 export interface ContactFormNode extends PageBlock {
   id: string;
@@ -641,6 +653,7 @@ export type AnyNode =
   | JobsNode
   | JobNode
   | ContactFormNode
+  | BannerNode
   | VideoNode
   | CardNode
   | ProjectNode

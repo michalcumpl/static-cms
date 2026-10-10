@@ -513,6 +513,22 @@ export function insertOpeningHours(tr: Tr): boolean {
   return true;
 }
 
+/** A banner: a placeholder heading in the site's language, no photo or button, caret in it. */
+export function insertBanner(tr: Tr): boolean {
+  const block = tr.generate_id();
+  tr.create({
+    id: block,
+    type: "banner",
+    hidden: false,
+    heading: text(stringsOf(tr).bannerHeading),
+    text: text(),
+    image: list([]),
+    action: list([]),
+  });
+  insertAndFocus(tr, block, "heading");
+  return true;
+}
+
 /** A call to action with a placeholder heading and one button to the home page. */
 export function insertCallToAction(tr: Tr): boolean {
   const site = tr.doc.nodes[tr.doc.document_id] as unknown as { home_page_id: string };
@@ -573,6 +589,7 @@ export type BlockType =
   | "contact"
   | "opening_hours"
   | "call_to_action"
+  | "banner"
   | "testimonials"
   | "faq"
   | "figures"
@@ -594,6 +611,7 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   contact: insertContact,
   opening_hours: insertOpeningHours,
   call_to_action: insertCallToAction,
+  banner: insertBanner,
   testimonials: insertTestimonials,
   faq: insertFaq,
   figures: insertFigures,
@@ -620,6 +638,7 @@ export function insertableBlocks(blocks: { type: string }[], index: number): Blo
     "contact",
     "opening_hours",
     "call_to_action",
+    "banner",
     "testimonials",
     "faq",
     "figures",

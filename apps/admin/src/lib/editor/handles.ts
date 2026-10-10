@@ -19,6 +19,7 @@ export const BLOCK_TYPES: readonly BlockType[] = [
   "contact",
   "opening_hours",
   "call_to_action",
+  "banner",
   "testimonials",
   "faq",
   "figures",

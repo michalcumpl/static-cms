@@ -21,6 +21,8 @@ export interface DetectContext {
   isIcon: (img: Cheerio<Element>) => boolean;
   /** The days the business's imported hours name; empty without hours. */
   hoursDays: ReadonlySet<Weekday>;
+  /** Whether the home page's hero may still take a photo here (it isn't a banner then). */
+  heroMayTake: () => boolean;
 }
 
 /** Cards a block holds at most (validation's limit). */
@@ -50,7 +52,60 @@ export function detectStructure(
     const hours = openingHours(el, name, d);
     if (hours) return hours;
   }
+  if (["section", "div", "article"].includes(name)) {
+    const found = banner(el, d);
+    if (found) return found;
+  }
   return keyFigures(el, d) ?? cards(el, d);
+}
+
+// Banners (banner-block design decision 5) --------------------------------------------------
+
+/** A banner's text, at most: a sentence or two over the photo. */
+const BANNER_TEXT = 300;
+
+/**
+ * A band with a background photo (the `img` `addBackgrounds` put in), one heading, a sentence or
+ * two and maybe a link: a banner, its first link the button. Anything more stays as it is.
+ */
+function banner(el: Cheerio<Element>, d: DetectContext): Segment | undefined {
+  const backdrop = el.children("img[data-import-background]").first();
+  if (!backdrop.length || d.heroMayTake()) return undefined;
+  const headings = el.find("h1, h2, h3, h4, h5, h6");
+  if (headings.length !== 1 || !headings.is("h2, h3, h4")) return undefined;
+  if (el.find("ul, ol, table, form, iframe, video").length) return undefined;
+  const others = el
+    .find("img")
+    .not(backdrop)
+    .toArray()
+    .map((img) => d.$(img) as Cheerio<Element>)
+    .filter((img) => !d.isIcon(img));
+  if (others.length > 0) return undefined;
+  const paragraphs = el
+    .find("p")
+    .toArray()
+    .map((p) => words(d.$(p)))
+    .filter(Boolean);
+  const text = paragraphs.join(" ");
+  if (paragraphs.length > 2 || text.length > BANNER_TEXT) return undefined;
+  const heading = words(headings.first() as Cheerio<Element>);
+  if (!heading) return undefined;
+  const image = d.image(backdrop as Cheerio<Element>);
+  if (!image) return undefined;
+  const anchor = el
+    .find("a[href]")
+    .toArray()
+    .map((a) => d.$(a) as Cheerio<Element>)
+    .find((a) => words(a) !== "");
+  const target = anchor ? resolve(anchor.attr("href"), d.ctx.base) : undefined;
+  const link = (target && d.ctx.link(target)) ?? "";
+  return {
+    kind: "banner",
+    heading: escapeInline(heading),
+    text: escapeInline(text),
+    image,
+    button: anchor && link ? { label: escapeInline(words(anchor)), link } : undefined,
+  };
 }
 
 // Cards (design decision 2) -----------------------------------------------------------------

@@ -40,6 +40,8 @@ export interface SiteStrings {
   jobDetails: string;
   jobContact: string;
   jobsHeading: string;
+  /** A new banner's placeholder heading (banner-block). */
+  bannerHeading: string;
   /** A contact form's fields, messages and new blocks' texts (contact-form). */
   form: {
     name: string;
@@ -92,6 +94,7 @@ const STRINGS: Record<string, SiteStrings> = {
     jobDetails: "Celý popis",
     jobContact: "Kontakt",
     jobsHeading: "Volné pozice",
+    bannerHeading: "Nadpis",
     form: {
       name: "Jméno",
       email: "E-mail",
@@ -146,6 +149,7 @@ const STRINGS: Record<string, SiteStrings> = {
     jobDetails: "Celý popis",
     jobContact: "Kontakt",
     jobsHeading: "Voľné pozície",
+    bannerHeading: "Nadpis",
     form: {
       name: "Meno",
       email: "E-mail",
@@ -201,6 +205,7 @@ const STRINGS: Record<string, SiteStrings> = {
     jobDetails: "Vollständige Beschreibung",
     jobContact: "Kontakt",
     jobsHeading: "Offene Stellen",
+    bannerHeading: "Überschrift",
     form: {
       name: "Name",
       email: "E-Mail",
@@ -255,6 +260,7 @@ const STRINGS: Record<string, SiteStrings> = {
     jobDetails: "Pełny opis",
     jobContact: "Kontakt",
     jobsHeading: "Oferty pracy",
+    bannerHeading: "Nagłówek",
     form: {
       name: "Imię",
       email: "E-mail",
@@ -309,6 +315,7 @@ const STRINGS: Record<string, SiteStrings> = {
     jobDetails: "Full description",
     jobContact: "Contact",
     jobsHeading: "Jobs",
+    bannerHeading: "Heading",
     form: {
       name: "Name",
       email: "Email",

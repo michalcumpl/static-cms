@@ -10,6 +10,7 @@ const typesFromTs: Record<NodeType, true> = {
   jobs: true,
   job: true,
   contact_form: true,
+  banner: true,
   menu_group: true,
   page_link: true,
   external_link: true,

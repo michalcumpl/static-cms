@@ -49,6 +49,14 @@ export type Segment =
   | { kind: "map"; heading: string; place: string }
   /** A booking service, with the sentence before it; `label` `""` for the language's word. */
   | { kind: "booking"; heading: string; text: string; label: string; url: string }
+  /** A photo band (banner-block); `button.link` as a card's. */
+  | {
+      kind: "banner";
+      heading: string;
+      text: string;
+      image: ImageUse;
+      button?: { label: string; link: string };
+    }
   /** A contact form, with the sentence before it; `button` `""` for the language's word. */
   | {
       kind: "contact_form";
@@ -322,6 +330,12 @@ export function readPage(html: string, options: ReadOptions): PageContent {
     image: use,
     isIcon,
     hoursDays: options.hoursDays ?? new Set<Weekday>(),
+    // The home page's hero takes the first photo before the second heading (takeHeroImage); a
+    // band there gives the hero its photo rather than becoming a banner.
+    heroMayTake: () =>
+      options.hero &&
+      !items.some((i) => i.kind === "image") &&
+      items.filter((i) => i.kind === "heading").length < 2,
   };
   const image = (img: Cheerio<AnyNode>, group: Element | null, caption = "") => {
     if (!img.length) return;

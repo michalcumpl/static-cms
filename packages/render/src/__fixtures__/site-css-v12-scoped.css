@@ -432,30 +432,40 @@
   overflow-x: hidden;
 }
 
-.site-canvas .block.hero-cover {
+.site-canvas .block.hero-cover,
+.site-canvas .block.banner-photo {
   display: grid;
   min-height: 26rem;
   padding-block: 0;
   background: var(--color-text);
 }
 
+.site-canvas .block.banner-photo {
+  min-height: 18rem;
+}
+
 .site-canvas .hero-cover > .hero-image,
-.site-canvas .hero-cover > .hero-inner {
+.site-canvas .hero-cover > .hero-inner,
+.site-canvas .banner-photo > .banner-image,
+.site-canvas .banner-photo > .banner-inner {
   grid-area: 1 / 1;
 }
 
-.site-canvas .hero-cover > .hero-image {
+.site-canvas .hero-cover > .hero-image,
+.site-canvas .banner-photo > .banner-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.site-canvas .hero-cover > .hero-inner {
+.site-canvas .hero-cover > .hero-inner,
+.site-canvas .banner-photo > .banner-inner {
   align-self: end;
   padding-block: 2rem;
 }
 
-.site-canvas .hero-cover .hero-content {
+.site-canvas .hero-cover .hero-content,
+.site-canvas .banner-photo .banner-content {
   max-width: 38rem;
   padding: 1.5rem 1.75rem;
   border-radius: var(--radius);
@@ -463,8 +473,36 @@
   color: var(--color-background);
 }
 
-.site-canvas .hero-cover .hero-content > :last-child {
+.site-canvas .hero-cover .hero-content > :last-child,
+.site-canvas .banner-content > :last-child {
   margin-bottom: 0;
+}
+
+.site-canvas .banner-content h2 {
+  margin-top: 0;
+}
+
+.site-canvas .banner-text {
+  margin: 0 0 1rem;
+}
+
+.site-canvas .banner-action {
+  margin: 0;
+}
+
+.site-canvas .block.banner-plain {
+  background: var(--color-primary);
+  color: var(--color-background);
+}
+
+.site-canvas .banner-plain .banner-content {
+  max-width: 38rem;
+}
+
+.site-canvas .banner-plain .button {
+  border-color: var(--color-background);
+  background: var(--color-background);
+  color: var(--color-primary);
 }
 
 .site-canvas .button {
@@ -1383,7 +1421,8 @@
     grid-template-columns: 3fr 2fr;
   }
 
-  .site-canvas .hero-cover > .hero-inner {
+  .site-canvas .hero-cover > .hero-inner,
+.site-canvas .banner-photo > .banner-inner {
     grid-template-columns: minmax(0, 1fr);
     padding-block: 3rem;
   }

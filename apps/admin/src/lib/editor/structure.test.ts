@@ -74,6 +74,7 @@ describe("block insertion", () => {
     "contact",
     "opening_hours",
     "call_to_action",
+    "banner",
     "testimonials",
     "faq",
     "figures",

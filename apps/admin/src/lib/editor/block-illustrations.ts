@@ -127,6 +127,14 @@ export const BLOCK_ILLUSTRATIONS: Record<BlockType, string> = {
       button(30, 42, 28) +
       button(62, 42, 28, false),
   ),
+  // A wide photo filling the band, a dark panel over it with a heading, a line and a button.
+  banner: svg(
+    photo(4, 8, 112, 56) +
+      `<rect x="10" y="30" width="60" height="28" rx="2" fill="#000" opacity="0.55"/>` +
+      bar(15, 35, 34, 5, "#fff") +
+      bar(15, 43, 48, 3, "#fff") +
+      button(15, 49, 22),
+  ),
   testimonials: svg(
     heading() +
       [0, 1]

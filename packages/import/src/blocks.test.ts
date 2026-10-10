@@ -43,19 +43,37 @@ describe("page content", () => {
     });
   });
 
-  it("reads a CSS background photo as the photo beside its section's text", () => {
-    const banner = read("/").segments.find((s) => s.kind === "text_with_image");
-    expect(banner).toMatchObject({
+  it("reads a band with a CSS background photo, a heading and a sentence as a banner", () => {
+    const banner = read("/").segments.find((s) => s.kind === "banner");
+    expect(banner).toEqual({
+      kind: "banner",
       heading: "Pec, která nevyhasíná",
+      text: "Naše pec stojí v Lipové ulici od roku 1923 a peče se v ní dodnes, každé ráno, šest dní v týdnu.",
       image: { ref: `${FIXTURE_ORIGINS.bakery}/images/pec.jpg`, alt: "" },
+      button: undefined,
     });
+  });
+
+  it("A background behind a long text: read as text, not a banner", () => {
+    const paragraphs = Array.from({ length: 5 }, (_, i) => `<p>Odstavec ${i + 1}.</p>`).join("");
+    const html = `<main><h1>O nás</h1><section style="background-image: url('/images/pec.jpg')"><h2>Historie</h2>${paragraphs}</section></main>`;
+    const page = read("/o-nas/", html);
+    expect(page.segments.map((s) => s.kind)).not.toContain("banner");
+    expect(JSON.stringify(page.segments)).toContain("Odstavec 5.");
+  });
+
+  it("leaves the home page's first photo band to the hero", () => {
+    const html = `<main><h1>Pekárna</h1><section style="background-image: url('/images/pec.jpg')"><h2>Vítejte</h2><p>Pečeme od roku 1923.</p></section><h2>Dále</h2><p>Text.</p></main>`;
+    const home = read("/", html);
+    expect(home.heroImage?.ref).toBe(`${FIXTURE_ORIGINS.bakery}/images/pec.jpg`);
+    expect(home.segments.map((s) => s.kind)).not.toContain("banner");
   });
 
   it("makes a gallery, a logo row and a videos block, each headed by the heading before it", () => {
     const { segments } = read("/");
     const kinds = segments.map((s) => [s.kind, "heading" in s ? s.heading : ""]);
     expect(kinds.slice(2)).toEqual([
-      ["text_with_image", "Pec, která nevyhasíná"],
+      ["banner", "Pec, která nevyhasíná"],
       ["gallery", "Z pekárny"],
       ["logos", "Naši dodavatelé"],
       ["videos", "Jak pečeme"],

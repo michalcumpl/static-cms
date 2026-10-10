@@ -52,6 +52,8 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderJobs(block, ctx);
     case "contact_form":
       return renderContactForm(block, ctx);
+    case "banner":
+      return renderBanner(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -392,6 +394,36 @@ function renderCallToAction(block: NodeOfType<"call_to_action">, ctx: RenderCont
         )}
         </p>`
         }
+      </div>
+    </section>`;
+}
+
+/**
+ * A banner (banner-block design decision 3): with a photo, the photo fills a full-width band and
+ * the text sits in the full-photo hero's panel over it; without one, a band in the primary colour.
+ * Its heading is an `<h2>`, and its photo loads lazily, as it is never the page's first.
+ */
+function renderBanner(block: NodeOfType<"banner">, ctx: RenderContext): Html {
+  const [image] = ctx.children(block.image);
+  const [action] = ctx.children(block.action);
+  const photo = image?.type === "image" ? image : undefined;
+  return html`<section class="block banner ${photo ? "banner-photo" : "banner-plain"}">${
+    photo &&
+    html`
+      ${renderImage(photo, ctx, { lazy: true, sizes: IMAGE_SIZES.banner, className: "banner-image" })}`
+  }
+      <div class="container banner-inner">
+        <div class="banner-content">
+          <h2>${renderText(block.heading, ctx)}</h2>${
+            !isEmpty(block.text) &&
+            html`
+          <p class="banner-text">${renderText(block.text, ctx)}</p>`
+          }${
+            action &&
+            html`
+          <p class="banner-action">${renderLink(action, ctx, "button")}</p>`
+          }
+        </div>
       </div>
     </section>`;
 }
@@ -834,6 +866,8 @@ export const IMAGE_SIZES = {
   hero: "(min-width: 48rem) 40vw, 100vw",
   /** A full-photo hero spans the window (block-variants). */
   heroCover: "100vw",
+  /** A banner's photo spans the window too (banner-block). */
+  banner: "100vw",
   /** Half the width beside the text from 48rem. */
   textWithImage: "(min-width: 48rem) 50vw, 100vw",
   /** Three columns from 48rem, two below. */

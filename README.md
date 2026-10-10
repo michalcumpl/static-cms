@@ -29,10 +29,11 @@ business control panel work; templates, our own hosting and the beta are next. S
   business blocks are added, moved and duplicated with handles. Photos are cropped and turned
   in the editor, and framed on a focal point. Every change can be undone, and every save is a
   version you can preview and restore.
-- **19 business blocks** with their looks: hero (beside, full photo or slideshow), text, text
+- **20 business blocks** with their looks: hero (beside, full photo or slideshow), text, text
   with image, services (cards, list or accordion), projects and project pages, team, gallery,
   partner logos, cards, videos, key figures, steps, testimonials, questions, call to action,
-  contact, opening hours, job openings and a contact form.
+  banner (a full-width photo band anywhere on a page), contact, opening hours, job openings and
+  a contact form.
 - **Contact forms:** *Contact us* or *Let us call you back*, on the static site without a script.
   Messages are emailed to the business (Reply-To the visitor) and listed in the panel's Messages
   section, with CSV export; spam is held back by a hidden field, rate limits and a link limit.

@@ -3,8 +3,8 @@ import { checkLinkAddress, type LinkAddressCheck } from "./links";
 import { locateNode } from "./locate";
 import { list, text } from "./transforms";
 
-// Buttons of a hero or a call to action (cta-and-testimonials design.md decision 3): where they
-// point, and adding or removing them. Each operation is one transaction, one undo step.
+// Buttons of a hero, a banner or a call to action (cta-and-testimonials design.md decision 3):
+// where they point, and adding or removing them. Each operation is one transaction, one undo step.
 
 type Doc = Parameters<typeof locateNode>[0];
 type TextValue = { content: string; marks: unknown[]; annotations: unknown[] };
@@ -20,7 +20,7 @@ export interface Button {
 /** A block whose buttons the panel manages, with the property holding them and its limit. */
 export interface ButtonBlock {
   id: string;
-  type: "hero" | "call_to_action";
+  type: "hero" | "banner" | "call_to_action";
   property: "action" | "actions";
   buttons: string[];
   max: number;
@@ -28,6 +28,7 @@ export interface ButtonBlock {
 
 const BUTTON_LISTS: Record<string, { property: "action" | "actions"; max: number }> = {
   hero: { property: "action", max: 1 },
+  banner: { property: "action", max: 1 },
   call_to_action: { property: "actions", max: 2 },
 };
 
@@ -48,7 +49,7 @@ export function buttonBlockOf(doc: Doc, blockId: string): ButtonBlock | undefine
 
 /**
  * The button and the button block the selection is in or on: a node selection of a button, or
- * a caret in its label, or anywhere in a hero or call to action (block only).
+ * a caret in its label, or anywhere in a hero, banner or call to action (block only).
  */
 export function selectedButton(session: Session): { button?: Button; block?: ButtonBlock } {
   const doc = session.doc as unknown as Doc;
@@ -178,10 +179,10 @@ export function addButton(session: Session, blockId: string): boolean {
   return true;
 }
 
-/** Whether a button can be removed: a call to action keeps at least one. */
+/** Whether a button can be removed: a call to action keeps at least one; a hero or banner none. */
 export function canRemoveButton(doc: Doc, buttonId: string): boolean {
   const block = ownerOf(doc, buttonId);
-  return block !== undefined && (block.type === "hero" || block.buttons.length > 1);
+  return block !== undefined && (block.type !== "call_to_action" || block.buttons.length > 1);
 }
 
 /** Removes a button from its block, unless it is a call to action's last one. */

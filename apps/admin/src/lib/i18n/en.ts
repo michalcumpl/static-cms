@@ -844,6 +844,7 @@ export const en = {
       heading: "Heading",
       shortTextOptional: "Short text (optional)",
       heroText: "Short introduction",
+      bannerText: "A line of text (optional)",
       link: "Link",
       menuGroup: "Group name",
       item: "Item",
@@ -917,6 +918,10 @@ export const en = {
       call_to_action: {
         name: "Call to action",
         description: "A short invitation with one or two buttons",
+      },
+      banner: {
+        name: "Banner",
+        description: "A full-width photo with a heading, a line of text and a button",
       },
       testimonials: { name: "Testimonials", description: "What customers say about you" },
       faq: { name: "Questions", description: "Frequently asked questions and their answers" },

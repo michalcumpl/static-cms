@@ -13,6 +13,7 @@ export const IMAGE_ALT_FIELD = "image-alt";
 /** Node types whose image may be taken away; gallery photos and logos always keep one. */
 export const OPTIONAL_IMAGE_OWNERS: readonly string[] = [
   "hero",
+  "banner",
   "text_with_image",
   "person",
   "testimonial",

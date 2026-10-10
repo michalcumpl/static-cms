@@ -162,7 +162,14 @@ describe("the import job", () => {
       const page = Object.values(doc.nodes).find((n) => n.type === "page" && n.slug === slug);
       return (page?.blocks?.nodes ?? []).map((id) => doc.nodes[id]?.type);
     };
-    expect(blocksOf("uvod")).toEqual(["hero", "rich_text", "cards", "call_to_action", "logos"]);
+    expect(blocksOf("uvod")).toEqual([
+      "hero",
+      "rich_text",
+      "cards",
+      "banner",
+      "call_to_action",
+      "logos",
+    ]);
     expect(blocksOf("kontakt")).toEqual(["rich_text", "contact"]);
     // The map and the booking widget aren't left out; nothing else on the site is.
     expect(row?.report?.leftOut).toEqual([]);

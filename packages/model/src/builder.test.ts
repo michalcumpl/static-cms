@@ -149,6 +149,11 @@ function everything(lang: "cs" | "en") {
       button: t("Chci zavolat", "Call me"),
       recipient: "kampan@example.org",
     }),
+    blocks.banner({
+      heading: t("Letní tábory", "Summer camps"),
+      text: t("Přihlášky do konce května.", "Sign up by the end of May."),
+      action: { label: "Web", url: "https://example.org" },
+    }),
     blocks.callToAction({
       heading: t("Přihlaste se", "Sign up"),
       actions: [{ label: "Web", url: "https://example.org" }],
@@ -189,6 +194,7 @@ describe("siteBuilder", () => {
       "menu_group",
       "jobs",
       "contact_form",
+      "banner",
     ]) {
       expect(types, type).toContain(type);
     }

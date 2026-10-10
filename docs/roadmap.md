@@ -18,18 +18,19 @@ about their business, and we keep a fast, valid, always-working website live. Wh
 Questions and loose ends that have no change yet are in [`tasks.md`](tasks.md); what the example
 sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
 
-## Where we are (2026-10-09)
+## Where we are (2026-10-10)
 
 - **Built:** the site document, validation, rendering and export; on-page editing with Svedit;
   pages and menus, media, SEO, theme, version history, languages; publishing to our own
   hosting (S3 and CloudFront, `<site>.webmio.site`, custom domains), with Netlify for websites
-  already there; business data as collections with locations; the business control panel; 18
-  block types with their looks, from key figures to the hero slideshow; the seven example
+  already there; business data as collections with locations; the business control panel; 20
+  block types with their looks, from key figures to the hero slideshow, banners and contact
+  forms that email the owner; the seven example
   sites, loaded locally; cropping and turning images, and a focal point for each use of an
   image; templates (the Standard template, layouts for new pages, blocks hidden from the
   website); importing a website from its address; the guided setup, which builds a first site
   from the owner's answers.
-- **Next:** the rest of phase 3 (`import-languages`, `banner-block`) and phase 4 (templates).
+- **Next:** the rest of phase 3 (`import-languages`) and phase 4 (templates).
   Phase 5 is done: every publish
   checks links, verifies the live website and keeps the previous version on failure. Our
   hosting runs in the `dev` stack; `prod` is deployed before the beta.
@@ -83,7 +84,7 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
 | [`import-review-actions`](../openspec/changes/archive/2026-10-09-import-review-actions/) | the import review's retry (failed pages and images, the next pages) and fixes (images marked decorative, subheading levels); the same problem grouped ("13 pages have no description", leading to the site's description); and import fixes found on marespartners.cz (a logo and photo drawn by CSS, a black-and-white theme for a site without colours, the site description from the first paragraph) | Done |
 | `import-languages` | "Import the Czech version": another language version of the old site as a project language, pages paired through the language switcher's links; and choosing which language is primary before importing | Planned |
 | [`import-existing-blocks`](../openspec/changes/archive/2026-10-09-import-existing-blocks/) | the import fills blocks Webmio already has: grids of repeated cards (image, title, text, link) as a `cards` block instead of one gallery per card (found on vroomagazine, a stress test, not a target site), key figures, numbered steps, map embeds, booking buttons, opening hours, and award or partner logos in the footer as a logos block (Mareš's awards) | Done |
-| `banner-block` | a full-width image with a heading, text and a button anywhere on a page (the hero is first only); the import maps mid-page "hero" bands to it | Planned |
+| [`banner-block`](../openspec/changes/archive/2026-10-10-banner-block/) | a full-width photo band with a heading, text and a button anywhere on a page (the hero is first only), a primary-colour band without a photo; the import maps mid-page photo bands to it | Done |
 ### 4. Templates as website systems · In progress
 
 Blocks the example sites need come first, because the templates render them
@@ -118,12 +119,12 @@ Blocks the example sites need come first, because the templates render them
 | [`own-hosting`](../openspec/changes/archive/2026-10-09-own-hosting/) | S3 and CloudFront, `<site>.webmio.site`, atomic deploys, rollback; new websites only, Netlify ones stay | Done |
 | [`safe-publishing`](../openspec/changes/archive/2026-10-09-safe-publishing/) | the publish pipeline: link check, outside links as warnings, verifying the live website, previous version kept on failure, *Try again* | Done |
 
-### 6. Domains and website health · Planned
+### 6. Domains and website health · In progress
 
 | Change | What | Status |
 | --- | --- | --- |
 | `domain-guides` | DNS guides per registrar with a live record check | Planned |
-| `contact-form` | **v1:** an interactive contact form block that emails each message to the owner: "Contact us" and "Let us call you back" (name, phone or email, a message), which owners use in campaigns to collect contacts; spam protection without third-party scripts; the import maps old sites' forms to it | Planned |
+| [`contact-form`](../openspec/changes/archive/2026-10-10-contact-form/) | **v1:** an interactive contact form block that emails each message to the owner: "Contact us" and "Let us call you back" (name, phone or email, a message), which owners use in campaigns to collect contacts; spam protection without third-party scripts; the import maps old sites' forms to it; messages in the panel's Messages section | Done |
 | `scheduled-jobs` | recurring server jobs in one place; the first removes deleted websites after 30 days | Planned |
 | `website-health` | daily checks, *Website healthy*, alerts | Planned |
 

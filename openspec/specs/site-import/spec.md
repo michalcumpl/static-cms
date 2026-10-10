@@ -124,6 +124,10 @@ navigation, footer, scripts, forms and hidden elements. In document order:
   names SHALL become its map link;
 - an embed of, or a link button to, a booking service the import knows SHALL become a call to
   action leading to that service, with the heading before it or the language's word for booking;
+- an element with a photo as its background, a heading, at most two short paragraphs and no
+  other images SHALL become a banner with that heading, text and photo, its first link becoming
+  the banner's button; on the home page, the panel that gives the hero its photo SHALL stay the
+  hero;
 - a YouTube or Vimeo embed SHALL become a videos block;
 - `<details>` elements, and questions in FAQPage structured data, SHALL become questions of the
   site's FAQ collection, shown by a questions block at that place;
@@ -190,6 +194,17 @@ shown in the review. The site SHALL use the Standard template.
 #### Scenario: Opening hours without structured data
 - **WHEN** a page shows opening hours in a list and the site has no hours in structured data
 - **THEN** the list stays text, and the business has no hours
+
+#### Scenario: A photo band between card grids
+- **WHEN** the home page has, after a grid of cards, a section with a background photo, the heading
+  "Last minute", the sentence "Odlety z Brna každou sobotu." and a link "Všechny zájezdy" to an
+  imported page
+- **THEN** the home page has a banner "Last minute" with that text, the photo and a button
+  "Všechny zájezdy" to that page, and no gallery or text block for the section
+
+#### Scenario: A background behind a long text
+- **WHEN** a section with a background photo holds a heading and five paragraphs
+- **THEN** it is imported as text, as before, and not as a banner
 
 #### Scenario: A map
 - **WHEN** the contact page embeds a Google map of the bakery's address

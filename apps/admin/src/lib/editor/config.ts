@@ -9,6 +9,7 @@ import FormQuestion from "./form/FormQuestion.svelte";
 import FormService from "./form/FormService.svelte";
 import FormSite from "./form/FormSite.svelte";
 import FormTestimonial from "./form/FormTestimonial.svelte";
+import Banner from "./nodes/Banner.svelte";
 import CallToAction from "./nodes/CallToAction.svelte";
 import Card from "./nodes/Card.svelte";
 import Cards from "./nodes/Cards.svelte";
@@ -116,6 +117,7 @@ export const nodeComponents: Record<string, Component<any>> = {
   jobs: Jobs,
   job: Job,
   contact_form: ContactForm,
+  banner: Banner,
   image: Image,
   strong: MarkStrong,
   emphasis: MarkEmphasis,

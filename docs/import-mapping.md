@@ -81,6 +81,7 @@ fixtures):
 | A bold-titled ordered list, or headings numbered 1, 2, 3, under a heading | `steps` | Fond 10X | done |
 | A Google Maps or Mapy.cz embed (was left out) | `contact`, with the "Show on map" link; the embed's place as the map link when the location has no address | Aniděti, the bakery and agency fixtures | done |
 | A booking widget or link of a known service (was left out as an embed) | `call_to_action` to the booking service, with the heading and sentence before it | Roubenka (Lodgify) | done |
+| A section with a background photo, one heading, at most two short paragraphs and no other images (was a photo beside the text, or a text and a one-photo gallery) | `banner`, its first link the button; the home page's top panel stays the hero's photo | the bakery and agency fixtures | done (`banner-block`) |
 | A form asking for an email or phone and a message, or for a name and a phone (was left out) | `contact_form`, *Contact us* or *Let us call you back*, with the heading and sentence before it and the submit button's words, to the business email | the bakery fixture | done (`contact-form`) |
 | Opening hours in a table or list | `opening_hours`, when structured data gave the business its hours; text otherwise | the bakery fixture | done |
 | Award or partner logos in the home page's footer | `logos` at the home page's end | Mareš Partners | done |
@@ -91,9 +92,9 @@ fixtures):
 `newsletter` (Fond 10X's signup on every page), `booking` (Roubenka's calendar). Contact
 forms came with `contact-form`.
 
-**New blocks planned from imports:** `banner-block`, a full-width image with a heading, text and a
-button anywhere on a page, for the "hero" bands between vroomagazine's card grids (today a text
-block and a one-photo gallery; the hero block must be first).
+**Blocks added for imports:** `banner-block`, a full-width photo band with a heading, text and a
+button anywhere on a page, for the "hero" bands between vroomagazine's card grids (before, a
+text block and a one-photo gallery, as the hero block must be first).
 
 **Not on the roadmap yet:**
 - **Posts** (a blog or news collection with dates): Mortgage Specialist's 91 posts, all over the

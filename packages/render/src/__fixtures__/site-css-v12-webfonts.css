@@ -432,30 +432,40 @@ img {
   overflow-x: hidden;
 }
 
-.block.hero-cover {
+.block.hero-cover,
+.block.banner-photo {
   display: grid;
   min-height: 26rem;
   padding-block: 0;
   background: var(--color-text);
 }
 
+.block.banner-photo {
+  min-height: 18rem;
+}
+
 .hero-cover > .hero-image,
-.hero-cover > .hero-inner {
+.hero-cover > .hero-inner,
+.banner-photo > .banner-image,
+.banner-photo > .banner-inner {
   grid-area: 1 / 1;
 }
 
-.hero-cover > .hero-image {
+.hero-cover > .hero-image,
+.banner-photo > .banner-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.hero-cover > .hero-inner {
+.hero-cover > .hero-inner,
+.banner-photo > .banner-inner {
   align-self: end;
   padding-block: 2rem;
 }
 
-.hero-cover .hero-content {
+.hero-cover .hero-content,
+.banner-photo .banner-content {
   max-width: 38rem;
   padding: 1.5rem 1.75rem;
   border-radius: var(--radius);
@@ -463,8 +473,36 @@ img {
   color: var(--color-background);
 }
 
-.hero-cover .hero-content > :last-child {
+.hero-cover .hero-content > :last-child,
+.banner-content > :last-child {
   margin-bottom: 0;
+}
+
+.banner-content h2 {
+  margin-top: 0;
+}
+
+.banner-text {
+  margin: 0 0 1rem;
+}
+
+.banner-action {
+  margin: 0;
+}
+
+.block.banner-plain {
+  background: var(--color-primary);
+  color: var(--color-background);
+}
+
+.banner-plain .banner-content {
+  max-width: 38rem;
+}
+
+.banner-plain .button {
+  border-color: var(--color-background);
+  background: var(--color-background);
+  color: var(--color-primary);
 }
 
 .button {
@@ -1383,7 +1421,8 @@ img {
     grid-template-columns: 3fr 2fr;
   }
 
-  .hero-cover > .hero-inner {
+  .hero-cover > .hero-inner,
+  .banner-photo > .banner-inner {
     grid-template-columns: minmax(0, 1fr);
     padding-block: 3rem;
   }

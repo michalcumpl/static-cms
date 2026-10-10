@@ -864,6 +864,7 @@ export const cs: Messages = {
       heading: "Nadpis",
       shortTextOptional: "Krátký text (nepovinný)",
       heroText: "Krátký úvodní text",
+      bannerText: "Řádek textu (nepovinné)",
       link: "Odkaz",
       menuGroup: "Název skupiny",
       item: "Položka",
@@ -937,6 +938,10 @@ export const cs: Messages = {
       call_to_action: {
         name: "Výzva k akci",
         description: "Krátká pozvánka s jedním nebo dvěma tlačítky",
+      },
+      banner: {
+        name: "Banner",
+        description: "Fotka přes celou šířku s nadpisem, řádkem textu a tlačítkem",
       },
       testimonials: { name: "Reference", description: "Co o vás říkají zákazníci" },
       faq: { name: "Otázky", description: "Časté dotazy a odpovědi na ně" },

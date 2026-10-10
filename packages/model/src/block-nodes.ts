@@ -81,6 +81,7 @@ export type BlockInput =
   | { type: "call_to_action"; heading: string; text?: string; actions: LinkInput[] }
   | { type: "figures"; heading?: string; items: { value: string; label: string }[] }
   | { type: "steps"; heading: string; items: { title: string; text?: string }[] }
+  | { type: "banner"; heading: string; text?: string; image?: ImageInput; action?: LinkInput }
   | {
       type: "contact_form";
       /** `contact` (default): a message; `callback`: a request to be called back. */
@@ -356,6 +357,13 @@ export function blockFactory(ctx: BlockFactoryContext) {
               add("figure", { value: text(item.value), label: text(item.label) }),
             ),
           ),
+        });
+      case "banner":
+        return addBlock("banner", {
+          heading: text(input.heading),
+          text: text(input.text),
+          image: list(image(input.image)),
+          action: list(input.action ? [link(input.action)] : []),
         });
       case "contact_form":
         return addBlock("contact_form", {

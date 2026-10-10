@@ -215,6 +215,7 @@ describe("structures as Webmio's blocks (import-existing-blocks)", () => {
       "hero",
       "rich_text",
       "cards",
+      "banner",
       "call_to_action",
       "logos",
     ]);
@@ -247,6 +248,20 @@ describe("structures as Webmio's blocks (import-existing-blocks)", () => {
     expect(form).toMatchObject({ form_kind: "contact", recipient: "" });
     expect(text(form.heading)).toBe("Napište nám");
     expect(text(form.button)).toBe("Odeslat zprávu");
+  });
+
+  it("A photo band between card grids: a banner with its photo and a button to the page", () => {
+    const nodes = nodesOf(agency);
+    const banner = blocksOf(agency, "uvod").find((b) => b.type === "banner");
+    expect(text(banner.heading)).toBe("Last minute");
+    expect(text(banner.text)).toBe("Odlety z Brna každou sobotu.");
+    expect(banner.image.nodes).toHaveLength(1);
+    const button = nodes[(banner.action.nodes as string[])[0] ?? ""];
+    expect(button).toMatchObject({ type: "page_link" });
+    expect(text(button.label)).toBe("Všechny zájezdy");
+    expect(nodes[button.page_id].slug).toBe("chorvatsko");
+    // No gallery or text block for the band.
+    expect(types(agency, "uvod").filter((t) => t === "gallery")).toEqual([]);
   });
 
   it("takes the map's place as the location's link when it has no address", () => {

@@ -11,7 +11,7 @@ import {
 } from "./buttons";
 import type { EditorState } from "./state.svelte";
 
-// Where the selected button of a hero or call to action points, and adding or removing
+// Where the selected button of a hero, banner or call to action points, and adding or removing
 // buttons (cta-and-testimonials design.md decision 3).
 let { editor }: { editor: EditorState } = $props();
 const i18n = getI18n();

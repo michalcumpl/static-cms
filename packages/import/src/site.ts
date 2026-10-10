@@ -441,6 +441,23 @@ export function segmentBlocks(
       return [{ type: "opening_hours", heading: segment.heading }];
     case "map":
       return [{ type: "contact", heading: segment.heading }];
+    case "banner": {
+      const img = image(segment.image.ref, segment.image.alt);
+      const link = segment.button?.link ?? "";
+      return [
+        {
+          type: "banner",
+          heading: segment.heading,
+          text: segment.text,
+          image: img,
+          action: segment.button
+            ? link.startsWith("page:")
+              ? { label: segment.button.label, page: link.slice(5) }
+              : { label: segment.button.label, url: link }
+            : undefined,
+        },
+      ];
+    }
     case "contact_form": {
       // To the business email (recipient `""`), in the site's language where the source had none.
       const cs = czech(lang);

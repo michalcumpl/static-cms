@@ -125,6 +125,8 @@ export const blocks = {
     ({ type: "steps", ...b }) as BlockInput,
   jobs: (b: Omit<Extract<BlockInput, { type: "jobs" }>, "type">) =>
     ({ type: "jobs", ...b }) as BlockInput,
+  banner: (b: Omit<Extract<BlockInput, { type: "banner" }>, "type">) =>
+    ({ type: "banner", ...b }) as BlockInput,
   contactForm: (b: Omit<Extract<BlockInput, { type: "contact_form" }>, "type">) =>
     ({ type: "contact_form", ...b }) as BlockInput,
   videos: (b: Omit<Extract<BlockInput, { type: "videos" }>, "type">) =>
