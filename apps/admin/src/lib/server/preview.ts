@@ -11,6 +11,8 @@ import { mediaFiles } from "./media";
 export interface PreviewOptions {
   /** Where the preview is served, e.g. `/p/<project>/preview/`. */
   basePath: string;
+  /** Where the site's contact forms post: the admin's `/forms/<project>`. */
+  formEndpoint?: string;
   /** The path inside the site that was asked for. */
   path: string;
   /** Where the problems page sends owners to fix them. */
@@ -33,7 +35,11 @@ export async function servePreview(
   const names = new Set(languages.flatMap((language) => usedMediaFiles(language.document)));
   const media = await mediaFiles(projectId, [...names]);
   const fonts = await siteFonts(languages);
-  const result = exportSiteLanguages(languages, media, { basePath: options.basePath, fonts });
+  const result = exportSiteLanguages(languages, media, {
+    basePath: options.basePath,
+    formEndpoint: options.formEndpoint,
+    fonts,
+  });
   if (!result.ok) return problemsPage(result.problems, options.editHref);
   const path = options.path.replace(/\/+$/, "");
   const file = path === "" ? "index.html" : result.files.has(path) ? path : `${path}/index.html`;

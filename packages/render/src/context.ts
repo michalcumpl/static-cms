@@ -57,6 +57,8 @@ export class RenderContext {
   /** The scripts any page of the site needs, for the export. */
   readonly siteScripts = new Set<SiteScript>();
 
+  /** The page being rendered, for blocks that name it (a contact form's way back). */
+  currentPageId = "";
   /** The off-centre focal points of the page being rendered's images, as `[x, y]` by class. */
   readonly pageFocalPoints = new Map<string, [number, number]>();
 
@@ -107,6 +109,8 @@ export class RenderContext {
      * which differs from `basePath` for a language under `/<lang>/`.
      */
     readonly assetBasePath: string = basePath,
+    /** Where contact forms post, without a trailing slash; none when the site has no endpoint. */
+    readonly formEndpoint?: string,
   ) {
     this.nodes = doc.nodes;
     this.site = this.node(doc.document_id, "site");

@@ -82,6 +82,7 @@ describe("block insertion", () => {
     "cards",
     "videos",
     "jobs",
+    "contact_form",
   ];
 
   it("offers the hero only at the top of a page without one, and nothing above a hero", () => {

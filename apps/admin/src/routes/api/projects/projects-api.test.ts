@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { useServices } from "$lib/server/app";
+import type { MailMessage } from "$lib/server/mail";
 import { thrownBy, useTestProject } from "$lib/server/test-project";
 import { GET as getSite, PUT as putSite } from "./[project]/site/+server";
 
@@ -48,6 +50,27 @@ describe("PUT /api/projects/[project]/site", () => {
     const body = await response.json();
     expect(body.version).not.toBe(version);
     expect(body.problems.map((p: { code: string }) => p.code)).toEqual(["empty-heading"]);
+  });
+
+  it("asks a contact form's new address to confirm once it's saved", async () => {
+    const sent: MailMessage[] = [];
+    useServices({ mailer: { send: async (m) => void sent.push(m) } });
+    const { document, version } = await read();
+    document.nodes.contact_form_1 = {
+      id: "contact_form_1",
+      type: "contact_form",
+      hidden: false,
+      form_kind: "contact",
+      heading: { content: "Napište nám", marks: [], annotations: [] },
+      text: { content: "", marks: [], annotations: [] },
+      button: { content: "Odeslat", marks: [], annotations: [] },
+      recipient: "kampan@pekarna-ulipy.cz",
+    };
+    document.nodes.page_home.blocks.nodes.push("contact_form_1");
+    const first = await (await put({ document, baseVersion: version })).json();
+    await put({ document, baseVersion: first.version });
+    expect(sent).toEqual([expect.objectContaining({ to: "kampan@pekarna-ulipy.cz" })]);
+    expect(sent[0]?.text).toMatch(/\/forms\/confirm\//);
   });
 
   it("answers 409 for an outdated base version", async () => {

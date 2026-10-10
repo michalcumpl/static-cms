@@ -104,12 +104,17 @@ export const SHARED_LAYOUTS: readonly Layout[] = [
     id: "contact",
     name: { cs: "Kontakt", en: "Contact" },
     description: {
-      cs: "Adresa, telefon a e-mail, otevírací doba a jak se k vám dostat.",
-      en: "Address, phone and email, opening hours and how to find you.",
+      cs: "Adresa, telefon a e-mail, otevírací doba, formulář pro zprávy a jak se k vám dostat.",
+      en: "Address, phone and email, opening hours, a form for messages and how to find you.",
     },
     blocks: [
       { type: "contact" },
       { type: "opening_hours", heading: { cs: "Otevírací doba", en: "Opening hours" } },
+      {
+        type: "contact_form",
+        heading: { cs: "Napište nám", en: "Write to us" },
+        button: { cs: "Odeslat", en: "Send" },
+      },
       {
         type: "rich_text",
         body: {

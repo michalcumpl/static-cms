@@ -133,6 +133,13 @@ function blockInput(
       };
     case "jobs":
       return { type: "jobs", heading: heading(recipe.heading), note: pick(recipe.note), items: [] };
+    case "contact_form":
+      return {
+        type: "contact_form",
+        kind: "contact",
+        heading: pick(recipe.heading),
+        button: pick(recipe.button),
+      };
     case "figures":
       return {
         type: "figures",

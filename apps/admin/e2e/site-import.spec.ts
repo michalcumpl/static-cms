@@ -57,9 +57,8 @@ test("Import the bakery: progress, then the review, then done reviewing", async 
   await expect(
     table.getByRole("row", { name: /Kontakt \/kontakt\.html \/kontakt\// }),
   ).toBeVisible();
-  await expect(
-    page.getByText("A form; the site has email and phone buttons instead."),
-  ).toBeVisible();
+  // The contact form came along as a contact form block (contact-form).
+  await expect(page.getByText(/^A form other than a contact form/)).toHaveCount(0);
   await expect(
     page.getByText("The email address was hidden by an anti-spam script; enter it in Business."),
   ).toBeVisible();

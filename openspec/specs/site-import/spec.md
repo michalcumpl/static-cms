@@ -127,7 +127,12 @@ navigation, footer, scripts, forms and hidden elements. In document order:
 - a YouTube or Vimeo embed SHALL become a videos block;
 - `<details>` elements, and questions in FAQPage structured data, SHALL become questions of the
   site's FAQ collection, shown by a questions block at that place;
-- other embeds, forms and widgets SHALL be left out and reported.
+- a contact form (asking for a name, an email or a phone, and a message) SHALL become a contact
+  form block in its place: *Let us call you back* when it asks for a phone and no message or
+  email, *Contact us* otherwise, its heading the one before it, its address the main location's
+  email;
+- other forms (sign-ups, searches, orders, logins), embeds and widgets SHALL be left out and
+  reported.
 
 On the home page, a row of two or more award or partner logos in the footer SHALL become a logos
 block at the page's end, each logo named by its description or the words beside it, linked when
@@ -149,7 +154,12 @@ shown in the review. The site SHALL use the Standard template.
   block where they were
 
 #### Scenario: A contact form
-- **WHEN** the contact page has a form
+- **WHEN** the contact page has a form with name, email and message fields
+- **THEN** the page has a *Contact us* form block where the form was, and the review doesn't list
+  it as left out
+
+#### Scenario: A newsletter sign-up
+- **WHEN** a page has a form with only an email field and a "Subscribe" button
 - **THEN** the form isn't imported and the review lists it as left out on that page
 
 #### Scenario: A grid of cards

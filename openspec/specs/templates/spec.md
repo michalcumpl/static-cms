@@ -119,7 +119,8 @@ Every template SHALL offer the shared layouts, in this order, with these blocks:
 - **Services:** text · services (all) · call to action;
 - **About:** text · team (all) · call to action;
 - **Team:** text · team (all);
-- **Contact:** contact (all locations) · opening hours (all locations) · text;
+- **Contact:** contact (all locations) · opening hours (all locations) · contact form (*Contact us*,
+  to the main location's email) · text;
 - **FAQ:** questions (all) · text;
 - **Careers:** text · jobs (no jobs yet, with a "no openings" note) · call to action.
 
@@ -136,6 +137,11 @@ A template's own layouts SHALL come after the shared ones.
 #### Scenario: German site
 - **WHEN** a German site makes a page from the Careers layout
 - **THEN** the starting texts are the English ones
+
+#### Scenario: A Contact page with a form
+- **WHEN** a Czech site makes a page from the Contact layout
+- **THEN** it has a *Contact us* form headed "Napište nám" with the button "Odeslat", after the
+  opening hours
 
 ### Requirement: Making a page from a layout
 Making a page from a layout SHALL give it a title and slug as adding a page does, and blocks

@@ -82,6 +82,16 @@ export type BlockInput =
   | { type: "figures"; heading?: string; items: { value: string; label: string }[] }
   | { type: "steps"; heading: string; items: { title: string; text?: string }[] }
   | {
+      type: "contact_form";
+      /** `contact` (default): a message; `callback`: a request to be called back. */
+      kind?: "contact" | "callback";
+      heading: string;
+      text?: string;
+      button: string;
+      /** An email address; the main location's without it. */
+      recipient?: string;
+    }
+  | {
       type: "jobs";
       heading?: string;
       /** Shown when there are no jobs. */
@@ -346,6 +356,14 @@ export function blockFactory(ctx: BlockFactoryContext) {
               add("figure", { value: text(item.value), label: text(item.label) }),
             ),
           ),
+        });
+      case "contact_form":
+        return addBlock("contact_form", {
+          form_kind: input.kind ?? "contact",
+          heading: text(input.heading),
+          text: text(input.text),
+          button: text(input.button),
+          recipient: input.recipient ?? "",
         });
       case "jobs":
         return addBlock("jobs", {

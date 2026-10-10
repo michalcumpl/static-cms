@@ -8,6 +8,8 @@ export interface MailMessage {
   to: string;
   subject: string;
   text: string;
+  /** Where replies go instead of the sender: a contact form's visitor (contact-form). */
+  replyTo?: string;
 }
 
 export interface Mailer {
@@ -17,8 +19,8 @@ export interface Mailer {
 /** Sends through a nodemailer transport (SMTP in production, a stub in tests). */
 export function transportMailer(transport: Transporter, from: string): Mailer {
   return {
-    async send({ to, subject, text }) {
-      await transport.sendMail({ from, to, subject, text });
+    async send({ to, subject, text, replyTo }) {
+      await transport.sendMail({ from, to, subject, text, ...(replyTo ? { replyTo } : {}) });
     },
   };
 }

@@ -242,6 +242,13 @@ describe("structures as Webmio's blocks (import-existing-blocks)", () => {
     });
   });
 
+  it("A contact form: a Contact us block where the form was, to the business email", () => {
+    const form = blocksOf(bakery, "kontakt").find((b) => b.type === "contact_form");
+    expect(form).toMatchObject({ form_kind: "contact", recipient: "" });
+    expect(text(form.heading)).toBe("Napište nám");
+    expect(text(form.button)).toBe("Odeslat zprávu");
+  });
+
   it("takes the map's place as the location's link when it has no address", () => {
     const location = Object.values(nodesOf(agency)).find((n) => n.type === "location");
     expect(location.map_url).toBe(

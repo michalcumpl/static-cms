@@ -128,6 +128,8 @@ describe("theme stylesheet", () => {
       ".figure-list",
       ".figure-value",
       ".step-list",
+      ".form-field",
+      ".form-sent",
       ".site-header",
       ".site-nav",
       ".site-footer",

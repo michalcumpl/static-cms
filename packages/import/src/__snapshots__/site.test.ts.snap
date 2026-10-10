@@ -19,11 +19,6 @@ exports[`reading a whole site > reports what it imported and left out 1`] = `
     {
       "reason": "hidden-email",
     },
-    {
-      "detail": "",
-      "page": "/kontakt.html",
-      "reason": "form",
-    },
   ],
   "pages": [
     {

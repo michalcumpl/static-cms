@@ -167,6 +167,16 @@ describe("the site the answers make", () => {
     expect(errors).toEqual([]);
   });
 
+  it("gives the Contact page a Contact us form, to the business email", () => {
+    const { pages, blocks, errors } = made(CAFE);
+    const contact = pages.find((p) => p.slug === "kontakt");
+    expect(blocks(contact).find((b) => b.type === "contact_form")).toMatchObject({
+      form_kind: "contact",
+      recipient: "",
+    });
+    expect(errors).toEqual([]);
+  });
+
   it("names pages in English for an English site", () => {
     const doc = siteFromSetup(
       { type: "health", name: "Dr. Novak", pages: ["home", "team", "faq"] },

@@ -52,7 +52,7 @@ describe("shared layouts", () => {
       services: ["rich_text", "services", "call_to_action"],
       about: ["rich_text", "team", "call_to_action"],
       team: ["rich_text", "team"],
-      contact: ["contact", "opening_hours", "rich_text"],
+      contact: ["contact", "opening_hours", "contact_form", "rich_text"],
       faq: ["faq", "rich_text"],
       careers: ["rich_text", "jobs", "call_to_action"],
     });
@@ -72,11 +72,23 @@ describe("making a page from a layout", () => {
   it("Czech starting texts", () => {
     const { doc } = editableDemoSite();
     const { blocks } = addFromLayout(doc as Doc, STANDARD, "contact");
-    expect(paragraphs(doc as Doc, blocks[2])).toEqual([
+    expect(paragraphs(doc as Doc, blocks[3])).toEqual([
       "Jak k nám",
       "Popište, kudy se k vám dostat a kde zaparkovat, nebo na koho se obrátit s čím.",
     ]);
     expect(blocks[1]?.heading.content).toBe("Otevírací doba");
+  });
+
+  it("A Contact page with a form", () => {
+    const { doc } = editableDemoSite();
+    const { blocks } = addFromLayout(doc as Doc, STANDARD, "contact");
+    expect(blocks[2]).toMatchObject({
+      type: "contact_form",
+      form_kind: "contact",
+      heading: { content: "Napište nám" },
+      button: { content: "Odeslat" },
+      recipient: "",
+    });
   });
 
   it("German site", () => {

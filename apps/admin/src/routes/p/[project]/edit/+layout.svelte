@@ -5,6 +5,7 @@ import { goto } from "$app/navigation";
 import BlockHandles from "$lib/editor/BlockHandles.svelte";
 import BlockPanel from "$lib/editor/BlockPanel.svelte";
 import ButtonPanel from "$lib/editor/ButtonPanel.svelte";
+import ContactFormPanel from "$lib/editor/ContactFormPanel.svelte";
 import CropDialog from "$lib/editor/CropDialog.svelte";
 import { canvasCss, canvasTheme } from "$lib/editor/canvas-css";
 import { selectionLabel } from "$lib/editor/handles";
@@ -243,6 +244,7 @@ const statusText = $derived(saveStatusText(editor, i18n.t));
     <LinkPanel {editor} />
     <VideoPanel {editor} />
     <JobPanel {editor} />
+    <ContactFormPanel {editor} />
     <ImagePanel {editor} />
   </aside>
 </div>

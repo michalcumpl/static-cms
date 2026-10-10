@@ -96,10 +96,12 @@ describe("the import job", () => {
       "/kontakt.html",
     ]);
     expect(row?.report?.leftOut.map((l) => l.reason)).toEqual(
-      expect.arrayContaining(["disallowed", "unreachable", "language", "hidden-email", "form"]),
+      expect.arrayContaining(["disallowed", "unreachable", "language", "hidden-email"]),
     );
-    // The contact page's map is a contact block now, not left out (import-existing-blocks).
+    // The contact page's map is a contact block now, not left out (import-existing-blocks), and
+    // its form a contact form block (contact-form).
     expect(row?.report?.leftOut.map((l) => l.reason)).not.toContain("embed");
+    expect(row?.report?.leftOut.map((l) => l.reason)).not.toContain("form");
   });
 
   it("keeps what a retry needs: failed pages and images, the queue, the menu, the pages", async () => {

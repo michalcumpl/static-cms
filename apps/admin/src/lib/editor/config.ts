@@ -13,6 +13,7 @@ import CallToAction from "./nodes/CallToAction.svelte";
 import Card from "./nodes/Card.svelte";
 import Cards from "./nodes/Cards.svelte";
 import Contact from "./nodes/Contact.svelte";
+import ContactForm from "./nodes/ContactForm.svelte";
 import ExternalLink from "./nodes/ExternalLink.svelte";
 import Faq from "./nodes/Faq.svelte";
 import FaqItem from "./nodes/FaqItem.svelte";
@@ -114,6 +115,7 @@ export const nodeComponents: Record<string, Component<any>> = {
   video: Video,
   jobs: Jobs,
   job: Job,
+  contact_form: ContactForm,
   image: Image,
   strong: MarkStrong,
   emphasis: MarkEmphasis,

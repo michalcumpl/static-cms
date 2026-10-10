@@ -5,6 +5,7 @@ import { resolve } from "./addresses.js";
 import { jsonLdNodes } from "./business.js";
 import { collapse, contentArea } from "./content.js";
 import { backgroundImages, inlineDeclarations } from "./css.js";
+import { readContactForm } from "./forms.js";
 import { candidateList, type ImageCollector, imageCandidates } from "./images.js";
 import type { LeftOut } from "./report.js";
 import { detectStructure } from "./structures.js";
@@ -47,12 +48,20 @@ export type Segment =
   /** A map: the business's contact details; `place`, a map link the embed names, or `""`. */
   | { kind: "map"; heading: string; place: string }
   /** A booking service, with the sentence before it; `label` `""` for the language's word. */
-  | { kind: "booking"; heading: string; text: string; label: string; url: string };
+  | { kind: "booking"; heading: string; text: string; label: string; url: string }
+  /** A contact form, with the sentence before it; `button` `""` for the language's word. */
+  | {
+      kind: "contact_form";
+      heading: string;
+      text: string;
+      formKind: "contact" | "callback";
+      button: string;
+    };
 
 /** The segments made from structures, which take the heading right before them. */
 type StructureSegment = Extract<
   Segment,
-  { kind: "cards" | "figures" | "steps" | "hours" | "map" | "booking" }
+  { kind: "cards" | "figures" | "steps" | "hours" | "map" | "booking" | "contact_form" }
 >;
 
 export interface PageContent {
@@ -262,9 +271,19 @@ export function readPage(html: string, options: ReadOptions): PageContent {
       case "audio":
         leftOut.push({ reason: "embed", page: options.page, detail: name });
         return;
-      case "form":
-        leftOut.push({ reason: "form", page: options.page, detail: "" });
+      case "form": {
+        const form = readContactForm($, el as Cheerio<Element>);
+        if (form) {
+          items.push({
+            kind: "structure",
+            segment: { kind: "contact_form", heading: "", text: "", ...form },
+            group,
+          });
+        } else {
+          leftOut.push({ reason: "form", page: options.page, detail: "" });
+        }
         return;
+      }
       case "a": {
         // A link on its own (a button): a paragraph with the link.
         if (el.find("img").length && !collapse(el.text())) {
@@ -572,8 +591,8 @@ function assemble(items: Item[]): Segment[] {
         text.push(
           item.segment.items.map((s) => `- **${s.title}**${s.text ? ` ${s.text}` : ""}`).join("\n"),
         );
-      } else if (item.segment.kind === "booking") {
-        // A booking widget under a heading and a sentence: the call to action's own.
+      } else if (item.segment.kind === "booking" || item.segment.kind === "contact_form") {
+        // A booking widget or a contact form under a heading and a sentence: the block's own.
         const sentence =
           text.length >= 2 && !/^(#|- )/.test(text.at(-1) ?? "") ? text.pop() : undefined;
         const heading = /^#{2,3} (.+)$/.exec(text.at(-1) ?? "");

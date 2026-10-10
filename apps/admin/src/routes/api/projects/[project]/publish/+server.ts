@@ -12,7 +12,10 @@ import type { RequestHandler } from "./$types";
 export const POST: RequestHandler = (event) => {
   const { user } = requireMember(event, event.params.project, { api: true });
   const { locale, say } = i18n(event.locals.locale);
-  const result = startPublish(getDb(), event.params.project, user.id, { locale });
+  const result = startPublish(getDb(), event.params.project, user.id, {
+    locale,
+    adminOrigin: event.url.origin,
+  });
   if (result.ok) return json({ id: result.publishId }, { status: 202 });
   if (result.reason === "not-found") notFound(event);
   if (result.reason === "invalid") return json({ problems: result.problems }, { status: 422 });

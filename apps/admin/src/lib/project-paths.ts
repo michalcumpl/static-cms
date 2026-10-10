@@ -22,6 +22,10 @@ export interface ProjectPaths {
   versionsPage: string;
   /** The review of the import that made the project (site-import). */
   importReview: string;
+  /** The contact forms' messages (contact-form). */
+  messages: string;
+  /** The listed messages as CSV (`?form=`, `?unhandled=1`). */
+  messagesCsv: string;
   /** The editor: `…/edit/` opens the home page, `…/edit/<page-id>/` a given page. */
   edit(pageId?: string): string;
   /** Base path the preview renders with. */
@@ -30,6 +34,10 @@ export interface ProjectPaths {
   api: string;
   /** GET the published languages' documents and media names, for the ZIP download. */
   exportInput: string;
+  /** GET the addresses the project's forms name and whether each confirmed (contact-form). */
+  formRecipients: string;
+  /** Where the site's contact forms post, before the admin's origin (contact-form). */
+  forms: string;
   /** GET the project's languages, POST adds one. */
   languages: string;
   /** PATCH publishes or hides a language, DELETE removes it. */
@@ -80,10 +88,14 @@ export function projectPaths(projectId: string, lang?: string): ProjectPaths {
     publishPage: `${base}publish`,
     versionsPage: `${base}publish/versions${query}`,
     importReview: `${base}import`,
+    messages: `${base}messages`,
+    messagesCsv: `${base}messages.csv`,
     edit: (pageId = "") => (pageId ? `${base}edit/${pageId}/${query}` : `${base}edit/${query}`),
     preview: `${base}preview/`,
     api: `/api/projects/${projectId}/site${query}`,
     exportInput: `/api/projects/${projectId}/export-input`,
+    forms: `/forms/${projectId}`,
+    formRecipients: `/api/projects/${projectId}/form-recipients`,
     languages: `/api/projects/${projectId}/languages`,
     language: (lang) => `/api/projects/${projectId}/languages/${encodeURIComponent(lang)}`,
     copyPage: (lang) => `/api/projects/${projectId}/languages/${encodeURIComponent(lang)}/pages`,

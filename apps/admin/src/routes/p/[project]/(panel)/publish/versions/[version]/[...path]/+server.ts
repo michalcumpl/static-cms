@@ -28,6 +28,7 @@ export const GET: RequestHandler = async (event) => {
     params.project,
     [{ lang: version.lang, document: version.document, primary: true }],
     {
+      formEndpoint: `${event.url.origin}${paths.forms}`,
       basePath: paths.version(params.version),
       path: params.path,
       editHref: paths.versionsPage,

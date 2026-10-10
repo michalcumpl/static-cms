@@ -463,6 +463,24 @@ function stringsOf(tr: Tr) {
   return siteStrings(site?.lang ?? "");
 }
 
+/** A Contact us form: the heading and button in the site's language, the caret in the heading. */
+export function insertContactForm(tr: Tr): boolean {
+  const block = tr.generate_id();
+  const { form } = stringsOf(tr);
+  tr.create({
+    id: block,
+    type: "contact_form",
+    hidden: false,
+    form_kind: "contact",
+    heading: text(form.contactHeading),
+    text: text(),
+    button: text(form.contactButton),
+    recipient: "",
+  });
+  insertAndFocus(tr, block, "heading");
+  return true;
+}
+
 /** A contact block showing every part of the business details, with a placeholder heading. */
 export function insertContact(tr: Tr): boolean {
   const block = tr.generate_id();
@@ -562,7 +580,8 @@ export type BlockType =
   | "projects"
   | "cards"
   | "videos"
-  | "jobs";
+  | "jobs"
+  | "contact_form";
 
 export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   hero: insertHero,
@@ -583,6 +602,7 @@ export const blockInserters: Record<BlockType, (tr: Tr) => boolean> = {
   cards: insertCards,
   videos: insertVideos,
   jobs: insertJobs,
+  contact_form: insertContactForm,
 };
 
 /** Block types that may be inserted at `index` of a page's blocks (hero: top only, once). */
@@ -608,6 +628,7 @@ export function insertableBlocks(blocks: { type: string }[], index: number): Blo
     "cards",
     "videos",
     "jobs",
+    "contact_form",
   ];
   return heroAllowed ? ["hero", ...others] : others;
 }

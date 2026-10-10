@@ -142,6 +142,13 @@ function everything(lang: "cs" | "en") {
         { title: t("Produkční", "Producer") },
       ],
     }),
+    blocks.contactForm({
+      kind: "callback",
+      heading: t("Zavoláme vám", "We'll call you"),
+      text: t("Nechte nám číslo.", "Leave us your number."),
+      button: t("Chci zavolat", "Call me"),
+      recipient: "kampan@example.org",
+    }),
     blocks.callToAction({
       heading: t("Přihlaste se", "Sign up"),
       actions: [{ label: "Web", url: "https://example.org" }],
@@ -181,6 +188,7 @@ describe("siteBuilder", () => {
       "videos",
       "menu_group",
       "jobs",
+      "contact_form",
     ]) {
       expect(types, type).toContain(type);
     }

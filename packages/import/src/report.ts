@@ -2,7 +2,7 @@
 // admin says them in the interface language.
 
 export type LeftOutReason =
-  /** A form; the site gets email and phone buttons instead. */
+  /** A form other than a contact form: a sign-up, search, order or login. */
   | "form"
   /** An embedded widget, map or player other than YouTube and Vimeo (`detail`: its host or tag). */
   | "embed"

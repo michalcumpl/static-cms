@@ -1,7 +1,8 @@
 import { error, json } from "@sveltejs/kit";
 import { i18n } from "$lib/i18n";
 import { notFound, requireMember } from "$lib/server/access";
-import { getDb } from "$lib/server/app";
+import { getDb, getMailer } from "$lib/server/app";
+import { askToConfirmRecipients } from "$lib/server/contact-forms";
 import { readSite, saveSite } from "$lib/server/site-documents";
 import type { RequestHandler } from "./$types";
 
@@ -40,7 +41,21 @@ export const PUT: RequestHandler = async (event) => {
   const lang = languageOf(event.url);
   if (lang !== undefined && !readSite(getDb(), event.params.project, lang)) notFound(event);
   const result = saveSite(getDb(), event.params.project, user.id, document, baseVersion, lang);
-  if (result.ok) return json({ version: result.version, problems: result.problems });
+  if (result.ok) {
+    // A contact form's new address confirms itself before it gets messages (contact-form).
+    try {
+      await askToConfirmRecipients(
+        getDb(),
+        getMailer(),
+        event.params.project,
+        document,
+        event.url.origin,
+      );
+    } catch (err) {
+      console.error(`[forms] Couldn't ask a form's address to confirm: ${String(err)}`);
+    }
+    return json({ version: result.version, problems: result.problems });
+  }
   if (result.reason === "conflict") {
     return json(
       { message: i18n(event.locals.locale).t("server.site.changedElsewhere") },

@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 
 /** `ws` and `dp`: a website and a deploy on Webmio hosting (own-hosting design.md decision 1). */
-export type IdPrefix = "u" | "w" | "p" | "d" | "v" | "pb" | "im" | "rt" | "ws" | "dp";
+export type IdPrefix = "u" | "w" | "p" | "d" | "v" | "pb" | "im" | "rt" | "ws" | "dp" | "msg";
 
 /**
  * A random ID with a type prefix, e.g. `p_3kTq9xW1bZcA`: safe in URLs, and never

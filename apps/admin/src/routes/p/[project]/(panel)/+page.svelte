@@ -130,6 +130,14 @@ const editDesign = $derived(`${paths.edit()}?tab=theme`);
         {/if}
         <a href={paths.publishPage}>{i18n.t("dashboard.open", { section: i18n.t("project.sections.publish") })}</a>
       </Card>
+      <Card title={i18n.t("project.sections.messages")} id="messages-card">
+        <p>
+          {data.unhandled > 0
+            ? i18n.t("dashboard.unhandled", { count: data.unhandled })
+            : i18n.t("dashboard.noUnhandled")}
+        </p>
+        <a href={paths.messages}>{i18n.t("dashboard.open", { section: i18n.t("project.sections.messages") })}</a>
+      </Card>
     </div>
   </div>
 </TabPanel>

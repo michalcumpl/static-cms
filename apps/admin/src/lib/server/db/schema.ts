@@ -418,3 +418,59 @@ export const projectSetups = sqliteTable("project_setups", {
   finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 });
+
+/** What a contact form asks for: a message, or a request to be called back. */
+export const contactFormKinds = ["contact", "callback"] as const;
+
+/**
+ * Messages visitors sent through a website's contact forms (contact-form design decision 5),
+ * kept 12 months, and with their project.
+ */
+export const contactMessages = sqliteTable(
+  "contact_messages",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    /** The contact form block's node ID, and its kind and heading when the message came. */
+    blockId: text("block_id").notNull(),
+    kind: text("kind", { enum: contactFormKinds }).notNull(),
+    heading: text("heading").notNull(),
+    /** The page's path on the site, as the form sent it. */
+    page: text("page").notNull(),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone").notNull(),
+    /** When to call back: `any`, `morning` or `afternoon`; "" for a message. */
+    when: text("when").notNull(),
+    message: text("message").notNull(),
+    /** Whether the email to the owner was sent. */
+    delivered: integer("delivered", { mode: "boolean" }).notNull(),
+    handledAt: integer("handled_at", { mode: "timestamp_ms" }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("contact_messages_project_idx").on(t.projectId, t.createdAt)],
+);
+
+/**
+ * Addresses a project's contact forms send to besides the business email (contact-form design
+ * decision 4): each confirms itself through a link before it gets messages.
+ */
+export const formRecipients = sqliteTable(
+  "form_recipients",
+  {
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    /** SHA-256 of the confirmation link's token. */
+    tokenHash: text("token_hash").notNull(),
+    confirmedAt: integer("confirmed_at", { mode: "timestamp_ms" }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.projectId, t.email] }),
+    uniqueIndex("form_recipients_token_idx").on(t.tokenHash),
+  ],
+);

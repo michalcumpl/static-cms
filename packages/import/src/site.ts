@@ -441,6 +441,28 @@ export function segmentBlocks(
       return [{ type: "opening_hours", heading: segment.heading }];
     case "map":
       return [{ type: "contact", heading: segment.heading }];
+    case "contact_form": {
+      // To the business email (recipient `""`), in the site's language where the source had none.
+      const cs = czech(lang);
+      const callback = segment.formKind === "callback";
+      return [
+        {
+          type: "contact_form",
+          kind: segment.formKind,
+          heading:
+            segment.heading ||
+            (callback
+              ? cs
+                ? "Zavoláme vám"
+                : "We'll call you back"
+              : cs
+                ? "Napište nám"
+                : "Write to us"),
+          text: segment.text,
+          button: segment.button || (cs ? "Odeslat" : "Send"),
+        },
+      ];
+    }
     case "booking": {
       const cs = czech(lang);
       return [

@@ -73,7 +73,8 @@ describe("importSiteCommand (site-import)", () => {
       if (!result.ok) throw new Error(lines.join("\n"));
       expect(lines).toContain("Imported 5 pages, 12 images, 3 questions, 2 social profiles.");
       expect(lines).toContain("  /kontakt.html → /kontakt/  Kontakt");
-      expect(lines).toContain("  form on /kontakt.html");
+      // The contact form is a contact form block now, not left out (contact-form).
+      expect(lines).not.toContain("  form on /kontakt.html");
       expect(lines.at(-1)).toBe(`Project: ${origin}/p/${result.projectId}/`);
     } finally {
       await server.close();

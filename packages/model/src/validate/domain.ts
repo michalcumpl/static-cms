@@ -142,6 +142,7 @@ export function checkSiteRules(
         checkCards(site, page, pageIds, get, problems);
         checkVideos(page, get, problems);
         checkJobs(page, get, problems);
+        checkContactForms(site, page, get, problems);
       }
     }
     for (const pageId of pageIds) {
@@ -1166,6 +1167,53 @@ function checkCards(
 
 /** A page's videos blocks: their number, titles and addresses (video design decision 2). */
 /** Job openings: titles, contacts, at most twelve, and something to show (jobs decision 1). */
+/** Contact forms (contact-form spec, "Contact form"): heading, button, and where messages go. */
+function checkContactForms(
+  site: NodeOfType<"site">,
+  page: NodeOfType<"page">,
+  get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,
+  problems: Problems,
+): void {
+  const on = pageLabel(page);
+  const business = get(site.business, "business");
+  const main = get(business?.locations.nodes[0] ?? "", "location");
+  for (const blockId of page.blocks.nodes) {
+    const form = get(blockId, "contact_form");
+    if (!form) continue;
+    if (isBlank(form.heading)) {
+      problems.error(
+        "empty-heading",
+        form.id,
+        `The contact form on ${on} needs a heading.`,
+        "heading",
+      );
+    }
+    if (isBlank(form.button)) {
+      problems.error(
+        "empty-label",
+        form.id,
+        `The contact form on ${on} needs its button's label.`,
+        "button",
+      );
+    }
+    if (form.recipient !== "" && !EMAIL.test(form.recipient)) {
+      problems.error(
+        "invalid-email",
+        form.id,
+        `The contact form on ${on}: "${form.recipient}" is not an email address.`,
+        "recipient",
+      );
+    } else if (form.recipient === "" && !main?.email) {
+      problems.warning(
+        "no-recipient",
+        form.id,
+        `The contact form on ${on} has nowhere to send messages: add the business's email or the form's own address. Until then messages are only kept in Messages.`,
+        "recipient",
+      );
+    }
+  }
+}
+
 function checkJobs(
   page: NodeOfType<"page">,
   get: <T extends NodeType>(id: string, type: T) => NodeOfType<T> | undefined,

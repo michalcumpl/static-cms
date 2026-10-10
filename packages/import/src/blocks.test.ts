@@ -120,11 +120,44 @@ describe("page content", () => {
     expect(JSON.stringify(home.segments)).not.toContain("chleb.jpg");
   });
 
-  it("A contact form and a hidden email: left out and reported; the map isn't", () => {
+  it("A contact form: a Contact us form under its heading; the hidden email isn't read", () => {
     const contact = read("/kontakt.html");
-    expect(contact.leftOut).toEqual([{ reason: "form", page: "/kontakt.html", detail: "" }]);
+    expect(contact.leftOut).toEqual([]);
+    expect(contact.segments).toContainEqual({
+      kind: "contact_form",
+      heading: "Napište nám",
+      text: "",
+      formKind: "contact",
+      button: "Odeslat zprávu",
+    });
     expect(contact.segments).toContainEqual({ kind: "map", heading: "", place: "" });
     expect(JSON.stringify(contact.segments)).not.toContain("protected");
+  });
+
+  it("A newsletter sign-up: left out and reported", () => {
+    const html = `<main><h1>Novinky</h1><form><input type="email" name="email" placeholder="Váš e-mail"><button>Odebírat</button></form></main>`;
+    const page = read("/novinky/", html);
+    expect(page.segments).toEqual([]);
+    expect(page.leftOut).toEqual([{ reason: "form", page: "/novinky/", detail: "" }]);
+  });
+
+  it.each([
+    ["a search", `<form role="search"><input name="q"><textarea name="message"></textarea></form>`],
+    ["a login", `<form><input name="email" type="email"><input type="password"></form>`],
+  ])("leaves out %s", (_name, form) => {
+    const page = read("/", `<main><h1>Úvod</h1>${form}</main>`);
+    expect(page.leftOut.map((l) => l.reason)).toEqual(["form"]);
+  });
+
+  it("reads a form asking only for a name and a phone as a callback request", () => {
+    const html = `<main><h1>Konzultace</h1><p>Úvodní konzultace zdarma.</p><form>
+      <label for="n">Vaše jméno</label><input id="n" name="n">
+      <input type="tel" name="t" placeholder="Telefon">
+      <input type="submit" value="Zavolejte mi"></form></main>`;
+    expect(read("/konzultace/", html).segments).toEqual([
+      { kind: "text", source: "Úvodní konzultace zdarma." },
+      { kind: "contact_form", heading: "", text: "", formKind: "callback", button: "Zavolejte mi" },
+    ]);
   });
 
   it("reads an image shown through an embed as an image, and other embeds as left out", () => {

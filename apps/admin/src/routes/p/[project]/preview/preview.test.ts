@@ -53,6 +53,26 @@ describe("/p/[project]/preview/[...path]", () => {
     },
   );
 
+  it("A contact form in the preview posts to the admin's form endpoint", async () => {
+    save((doc) => {
+      doc.nodes.contact_form_1 = {
+        id: "contact_form_1",
+        type: "contact_form",
+        hidden: false,
+        form_kind: "contact",
+        heading: { content: "Napište nám", marks: [], annotations: [] },
+        text: { content: "", marks: [], annotations: [] },
+        button: { content: "Odeslat", marks: [], annotations: [] },
+        recipient: "",
+      };
+      doc.nodes.page_contact.blocks.nodes.push("contact_form_1");
+    });
+    const html = await (await get("kontakt/")).text();
+    expect(html).toContain(
+      `action="https://admin.example.cz/forms/${project().projectId}/contact_form_1"`,
+    );
+  });
+
   it("serves the theme's webfonts beside the stylesheet", async () => {
     save((doc) => {
       doc.nodes.theme_1.font_heading = "lora";

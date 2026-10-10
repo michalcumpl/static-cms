@@ -83,6 +83,8 @@ export type LayoutBlock =
       buttons: "contact";
     }
   | { type: "jobs"; heading?: Localized; note: Localized }
+  /** A Contact us form, to the business email (contact-form). */
+  | { type: "contact_form"; heading: Localized; button: Localized }
   | { type: "figures"; heading?: Localized; items: { value: Localized; label: Localized }[] }
   | { type: "steps"; heading: Localized; items: { title: Localized; text?: Localized }[] };
 

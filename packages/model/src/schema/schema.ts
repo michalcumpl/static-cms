@@ -45,6 +45,8 @@ export const SERVICES_LAYOUTS = ["cards", "list", "accordion"] as const;
 export const TEAM_LAYOUTS = ["cards", "list"] as const;
 export const GALLERY_IMAGE_FITS = ["fill", "whole"] as const;
 export const CARDS_LAYOUTS = ["below", "over"] as const;
+/** A contact form's kinds: a message, or a request to be called back. */
+export const CONTACT_FORM_KINDS = ["contact", "callback"] as const;
 
 /** What a collection block shows: its whole collection, or the items it chose. */
 export const COLLECTION_SHOW = ["all", "chosen"] as const;
@@ -200,6 +202,7 @@ export const siteSchema = {
           "cards",
           "videos",
           "jobs",
+          "contact_form",
         ],
         default_node_type: "rich_text",
       },
@@ -525,6 +528,22 @@ export const siteSchema = {
       title: { type: "text", allow_newlines: false },
       caption: { type: "text", allow_newlines: false },
       poster: { type: "node_array", node_types: ["image"] },
+    },
+  },
+  /**
+   * A form visitors send messages or callback requests with (contact-form design decision 1):
+   * its kind decides the fields; messages go to `recipient`, or the main location's email.
+   */
+  contact_form: {
+    kind: "block",
+    properties: {
+      ...PAGE_BLOCK,
+      form_kind: { type: "string", values: CONTACT_FORM_KINDS, default: "contact" },
+      heading: { type: "text", allow_newlines: false },
+      text: { type: "text", mark_types: INLINE_MARKS, allow_newlines: true },
+      button: { type: "text", allow_newlines: false },
+      /** An email address, or "" for the main location's. */
+      recipient: { type: "string" },
     },
   },
   /** Job openings (jobs design decision 1): the note shows when there are no jobs. */

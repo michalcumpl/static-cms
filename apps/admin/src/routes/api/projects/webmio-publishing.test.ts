@@ -11,7 +11,7 @@ import { connectWorkspace, targetFor } from "$lib/server/publishing/connection";
 import { type FakeNetlify, startFakeNetlify } from "$lib/server/publishing/fake-netlify";
 import { publishesSettled, startPublish } from "$lib/server/publishing/publish";
 import { fakeHosting, serveFake } from "$lib/server/publishing/webmio-fake";
-import { createProject } from "$lib/server/site-documents";
+import { createProject, readSite, saveSite } from "$lib/server/site-documents";
 import { useTestProject } from "$lib/server/test-project";
 import { POST as publish } from "./[project]/publish/+server";
 import { GET as history } from "./[project]/publishes/+server";
@@ -99,6 +99,28 @@ describe("publishing to Webmio hosting", () => {
     expect(home.text).toContain('href="https://pekarna-u-lipy.webmio.site/"');
     const sitemap = await visit("/sitemap.xml");
     expect(sitemap.text).toContain("<loc>https://pekarna-u-lipy.webmio.site/</loc>");
+  });
+
+  it("A published page's contact form posts to the admin", async () => {
+    const { db, projectId, owner } = project();
+    const site = readSite(db, projectId);
+    const doc = site?.document as { nodes: Record<string, { blocks?: { nodes: string[] } }> };
+    doc.nodes.contact_form_1 = {
+      id: "contact_form_1",
+      type: "contact_form",
+      hidden: false,
+      form_kind: "contact",
+      heading: { content: "Napište nám", marks: [], annotations: [] },
+      text: { content: "", marks: [], annotations: [] },
+      button: { content: "Odeslat", marks: [], annotations: [] },
+      recipient: "",
+    } as never;
+    doc.nodes.page_contact?.blocks?.nodes.push("contact_form_1");
+    expect(saveSite(db, projectId, owner.id, doc, site?.version ?? "").ok).toBe(true);
+    await doPublish();
+    expect((await visit("/kontakt/")).text).toContain(
+      `action="https://admin.example.cz/forms/${projectId}/contact_form_1"`,
+    );
   });
 
   it("keeps the address when the project is renamed", async () => {

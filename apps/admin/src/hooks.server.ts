@@ -1,6 +1,7 @@
 import type { Handle, ServerInit } from "@sveltejs/kit";
 import { getDb } from "$lib/server/app";
 import { getSessionUser } from "$lib/server/auth";
+import { pruneMessages } from "$lib/server/contact-forms";
 import { importWorkingCopy } from "$lib/server/import-working-copy";
 import { LOCALE_COOKIE, resolveLocale } from "$lib/server/locale";
 import { bodySizeWarning, registerAllLegacyMedia } from "$lib/server/media";
@@ -18,6 +19,8 @@ export const init: ServerInit = async () => {
   const interrupted = markInterruptedPublishes(getDb());
   if (interrupted > 0)
     console.warn(`[publish] Marked ${interrupted} interrupted publish(es) as failed.`);
+  const pruned = pruneMessages(getDb());
+  if (pruned > 0) console.log(`[forms] Deleted ${pruned} message(s) older than 12 months.`);
   const warning = bodySizeWarning(process.env);
   if (warning) console.warn(`[media] ${warning}`);
   for (const [project, keys] of await registerAllLegacyMedia(getDb())) {
@@ -28,16 +31,34 @@ export const init: ServerInit = async () => {
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 /**
- * Refuses API requests that change data from another origin. SvelteKit checks form posts
- * itself; JSON requests (the editor's saves) are checked here. See design.md decision 5.
+ * Refuses API requests that change data from another origin; JSON requests (the editor's saves)
+ * included. See design.md decision 5. Form posts are checked by `isForeignFormPost`.
  */
 export function isForeignApiWrite(request: Request, url: URL): boolean {
   if (SAFE_METHODS.has(request.method) || !url.pathname.startsWith("/api/")) return false;
   return request.headers.get("origin") !== url.origin;
 }
 
+/** The content types a browser posts a form with, which another site can send. */
+const FORM_TYPES = new Set([
+  "application/x-www-form-urlencoded",
+  "multipart/form-data",
+  "text/plain",
+]);
+
+/**
+ * Refuses form posts from another origin, as SvelteKit's own check did before `svelte.config.js`
+ * trusted every origin for the websites' contact forms (contact-form design decision 6): those
+ * post to `/forms/` from the websites, everything else only from the admin itself.
+ */
+export function isForeignFormPost(request: Request, url: URL): boolean {
+  if (SAFE_METHODS.has(request.method) || url.pathname.startsWith("/forms/")) return false;
+  const type = (request.headers.get("content-type") ?? "").split(";")[0]?.trim().toLowerCase();
+  return FORM_TYPES.has(type ?? "") && request.headers.get("origin") !== url.origin;
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
-  if (isForeignApiWrite(event.request, event.url)) {
+  if (isForeignApiWrite(event.request, event.url) || isForeignFormPost(event.request, event.url)) {
     return new Response("Cross-site request refused.", { status: 403 });
   }
   const token = event.cookies.get(SESSION_COOKIE);

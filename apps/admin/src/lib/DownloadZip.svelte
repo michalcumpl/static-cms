@@ -33,7 +33,10 @@ async function downloadZip() {
       const response = await fetch(fontPath(name));
       fonts.set(name, new Uint8Array(await response.arrayBuffer()));
     }
-    const result = exportSiteLanguages(input.languages, media, { fonts });
+    const result = exportSiteLanguages(input.languages, media, {
+      fonts,
+      formEndpoint: `${location.origin}${paths.forms}`,
+    });
     if (!result.ok) {
       downloadError = result.problems.map((p) => p.message).join(" ");
       return;

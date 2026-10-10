@@ -943,6 +943,75 @@
   margin: 0.75rem 0 0;
 }
 
+.site-canvas .contact-form form {
+  display: grid;
+  gap: 1rem;
+  max-width: 36rem;
+}
+
+.site-canvas .form-field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.site-canvas .form-field label {
+  font-weight: 700;
+}
+
+.site-canvas .form-field input,
+.site-canvas .form-field select,
+.site-canvas .form-field textarea {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-text) 55%, transparent);
+  border-radius: var(--radius);
+  background: var(--color-background);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.site-canvas .form-field textarea {
+  resize: vertical;
+}
+
+.site-canvas .form-hint,
+.site-canvas .form-privacy {
+  margin: 0;
+  font-size: 0.9em;
+}
+
+.site-canvas .contact-form .button {
+  justify-self: start;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.site-canvas .form-trap {
+  position: absolute;
+  left: -100vw;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.site-canvas .form-sent,
+.site-canvas .form-error {
+  display: none;
+  padding: 1rem;
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-secondary);
+}
+
+.site-canvas .form-sent:target,
+.site-canvas .form-error:target {
+  display: block;
+}
+
+.site-canvas .contact-form:has(.form-sent:target) form {
+  display: none;
+}
+
 .site-canvas .figure-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

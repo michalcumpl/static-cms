@@ -50,6 +50,8 @@ export function renderBlock(block: AnyNode, ctx: RenderContext): Html {
       return renderVideos(block, ctx);
     case "jobs":
       return renderJobs(block, ctx);
+    case "contact_form":
+      return renderContactForm(block, ctx);
     default:
       throw new Error(`${block.id} of type ${block.type} is not a block.`);
   }
@@ -506,6 +508,100 @@ function renderCards(block: NodeOfType<"cards">, ctx: RenderContext): Html {
       <div class="container">${blockHeading(block.heading, ctx)}
         <ul class="card-list card-columns-${columns}">${items}
         </ul>
+      </div>
+    </section>`;
+}
+
+/** Why the form endpoint refused a message, as the address's fragment names it. */
+export const FORM_ERRORS = ["missing", "contact", "invalid", "limit", "links"] as const;
+
+/**
+ * A contact form (contact-form design decision 2): a plain form posting to the site's form
+ * endpoint, working without JavaScript. The endpoint sends the visitor back to the page at
+ * `#<form>-sent` or `#<form>-error-<code>`, and CSS shows that message (`:target`). Without an
+ * endpoint, the business's email and phone take the form's place.
+ */
+function renderContactForm(block: NodeOfType<"contact_form">, ctx: RenderContext): Html {
+  const { form: strings } = ctx.strings;
+  const id = `form-${block.id}`;
+  const heading = blockHeading(block.heading, ctx);
+  const text =
+    !isEmpty(block.text) &&
+    html`
+        <p class="form-text">${renderText(block.text, ctx)}</p>`;
+  if (!ctx.formEndpoint) {
+    const main = ctx.business.locations[0];
+    const ways = [
+      main?.email && html`<a href="mailto:${main.email}">${main.email}</a>`,
+      main?.phone &&
+        html`<a href="tel:${main.phone}">${formatPhone(main.phone).replaceAll(" ", " ")}</a>`,
+    ].filter((part): part is Html => Boolean(part));
+    return html`<section class="block contact-form" id="${id}">
+      <div class="container">${heading}${text}${
+        ways.length > 0 &&
+        html`
+        <p class="form-ways">${ways.map((part, i) => (i === 0 ? part : html` · ${part}`))}</p>`
+      }
+      </div>
+    </section>`;
+  }
+  const field = (name: string, label: string, input: Html) => html`
+          <div class="form-field">
+            <label for="${id}-${name}">${label}</label>
+            ${input}
+          </div>`;
+  const input = (name: string, type: string, required: boolean, autocomplete: string) =>
+    html`<input id="${id}-${name}" name="${name}" type="${type}" autocomplete="${autocomplete}"${
+      required ? html` required` : html``
+    }>`;
+  const fields =
+    block.form_kind === "callback"
+      ? [
+          field("name", strings.name, input("name", "text", true, "name")),
+          field("phone", strings.phone, input("phone", "tel", true, "tel")),
+          field(
+            "when",
+            strings.when,
+            html`<select id="${id}-when" name="when">
+              <option value="any">${strings.whenAny}</option>
+              <option value="morning">${strings.whenMorning}</option>
+              <option value="afternoon">${strings.whenAfternoon}</option>
+            </select>`,
+          ),
+          field(
+            "message",
+            strings.note,
+            html`<textarea id="${id}-message" name="message" rows="3" maxlength="3000"></textarea>`,
+          ),
+        ]
+      : [
+          field("name", strings.name, input("name", "text", true, "name")),
+          field("email", strings.email, input("email", "email", false, "email")),
+          field("phone", strings.phone, input("phone", "tel", false, "tel")),
+          html`
+          <p class="form-hint">${strings.emailOrPhone}</p>`,
+          field(
+            "message",
+            strings.message,
+            html`<textarea id="${id}-message" name="message" rows="5" maxlength="3000" required></textarea>`,
+          ),
+        ];
+  const errors = FORM_ERRORS.map(
+    (code) => html`
+        <p class="form-error" id="${id}-error-${code}" role="alert">${strings.errors[code]} ${strings.back}</p>`,
+  );
+  return html`<section class="block contact-form" id="${id}">
+      <div class="container">${heading}${text}
+        <p class="form-sent" id="${id}-sent" role="status">${strings.sent}</p>${errors}
+        <form method="post" action="${ctx.formEndpoint}/${block.id}">
+          <input type="hidden" name="_page" value="${ctx.pageUrl(ctx.currentPageId)}">
+          <div class="form-trap" aria-hidden="true">
+            <label for="${id}-website">${strings.trap}</label>
+            <input id="${id}-website" name="website" type="text" tabindex="-1" autocomplete="off">
+          </div>${fields}
+          <p class="form-privacy">${strings.privacy}</p>
+          <button type="submit" class="button">${renderText(block.button, ctx)}</button>
+        </form>
       </div>
     </section>`;
 }

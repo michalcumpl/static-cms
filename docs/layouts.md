@@ -32,7 +32,7 @@ database only, not in this repository.
 | **Services** | text (intro) · services (all) · *steps* ("how it works") · call to action | Law, Financial advisory, Short-term rentals |
 | **About** | text (story) · *key figures* · team (all) · call to action | Financial advisory, Investment management |
 | **Team** | text (intro) · team (all, or chosen groups such as "Partners" and "Office") | Education, Law, Investment management |
-| **Contact** | contact (main location) · text (how to get here, who to ask about what) · call to action (email, phone) · testimonials | all five |
+| **Contact** | contact (main location) · contact form · text (how to get here, who to ask about what) · call to action (email, phone) · testimonials | all five |
 | **FAQ** | faq (all) · text (documents, legal notes) | Investment management |
 | **Media / press** | text (list of articles with links and outlets) | Investment management |
 | **Careers** | text (who we look for, what we offer) · call to action (send a CV) | Law |
@@ -76,8 +76,10 @@ Film added 15–20 and the second video. Today's stand-in is in brackets.
 4. **Service detail pages, or lists in a service** (2: Mareš's eight areas each with a scope list,
    Aniděti's long course descriptions): **done**, a page per service with its own text and lists
    (`collection-pages`); Mareš's practice areas use it.
-5. **Contact form** (3: Mortgage, Fond 10X, Roubenka) [email and phone buttons]. Planned as
-   `contact-form`.
+5. **Contact form** (3: Mortgage, Fond 10X, Roubenka) [email and phone buttons]: **done**, the
+   contact form block (`contact-form`): *Contact us* or *Let us call you back*, posting to the
+   admin, which emails the business and lists the messages in the panel's Messages section. The
+   shared Contact layout has one after the opening hours.
 6. **Documents to download** (2: Fond 10X's statute and key information documents, Mareš's award
    certificates) [links to the old site's files]. Needs file uploads next to images.
 7. **Reviews with a rating** (2: a Google rating, Roubenka) [testimonials; review

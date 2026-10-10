@@ -22,6 +22,11 @@ export const GET: RequestHandler = async (event) => {
   return servePreview(
     params.project,
     sites.map(({ lang, document, primary }) => ({ lang, document, primary })),
-    { basePath: paths.preview, path: params.path, editHref: paths.edit() },
+    {
+      formEndpoint: `${event.url.origin}${paths.forms}`,
+      basePath: paths.preview,
+      path: params.path,
+      editHref: paths.edit(),
+    },
   );
 };

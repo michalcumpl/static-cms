@@ -90,6 +90,8 @@ export interface PublishOptions extends HostingEnv {
   outsideLinks?: OutsideLinkOptions | false;
   /** Changes the exported files before they are checked. */
   alterExport?: (files: Map<string, Uint8Array>) => void;
+  /** The admin's address, where the site's contact forms post (contact-form decision 2). */
+  adminOrigin?: string;
 }
 
 /** How many successful publishes Webmio hosting keeps the files of, besides the live one. */
@@ -388,7 +390,12 @@ async function runPublish(
     const exported = exportSiteLanguages(
       sites.map(({ lang, document, primary }) => ({ lang, document, primary })),
       media,
-      { siteUrl: url, redirects, fonts },
+      {
+        siteUrl: url,
+        redirects,
+        fonts,
+        formEndpoint: options.adminOrigin && `${options.adminOrigin}/forms/${projectId}`,
+      },
     );
     if (!exported.ok) {
       throw new PublishError(

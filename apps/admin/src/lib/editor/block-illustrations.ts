@@ -205,6 +205,14 @@ export const BLOCK_ILLUSTRATIONS: Record<BlockType, string> = {
         })
         .join(""),
   ),
+  // A heading, then two fields side by side, a tall message field and a button.
+  contact_form: svg(
+    heading() +
+      `<rect x="8.5" y="18.5" width="49" height="10" rx="1.5" fill="none" stroke="${S}"/>` +
+      `<rect x="62.5" y="18.5" width="49" height="10" rx="1.5" fill="none" stroke="${S}"/>` +
+      `<rect x="8.5" y="33.5" width="103" height="20" rx="1.5" fill="none" stroke="${S}"/>` +
+      `<rect x="8" y="58" width="28" height="9" rx="2" fill="${P}"/>`,
+  ),
   // A heading, then three cards, each a photo with a title and two lines of text under it.
   cards: svg(
     heading() +

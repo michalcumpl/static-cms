@@ -89,6 +89,7 @@ describe("problem categories", () => {
       "invalid-hours": true,
       "nothing-to-show": true,
       "no-jobs": true,
+      "no-recipient": true,
       "empty-quote": true,
       "duplicate-translation-key": true,
       "empty-question": true,

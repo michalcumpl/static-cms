@@ -268,6 +268,18 @@ export interface VideoNode {
   poster: NodeArrayValue;
 }
 
+/** A contact form: a message (`contact`) or a callback request (`callback`). */
+export interface ContactFormNode extends PageBlock {
+  id: string;
+  type: "contact_form";
+  form_kind: "contact" | "callback";
+  heading: TextValue;
+  text: TextValue;
+  button: TextValue;
+  /** An email address, or "" for the main location's. */
+  recipient: string;
+}
+
 /** Job openings; `empty_note` shows when there are none. */
 export interface JobsNode extends PageBlock {
   id: string;
@@ -628,6 +640,7 @@ export type AnyNode =
   | VideosNode
   | JobsNode
   | JobNode
+  | ContactFormNode
   | VideoNode
   | CardNode
   | ProjectNode

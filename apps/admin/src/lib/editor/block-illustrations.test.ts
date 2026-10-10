@@ -31,6 +31,7 @@ describe("block illustrations", () => {
         "testimonials",
         "videos",
         "jobs",
+        "contact_form",
       ].sort(),
     );
   });

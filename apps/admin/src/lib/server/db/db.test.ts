@@ -15,6 +15,8 @@ describe("openDatabase", () => {
       .map((t) => t.name)
       .sort();
     expect(tables).toEqual([
+      "contact_messages",
+      "form_recipients",
       "hosting_connections",
       "import_retries",
       "imports",
@@ -65,6 +67,24 @@ describe("openDatabase", () => {
     );
     db.run(sql`delete from imports where id = 'i_1'`);
     expect(db.all(sql`select * from import_retries`)).toEqual([]);
+  });
+
+  it("drops a project's contact messages and form recipients with it (contact-form)", () => {
+    const db = openDatabase(":memory:");
+    db.run(sql`insert into workspaces (id, name, created_at) values ('w_1', 'W', 0)`);
+    db.run(
+      sql`insert into projects (id, workspace_id, name, created_at) values ('p_1', 'w_1', 'P', 0)`,
+    );
+    db.run(
+      sql`insert into contact_messages (id, project_id, block_id, kind, heading, page, name, email, phone, "when", message, delivered, created_at)
+          values ('m_1', 'p_1', 'contact_form_1', 'contact', 'Napište nám', '/kontakt/', 'Jana', 'jana@example.cz', '', '', 'Dobrý den', 1, 0)`,
+    );
+    db.run(
+      sql`insert into form_recipients (project_id, email, token_hash, created_at) values ('p_1', 'kampan@example.cz', 'h', 0)`,
+    );
+    db.run(sql`delete from projects where id = 'p_1'`);
+    expect(db.all(sql`select * from contact_messages`)).toEqual([]);
+    expect(db.all(sql`select * from form_recipients`)).toEqual([]);
   });
 
   it("keeps one media row per file content and project", () => {

@@ -63,6 +63,7 @@ export type ProblemCode =
   | "invalid-hours"
   | "nothing-to-show"
   | "no-jobs"
+  | "no-recipient"
   | "empty-quote"
   | "duplicate-translation-key"
   // Collections (business-collections)
@@ -163,6 +164,7 @@ const CATEGORIES: Record<ProblemCode, ProblemCategory> = {
   "invalid-hours": "site",
   "nothing-to-show": "site",
   "no-jobs": "site",
+  "no-recipient": "site",
   "empty-quote": "site",
   "duplicate-translation-key": "site",
   "empty-question": "site",

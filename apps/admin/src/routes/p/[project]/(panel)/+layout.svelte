@@ -16,7 +16,7 @@ import type { LayoutProps } from "./$types";
 let { data, children }: LayoutProps = $props();
 const i18n = getI18n();
 
-type Section = "dashboard" | "business" | "offer" | "about" | "website" | "publish";
+type Section = "dashboard" | "business" | "offer" | "about" | "website" | "publish" | "messages";
 type Subpage = "site" | "pages" | "languages" | "domain" | "publishing" | "versions";
 
 /** Each page of the panel: its section, its subpage, and whether it shows one language. */
@@ -31,6 +31,7 @@ const ROUTES: Record<string, { section: Section; subpage?: Subpage; perLanguage?
   "/website/domain": { section: "website", subpage: "domain" },
   "/publish": { section: "publish", subpage: "publishing" },
   "/publish/versions": { section: "publish", subpage: "versions", perLanguage: true },
+  "/messages": { section: "messages" },
 };
 
 const paths = $derived(
@@ -52,6 +53,7 @@ const sections = $derived<{ section: Section; href: string }[]>([
   { section: "about", href: paths.about },
   { section: "website", href: paths.website },
   { section: "publish", href: paths.publishPage },
+  { section: "messages", href: paths.messages },
 ]);
 const subpages = $derived<{ subpage: Subpage; href: string }[]>(
   current?.section === "website"
@@ -96,7 +98,10 @@ function chooseLanguage(lang: string) {
       label={i18n.t("project.tabsLabel")}
       items={sections.map((item) => ({
         href: keep(item.href),
-        label: i18n.t(`project.sections.${item.section}`),
+        label:
+          item.section === "messages" && data.unhandled > 0
+            ? `${i18n.t("project.sections.messages")} ${i18n.formatNumber(data.unhandled)}`
+            : i18n.t(`project.sections.${item.section}`),
         current: item.section === current?.section,
       }))}
     />

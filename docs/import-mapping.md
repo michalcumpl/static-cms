@@ -24,7 +24,7 @@ The reading is [`@webmio/import`](../packages/import/) (pure, tested on the inve
 | `<details>` and FAQPage questions into the FAQ collection | `blocks.ts`, `site.ts` | done |
 | Theme: colours, catalogue fonts, contrast | `theme.ts` | done |
 | Each page's old address, redirected when published | `site.ts`, admin `publishing/redirects.ts` | done |
-| Forms and widgets left out and reported | `blocks.ts` | done |
+| Contact forms as contact form blocks; other forms and widgets left out and reported | `forms.ts`, `blocks.ts`, `site.ts` | done (`contact-form`) |
 | Cards, key figures, steps, opening hours, maps, booking widgets and footer logos as Webmio's blocks | `structures.ts`, `booking.ts`, `site.ts` | done (`import-existing-blocks`) |
 | Other languages | | reported, not imported |
 | One-page sites split into pages per section | | not yet: imported as one home page |
@@ -81,14 +81,15 @@ fixtures):
 | A bold-titled ordered list, or headings numbered 1, 2, 3, under a heading | `steps` | Fond 10X | done |
 | A Google Maps or Mapy.cz embed (was left out) | `contact`, with the "Show on map" link; the embed's place as the map link when the location has no address | Aniděti, the bakery and agency fixtures | done |
 | A booking widget or link of a known service (was left out as an embed) | `call_to_action` to the booking service, with the heading and sentence before it | Roubenka (Lodgify) | done |
+| A form asking for an email or phone and a message, or for a name and a phone (was left out) | `contact_form`, *Contact us* or *Let us call you back*, with the heading and sentence before it and the submit button's words, to the business email | the bakery fixture | done (`contact-form`) |
 | Opening hours in a table or list | `opening_hours`, when structured data gave the business its hours; text otherwise | the bakery fixture | done |
 | Award or partner logos in the home page's footer | `logos` at the home page's end | Mareš Partners | done |
 | Repeated cards of people, quotes, priced services | `team`, `testimonials`, `services` | Aniděti, Fond 10X, Roubenka | **AI** (v2) |
 | Many pages of one kind | `projects` collection | Scénografie (327), Punk Film | **AI** (v2) |
 
 **New blocks already on the roadmap:** `documents` (links to PDFs: the bakery's price list),
-`contact-form` (forms on most examples), `newsletter` (Fond 10X's signup on every page),
-`booking` (Roubenka's calendar).
+`newsletter` (Fond 10X's signup on every page), `booking` (Roubenka's calendar). Contact
+forms came with `contact-form`.
 
 **New blocks planned from imports:** `banner-block`, a full-width image with a heading, text and a
 button anywhere on a page, for the "hero" bands between vroomagazine's card grids (today a text
@@ -139,7 +140,7 @@ block and a one-photo gallery; the hero block must be first).
 | Numbered "how it works" headings | Steps (a gap today: subheadings) | **AI** |
 | Photo grids | A gallery; images with text beside them become text with image | v1 |
 | Links to PDFs | Documents (a gap today: links) | v1 |
-| Forms | A contact form once `contact-form` exists; until then email and phone buttons | v1 notes it |
+| Forms | A contact form block for contact and callback forms; sign-ups, searches, orders and logins left out | v1 |
 | Booking widgets and checkout links | A call to action to the booking service | v1 |
 | Opening hours and check-in times | Hours only when they are opening hours; check-in times go to the house rules | **AI** |
 | Theme: the most used colours in the CSS, the fonts in `@font-face` and Google Fonts links | A design: the nearest catalogue fonts, colours adjusted until the contrast checks pass | v1 guess |
@@ -147,7 +148,8 @@ block and a one-photo gallery; the hero block must be first).
 ## What the review must show
 
 - Pages, items and images imported, with counts.
-- What was left out: forms, videos, widgets, hidden emails, images that couldn't be fetched.
+- What was left out: forms other than contact forms, videos, widgets, hidden emails, images that
+  couldn't be fetched.
 - The validation problems of the imported site, each leading to its field, before anything is
   published.
 

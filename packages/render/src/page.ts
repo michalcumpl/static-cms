@@ -11,6 +11,7 @@ import { renderText } from "./text.js";
 export function renderPage(page: NodeOfType<"page">, ctx: RenderContext): Html {
   const { site } = ctx;
   ctx.startPage();
+  ctx.currentPageId = page.id;
   const isHome = ctx.homeId === page.id;
   const title = isHome ? site.name : `${page.title} – ${site.name}`;
   const own = page.seo_description.trim() !== "" ? page.seo_description : site.description;

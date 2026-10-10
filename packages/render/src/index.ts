@@ -32,6 +32,12 @@ export interface RenderOptions {
   languages?: readonly SiteLanguage[];
   /** The templates sites can use: the registry (`TEMPLATES`) by default, a test's own otherwise. */
   templates?: readonly Template[];
+  /**
+   * Where contact forms post, like `https://app.webmio.eu/forms/<project>` (contact-form design
+   * decision 2); each form posts to `<formEndpoint>/<block ID>`. Without it, forms show the
+   * business's email and phone instead.
+   */
+  formEndpoint?: string;
 }
 
 export interface RenderedPage {
@@ -113,6 +119,7 @@ export function renderSite(input: unknown, options: RenderOptions = {}): RenderR
     options.siteUrl?.replace(/\/+$/, ""),
     options.languages,
     options.assetBasePath ?? basePath,
+    options.formEndpoint?.replace(/\/+$/, ""),
   );
   const pages = ctx.site.pages.nodes.map((pageId): RenderedPage => {
     const route = ctx.routes.get(pageId);

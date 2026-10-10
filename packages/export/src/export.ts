@@ -35,6 +35,8 @@ export interface ExportOptions {
    * webfont; only the files it uses are included.
    */
   fonts?: ReadonlyMap<string, Uint8Array>;
+  /** Where the site's contact forms post, `<admin>/forms/<project>` (see `RenderOptions`). */
+  formEndpoint?: string;
 }
 
 /** A permanent redirect from one address path to another, both starting with `/`. */
