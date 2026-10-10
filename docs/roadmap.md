@@ -27,8 +27,10 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
   block types with their looks, from key figures to the hero slideshow; the seven example
   sites, loaded locally; cropping and turning images, and a focal point for each use of an
   image; templates (the Standard template, layouts for new pages, blocks hidden from the
-  website); importing a website from its address.
-- **Next:** `guided-setup` and the rest of phase 4 (templates). Phase 5 is done: every publish
+  website); importing a website from its address; the guided setup, which builds a first site
+  from the owner's answers.
+- **Next:** the rest of phase 3 (`import-languages`, `banner-block`) and phase 4 (templates).
+  Phase 5 is done: every publish
   checks links, verifies the live website and keeps the previous version on failure. Our
   hosting runs in the `dev` stack; `prod` is deployed before the beta.
 - **Private beta** (phase 7) when phases 3–6 work with at least two launch templates.

@@ -77,6 +77,9 @@ async function purgeNow() {
                   <a class="name" href={projectPaths(project.id).dashboard}>{project.name}</a>
                   <Button href={projectPaths(project.id).edit()} kind="primary" icon="pencil" size="sm">{i18n.t("common.edit")}</Button>
                 </div>
+                {#if workspace.setups[project.id]}
+                  <a class="setup" href={`/p/${project.id}/setup/${workspace.setups[project.id]}`}>{i18n.t("projects.finishSetup")}</a>
+                {/if}
               </Card>
             </li>
           {/each}
@@ -169,6 +172,12 @@ async function purgeNow() {
 
   .name:hover {
     text-decoration: underline;
+  }
+
+  .setup {
+    display: inline-block;
+    margin-top: var(--ui-space-2);
+    font-size: var(--ui-text-sm);
   }
 
   .deleted h3 {

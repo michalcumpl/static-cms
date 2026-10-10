@@ -26,25 +26,11 @@ const nameMissing = $derived(Boolean(form && "missing" in form && form.missing))
   />
   <div class="ways">
     <Card>
-      <form method="POST" action="?/empty" aria-labelledby="empty-title">
-        <h2 id="empty-title">{i18n.t("newProject.empty")}</h2>
-        <div class="field">
-          <label for="name">{i18n.t("newProject.name")}</label>
-          <input
-            id="name"
-            name="name"
-            required
-            defaultValue={form && "name" in form ? (form.name ?? "") : ""}
-            aria-invalid={nameMissing ? "true" : undefined}
-            aria-describedby={nameMissing ? "name-error" : "name-hint"}
-          />
-          <p id="name-hint" class="hint">{i18n.t("newProject.nameHint")}</p>
-          {#if nameMissing}
-            <p id="name-error" class="error" role="alert">{i18n.t("newProject.missing")}</p>
-          {/if}
-        </div>
-        <div><Button type="submit" kind="primary" icon="plus">{i18n.t("newProject.create")}</Button></div>
-      </form>
+      <section class="guided" aria-labelledby="guided-title">
+        <h2 id="guided-title">{i18n.t("setup.title")}</h2>
+        <p class="hint">{i18n.t("newProject.guidedText")}</p>
+        <div><Button href={`/w/${data.workspace.id}/setup`} kind="primary" icon="pencil">{i18n.t("newProject.guidedStart")}</Button></div>
+      </section>
     </Card>
     <Card>
       <form method="POST" action="?/import" aria-labelledby="import-title">
@@ -73,6 +59,27 @@ const nameMissing = $derived(Boolean(form && "missing" in form && form.missing))
         <div><Button type="submit" kind="primary" icon="globe">{i18n.t("newProject.import")}</Button></div>
       </form>
     </Card>
+    <details class="empty" open={nameMissing}>
+      <summary>{i18n.t("newProject.empty")}</summary>
+      <form method="POST" action="?/empty" aria-label={i18n.t("newProject.empty")}>
+        <div class="field">
+          <label for="name">{i18n.t("newProject.name")}</label>
+          <input
+            id="name"
+            name="name"
+            required
+            defaultValue={form && "name" in form ? (form.name ?? "") : ""}
+            aria-invalid={nameMissing ? "true" : undefined}
+            aria-describedby={nameMissing ? "name-error" : "name-hint"}
+          />
+          <p id="name-hint" class="hint">{i18n.t("newProject.nameHint")}</p>
+          {#if nameMissing}
+            <p id="name-error" class="error" role="alert">{i18n.t("newProject.missing")}</p>
+          {/if}
+        </div>
+        <div><Button type="submit" icon="plus">{i18n.t("newProject.create")}</Button></div>
+      </form>
+    </details>
   </div>
 </Page>
 
@@ -91,6 +98,27 @@ const nameMissing = $derived(Boolean(form && "missing" in form && form.missing))
   h2 {
     margin: 0;
     font-size: var(--ui-text-lg);
+  }
+
+  .guided {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-3);
+  }
+
+  .guided p {
+    margin: 0;
+  }
+
+  .empty summary {
+    cursor: pointer;
+    color: var(--ui-link);
+    text-decoration: underline;
+    width: fit-content;
+  }
+
+  .empty form {
+    margin-top: var(--ui-space-3);
   }
 
   .field {

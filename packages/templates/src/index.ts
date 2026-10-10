@@ -10,6 +10,16 @@ export {
   pageFromLayout,
 } from "./page-from-layout.js";
 export { TEMPLATE_RELEASES, TEMPLATES, templateById } from "./registry.js";
+export {
+  type MediaSizes,
+  SETUP_TYPES,
+  SETUP_WEEKDAYS,
+  type SetupAnswers,
+  type SetupPhoto,
+  type SetupType,
+  setupType,
+  siteFromSetup,
+} from "./setup.js";
 export { STANDARD } from "./standard.js";
 export {
   type Layout,

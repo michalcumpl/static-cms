@@ -1,5 +1,7 @@
 // Database schema (design.md decision 1). Token-like IDs (sessions, login tokens, invitations)
 // are SHA-256 hashes of the secret; the secret itself is never stored.
+
+import type { SetupAnswers } from "@webmio/templates";
 import {
   type AnySQLiteColumn,
   index,
@@ -400,3 +402,19 @@ export const importRetries = sqliteTable(
   },
   (t) => [index("import_retries_import_idx").on(t.importId, t.startedAt)],
 );
+
+/**
+ * A project's guided setup (guided-setup design decision 1): the answers given so far and the
+ * next step to show, until the owner finishes and the site is built from them. Projects made
+ * another way have none.
+ */
+export const projectSetups = sqliteTable("project_setups", {
+  projectId: text("project_id")
+    .primaryKey()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  answers: text("answers", { mode: "json" }).$type<SetupAnswers>().notNull(),
+  /** The next step to show, 2 to 7 (step 1 made the project). */
+  step: integer("step").notNull(),
+  finishedAt: integer("finished_at", { mode: "timestamp_ms" }),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+});

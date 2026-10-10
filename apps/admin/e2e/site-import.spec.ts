@@ -19,6 +19,8 @@ async function startImport(page: Page, address: string, confirm = true) {
 
 test("New project: start empty", async ({ page }) => {
   await page.goto(newProject());
+  // A small link below the guided setup and the import (guided-setup, "Projects").
+  await page.getByText("Start empty", { exact: true }).click();
   const form = page.getByRole("form", { name: "Start empty" });
   await form.getByLabel("Name").fill("Kadeřnictví Eva");
   await form.getByRole("button", { name: "Create project" }).click();

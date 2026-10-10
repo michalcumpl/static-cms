@@ -2,6 +2,7 @@ import { requireUser } from "$lib/server/access";
 import { getDb } from "$lib/server/app";
 import { listWorkspaces } from "$lib/server/members";
 import { deletedProjects } from "$lib/server/project-deletion";
+import { unfinishedSetups } from "$lib/server/setup";
 import type { PageServerLoad } from "./$types";
 
 /**
@@ -20,6 +21,14 @@ export const load: PageServerLoad = (event) => {
     workspaces: workspaces.map((w) => ({
       ...w,
       deleted: w.role === "owner" ? deletedProjects(getDb(), w.id) : [],
+      // Owners' unfinished guided setups, by project: the step to go on with.
+      setups:
+        w.role === "owner"
+          ? unfinishedSetups(
+              getDb(),
+              w.projects.map((p) => p.id),
+            )
+          : {},
     })),
     deletedName: event.url.searchParams.get("deleted"),
   };
