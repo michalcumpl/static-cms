@@ -28,9 +28,9 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
   forms that email the owner; the seven example
   sites, loaded locally; cropping and turning images, and a focal point for each use of an
   image; templates (the Standard template, layouts for new pages, blocks hidden from the
-  website); importing a website from its address; the guided setup, which builds a first site
+  website); importing a website from its address, with its other language versions; the guided setup, which builds a first site
   from the owner's answers.
-- **Next:** the rest of phase 3 (`import-languages`) and phase 4 (templates).
+- **Next:** phase 4 (templates); phase 3 is done.
   Phase 5 is done: every publish
   checks links, verifies the live website and keeps the previous version on failure. Our
   hosting runs in the `dev` stack; `prod` is deployed before the beta.
@@ -73,7 +73,7 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
 | [`package-split`](../openspec/changes/archive/2026-10-05-package-split/) | renamed to Webmio; `@webmio/model`, `@webmio/render`, `@webmio/export` | Done |
 | [`business-locations`](../openspec/changes/archive/2026-10-06-business-locations/) | several locations, each with address, hours and contact | Done |
 
-### 3. Business control panel · In progress
+### 3. Business control panel · Done
 
 | Change | What | Status |
 | --- | --- | --- |
@@ -85,7 +85,7 @@ sites taught us about pages and blocks is in [`layouts.md`](layouts.md).
 | [`guided-setup`](../openspec/changes/archive/2026-10-10-guided-setup/) | the "Tell us about your business" wizard: type, design, contact and hours, services, photos and pages, previewed, building the first site from the layouts | Done |
 | [`site-import`](../openspec/changes/archive/2026-10-09-site-import/) | import a public website by its address (version 1, no AI), reviewed before publishing; see [`import-mapping.md`](import-mapping.md) | Done |
 | [`import-review-actions`](../openspec/changes/archive/2026-10-09-import-review-actions/) | the import review's retry (failed pages and images, the next pages) and fixes (images marked decorative, subheading levels); the same problem grouped ("13 pages have no description", leading to the site's description); and import fixes found on marespartners.cz (a logo and photo drawn by CSS, a black-and-white theme for a site without colours, the site description from the first paragraph) | Done |
-| `import-languages` | "Import the Czech version": another language version of the old site as a project language, pages paired through the language switcher's links; and choosing which language is primary before importing | Planned |
+| [`import-languages`](../openspec/changes/archive/2026-10-10-import-languages/) | "Import the English version" in the import review: another language version of the old site, up to 20 pages, as a new hidden project language, pages paired with the primary's through `hreflang` and the language switcher's links, its own menu, old addresses redirected under the language's path; problems of every language in the review | Done |
 | [`import-existing-blocks`](../openspec/changes/archive/2026-10-09-import-existing-blocks/) | the import fills blocks Webmio already has: grids of repeated cards (image, title, text, link) as a `cards` block instead of one gallery per card (found on vroomagazine, a stress test, not a target site), key figures, numbered steps, map embeds, booking buttons, opening hours, and award or partner logos in the footer as a logos block (Mareš's awards) | Done |
 | [`banner-block`](../openspec/changes/archive/2026-10-10-banner-block/) | a full-width photo band with a heading, text and a button anywhere on a page (the hero is first only), a primary-colour band without a photo; the import maps mid-page photo bands to it | Done |
 ### 4. Templates as website systems · In progress

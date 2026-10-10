@@ -26,6 +26,10 @@ here becomes a change, move it to the roadmap and delete it here.
 - [ ] **Checking connected domains on their own:** the free address stops redirecting to a broken
   domain only when the domain is checked, which happens when its Domain page is opened.
   `scheduled-jobs` or `website-health` could check every ready domain regularly.
+- [ ] **Choosing the primary language before importing:** left out of `import-languages`; the
+  old site's home page language becomes the primary, and the primary can't be changed later.
+  Also not done: several languages at once or during the first import, *Try again* and *Import
+  the next pages* for another language.
 - [ ] **Other Punk Film trailers:** only The Last Race has a trailer address in the local
   example; collect the others' from their site.
 
