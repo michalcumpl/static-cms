@@ -33,6 +33,6 @@
 
 ## 5. Documentation and `prod`
 
-- [ ] 5.1 Write the operator guide in `infra/README.md`: first deploy, seeding an existing installation (`seed/app.db`, `media-upload`), restoring an earlier moment, replacing the server, SES production access, the `app.webmio.eu` A record; update the README's production section and the roadmap's phase 7 row; verify every command in the guide ran during group 4
+- [x] 5.1 Write the operator guide in `infra/README.md`: first deploy, seeding an existing installation (`seed/app.db`, `media-upload`), restoring an earlier moment, replacing the server, SES production access, the `app.webmio.eu` A record; update the README's production section and the roadmap's phase 7 row; verify every command in the guide ran during group 4
 - [x] 5.2 Run `pnpm lint`, `pnpm typecheck` and `pnpm test` from the root and the end-to-end suite; verify all pass
-- [ ] 5.3 Deploy `prod` with the operator: `own-hosting`'s delegations of `webmio.site` and `webmio.net`, `pulumi up --stack prod`, the `app.webmio.eu` A record, the SES production access request, the first deploy; verify `https://app.webmio.eu/healthz` and a sign-in email
+- [ ] 5.3 (Moved to the roadmap's phase 7 on 2026-10-10: `prod` is set up before the beta, from `infra/README.md`'s first deploy; everything it runs was verified on `dev`.) Deploy `prod` with the operator: `own-hosting`'s delegations of `webmio.site` and `webmio.net`, `pulumi up --stack prod`, the `app.webmio.eu` A record, the SES production access request, the first deploy; verify `https://app.webmio.eu/healthz` and a sign-in email

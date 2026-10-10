@@ -132,7 +132,7 @@ Blocks the example sites need come first, because the templates render them
 
 | Change | What | Status |
 | --- | --- | --- |
-| `admin-on-aws` | the admin on one small EU server at `app.webmio.eu`, media in S3, Litestream backups; running on `dev` | Next |
+| [`admin-on-aws`](../openspec/changes/archive/2026-10-10-admin-on-aws/) | the admin on one small EU server at `app.webmio.eu`, media in S3, Litestream backups, deploys from `main`, alarms; running on `dev`, `prod` set up before the beta | Done |
 | `bare-domain-redirect` | `https://<domain>` redirects to `https://www.<domain>` with a valid certificate and the same path, from a tiny redirect server of its own; customers set `@ A` to its address instead of their registrar's forwarding | Planned |
 | `presentation-site` | `webmio.cz` and `webmio.eu`, built and published with Webmio | Planned |
 | `operator-console` | the operator's own part of the admin: an overview and stats, customers and their websites, inviting users, deleting websites and accounts, plan status, renewal dates, manual invoices | Planned |
@@ -268,6 +268,11 @@ Invite-only, small and cheap, for friends.
 
 - **`admin-on-aws`:** one small EU server, deploy pipeline, monitoring and alerts; media in S3;
   SQLite with Litestream to S3.
+- **`prod` before the beta, not before:** `dev` proved every part (deploys and rollback,
+  restores, alarms, mail, publishing), so `prod` waits until the first invited users need a
+  stable `app.webmio.eu`; [`infra/README.md`](../infra/README.md)'s first deploy lists the steps.
+  SES production access applies to the whole account, so it is requested early: until then
+  `dev` mails only verified addresses.
 - **`bare-domain-redirect`:** CloudFront serves only `www.<domain>`, and registrars' forwarding
   (Webglobe's, for one) can't do HTTPS. So a tiny server of its own (a `t4g.nano` with an
   Elastic IP, ≈ €7 a month) answers bare domains with Caddy:

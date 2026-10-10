@@ -16,6 +16,12 @@ here becomes a change, move it to the roadmap and delete it here.
 - [ ] **AVIF** next to WebP: measure the size gain on the example sites before adding a format.
 - [ ] **Clips without Vimeo:** hero slideshow clips uploaded to the media library, so pages
   don't contact Vimeo on open. Needs video processing (size limits, transcoding) on our side.
+- [ ] **The free address's redirect to a domain:** it is a 301 cached for an hour, so a browser
+  that saw it keeps going to a domain that broke or was removed. A short cache time, or a 302
+  with the canonical link telling search engines, would end that at once.
+- [ ] **Checking connected domains on their own:** the free address stops redirecting to a broken
+  domain only when the domain is checked, which happens when its Domain page is opened.
+  `scheduled-jobs` or `website-health` could check every ready domain regularly.
 - [ ] **Other Punk Film trailers:** only The Last Race has a trailer address in the local
   example; collect the others' from their site.
 
